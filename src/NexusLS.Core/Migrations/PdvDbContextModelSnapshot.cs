@@ -165,6 +165,9 @@ namespace NexusLS.Core.Migrations
                         .HasColumnType("INTEGER")
                         .HasDefaultValue(true);
 
+                    b.Property<long?>("CustoUnitarioCentavos")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("NomeProduto")
                         .IsRequired()
                         .HasMaxLength(200)

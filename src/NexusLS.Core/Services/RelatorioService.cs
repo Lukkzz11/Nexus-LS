@@ -15,6 +15,12 @@ public record ResumoForma(FormaPagamento Forma, int Vendas, long TotalCentavos);
 /// <summary>Quanto foi vendido num dia (vendas canceladas não contam).</summary>
 public record ResumoDia(DateTime Dia, int Vendas, long TotalCentavos);
 
+/// <summary>Faturamento, custo e lucro de uma categoria de produto (itens vendidos, antes do desconto da venda).</summary>
+public record ResumoCategoria(string Categoria, int Quantidade, long FaturamentoCentavos, long CustoCentavos)
+{
+    public long LucroCentavos => FaturamentoCentavos - CustoCentavos;
+}
+
 /// <summary>Tudo que o relatório de vendas por período mostra.</summary>
 /// <param name="Vendas">Todas as vendas do período, inclusive as canceladas (marcadas), da mais antiga para a mais nova.</param>
 public record RelatorioVendas(
@@ -27,7 +33,14 @@ public record RelatorioVendas(
     long DescontosCentavos,
     long TicketMedioCentavos,
     IReadOnlyList<ResumoForma> PorForma,
-    IReadOnlyList<ResumoDia> PorDia);
+    IReadOnlyList<ResumoDia> PorDia,
+    long CustoTotalCentavos = 0,
+    bool CustoEstimado = false,
+    IReadOnlyList<ResumoCategoria>? PorCategoria = null)
+{
+    /// <summary>Total vendido (já com desconto) menos o custo das mercadorias. Não desconta taxas, impostos nem despesas.</summary>
+    public long LucroBrutoCentavos => TotalCentavos - CustoTotalCentavos;
+}
 
 public class RelatorioService
 {
@@ -99,12 +112,35 @@ public class RelatorioService
             .Select(g => new ResumoDia(g.Key, g.Count(), g.Sum(v => v.TotalCentavos)))
             .ToList();
 
+        // Custo: o guardado na venda; em vendas antigas (sem custo guardado) usa o custo de hoje do produto, e marca como estimativa.
+        var idsProdutos = validas.SelectMany(v => v.Itens).Select(i => i.ProdutoId).Distinct().ToList();
+        var produtos = await db.Produtos.AsNoTracking().Where(p => idsProdutos.Contains(p.Id))
+            .Select(p => new { p.Id, p.PrecoCustoCentavos, p.Categoria }).ToDictionaryAsync(p => p.Id);
+        var estimado = false;
+        var linhasCusto = new List<(string Categoria, int Quantidade, long Faturamento, long Custo)>();
+        foreach (var item in validas.SelectMany(v => v.Itens))
+        {
+            produtos.TryGetValue(item.ProdutoId, out var produto);
+            long unitario;
+            if (item.CustoUnitarioCentavos is long guardado) unitario = guardado;
+            else { unitario = produto?.PrecoCustoCentavos ?? 0; estimado = true; }
+            linhasCusto.Add((produto?.Categoria ?? SemCategoria, item.Quantidade, item.TotalCentavos, unitario * item.Quantidade));
+        }
+        var porCategoria = linhasCusto
+            .GroupBy(l => l.Categoria)
+            .Select(g => new ResumoCategoria(g.Key, g.Sum(l => l.Quantidade), g.Sum(l => l.Faturamento), g.Sum(l => l.Custo)))
+            .OrderByDescending(c => c.FaturamentoCentavos).ThenBy(c => c.Categoria)
+            .ToList();
+
         return new RelatorioVendas(
             inicio, fim.AddDays(-1), vendas,
             validas.Count, vendas.Count - validas.Count,
             total, validas.Sum(v => v.DescontoCentavos), ticket,
-            ResumoPorForma(vendas), porDia);
+            ResumoPorForma(vendas), porDia,
+            linhasCusto.Sum(l => l.Custo), estimado, porCategoria);
     }
+
+    public const string SemCategoria = "Sem categoria";
 
     /// <summary>Total por forma de pagamento, na ordem de sempre (dinheiro, Pix, débito...). Só formas que tiveram venda.</summary>
     public static IReadOnlyList<ResumoForma> ResumoPorForma(IEnumerable<Venda> vendas) => vendas

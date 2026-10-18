@@ -58,6 +58,14 @@
             </Border>
             <Border Style="{StaticResource CartaoNumero}">
                 <StackPanel>
+                    <TextBlock Text="LUCRO BRUTO" Foreground="{StaticResource CorTextoSuave}" FontSize="12"
+                               ToolTip="Total vendido menos o custo das mercadorias. Não desconta taxas nem despesas." />
+                    <TextBlock Text="{Binding LucroTexto}" FontSize="26" FontWeight="Bold" Foreground="{StaticResource CorSucesso}"
+                               AutomationProperties.Name="Lucro bruto" />
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource CartaoNumero}">
+                <StackPanel>
                     <TextBlock Text="VENDAS" Foreground="{StaticResource CorTextoSuave}" FontSize="12" />
                     <TextBlock Text="{Binding QuantidadeTexto}" FontSize="26" FontWeight="Bold" />
                 </StackPanel>
@@ -92,8 +100,10 @@
             <!-- Esquerda: por dia e por forma de pagamento -->
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="2*" />
-                    <RowDefinition Height="12" />
+                    <RowDefinition Height="1.6*" />
+                    <RowDefinition Height="10" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="10" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
@@ -149,6 +159,34 @@
                         </ItemsControl>
                     </DockPanel>
                 </Border>
+
+                <Border Grid.Row="4" Style="{StaticResource Painel}" Padding="14,10">
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Top" Text="Por categoria (faturamento · lucro)" FontWeight="SemiBold" Margin="0,0,0,8" />
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding PorCategoria}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,3">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="50" />
+                                                <ColumnDefinition Width="110" />
+                                                <ColumnDefinition Width="110" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding Categoria}" />
+                                            <TextBlock Grid.Column="1" Text="{Binding Quantidade, StringFormat='{}{0}un'}" HorizontalAlignment="Right"
+                                                       Foreground="{StaticResource CorTextoSuave}" />
+                                            <TextBlock Grid.Column="2" Text="{Binding Faturamento}" HorizontalAlignment="Right" FontWeight="SemiBold" />
+                                            <TextBlock Grid.Column="3" Text="{Binding Lucro}" HorizontalAlignment="Right"
+                                                       Foreground="{StaticResource CorSucesso}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </DockPanel>
+                </Border>
             </Grid>
 
             <!-- Direita: lista das vendas do período -->
@@ -188,6 +226,9 @@
             </Border>
         </Grid>
 
-        <TextBlock Grid.Row="4" Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" />
+        <StackPanel Grid.Row="4">
+            <TextBlock Text="{Binding AvisoLucro}" TextWrapping="Wrap" Foreground="{StaticResource CorTextoSuave}" Margin="0,8,0,0" />
+            <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" />
+        </StackPanel>
     </Grid>
 </UserControl>

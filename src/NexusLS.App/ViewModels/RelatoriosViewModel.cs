@@ -9,6 +9,9 @@ namespace NexusLS.App.ViewModels;
 /// <summary>Uma barra do gráfico "vendas por dia": o dia, quanto foi vendido e o tamanho da barra (0 a 100).</summary>
 public record DiaDoRelatorio(string Dia, int Vendas, string Total, double Percentual);
 
+/// <summary>Uma linha de "por categoria" com os textos prontos.</summary>
+public record LinhaCategoria(string Categoria, int Quantidade, string Faturamento, string Lucro);
+
 /// <summary>Relatório de vendas por período: totais, ticket médio, por forma de pagamento, por dia e a lista das vendas.</summary>
 public partial class RelatoriosViewModel : ViewModelBase
 {
@@ -30,6 +33,7 @@ public partial class RelatoriosViewModel : ViewModelBase
 
     public ObservableCollection<DiaDoRelatorio> PorDia { get; } = new();
     public ObservableCollection<ResumoForma> PorForma { get; } = new();
+    public ObservableCollection<LinhaCategoria> PorCategoria { get; } = new();
     public ObservableCollection<Venda> Vendas { get; } = new();
 
     [ObservableProperty] private DateTime? _de;
@@ -40,6 +44,9 @@ public partial class RelatoriosViewModel : ViewModelBase
     [ObservableProperty] private string _ticketMedioTexto = "";
     [ObservableProperty] private string _descontosTexto = "";
     [ObservableProperty] private string _canceladasTexto = "";
+    [ObservableProperty] private string _lucroTexto = "";
+    [ObservableProperty] private string _custoTexto = "";
+    [ObservableProperty] private string _avisoLucro = "";
 
     private bool _definindoPeriodo; // true enquanto um atalho troca as duas datas de uma vez (carrega só no fim)
 
@@ -74,6 +81,17 @@ public partial class RelatoriosViewModel : ViewModelBase
         DescontosTexto = Dinheiro.Formatar(relatorio.DescontosCentavos);
         CanceladasTexto = relatorio.QuantidadeCanceladas.ToString();
 
+        LucroTexto = Dinheiro.Formatar(relatorio.LucroBrutoCentavos);
+        CustoTexto = Dinheiro.Formatar(relatorio.CustoTotalCentavos);
+        AvisoLucro = relatorio.CustoEstimado
+            ? "Lucro estimado: parte das vendas é de antes do registro do custo e usou o custo atual do produto."
+            : "";
+
+        PorCategoria.Clear();
+        foreach (var c in relatorio.PorCategoria ?? Array.Empty<ResumoCategoria>())
+            PorCategoria.Add(new LinhaCategoria(c.Categoria, c.Quantidade, Dinheiro.Formatar(c.FaturamentoCentavos),
+                Dinheiro.Formatar(c.LucroCentavos)));
+
         PorForma.Clear();
         foreach (var f in relatorio.PorForma) PorForma.Add(f);
 
@@ -90,7 +108,8 @@ public partial class RelatoriosViewModel : ViewModelBase
     private void Limpar()
     {
         _atual = null;
-        TotalTexto = QuantidadeTexto = TicketMedioTexto = DescontosTexto = CanceladasTexto = "";
+        TotalTexto = QuantidadeTexto = TicketMedioTexto = DescontosTexto = CanceladasTexto = LucroTexto = CustoTexto = AvisoLucro = "";
+        PorCategoria.Clear();
         PorDia.Clear();
         PorForma.Clear();
         Vendas.Clear();

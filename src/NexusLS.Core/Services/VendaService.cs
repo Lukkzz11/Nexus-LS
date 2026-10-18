@@ -107,7 +107,8 @@ public class VendaService
                 PrecoUnitarioCentavos = unitario,
                 Quantidade = quantidade,
                 TotalCentavos = total,
-                BaixouEstoque = !produto.VenderSemBaixa
+                BaixouEstoque = !produto.VenderSemBaixa,
+                CustoUnitarioCentavos = produto.PrecoCustoCentavos
             });
         }
 

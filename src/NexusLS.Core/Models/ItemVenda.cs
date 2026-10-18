@@ -15,6 +15,9 @@ public class ItemVenda
     public long PrecoUnitarioCentavos { get; set; }
     public int Quantidade { get; set; }
 
+    /// <summary>Custo unitário do produto no momento da venda (para o lucro bruto). Nulo em vendas antigas, de antes deste registro.</summary>
+    public long? CustoUnitarioCentavos { get; set; }
+
     /// <summary>Esta venda baixou o estoque deste item? (Falso em produto "vender sem baixa".) Só quem baixou devolve ao cancelar.</summary>
     public bool BaixouEstoque { get; set; } = true;
     public long TotalCentavos { get; set; }
