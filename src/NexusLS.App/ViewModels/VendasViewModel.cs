@@ -13,12 +13,14 @@ public partial class VendasViewModel : ViewModelBase
 {
     private readonly VendaService _vendas;
     private readonly CupomService _cupons;
+    private readonly CaixaService? _caixa;
     private int _versao;
 
-    public VendasViewModel(VendaService vendas, CupomService cupons)
+    public VendasViewModel(VendaService vendas, CupomService cupons, CaixaService? caixa = null)
     {
         _vendas = vendas;
         _cupons = cupons;
+        _caixa = caixa;
         _data = DateTime.Today; // campo direto: não dispara o carregamento duas vezes
         _ = CarregarAsync();
     }
@@ -129,7 +131,11 @@ public partial class VendasViewModel : ViewModelBase
     {
         if (Selecionada is not { Cancelada: false } venda) return;
 
-        var dados = PedirCancelamento($"Cancelar a venda #{venda.Id} de {Dinheiro.Formatar(venda.TotalCentavos)}?");
+        var pergunta = $"Cancelar a venda #{venda.Id} de {Dinheiro.Formatar(venda.TotalCentavos)}?";
+        if (_caixa is not null && await _caixa.TurnoFechadoDoHorarioAsync(venda.DataHora) is { } fechado)
+            pergunta += $"{Environment.NewLine}ATENÇÃO: esta venda é do caixa nº {fechado.Id}, que já foi fechado. "
+                        + "O fechamento antigo não muda; depois do cancelamento, refaça a conferência desse caixa.";
+        var dados = PedirCancelamento(pergunta);
         if (dados is null) return;
 
         await _vendas.CancelarAsync(venda.Id, dados.Motivo, dados.DevolverEstoque);

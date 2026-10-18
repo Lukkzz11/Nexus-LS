@@ -1,0 +1,120 @@
+<UserControl x:Class="NexusLS.App.Views.FechamentoView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="24" />
+            <ColumnDefinition Width="400" />
+        </Grid.ColumnDefinitions>
+
+        <!-- ===== Abrir / movimentar / conferir ===== -->
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <TextBlock Text="Fechamento de caixa" Style="{StaticResource TituloTela}" Margin="0,0,0,14" />
+
+                <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" Margin="0,0,0,10" />
+
+                <!-- Sem caixa aberto -->
+                <Border Style="{StaticResource Painel}" Visibility="{Binding PodeAbrir, Converter={StaticResource BoolVis}}">
+                    <StackPanel>
+                        <TextBlock Text="Abrir o caixa" FontSize="18" FontWeight="SemiBold" />
+                        <TextBlock Text="Quanto de troco há na gaveta agora?" Style="{StaticResource Rotulo}" />
+                        <TextBox Width="200" HorizontalAlignment="Left"
+                                 AutomationProperties.Name="Troco inicial"
+                                 Text="{Binding TrocoInicialTexto, UpdateSourceTrigger=PropertyChanged}" />
+                        <Button Content="Abrir caixa" Style="{StaticResource BotaoPrimario}" Margin="0,16,0,0"
+                                HorizontalAlignment="Left" Command="{Binding AbrirCaixaCommand}" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Resumo do turno -->
+                <Border Style="{StaticResource Painel}" Margin="0,0,0,0"
+                        Visibility="{Binding PodeConferir, Converter={StaticResource BoolVis}}">
+                    <StackPanel>
+                        <TextBlock Text="{Binding Cabecalho}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding ResumoVendas}" Margin="0,6,0,0" Foreground="{StaticResource CorTextoSuave}" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding EsperadoDinheiro}" Margin="0,10,0,0" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding EsperadoCartao}" Margin="0,2,0,0" />
+                        <TextBlock Text="{Binding EsperadoPix}" Margin="0,2,0,0" />
+
+                        <ItemsControl ItemsSource="{Binding Lancamentos}" Margin="0,10,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Sangria, reforço, despesa, entrada -->
+                <Border Style="{StaticResource Painel}" Margin="0,16,0,0"
+                        Visibility="{Binding TurnoAberto, Converter={StaticResource BoolVis}}">
+                    <StackPanel>
+                        <TextBlock Text="Movimentar o caixa" FontSize="18" FontWeight="SemiBold" />
+                        <ComboBox ItemsSource="{Binding OpcoesMovimento}" DisplayMemberPath="Texto"
+                                  SelectedItem="{Binding MovimentoSelecionado}" Margin="0,10,0,0"
+                                  AutomationProperties.Name="Tipo de movimento" />
+                        <TextBlock Text="Valor" Style="{StaticResource Rotulo}" />
+                        <TextBox Width="200" HorizontalAlignment="Left" AutomationProperties.Name="Valor do movimento"
+                                 Text="{Binding MovimentoValorTexto, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBlock Text="Descrição (obrigatória em despesa e entrada avulsa)" Style="{StaticResource Rotulo}" />
+                        <TextBox AutomationProperties.Name="Descrição do movimento"
+                                 Text="{Binding MovimentoDescricao, UpdateSourceTrigger=PropertyChanged}" />
+                        <Button Content="Registrar" Style="{StaticResource BotaoSecundario}" Margin="0,14,0,0"
+                                HorizontalAlignment="Left" Command="{Binding RegistrarMovimentoCommand}" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Conferência / fechamento -->
+                <Border Style="{StaticResource Painel}" Margin="0,16,0,16"
+                        Visibility="{Binding PodeConferir, Converter={StaticResource BoolVis}}">
+                    <StackPanel>
+                        <TextBlock Text="Conferir e fechar" FontSize="18" FontWeight="SemiBold" />
+                        <TextBlock Text="Conte o que há de verdade e digite abaixo (vazio = zero)." Foreground="{StaticResource CorTextoSuave}" />
+
+                        <TextBlock Text="Dinheiro na gaveta" Style="{StaticResource Rotulo}" />
+                        <TextBox Width="200" HorizontalAlignment="Left" AutomationProperties.Name="Dinheiro conferido"
+                                 Text="{Binding ConferidoDinheiroTexto, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBlock Text="Total no cartão (maquininha)" Style="{StaticResource Rotulo}" />
+                        <TextBox Width="200" HorizontalAlignment="Left" AutomationProperties.Name="Cartão conferido"
+                                 Text="{Binding ConferidoCartaoTexto, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBlock Text="Total no Pix" Style="{StaticResource Rotulo}" />
+                        <TextBox Width="200" HorizontalAlignment="Left" AutomationProperties.Name="Pix conferido"
+                                 Text="{Binding ConferidoPixTexto, UpdateSourceTrigger=PropertyChanged}" />
+
+                        <TextBlock Text="{Binding TextoDiferenca}" FontWeight="SemiBold" Margin="0,12,0,0" TextWrapping="Wrap" />
+
+                        <TextBlock Text="Observação (obrigatória se houver diferença ou se for conferência refeita)" Style="{StaticResource Rotulo}" />
+                        <TextBox AutomationProperties.Name="Observação do fechamento"
+                                 Text="{Binding Observacao, UpdateSourceTrigger=PropertyChanged}" />
+
+                        <Button Content="Fechar caixa" Style="{StaticResource BotaoPrimario}" Margin="0,16,0,0"
+                                HorizontalAlignment="Left" Command="{Binding FecharCommand}" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- ===== Histórico ===== -->
+        <Grid Grid.Column="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <TextBlock Text="Histórico" FontSize="18" FontWeight="SemiBold" Margin="0,48,0,10" />
+            <ListBox x:Name="ListaHistorico" Grid.Row="1" ItemsSource="{Binding Historico}" BorderThickness="0"
+                     Background="Transparent" AutomationProperties.Name="Histórico de fechamentos">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Margin="0,6">
+                            <TextBlock Text="{Binding Quando}" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding Diferenca}" />
+                            <TextBlock Text="{Binding Observacao}" Foreground="{StaticResource CorTextoSuave}" TextWrapping="Wrap" />
+                            <Button Content="Conferir de novo" Style="{StaticResource BotaoSecundario}" Margin="0,6,0,0"
+                                    Padding="10,4" HorizontalAlignment="Left"
+                                    Command="{Binding DataContext.ConferirDeNovoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    CommandParameter="{Binding}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Grid>
+    </Grid>
+</UserControl>

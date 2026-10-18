@@ -99,6 +99,55 @@ namespace NexusLS.Core.Migrations
                     b.ToTable("ConfiguracoesLoja");
                 });
 
+            modelBuilder.Entity("NexusLS.Core.Models.FechamentoCaixa", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("ConferidoCartaoCentavos")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("ConferidoDinheiroCentavos")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("ConferidoPixCentavos")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("DataHora")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("EsperadoCartaoCentavos")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("EsperadoDinheiroCentavos")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("EsperadoPixCentavos")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Observacao")
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Operador")
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("TurnoId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Versao")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TurnoId", "Versao")
+                        .IsUnique();
+
+                    b.ToTable("FechamentosCaixa");
+                });
+
             modelBuilder.Entity("NexusLS.Core.Models.ItemVenda", b =>
                 {
                     b.Property<int>("Id")
@@ -171,6 +220,35 @@ namespace NexusLS.Core.Migrations
                     b.HasIndex("ProdutoId");
 
                     b.ToTable("Movimentacoes");
+                });
+
+            modelBuilder.Entity("NexusLS.Core.Models.MovimentoCaixa", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("DataHora")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Descricao")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Tipo")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TurnoId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("ValorCentavos")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TurnoId");
+
+                    b.ToTable("MovimentosCaixa");
                 });
 
             modelBuilder.Entity("NexusLS.Core.Models.Produto", b =>
@@ -246,6 +324,32 @@ namespace NexusLS.Core.Migrations
                     b.ToTable("TamanhosProduto");
                 });
 
+            modelBuilder.Entity("NexusLS.Core.Models.TurnoCaixa", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("DataAbertura")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DataFechamento")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Operador")
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("TrocoInicialCentavos")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DataAbertura");
+
+                    b.ToTable("TurnosCaixa");
+                });
+
             modelBuilder.Entity("NexusLS.Core.Models.Venda", b =>
                 {
                     b.Property<int>("Id")
@@ -312,6 +416,15 @@ namespace NexusLS.Core.Migrations
                     b.ToTable("Vendas");
                 });
 
+            modelBuilder.Entity("NexusLS.Core.Models.FechamentoCaixa", b =>
+                {
+                    b.HasOne("NexusLS.Core.Models.TurnoCaixa", null)
+                        .WithMany()
+                        .HasForeignKey("TurnoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("NexusLS.Core.Models.ItemVenda", b =>
                 {
                     b.HasOne("NexusLS.Core.Models.Venda", null)
@@ -330,6 +443,15 @@ namespace NexusLS.Core.Migrations
                         .IsRequired();
 
                     b.Navigation("Produto");
+                });
+
+            modelBuilder.Entity("NexusLS.Core.Models.MovimentoCaixa", b =>
+                {
+                    b.HasOne("NexusLS.Core.Models.TurnoCaixa", null)
+                        .WithMany()
+                        .HasForeignKey("TurnoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("NexusLS.Core.Models.ProdutoTamanho", b =>

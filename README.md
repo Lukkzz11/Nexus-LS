@@ -11,6 +11,7 @@ O menu lateral tem três grupos:
 |---|---|---|
 | **Vendas** | **PDV** | Frente de caixa, todo pelo teclado (veja o fluxo abaixo). |
 | | **Caixa** | Vendas de um dia, resumo por forma de pagamento, detalhe, **cancelar** venda (pede o motivo, registra quem e quando cancelou, devolve o estoque se você quiser; a venda nunca é apagada), reimprimir cupom e exportar CSV. |
+| | **Fechamento** | Abrir o caixa com troco inicial, registrar sangria, reforço, despesa e entrada avulsa, e fechar conferindo dinheiro, cartão e Pix contra o esperado. Diferença exige observação. Fechamentos nunca mudam: conferir de novo cria uma nova versão. |
 | | **Mais vendidos** | Ranking de produtos num período, com opção de separar por tamanho, e exportar CSV. |
 | **Estoque** | **Estoque da loja** | Lista de produtos, cadastro (preço de varejo e de atacado, custo, mínimo, referência, código de barras), grade de tamanhos com estoque de cada um e ajuste de estoque com motivo (entrada, perda, correção). Itens abaixo do mínimo ficam em amarelo. Todo ajuste vira uma linha no histórico. |
 | | **Etiquetas** | Etiquetas com nome, preço, tamanho e código de barras (Code 128), em bobina ou folha A4, com prévia. |
@@ -56,6 +57,7 @@ Enter repetido (tecla segurada) é ignorado; Enter já tratado por outro element
 - **Venda e baixa de estoque** (por produto **e tamanho**) acontecem na **mesma transação** do banco: ou grava tudo, ou nada.
 - **Estoque nunca fica negativo**, e o operador é avisado.
 - **Nunca se apaga uma venda**: só se cancela, com motivo obrigatório (mínimo 3 letras), guardando quem cancelou e quando. O estoque volta ao mesmo tamanho, a menos que se escolha não devolver (peça danificada). O nome do operador fica em Configurações. Venda cancelada não entra em totais.
+- **Caixa por turno**: só um caixa aberto por vez; as vendas pertencem ao turno pelo horário, então turnos não se cruzam. Cancelar venda de um caixa já fechado avisa para refazer a conferência.
 - **Todo movimento de estoque deixa registro** (estoque inicial, ajustes, vendas e cancelamentos), com o tamanho.
 - Cada produto tem **dois preços**: varejo e atacado. Atacado vazio vale o de varejo.
 - O item da venda guarda o nome, o tamanho e o preço **da hora da venda**.

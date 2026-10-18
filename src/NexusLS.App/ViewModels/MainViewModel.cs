@@ -4,7 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 namespace NexusLS.App.ViewModels;
 
 /// <summary>Os itens do menu lateral. O nome do item é também o "Tag" do botão: assim o menu destaca o da tela aberta.</summary>
-public enum ItemMenu { Pdv, Caixa, MaisVendidos, EstoqueDaLoja, Etiquetas, Clientes, Relatorios, Configuracoes }
+public enum ItemMenu { Pdv, Caixa, Fechamento, MaisVendidos, EstoqueDaLoja, Etiquetas, Clientes, Relatorios, Configuracoes }
 
 /// <summary>
 /// ViewModel = a "lógica da tela". Ele guarda os dados que a tela mostra e os comandos dos botões,
@@ -32,7 +32,8 @@ public partial class MainViewModel : ObservableObject
 
     // Vendas
     [RelayCommand] private void IrParaPdv() => Abrir(_pdv, ItemMenu.Pdv);
-    [RelayCommand] private void IrParaCaixa() => Abrir(new VendasViewModel(Servicos.Vendas, Servicos.Cupons), ItemMenu.Caixa);
+    [RelayCommand] private void IrParaCaixa() => Abrir(new VendasViewModel(Servicos.Vendas, Servicos.Cupons, Servicos.Caixa), ItemMenu.Caixa);
+    [RelayCommand] private void IrParaFechamento() => Abrir(new FechamentoViewModel(Servicos.Caixa), ItemMenu.Fechamento);
     [RelayCommand] private void IrParaMaisVendidos() => Abrir(new MaisVendidosViewModel(Servicos.Relatorios), ItemMenu.MaisVendidos);
 
     // Estoque
