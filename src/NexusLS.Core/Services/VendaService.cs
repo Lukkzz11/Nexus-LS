@@ -60,6 +60,7 @@ public class VendaService
         var faltas = new List<string>();
         foreach (var demanda in grupos.GroupBy(g => (g.Chave.ProdutoId, g.Chave.Tamanho)))
         {
+            if (produtos[demanda.Key.ProdutoId].VenderSemBaixa) continue; // sem controle de estoque
             var pedidoTotal = demanda.Sum(g => g.Quantidade);
             var linha = linhas.First(t => t.ProdutoId == demanda.Key.ProdutoId && t.Tamanho == demanda.Key.Tamanho);
             if (linha.Estoque < pedidoTotal)
@@ -105,7 +106,8 @@ public class VendaService
                 Tamanho = chave.Tamanho,
                 PrecoUnitarioCentavos = unitario,
                 Quantidade = quantidade,
-                TotalCentavos = total
+                TotalCentavos = total,
+                BaixouEstoque = !produto.VenderSemBaixa
             });
         }
 
@@ -120,7 +122,7 @@ public class VendaService
         await db.SaveChangesAsync();
 
         // 6) 2º passo: baixa o estoque do tamanho e do produto, e registra as movimentações ligadas à venda.
-        foreach (var item in venda.Itens)
+        foreach (var item in venda.Itens.Where(i => i.BaixouEstoque))
         {
             produtos[item.ProdutoId].EstoqueAtual -= item.Quantidade;
             linhas.First(t => t.ProdutoId == item.ProdutoId && t.Tamanho == item.Tamanho).Estoque -= item.Quantidade;
@@ -174,7 +176,7 @@ public class VendaService
         var produtos = await db.Produtos.Where(p => ids.Contains(p.Id)).ToDictionaryAsync(p => p.Id);
         var grades = await db.TamanhosProduto.Where(t => ids.Contains(t.ProdutoId)).ToListAsync();
 
-        foreach (var item in devolverEstoque ? venda.Itens : new List<ItemVenda>())
+        foreach (var item in devolverEstoque ? venda.Itens.Where(i => i.BaixouEstoque).ToList() : new List<ItemVenda>())
         {
             produtos[item.ProdutoId].EstoqueAtual += item.Quantidade;
 

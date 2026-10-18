@@ -55,6 +55,8 @@
 
                         <CheckBox Content="Imprimir o cupom sozinho ao finalizar a venda" Margin="0,16,0,0"
                                   IsChecked="{Binding ImprimirAoFinalizar}" />
+                        <CheckBox Content="Perguntar o tamanho no PDV (desligado: vai direto à quantidade quando só há uma opção)"
+                                  Margin="0,10,0,0" IsChecked="{Binding PerguntarTamanho}" />
 
                         <StackPanel Orientation="Horizontal" Margin="0,20,0,0">
                             <Button Content="Salvar (Ctrl+S)" Style="{StaticResource BotaoPrimario}"

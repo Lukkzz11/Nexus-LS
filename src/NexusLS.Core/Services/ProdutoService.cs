@@ -30,6 +30,7 @@ public class ProdutoService
             Nome = dados.Nome.Trim(),
             CodigoInterno = await ProximoCodigoInternoAsync(db),
             Categoria = Limpar(dados.Categoria),
+            VenderSemBaixa = dados.VenderSemBaixa,
             CodigoBarras = codigo,
             Referencia = referencia,
             PrecoVendaCentavos = dados.PrecoVendaCentavos,
@@ -71,6 +72,7 @@ public class ProdutoService
 
         produto.Nome = dados.Nome.Trim();
         produto.Categoria = Limpar(dados.Categoria);
+        produto.VenderSemBaixa = dados.VenderSemBaixa;
         produto.CodigoInterno ??= await ProximoCodigoInternoAsync(db); // produtos antigos ganham o código ao serem editados
         produto.CodigoBarras = codigo;
         produto.Referencia = referencia;

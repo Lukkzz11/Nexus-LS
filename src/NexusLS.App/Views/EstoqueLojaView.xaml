@@ -220,6 +220,10 @@
                                     </StackPanel>
                                 </Grid>
 
+                                <CheckBox Content="Vender sem baixa de estoque (serviço ou encomenda)" Margin="0,10,0,0"
+                                          IsChecked="{Binding VenderSemBaixa}" AutomationProperties.Name="Vender sem baixa"
+                                          ToolTip="O PDV não confere nem baixa o estoque deste produto" />
+
                                 <!-- Calculadora de preço -->
                                 <TextBlock Text="{Binding TextoMargem}" TextWrapping="Wrap" Margin="0,8,0,0"
                                            Foreground="{StaticResource CorTextoSuave}" />

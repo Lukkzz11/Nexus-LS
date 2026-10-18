@@ -164,6 +164,7 @@ public class RascunhoService
                 continue;
             }
 
+            if (produto.VenderSemBaixa) tamanho.Estoque = Produto.EstoqueVirtual;
             var livre = tamanho.Estoque - carrinho.QuantidadeDe(produto.Id, tamanho.Tamanho);
             if (livre <= 0)
             {

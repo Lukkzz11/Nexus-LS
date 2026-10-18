@@ -44,6 +44,7 @@ public partial class ConfiguracoesViewModel : ViewModelBase
     [ObservableProperty] private string _impressoraSelecionada;
     [ObservableProperty] private OpcaoLargura _larguraSelecionada;
     [ObservableProperty] private bool _imprimirAoFinalizar = true;
+    [ObservableProperty] private bool _perguntarTamanho = true;
     [ObservableProperty] private string _previa = "";
 
     partial void OnNomeLojaChanged(string value) => AtualizarPrevia();
@@ -64,6 +65,7 @@ public partial class ConfiguracoesViewModel : ViewModelBase
         NomeOperador = c.NomeOperador;
         RodapeCupom = c.MensagemCupom ?? "";
         ImprimirAoFinalizar = c.ImprimirCupomAoFinalizar;
+        PerguntarTamanho = c.PerguntarTamanho;
         LarguraSelecionada = Larguras.FirstOrDefault(l => l.Colunas == c.LarguraCupom)
                              ?? new OpcaoLargura($"{c.LarguraCupom} colunas", c.LarguraCupom);
 
@@ -99,7 +101,7 @@ public partial class ConfiguracoesViewModel : ViewModelBase
     private DadosLoja DadosDoFormulario() => new(
         NomeLoja, Documento, Endereco, Telefone, RodapeCupom,
         ImpressoraSelecionada == ImpressoraWindows.ImpressoraPadrao ? null : ImpressoraSelecionada,
-        LarguraSelecionada.Colunas, ImprimirAoFinalizar, NomeOperador);
+        LarguraSelecionada.Colunas, ImprimirAoFinalizar, NomeOperador, PerguntarTamanho);
 
     private ConfiguracaoLoja ConfigDoFormulario()
     {

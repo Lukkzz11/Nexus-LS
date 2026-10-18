@@ -28,6 +28,7 @@ BUSCA vazia + carrinho cheio ─Enter→ DESCONTO ─Enter→ PAGAMENTO ─Enter
 
 - O foco volta sempre para a busca. A busca aceita nome, referência ou código de barras.
 - **Cadastro de produto:** o código interno (INT-000001...) é automático e nunca repete; o botão Gerar cria um código de barras EAN-13 que começa com 2 (faixa de uso interno). Não se cadastra dois produtos ativos com o mesmo nome e a mesma referência. Margem = lucro sobre o preço; markup = lucro sobre o custo.
+- **Vender sem baixa:** marque no produto (serviço, encomenda) para o PDV não conferir nem baixar o estoque dele; o cancelamento só devolve o que de fato saiu do estoque. Em Configurações, desligar "Perguntar o tamanho" faz o PDV ir direto à quantidade quando o produto só tem uma opção (modo rápido). Ligado é o padrão.
 - **Enter na busca:** se você desceu com ↑ ↓, vale o item destacado; senão o código de barras exato tem prioridade (leitor); senão vale o primeiro resultado.
 - **Tamanho:** sempre abre ao escolher o produto. Grade de 3 colunas, navegue com ← → ↑ ↓ ou digite a letra/número do tamanho (M, GG, 38). No **atacado** aparece também a opção "Sem tamanho".
 - **Quantidade:** digite o número ou use ↑ soma / ↓ subtrai (mínimo 1); limitada ao estoque do tamanho.

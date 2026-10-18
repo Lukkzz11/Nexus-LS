@@ -64,6 +64,7 @@ public partial class EstoqueLojaViewModel : ViewModelBase
     [ObservableProperty] private string _precoCusto = "";
     [ObservableProperty] private string _categoria = "";
     [ObservableProperty] private string _codigoInterno = "";
+    [ObservableProperty] private bool _venderSemBaixa;
     [ObservableProperty] private string _margemDesejada = "";
     [ObservableProperty] private string _textoMargem = "";
     [ObservableProperty] private string _estoqueMinimo = "0";
@@ -219,6 +220,7 @@ public partial class EstoqueLojaViewModel : ViewModelBase
         PrecoCusto = "";
         Categoria = "";
         CodigoInterno = "";
+        VenderSemBaixa = false;
         MargemDesejada = "";
         EstoqueMinimo = "0";
         EstoqueInicial = "0";
@@ -284,7 +286,7 @@ public partial class EstoqueLojaViewModel : ViewModelBase
         var minimo = LerInteiro(EstoqueMinimo, "Estoque mínimo");
         var inicial = EhNovo ? LerInteiro(EstoqueInicial, "Estoque inicial") : 0;
 
-        return (new DadosProduto(Nome, CodigoBarras, venda, custo, minimo, Referencia, atacado, Categoria), inicial);
+        return (new DadosProduto(Nome, CodigoBarras, venda, custo, minimo, Referencia, atacado, Categoria, VenderSemBaixa), inicial);
     }
 
     private static int LerInteiro(string texto, string campo)
@@ -305,6 +307,7 @@ public partial class EstoqueLojaViewModel : ViewModelBase
         Referencia = produto.Referencia ?? "";
         Categoria = produto.Categoria ?? "";
         CodigoInterno = produto.CodigoInterno ?? "";
+        VenderSemBaixa = produto.VenderSemBaixa;
         PrecoVenda = Dinheiro.FormatarParaEdicao(produto.PrecoVendaCentavos);
         PrecoAtacado = produto.PrecoAtacadoCentavos > 0 ? Dinheiro.FormatarParaEdicao(produto.PrecoAtacadoCentavos) : "";
         PrecoCusto = Dinheiro.FormatarParaEdicao(produto.PrecoCustoCentavos);

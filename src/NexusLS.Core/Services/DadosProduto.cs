@@ -14,4 +14,5 @@ public record DadosProduto(
     int EstoqueMinimo,
     string? Referencia = null,
     long PrecoAtacadoCentavos = 0,
-    string? Categoria = null);
+    string? Categoria = null,
+    bool VenderSemBaixa = false);

@@ -14,5 +14,8 @@ public class ItemVenda
 
     public long PrecoUnitarioCentavos { get; set; }
     public int Quantidade { get; set; }
+
+    /// <summary>Esta venda baixou o estoque deste item? (Falso em produto "vender sem baixa".) Só quem baixou devolve ao cancelar.</summary>
+    public bool BaixouEstoque { get; set; } = true;
     public long TotalCentavos { get; set; }
 }

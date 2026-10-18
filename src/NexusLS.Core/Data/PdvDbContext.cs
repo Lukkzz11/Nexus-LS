@@ -66,6 +66,7 @@ public class PdvDbContext : DbContext
 
         modelBuilder.Entity<ItemVenda>(e =>
         {
+            e.Property(i => i.BaixouEstoque).HasDefaultValue(true);
             e.Property(i => i.NomeProduto).IsRequired().HasMaxLength(200);
             e.Property(i => i.Tamanho).IsRequired().HasMaxLength(30);
         });

@@ -93,6 +93,9 @@ namespace NexusLS.Core.Migrations
                         .HasMaxLength(80)
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("PerguntarTamanho")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Telefone")
                         .HasMaxLength(30)
                         .HasColumnType("TEXT");
@@ -156,6 +159,11 @@ namespace NexusLS.Core.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
+
+                    b.Property<bool>("BaixouEstoque")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(true);
 
                     b.Property<string>("NomeProduto")
                         .IsRequired()
@@ -331,6 +339,9 @@ namespace NexusLS.Core.Migrations
                     b.Property<string>("Referencia")
                         .HasMaxLength(60)
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("VenderSemBaixa")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 

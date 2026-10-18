@@ -35,6 +35,7 @@ public partial class PdvViewModel : ViewModelBase, IEditorCarrinho
 
     // estado da venda em andamento
     private Produto? _produtoAtual;
+    private readonly ConfiguracaoService? _configuracao;
     private List<ProdutoTamanho> _gradeReal = new();
     private GradeTamanhos? _grade;
     private ProdutoTamanho? _tamanhoAtual;
@@ -56,8 +57,9 @@ public partial class PdvViewModel : ViewModelBase, IEditorCarrinho
     /// segurada) pule a confirmação da venda sem o operador ver. Os testes passam zero.
     /// </param>
     public PdvViewModel(ProdutoService produtos, VendaService vendas, RascunhoService rascunho, ClienteService clientes,
-        CupomService cupons, TimeSpan? tempoMinimoSucesso = null)
+        CupomService cupons, TimeSpan? tempoMinimoSucesso = null, ConfiguracaoService? configuracao = null)
     {
+        _configuracao = configuracao;
         _tempoMinimoSucesso = tempoMinimoSucesso ?? TimeSpan.FromMilliseconds(400);
         _produtos = produtos;
         _vendas = vendas;
@@ -476,6 +478,8 @@ public partial class PdvViewModel : ViewModelBase, IEditorCarrinho
         }
 
         _gradeReal = await _produtos.ListarTamanhosAsync(produto.Id);
+        if (produto.VenderSemBaixa)
+            foreach (var t in _gradeReal) t.Estoque = Produto.EstoqueVirtual; // sem controle: nunca esgota
         var opcoes = GradeTamanhos.OpcoesParaVenda(_gradeReal, _carrinho.Tabela)
             .Select(t => new ProdutoTamanho   // o estoque mostrado já desconta o que está no carrinho
             {
@@ -492,12 +496,18 @@ public partial class PdvViewModel : ViewModelBase, IEditorCarrinho
 
         OpcoesTamanho.Clear();
         foreach (var o in _grade.Opcoes)
-            OpcoesTamanho.Add(new OpcaoViewModel(o.Tamanho, o.Estoque > 0 ? $"{o.Estoque} em estoque" : "esgotado", o.Estoque <= 0));
+            OpcoesTamanho.Add(new OpcaoViewModel(o.Tamanho,
+                produto.VenderSemBaixa ? "sem controle de estoque" : o.Estoque > 0 ? $"{o.Estoque} em estoque" : "esgotado", o.Estoque <= 0));
         AtualizarSelecaoTamanho();
 
         Resultados.Clear();
         Mensagem = "";
         IrPara(EtapaPdv.Tamanho);
+
+        // Modo rápido: com uma única opção disponível, não há o que perguntar.
+        if (_grade.Opcoes.Count == 1 && _grade.Opcoes[0].Estoque > 0
+            && _configuracao is not null && !(await _configuracao.ObterAsync()).PerguntarTamanho)
+            ConfirmarTamanho();
     }
 
     private void MoverGrade(DirecaoGrade direcao)
@@ -525,7 +535,7 @@ public partial class PdvViewModel : ViewModelBase, IEditorCarrinho
         _quantidadeSel = new SeletorQuantidade(escolhido.Estoque);
         QuantidadeTexto = "1";
         TamanhoModalTexto = escolhido.Tamanho == Tamanhos.SemTamanho ? "Sem tamanho" : $"Tamanho {escolhido.Tamanho}";
-        QuantidadeMaximoTexto = $"Disponível: {escolhido.Estoque}";
+        QuantidadeMaximoTexto = _produtoAtual!.VenderSemBaixa ? "Sem controle de estoque" : $"Disponível: {escolhido.Estoque}";
         Mensagem = "";
         IrPara(EtapaPdv.Quantidade);
     }

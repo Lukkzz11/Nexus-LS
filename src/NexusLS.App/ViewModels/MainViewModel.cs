@@ -16,7 +16,8 @@ public partial class MainViewModel : ObservableObject
 {
     // O PDV é criado uma vez só: se o operador for olhar o estoque no meio de uma venda, o carrinho continua lá.
     private readonly PdvViewModel _pdv =
-        new(Servicos.Produtos, Servicos.Vendas, Servicos.Rascunho, Servicos.Clientes, Servicos.Cupons);
+        new(Servicos.Produtos, Servicos.Vendas, Servicos.Rascunho, Servicos.Clientes, Servicos.Cupons,
+            configuracao: Servicos.Configuracao);
 
     [ObservableProperty]
     private object? _telaAtual;

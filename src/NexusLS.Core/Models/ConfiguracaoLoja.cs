@@ -21,6 +21,12 @@ public class ConfiguracaoLoja
     /// <summary>Nome de quem está no caixa. Aparece nas vendas, nos cancelamentos e nos relatórios.</summary>
     public string NomeOperador { get; set; } = "Caixa";
 
+    /// <summary>
+    /// Ligado (padrão): o PDV sempre abre a janela de tamanho. Desligado ("modo rápido"): produto com uma única
+    /// opção de tamanho (por exemplo, só "Sem tamanho") vai direto para a quantidade.
+    /// </summary>
+    public bool PerguntarTamanho { get; set; } = true;
+
     /// <summary>Imprime o cupom sozinho quando a venda é finalizada.</summary>
     public bool ImprimirCupomAoFinalizar { get; set; } = true;
 }

@@ -38,6 +38,14 @@ public class Produto
 
     public int EstoqueMinimo { get; set; }
 
+    /// <summary>
+    /// "Vender sem baixa": o produto é vendido sem conferir nem baixar estoque (serviço, encomenda, peça sob medida).
+    /// </summary>
+    public bool VenderSemBaixa { get; set; }
+
+    /// <summary>Quantidade "infinita" mostrada no PDV para produto sem controle de estoque.</summary>
+    public const int EstoqueVirtual = 99_999;
+
     /// <summary>Produto desativado some do PDV, mas continua no histórico de vendas.</summary>
     public bool Ativo { get; set; } = true;
 
