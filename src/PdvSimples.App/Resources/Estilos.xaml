@@ -97,6 +97,19 @@
         <Setter Property="Padding" Value="16" />
     </Style>
 
+    <!-- Mensagem de sucesso (verde) ou erro (vermelho), conforme MensagemEhErro do ViewModel. -->
+    <Style x:Key="TextoMensagem" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource CorSucesso}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="Margin" Value="0,14,0,0" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding MensagemEhErro}" Value="True">
+                <Setter Property="Foreground" Value="{StaticResource CorPerigo}" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
     <Style x:Key="TituloTela" TargetType="TextBlock">
         <Setter Property="FontSize" Value="24" />
         <Setter Property="FontWeight" Value="Bold" />

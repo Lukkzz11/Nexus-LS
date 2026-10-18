@@ -18,4 +18,7 @@ public partial class MainViewModel : ObservableObject
 
     [RelayCommand]
     private void IrParaProdutos() => TelaAtual = new ProdutosViewModel(Servicos.Produtos);
+
+    [RelayCommand]
+    private void IrParaEstoque() => TelaAtual = new EstoqueViewModel(Servicos.Produtos, Servicos.Estoque);
 }

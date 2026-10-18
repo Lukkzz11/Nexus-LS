@@ -154,18 +154,7 @@
                         Command="{Binding AlternarAtivoCommand}"
                         Visibility="{Binding EstaEditando, Converter={StaticResource BoolVis}}" />
 
-                <TextBlock Text="{Binding Mensagem}" TextWrapping="Wrap" Margin="0,14,0,0" FontWeight="SemiBold">
-                    <TextBlock.Style>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="Foreground" Value="{StaticResource CorSucesso}" />
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding MensagemEhErro}" Value="True">
-                                    <Setter Property="Foreground" Value="{StaticResource CorPerigo}" />
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </TextBlock.Style>
-                </TextBlock>
+                <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" />
             </StackPanel>
         </Border>
     </Grid>

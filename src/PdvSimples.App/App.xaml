@@ -13,12 +13,16 @@
 
             <conv:CentavosConverter x:Key="Centavos" />
             <conv:BoolParaTextoConverter x:Key="BoolTexto" />
+            <conv:TipoMovimentacaoConverter x:Key="TipoMov" />
             <BooleanToVisibilityConverter x:Key="BoolVis" />
 
             <!-- Regra do MVVM no WPF: quando a janela mostra um ViewModel, o WPF procura aqui
                  qual View (tela) desenhar para ele. Assim o ViewModel nunca conhece a tela. -->
             <DataTemplate DataType="{x:Type vm:ProdutosViewModel}">
                 <views:ProdutosView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:EstoqueViewModel}">
+                <views:EstoqueView />
             </DataTemplate>
         </ResourceDictionary>
     </Application.Resources>

@@ -7,7 +7,7 @@ using PdvSimples.Core.Services;
 
 namespace PdvSimples.App.ViewModels;
 
-public partial class ProdutosViewModel : ObservableObject
+public partial class ProdutosViewModel : ViewModelBase
 {
     private readonly ProdutoService _servico;
     private int _versaoBusca;
@@ -49,10 +49,6 @@ public partial class ProdutosViewModel : ObservableObject
     private bool _produtoAtivo = true;
 
     [ObservableProperty] private int _estoqueAtualEditando;
-
-    // ----- Mensagens -----
-    [ObservableProperty] private string _mensagem = "";
-    [ObservableProperty] private bool _mensagemEhErro;
 
     public bool EstaEditando => IdEditando is not null;
     public bool EhNovo => !EstaEditando;
@@ -165,34 +161,5 @@ public partial class ProdutosViewModel : ObservableObject
         if (!int.TryParse(texto, NumberStyles.None, CultureInfo.InvariantCulture, out var valor))
             throw new RegraDeNegocioException($"{campo} inválido. Use um número inteiro, sem sinal.");
         return valor;
-    }
-
-    /// <summary>Roda uma ação e transforma qualquer erro em mensagem na tela, em vez de fechar o programa.</summary>
-    private async Task ExecutarAsync(Func<Task> acao)
-    {
-        try
-        {
-            await acao();
-        }
-        catch (RegraDeNegocioException ex)
-        {
-            MostrarErro(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            MostrarErro("Erro inesperado: " + ex.Message);
-        }
-    }
-
-    private void MostrarSucesso(string texto)
-    {
-        MensagemEhErro = false;
-        Mensagem = texto;
-    }
-
-    private void MostrarErro(string texto)
-    {
-        MensagemEhErro = true;
-        Mensagem = texto;
     }
 }

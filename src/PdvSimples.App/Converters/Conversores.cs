@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Windows.Data;
+using PdvSimples.Core.Models;
 using PdvSimples.Core.Services;
 
 namespace PdvSimples.App.Converters;
@@ -12,6 +13,23 @@ public class CentavosConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
         value is long centavos ? Dinheiro.Formatar(centavos) : string.Empty;
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}
+
+/// <summary>Mostra o tipo de movimentação em português ("CancelamentoVenda" -> "Cancelamento de venda").</summary>
+public class TipoMovimentacaoConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => value switch
+    {
+        TipoMovimentacao.Entrada => "Entrada",
+        TipoMovimentacao.Perda => "Perda",
+        TipoMovimentacao.Correcao => "Correção",
+        TipoMovimentacao.Venda => "Venda",
+        TipoMovimentacao.CancelamentoVenda => "Cancelamento de venda",
+        _ => string.Empty
+    };
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
         throw new NotSupportedException();
