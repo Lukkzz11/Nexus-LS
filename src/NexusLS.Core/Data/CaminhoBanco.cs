@@ -18,7 +18,13 @@ public static class CaminhoBanco
 
         var antigo = Path.Combine(RaizLocal, "PdvSimples", "pdv.db");
         if (!File.Exists(novo) && File.Exists(antigo))
-            File.Copy(antigo, novo);
+        {
+            // O SQLite pode ter dados ainda nos arquivos -wal e -shm (se o programa foi fechado à força);
+            // por isso os três vão juntos.
+            foreach (var sufixo in new[] { "", "-wal", "-shm" })
+                if (File.Exists(antigo + sufixo))
+                    File.Copy(antigo + sufixo, novo + sufixo);
+        }
 
         return novo;
     }
