@@ -47,8 +47,9 @@ public sealed class CapturaDeTelas : IDisposable
         await clientes.CadastrarAsync(new DadosCliente("Maria Souza"));
         await clientes.CadastrarAsync(new DadosCliente("Marcos Lima"));
 
+        var cupons = new CupomService(_banco.Fabrica, new ConfiguracaoService(_banco.Fabrica), new ImpressoraDeMentira());
         var vm = new PdvViewModel(produtos, new VendaService(_banco.Fabrica),
-            new RascunhoService(new RascunhoStore(Path.Combine(_pasta, "r.json")), _banco.Fabrica), clientes, TimeSpan.Zero);
+            new RascunhoService(new RascunhoStore(Path.Combine(_pasta, "r.json")), _banco.Fabrica), clientes, cupons, TimeSpan.Zero);
 
         async Task Espera(Func<bool> c) { for (var i = 0; i < 300 && !c(); i++) await Task.Delay(10); }
         void Tecla(params ComandoTecla[] ts) => Capturador.Rodar(() => { foreach (var t in ts) vm.ProcessarTecla(t); });
@@ -105,6 +106,25 @@ public sealed class CapturaDeTelas : IDisposable
         await Espera(() => vm.Etapa == EtapaPdv.Sucesso);
         Capturador.Salvar(vm, Path.Combine(saida, "10-sucesso.png"));
     }
+
+    [Fact]
+    public async Task Gera_a_tela_de_configuracoes()
+    {
+        var saida = Environment.GetEnvironmentVariable("NEXUSLS_PRINTS");
+        if (string.IsNullOrWhiteSpace(saida)) return;
+        Directory.CreateDirectory(saida);
+
+        var configuracao = new ConfiguracaoService(_banco.Fabrica);
+        await configuracao.SalvarAsync(new DadosLoja("Casa Nexus", "12.345.678/0001-90", "Rua das Flores, 123 - Centro",
+            "(11) 3333-4444", "Obrigado pela preferência! Volte sempre."));
+        var cupons = new CupomService(_banco.Fabrica, configuracao, new ImpressoraDeMentira());
+
+        ConfiguracoesViewModel? vm = null;
+        Capturador.Rodar(() => vm = new ConfiguracoesViewModel(configuracao, cupons));
+        for (var i = 0; i < 300 && vm!.NomeLoja != "Casa Nexus"; i++) await Task.Delay(10);
+
+        Capturador.SalvarConfiguracoes(vm!, Path.Combine(saida, "11-configuracoes.png"));
+    }
 }
 
 /// <summary>Uma thread própria de interface (STA) com o Application do programa carregado, só para desenhar.</summary>
@@ -134,7 +154,13 @@ internal static class Capturador
     /// <summary>Roda na thread da interface, como no programa de verdade (os ViewModels só mexem nas listas ali).</summary>
     public static void Rodar(Action acao) => Interface.Invoke(acao);
 
-    public static void Salvar(PdvViewModel vm, string caminho, int largura = 1400, int altura = 820)
+    public static void Salvar(PdvViewModel vm, string caminho, int largura = 1400, int altura = 820) =>
+        Desenhar(() => new PdvView { DataContext = vm }, caminho, largura, altura);
+
+    public static void SalvarConfiguracoes(ConfiguracoesViewModel vm, string caminho, int largura = 1400, int altura = 820) =>
+        Desenhar(() => new ConfiguracoesView { DataContext = vm }, caminho, largura, altura);
+
+    private static void Desenhar(Func<FrameworkElement> criarTela, string caminho, int largura, int altura)
     {
         Interface.Invoke(() =>
         {
@@ -153,7 +179,7 @@ internal static class Capturador
                 Content = new Border
                 {
                     Padding = new Thickness(20),
-                    Child = new PdvView { DataContext = vm }
+                    Child = criarTela()
                 }
             };
             janela.Show();

@@ -32,6 +32,9 @@
             <DataTemplate DataType="{x:Type vm:EstoqueViewModel}">
                 <views:EstoqueView />
             </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:ConfiguracoesViewModel}">
+                <views:ConfiguracoesView />
+            </DataTemplate>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

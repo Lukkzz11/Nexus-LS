@@ -9,11 +9,13 @@ namespace NexusLS.App.ViewModels;
 public partial class VendasViewModel : ViewModelBase
 {
     private readonly VendaService _vendas;
+    private readonly CupomService _cupons;
     private int _versao;
 
-    public VendasViewModel(VendaService vendas)
+    public VendasViewModel(VendaService vendas, CupomService cupons)
     {
         _vendas = vendas;
+        _cupons = cupons;
         _data = DateTime.Today; // campo direto: não dispara o carregamento duas vezes
         _ = CarregarAsync();
     }
@@ -56,6 +58,15 @@ public partial class VendasViewModel : ViewModelBase
                  + (canceladas > 0 ? $" · {canceladas} cancelada(s) (não somadas)" : "");
 
         if (idSelecionado is int id) Selecionada = Vendas.FirstOrDefault(v => v.Id == id);
+    });
+
+    /// <summary>Imprime de novo o cupom da venda selecionada (se a venda foi cancelada, o cupom sai marcado como cancelado).</summary>
+    [RelayCommand]
+    private Task ReimprimirCupomAsync() => ExecutarAsync(async () =>
+    {
+        if (Selecionada is not { } venda) return;
+        await _cupons.ImprimirAsync(venda.Id);
+        MostrarSucesso($"Cupom da venda #{venda.Id} enviado para a impressora.");
     });
 
     [RelayCommand(CanExecute = nameof(PodeCancelar))]

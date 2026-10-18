@@ -130,9 +130,12 @@
                     <TextBlock Margin="0,12,0,0" Foreground="{StaticResource CorPerigo}" FontWeight="SemiBold"
                                Text="{Binding Selecionada.DataCancelamento, StringFormat='Cancelada em dd/MM/yyyy HH:mm'}" />
 
-                    <Button Content="Cancelar venda" Style="{StaticResource BotaoPerigo}"
-                            HorizontalAlignment="Left" Margin="0,16,0,0"
-                            Command="{Binding CancelarVendaCommand}" />
+                    <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+                        <Button Content="Reimprimir cupom" Style="{StaticResource BotaoSecundario}"
+                                Command="{Binding ReimprimirCupomCommand}" />
+                        <Button Content="Cancelar venda" Style="{StaticResource BotaoPerigo}" Margin="8,0,0,0"
+                                Command="{Binding CancelarVendaCommand}" />
+                    </StackPanel>
                 </StackPanel>
 
                 <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" />

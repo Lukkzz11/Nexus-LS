@@ -12,7 +12,8 @@ namespace NexusLS.App.ViewModels;
 public partial class MainViewModel : ObservableObject
 {
     // O PDV é criado uma vez só: se o operador for olhar o estoque no meio de uma venda, o carrinho continua lá.
-    private readonly PdvViewModel _pdv = new(Servicos.Produtos, Servicos.Vendas, Servicos.Rascunho, Servicos.Clientes);
+    private readonly PdvViewModel _pdv =
+        new(Servicos.Produtos, Servicos.Vendas, Servicos.Rascunho, Servicos.Clientes, Servicos.Cupons);
 
     [ObservableProperty]
     private object? _telaAtual;
@@ -30,8 +31,11 @@ public partial class MainViewModel : ObservableObject
     private void IrParaProdutos() => TelaAtual = new ProdutosViewModel(Servicos.Produtos);
 
     [RelayCommand]
-    private void IrParaVendas() => TelaAtual = new VendasViewModel(Servicos.Vendas);
+    private void IrParaVendas() => TelaAtual = new VendasViewModel(Servicos.Vendas, Servicos.Cupons);
 
     [RelayCommand]
     private void IrParaEstoque() => TelaAtual = new EstoqueViewModel(Servicos.Produtos, Servicos.Estoque);
+
+    [RelayCommand]
+    private void IrParaConfiguracoes() => TelaAtual = new ConfiguracoesViewModel(Servicos.Configuracao, Servicos.Cupons);
 }

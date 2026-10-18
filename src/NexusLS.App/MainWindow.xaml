@@ -23,6 +23,8 @@
                         Command="{Binding IrParaProdutosCommand}" />
                 <Button Content="Estoque" Style="{StaticResource BotaoMenu}"
                         Command="{Binding IrParaEstoqueCommand}" />
+                <Button Content="Configurações" Style="{StaticResource BotaoMenu}"
+                        Command="{Binding IrParaConfiguracoesCommand}" />
             </StackPanel>
         </Border>
 

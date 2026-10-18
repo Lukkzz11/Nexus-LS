@@ -9,11 +9,17 @@ public record DadosLoja(
     string? Documento = null,
     string? Endereco = null,
     string? Telefone = null,
-    string? MensagemCupom = null);
+    string? MensagemCupom = null,
+    string? ImpressoraCupom = null,
+    int LarguraCupom = 42,
+    bool ImprimirCupomAoFinalizar = true);
 
 /// <summary>Dados da loja e do cupom. Só existe uma configuração; ela é criada na primeira leitura.</summary>
 public class ConfiguracaoService
 {
+    public const int LarguraMinima = 24;
+    public const int LarguraMaxima = 80;
+
     private readonly IDbContextFactory<PdvDbContext> _fabrica;
 
     public ConfiguracaoService(IDbContextFactory<PdvDbContext> fabrica) => _fabrica = fabrica;
@@ -34,6 +40,8 @@ public class ConfiguracaoService
     {
         if (string.IsNullOrWhiteSpace(dados.NomeLoja))
             throw new RegraDeNegocioException("Informe o nome da loja.");
+        if (dados.LarguraCupom < LarguraMinima || dados.LarguraCupom > LarguraMaxima)
+            throw new RegraDeNegocioException($"A largura do cupom deve ficar entre {LarguraMinima} e {LarguraMaxima} caracteres.");
 
         await ObterAsync(); // garante que a linha existe
         await using var db = await _fabrica.CreateDbContextAsync();
@@ -44,6 +52,9 @@ public class ConfiguracaoService
         config.Endereco = Limpar(dados.Endereco);
         config.Telefone = Limpar(dados.Telefone);
         config.MensagemCupom = Limpar(dados.MensagemCupom);
+        config.ImpressoraCupom = Limpar(dados.ImpressoraCupom);
+        config.LarguraCupom = dados.LarguraCupom;
+        config.ImprimirCupomAoFinalizar = dados.ImprimirCupomAoFinalizar;
 
         await db.SaveChangesAsync();
         return config;

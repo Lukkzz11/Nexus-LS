@@ -77,6 +77,7 @@ public class PdvDbContext : DbContext
             e.Property(c => c.Endereco).HasMaxLength(250);
             e.Property(c => c.Telefone).HasMaxLength(30);
             e.Property(c => c.MensagemCupom).HasMaxLength(250);
+            e.Property(c => c.ImpressoraCupom).HasMaxLength(200);
         });
     }
 }

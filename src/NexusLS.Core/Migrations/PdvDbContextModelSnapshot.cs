@@ -66,6 +66,16 @@ namespace NexusLS.Core.Migrations
                         .HasMaxLength(250)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("ImpressoraCupom")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("ImprimirCupomAoFinalizar")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("LarguraCupom")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("MensagemCupom")
                         .HasMaxLength(250)
                         .HasColumnType("TEXT");

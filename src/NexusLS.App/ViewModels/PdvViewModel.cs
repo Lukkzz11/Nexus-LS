@@ -28,6 +28,8 @@ public partial class PdvViewModel : ViewModelBase, IEditorCarrinho
     private readonly VendaService _vendas;
     private readonly RascunhoService _rascunho;
     private readonly ClienteService _clientes;
+    private readonly CupomService _cupons;
+    private int _ultimaVendaId;
 
     private Carrinho _carrinho = new();
 
@@ -54,13 +56,14 @@ public partial class PdvViewModel : ViewModelBase, IEditorCarrinho
     /// segurada) pule a confirmação da venda sem o operador ver. Os testes passam zero.
     /// </param>
     public PdvViewModel(ProdutoService produtos, VendaService vendas, RascunhoService rascunho, ClienteService clientes,
-        TimeSpan? tempoMinimoSucesso = null)
+        CupomService cupons, TimeSpan? tempoMinimoSucesso = null)
     {
         _tempoMinimoSucesso = tempoMinimoSucesso ?? TimeSpan.FromMilliseconds(400);
         _produtos = produtos;
         _vendas = vendas;
         _rascunho = rascunho;
         _clientes = clientes;
+        _cupons = cupons;
         Resultados.CollectionChanged += (_, _) => OnPropertyChanged(nameof(TemResultados));
         AtualizarOpcoesDesconto();
     }
@@ -79,7 +82,7 @@ public partial class PdvViewModel : ViewModelBase, IEditorCarrinho
     /// <summary>A tela define como perguntar "tem certeza?" ao operador (assim o ViewModel não depende de MessageBox).</summary>
     public Func<string, bool> Confirmar { get; set; } = _ => true;
 
-    /// <summary>A tela imprime o cupom da venda (etapa seguinte do projeto); por enquanto ninguém escuta.</summary>
+    /// <summary>O ViewModel pede para a tela mover o cursor (a tela é quem sabe mexer no foco).</summary>
     public event Action<AlvoFoco>? FocoSolicitado;
 
     // ================= Estado que a tela mostra =================
@@ -304,7 +307,7 @@ public partial class PdvViewModel : ViewModelBase, IEditorCarrinho
             case ComandoTecla.Enter:
                 if (DateTime.UtcNow - _sucessoDesde < _tempoMinimoSucesso) return true; // Enter apressado: engole
                 if (_sucessoSel.Opcao == OpcaoSucesso.NovaVenda) NovaVenda();
-                else ReimprimirCupom();
+                else _ = ExecutarOcupadoAsync(ReimprimirCupomAsync);
                 return true;
             case ComandoTecla.Esc: NovaVenda(); return true;
             default: return false;
@@ -672,9 +675,20 @@ public partial class PdvViewModel : ViewModelBase, IEditorCarrinho
         LimparCarrinho();
         _sucessoSel = new SelecaoSucesso();
         _sucessoDesde = DateTime.UtcNow;
+        _ultimaVendaId = venda.Id;
         AtualizarOpcoesSucesso();
         Mensagem = "";
         IrPara(EtapaPdv.Sucesso);
+
+        // O cupom sai DEPOIS da venda gravada: uma falha da impressora nunca desfaz nem bloqueia a venda.
+        try
+        {
+            if (await _cupons.ImprimirAoFinalizarAsync(venda.Id)) MostrarSucesso("Cupom enviado para a impressora.");
+        }
+        catch (Exception ex)
+        {
+            MostrarErro($"Venda finalizada, mas o cupom não foi impresso: {ex.Message} Use \"Reimprimir cupom\".");
+        }
     }
 
     // ================= Etapa: sucesso =================
@@ -697,8 +711,12 @@ public partial class PdvViewModel : ViewModelBase, IEditorCarrinho
         IrPara(EtapaPdv.Busca);
     }
 
-    private void ReimprimirCupom() =>
-        MostrarErro("A impressão do cupom chega na próxima etapa do projeto.");
+    /// <summary>Reimprime o cupom da venda que acabou de ser finalizada (mesmo com a impressão automática desligada).</summary>
+    private async Task ReimprimirCupomAsync()
+    {
+        await _cupons.ImprimirAsync(_ultimaVendaId);
+        MostrarSucesso("Cupom enviado para a impressora.");
+    }
 
     // ================= Rascunho =================
 

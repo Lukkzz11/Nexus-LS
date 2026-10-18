@@ -19,6 +19,9 @@ public sealed class FluxoPdvTeclado : IDisposable
     private readonly EstoqueService _estoque;
     private readonly ClienteService _clientes;
     private readonly RascunhoService _rascunho;
+    private readonly ConfiguracaoService _configuracao;
+    private readonly ImpressoraDeMentira _impressora = new();
+    private readonly CupomService _cupons;
     private readonly PdvViewModel _vm;
 
     private int _camisetaId;
@@ -29,12 +32,14 @@ public sealed class FluxoPdvTeclado : IDisposable
         _produtos = new ProdutoService(_banco.Fabrica);
         _estoque = new EstoqueService(_banco.Fabrica);
         _clientes = new ClienteService(_banco.Fabrica);
+        _configuracao = new ConfiguracaoService(_banco.Fabrica);
+        _cupons = new CupomService(_banco.Fabrica, _configuracao, _impressora);
         _rascunho = new RascunhoService(new RascunhoStore(Path.Combine(_pasta, "rascunho.json")), _banco.Fabrica);
         _vm = NovoVm();
     }
 
     private PdvViewModel NovoVm(TimeSpan? tempoMinimoSucesso = null) =>
-        new(_produtos, new VendaService(_banco.Fabrica), _rascunho, _clientes, tempoMinimoSucesso ?? TimeSpan.Zero);
+        new(_produtos, new VendaService(_banco.Fabrica), _rascunho, _clientes, _cupons, tempoMinimoSucesso ?? TimeSpan.Zero);
 
     public void Dispose()
     {
@@ -549,5 +554,85 @@ public sealed class FluxoPdvTeclado : IDisposable
         await novo.RestaurarRascunhoAsync();
 
         Assert.Empty(novo.Itens);
+    }
+
+    // ---------- cupom ----------
+
+    private async Task FinalizarVendaDeUmBoneAsync()
+    {
+        await AdicionarAsync("Boné", 0, 0);
+        Tecla(ComandoTecla.Enter, ComandoTecla.Enter, ComandoTecla.Enter);
+        await AteAsync(() => _vm.Etapa == EtapaPdv.Sucesso, "sucesso");
+    }
+
+    [Fact]
+    public async Task Ao_finalizar_o_cupom_sai_com_o_numero_da_venda_e_os_itens()
+    {
+        await PrepararAsync();
+
+        await FinalizarVendaDeUmBoneAsync();
+
+        var cupom = Assert.Single(_impressora.Impressos);
+        Assert.Contains("CUPOM NÃO FISCAL", cupom);
+        Assert.Contains("Venda nº 1", cupom);
+        Assert.Contains("Boné", cupom);
+        Assert.Contains("Cupom enviado", _vm.Mensagem);
+    }
+
+    [Fact]
+    public async Task Falha_da_impressora_nao_desfaz_a_venda_e_avisa_na_tela_de_sucesso()
+    {
+        await PrepararAsync();
+        _impressora.Falha = new InvalidOperationException("Impressora sem papel.");
+
+        await FinalizarVendaDeUmBoneAsync();
+
+        Assert.Equal(EtapaPdv.Sucesso, _vm.Etapa);
+        Assert.Single(Vendas());                              // a venda foi gravada
+        Assert.Equal(9, EstoqueDe(_boneId, Tamanhos.SemTamanho));
+        Assert.True(_vm.MensagemEhErro);
+        Assert.Contains("não foi impresso", _vm.Mensagem);
+        Assert.Contains("sem papel", _vm.Mensagem);
+    }
+
+    [Fact]
+    public async Task Reimprimir_cupom_na_tela_de_sucesso_imprime_de_novo_e_nao_sai_da_tela()
+    {
+        await PrepararAsync();
+        await FinalizarVendaDeUmBoneAsync();
+
+        Tecla(ComandoTecla.Esquerda, ComandoTecla.Enter);     // [Reimprimir cupom]
+        await AteAsync(() => _impressora.Impressos.Count == 2, "segunda impressão");
+
+        Assert.Equal(EtapaPdv.Sucesso, _vm.Etapa);
+        Assert.Equal(_impressora.Impressos[0], _impressora.Impressos[1]); // é o mesmo cupom
+        Assert.Single(Vendas());
+    }
+
+    [Fact]
+    public async Task Com_a_impressao_automatica_desligada_nao_imprime_mas_reimprimir_funciona()
+    {
+        await PrepararAsync();
+        await _configuracao.SalvarAsync(new DadosLoja("Loja", ImprimirCupomAoFinalizar: false));
+
+        await FinalizarVendaDeUmBoneAsync();
+        Assert.Empty(_impressora.Impressos);
+
+        Tecla(ComandoTecla.Esquerda, ComandoTecla.Enter);
+        await AteAsync(() => _impressora.Impressos.Count == 1, "reimpressão");
+    }
+
+    [Fact]
+    public async Task O_cupom_leva_os_dados_da_loja_salvos_em_Configuracoes()
+    {
+        await PrepararAsync();
+        await _configuracao.SalvarAsync(new DadosLoja("Casa Nexus", "12.345.678/0001-90", MensagemCupom: "Volte sempre!"));
+
+        await FinalizarVendaDeUmBoneAsync();
+
+        var cupom = Assert.Single(_impressora.Impressos);
+        Assert.Contains("Casa Nexus", cupom);
+        Assert.Contains("12.345.678/0001-90", cupom);
+        Assert.Contains("Volte sempre!", cupom);
     }
 }
