@@ -17,73 +17,109 @@ public class VendaService
     }
 
     /// <summary>
-    /// Grava a venda e dá baixa no estoque NA MESMA TRANSAÇÃO. Uma transação é um "tudo ou nada":
-    /// se qualquer passo falhar, o banco volta ao estado anterior e nada fica pela metade.
+    /// Grava a venda e dá baixa no estoque (por produto e tamanho) NA MESMA TRANSAÇÃO. Uma transação é um
+    /// "tudo ou nada": se qualquer passo falhar, o banco volta ao estado anterior e nada fica pela metade.
     /// </summary>
     public async Task<Venda> FinalizarAsync(PedidoVenda pedido)
     {
-        if (pedido.Itens.Count == 0)
-            throw new RegraDeNegocioException("O carrinho está vazio.");
-        if (pedido.Itens.Any(i => i.Quantidade <= 0))
-            throw new RegraDeNegocioException("A quantidade de cada item deve ser maior que zero.");
+        // 1) Validações que não dependem do banco.
+        ValidarPedido(pedido);
 
-        // Se o mesmo produto aparecer em duas linhas, soma as quantidades.
-        var quantidades = pedido.Itens
-            .GroupBy(i => i.ProdutoId)
-            .ToDictionary(g => g.Key, g => g.Sum(i => i.Quantidade));
+        // Linhas iguais (mesmo produto, tamanho e preço) viram uma só, somando as quantidades.
+        // Linha com total editado nunca se junta a outra: o total vale para aquela linha.
+        var grupos = pedido.Itens
+            .Select((item, indice) => (item, indice))
+            .GroupBy(x => (
+                x.item.ProdutoId,
+                Tamanho: NomeTamanho(x.item.Tamanho),
+                x.item.PrecoUnitarioCentavos,
+                x.item.TotalLinhaCentavos,
+                Separador: x.item.TotalLinhaCentavos is null ? -1 : x.indice))
+            .Select(g => (Chave: g.Key, Quantidade: g.Sum(x => x.item.Quantidade)))
+            .ToList();
 
         await using var db = await _fabrica.CreateDbContextAsync();
         await using var transacao = await db.Database.BeginTransactionAsync();
 
-        var ids = quantidades.Keys.ToList();
+        var ids = grupos.Select(g => g.Chave.ProdutoId).Distinct().ToList();
         var produtos = await db.Produtos.Where(p => ids.Contains(p.Id)).ToDictionaryAsync(p => p.Id);
-        // Nesta etapa a venda ainda sai da linha "Sem tamanho"; a escolha do tamanho entra na próxima etapa.
-        var semTamanho = await db.TamanhosProduto
-            .Where(t => ids.Contains(t.ProdutoId) && t.Tamanho == Tamanhos.SemTamanho)
-            .ToDictionaryAsync(t => t.ProdutoId);
+        var linhas = await db.TamanhosProduto.Where(t => ids.Contains(t.ProdutoId)).ToListAsync();
 
-        var venda = new Venda { DataHora = _agora(), FormaPagamento = pedido.FormaPagamento };
-        var faltas = new List<string>();
-
-        foreach (var (produtoId, quantidade) in quantidades)
+        // 2) Produto e tamanho precisam existir; o produto precisa estar ativo.
+        foreach (var (chave, _) in grupos)
         {
-            if (!produtos.TryGetValue(produtoId, out var produto))
+            if (!produtos.TryGetValue(chave.ProdutoId, out var produto))
                 throw new RegraDeNegocioException("Produto do carrinho não encontrado.");
             if (!produto.Ativo)
                 throw new RegraDeNegocioException($"O produto \"{produto.Nome}\" está desativado.");
-            var disponivel = semTamanho.TryGetValue(produtoId, out var linha) ? linha.Estoque : 0;
-            if (disponivel < quantidade)
+            if (!linhas.Any(t => t.ProdutoId == chave.ProdutoId && t.Tamanho == chave.Tamanho))
+                throw new RegraDeNegocioException($"O produto \"{produto.Nome}\" não tem o tamanho {chave.Tamanho}.");
+        }
+
+        // 3) Estoque: soma o que foi pedido de cada produto+tamanho (mesmo em linhas com preços diferentes).
+        var faltas = new List<string>();
+        foreach (var demanda in grupos.GroupBy(g => (g.Chave.ProdutoId, g.Chave.Tamanho)))
+        {
+            var pedidoTotal = demanda.Sum(g => g.Quantidade);
+            var linha = linhas.First(t => t.ProdutoId == demanda.Key.ProdutoId && t.Tamanho == demanda.Key.Tamanho);
+            if (linha.Estoque < pedidoTotal)
             {
-                faltas.Add($"\"{produto.Nome}\" (pedido: {quantidade}, em estoque: {disponivel})");
-                continue;
+                var onde = linha.EhSemTamanho ? "" : $" tamanho {linha.Tamanho}";
+                faltas.Add($"\"{produtos[demanda.Key.ProdutoId].Nome}\"{onde} (pedido: {pedidoTotal}, em estoque: {linha.Estoque})");
+            }
+        }
+        if (faltas.Count > 0)
+            throw new RegraDeNegocioException("Estoque insuficiente para: " + string.Join("; ", faltas) + ".");
+
+        // 4) Monta a venda.
+        var venda = new Venda
+        {
+            DataHora = _agora(),
+            FormaPagamento = pedido.FormaPagamento,
+            TabelaPreco = pedido.TabelaPreco,
+            Parcelas = pedido.Parcelas
+        };
+
+        foreach (var (chave, quantidade) in grupos)
+        {
+            var produto = produtos[chave.ProdutoId];
+            long total, unitario;
+
+            if (chave.TotalLinhaCentavos is long totalEditado)
+            {
+                total = totalEditado;
+                unitario = (long)Math.Round(total / (decimal)quantidade, MidpointRounding.AwayFromZero);
+            }
+            else
+            {
+                unitario = chave.PrecoUnitarioCentavos ?? produto.PrecoPara(pedido.TabelaPreco);
+                total = unitario * quantidade;
             }
 
             venda.Itens.Add(new ItemVenda
             {
                 ProdutoId = produto.Id,
-                NomeProduto = produto.Nome,                       // cópia do nome e do preço no momento da venda
-                Tamanho = Tamanhos.SemTamanho,
-                PrecoUnitarioCentavos = produto.PrecoVendaCentavos,
+                NomeProduto = produto.Nome,           // cópia do nome e do preço no momento da venda
+                Tamanho = chave.Tamanho,
+                PrecoUnitarioCentavos = unitario,
                 Quantidade = quantidade,
-                TotalCentavos = produto.PrecoVendaCentavos * quantidade
+                TotalCentavos = total
             });
         }
 
-        if (faltas.Count > 0)
-            throw new RegraDeNegocioException("Estoque insuficiente para: " + string.Join("; ", faltas) + ".");
-
         venda.SubtotalCentavos = venda.Itens.Sum(i => i.TotalCentavos);
-        CalcularPagamento(venda, pedido);
+        venda.ClienteId = await ValidarClienteAsync(db, pedido);
+        CalcularDescontoEPagamento(venda, pedido);
 
-        // 1º passo: grava a venda para o banco gerar o Id dela.
+        // 5) 1º passo: grava a venda para o banco gerar o Id dela.
         db.Vendas.Add(venda);
         await db.SaveChangesAsync();
 
-        // 2º passo: baixa o estoque e registra as movimentações ligadas à venda.
+        // 6) 2º passo: baixa o estoque do tamanho e do produto, e registra as movimentações ligadas à venda.
         foreach (var item in venda.Itens)
         {
             produtos[item.ProdutoId].EstoqueAtual -= item.Quantidade;
-            semTamanho[item.ProdutoId].Estoque -= item.Quantidade;
+            linhas.First(t => t.ProdutoId == item.ProdutoId && t.Tamanho == item.Tamanho).Estoque -= item.Quantidade;
             db.Movimentacoes.Add(new MovimentacaoEstoque
             {
                 ProdutoId = item.ProdutoId,
@@ -158,7 +194,7 @@ public class VendaService
         var fim = inicio.AddDays(1);
 
         await using var db = await _fabrica.CreateDbContextAsync();
-        return await db.Vendas.AsNoTracking().Include(v => v.Itens)
+        return await db.Vendas.AsNoTracking().Include(v => v.Itens).Include(v => v.Cliente)
             .Where(v => v.DataHora >= inicio && v.DataHora < fim)
             .OrderByDescending(v => v.DataHora).ThenByDescending(v => v.Id)
             .ToListAsync();
@@ -168,15 +204,80 @@ public class VendaService
     public static long TotalValido(IEnumerable<Venda> vendas) =>
         vendas.Where(v => !v.Cancelada).Sum(v => v.TotalCentavos);
 
-    private static void CalcularPagamento(Venda venda, PedidoVenda pedido)
+    // ================= Regras de apoio =================
+
+    /// <summary>Nulo/vazio/"sem tamanho" viram "Sem tamanho"; os demais ficam em maiúsculas (m -> M).</summary>
+    private static string NomeTamanho(string? tamanho)
     {
-        if (pedido.DescontoCentavos < 0)
+        var nome = tamanho?.Trim();
+        if (string.IsNullOrEmpty(nome) || string.Equals(nome, Tamanhos.SemTamanho, StringComparison.OrdinalIgnoreCase))
+            return Tamanhos.SemTamanho;
+        return nome.ToUpperInvariant();
+    }
+
+    private static void ValidarPedido(PedidoVenda pedido)
+    {
+        if (pedido.Itens.Count == 0)
+            throw new RegraDeNegocioException("O carrinho está vazio.");
+
+        foreach (var item in pedido.Itens)
+        {
+            if (item.Quantidade <= 0)
+                throw new RegraDeNegocioException("A quantidade de cada item deve ser maior que zero.");
+            if (item.PrecoUnitarioCentavos is < 0 || item.TotalLinhaCentavos is < 0)
+                throw new RegraDeNegocioException("O preço editado não pode ser negativo.");
+            if (item.PrecoUnitarioCentavos is not null && item.TotalLinhaCentavos is not null)
+                throw new RegraDeNegocioException("Edite o preço da unidade OU o total da linha, não os dois.");
+        }
+
+        if (pedido.FormaPagamento == FormaPagamento.CartaoCredito)
+        {
+            if (pedido.Parcelas is < 1 or > 4)
+                throw new RegraDeNegocioException("No cartão de crédito, as parcelas vão de 1 a 4.");
+        }
+        else if (pedido.Parcelas != 1)
+        {
+            throw new RegraDeNegocioException("Só o cartão de crédito pode ser parcelado.");
+        }
+    }
+
+    /// <summary>Confere o cliente. A venda a prazo exige cliente; nas demais ele é opcional.</summary>
+    private static async Task<int?> ValidarClienteAsync(PdvDbContext db, PedidoVenda pedido)
+    {
+        if (pedido.ClienteId is null)
+        {
+            if (pedido.FormaPagamento == FormaPagamento.APrazo)
+                throw new RegraDeNegocioException("A venda a prazo exige um cliente.");
+            return null;
+        }
+
+        var cliente = await db.Clientes.AsNoTracking().FirstOrDefaultAsync(c => c.Id == pedido.ClienteId)
+            ?? throw new RegraDeNegocioException("Cliente não encontrado.");
+        if (!cliente.Ativo)
+            throw new RegraDeNegocioException($"O cliente \"{cliente.Nome}\" está desativado.");
+        return cliente.Id;
+    }
+
+    private static void CalcularDescontoEPagamento(Venda venda, PedidoVenda pedido)
+    {
+        // Desconto: em R$ ou em %, nunca os dois. O % vira R$ (arredondado ao centavo) na hora da venda.
+        long desconto = pedido.DescontoCentavos;
+        if (pedido.DescontoPercentual is decimal percentual)
+        {
+            if (pedido.DescontoCentavos != 0)
+                throw new RegraDeNegocioException("Informe o desconto em R$ ou em %, não os dois.");
+            if (percentual < 0 || percentual > 100)
+                throw new RegraDeNegocioException("O desconto em % deve ficar entre 0 e 100.");
+            desconto = (long)Math.Round(venda.SubtotalCentavos * percentual / 100m, MidpointRounding.AwayFromZero);
+        }
+
+        if (desconto < 0)
             throw new RegraDeNegocioException("O desconto não pode ser negativo.");
-        if (pedido.DescontoCentavos > venda.SubtotalCentavos)
+        if (desconto > venda.SubtotalCentavos)
             throw new RegraDeNegocioException("O desconto não pode ser maior que o subtotal.");
 
-        venda.DescontoCentavos = pedido.DescontoCentavos;
-        venda.TotalCentavos = venda.SubtotalCentavos - pedido.DescontoCentavos;
+        venda.DescontoCentavos = desconto;
+        venda.TotalCentavos = venda.SubtotalCentavos - desconto;
 
         if (pedido.FormaPagamento == FormaPagamento.Dinheiro)
         {
@@ -190,7 +291,7 @@ public class VendaService
         }
         else
         {
-            venda.ValorRecebidoCentavos = null; // Pix e cartão: paga exatamente o total
+            venda.ValorRecebidoCentavos = null; // as outras formas pagam exatamente o total
             venda.TrocoCentavos = 0;
         }
     }
