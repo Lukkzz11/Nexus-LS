@@ -29,6 +29,9 @@
             <DataTemplate DataType="{x:Type vm:EstoqueLojaViewModel}">
                 <views:EstoqueLojaView />
             </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:MaisVendidosViewModel}">
+                <views:MaisVendidosView />
+            </DataTemplate>
             <DataTemplate DataType="{x:Type vm:ConfiguracoesViewModel}">
                 <views:ConfiguracoesView />
             </DataTemplate>

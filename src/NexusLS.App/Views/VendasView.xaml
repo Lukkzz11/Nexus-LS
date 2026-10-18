@@ -25,10 +25,20 @@
 
             <TextBlock Text="Caixa" Style="{StaticResource TituloTela}" Margin="0,0,0,14" />
 
-            <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
-                <TextBlock Text="Dia:" VerticalAlignment="Center" Margin="0,0,8,0" />
-                <DatePicker SelectedDate="{Binding Data}" Width="150" VerticalContentAlignment="Center" />
-                <TextBlock Text="{Binding Resumo}" VerticalAlignment="Center" Margin="20,0,0,0" FontWeight="SemiBold" />
+            <StackPanel Grid.Row="1" Margin="0,0,0,10">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Dia:" VerticalAlignment="Center" Margin="0,0,8,0" />
+                    <DatePicker SelectedDate="{Binding Data}" Width="150" VerticalContentAlignment="Center" />
+                    <Button Content="Exportar vendas (CSV)" Style="{StaticResource BotaoSecundario}" Margin="16,0,0,0"
+                            Padding="12,6" Command="{Binding ExportarVendasCommand}"
+                            ToolTip="Uma linha por venda, para abrir no Excel" />
+                    <Button Content="Exportar itens (CSV)" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0"
+                            Padding="12,6" Command="{Binding ExportarItensCommand}"
+                            ToolTip="Uma linha por item vendido, para abrir no Excel" />
+                </StackPanel>
+                <TextBlock Text="{Binding Resumo}" FontWeight="SemiBold" Margin="0,10,0,0" />
+                <TextBlock Text="{Binding ResumoFormas}" Foreground="{StaticResource CorTextoSuave}" Margin="0,2,0,0"
+                           TextWrapping="Wrap" />
             </StackPanel>
 
             <Border Grid.Row="2" Style="{StaticResource Painel}" Padding="0">

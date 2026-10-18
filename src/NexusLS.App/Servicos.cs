@@ -17,6 +17,7 @@ public static class Servicos
     public static VendaService Vendas { get; } = new(Fabrica);
     public static ClienteService Clientes { get; } = new(Fabrica);
     public static ConfiguracaoService Configuracao { get; } = new(Fabrica);
+    public static RelatorioService Relatorios { get; } = new(Fabrica);
     public static CupomService Cupons { get; } = new(Fabrica, Configuracao, new ImpressoraWindows());
     public static RascunhoService Rascunho { get; } = new(new RascunhoStore(RascunhoStore.CaminhoPadrao()), Fabrica);
 }

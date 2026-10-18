@@ -153,6 +153,49 @@ public sealed class CapturaDeTelas : IDisposable
         Capturador.SalvarEstoque(vm!, Path.Combine(saida, "12-estoque-produto.png"), 0);
         Capturador.SalvarEstoque(vm!, Path.Combine(saida, "13-estoque-tamanhos.png"), 1);
     }
+
+    [Fact]
+    public async Task Gera_as_telas_de_caixa_e_mais_vendidos()
+    {
+        var saida = Environment.GetEnvironmentVariable("NEXUSLS_PRINTS");
+        if (string.IsNullOrWhiteSpace(saida)) return;
+        Directory.CreateDirectory(saida);
+
+        var produtos = new ProdutoService(_banco.Fabrica);
+        var estoque = new EstoqueService(_banco.Fabrica);
+        var vendas = new VendaService(_banco.Fabrica);
+        var clientes = new ClienteService(_banco.Fabrica);
+        var camiseta = await produtos.CadastrarAsync(new DadosProduto("Camiseta Basica Algodao", null, 5990, 2000, 2), 0);
+        foreach (var t in new[] { "P", "M", "G" })
+        {
+            await produtos.AdicionarTamanhoAsync(camiseta.Id, t);
+            await estoque.AjustarAsync(camiseta.Id, TipoMovimentacao.Entrada, 50, null, t);
+        }
+        var bone = await produtos.CadastrarAsync(new DadosProduto("Bone Aba Reta", null, 2990, 800, 5), 100);
+        var maria = await clientes.CadastrarAsync(new DadosCliente("Maria Souza"));
+
+        await vendas.FinalizarAsync(new PedidoVenda(new[] { new ItemCarrinho(camiseta.Id, 2, "M"), new ItemCarrinho(bone.Id, 1) }, 0, FormaPagamento.Dinheiro, 20000));
+        await vendas.FinalizarAsync(new PedidoVenda(new[] { new ItemCarrinho(camiseta.Id, 1, "P") }, 0, FormaPagamento.Pix));
+        await vendas.FinalizarAsync(new PedidoVenda(new[] { new ItemCarrinho(bone.Id, 4) }, 0, FormaPagamento.CartaoCredito, Parcelas: 2));
+        await vendas.FinalizarAsync(new PedidoVenda(new[] { new ItemCarrinho(camiseta.Id, 3, "G") }, 1000, FormaPagamento.APrazo, ClienteId: maria.Id));
+        var cancelada = await vendas.FinalizarAsync(new PedidoVenda(new[] { new ItemCarrinho(bone.Id, 9) }, 0, FormaPagamento.Pix));
+        await vendas.CancelarAsync(cancelada.Id);
+
+        var cupons = new CupomService(_banco.Fabrica, new ConfiguracaoService(_banco.Fabrica), new ImpressoraDeMentira());
+        VendasViewModel? caixa = null;
+        MaisVendidosViewModel? ranking = null;
+        Capturador.Rodar(() =>
+        {
+            caixa = new VendasViewModel(vendas, cupons);
+            ranking = new MaisVendidosViewModel(new RelatorioService(_banco.Fabrica));
+        });
+        for (var i = 0; i < 300 && (caixa!.Vendas.Count < 5 || ranking!.Ranking.Count < 2); i++) await Task.Delay(10);
+        Capturador.Rodar(() => caixa!.Selecionada = caixa.Vendas.Last());
+        await Task.Delay(100);
+
+        Capturador.Desenhar(() => new VendasView { DataContext = caixa }, Path.Combine(saida, "14-caixa.png"), 1400, 820);
+        Capturador.Desenhar(() => new MaisVendidosView { DataContext = ranking }, Path.Combine(saida, "15-mais-vendidos.png"), 1400, 820);
+    }
 }
 
 /// <summary>Uma thread própria de interface (STA) com o Application do programa carregado, só para desenhar.</summary>
@@ -203,7 +246,7 @@ internal static class Capturador
     public static void SalvarConfiguracoes(ConfiguracoesViewModel vm, string caminho, int largura = 1400, int altura = 820) =>
         Desenhar(() => new ConfiguracoesView { DataContext = vm }, caminho, largura, altura);
 
-    private static void Desenhar(Func<FrameworkElement> criarTela, string caminho, int largura, int altura, Action<FrameworkElement>? ajustar = null)
+    internal static void Desenhar(Func<FrameworkElement> criarTela, string caminho, int largura, int altura, Action<FrameworkElement>? ajustar = null)
     {
         Interface.Invoke(() =>
         {

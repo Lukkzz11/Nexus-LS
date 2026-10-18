@@ -23,6 +23,12 @@ public partial class VendasViewModel : ViewModelBase
     /// <summary>A tela define como perguntar "tem certeza?" (ver PdvViewModel).</summary>
     public Func<string, bool> Confirmar { get; set; } = _ => true;
 
+    /// <summary>
+    /// A tela define como o operador escolhe onde salvar o arquivo (caixa "Salvar como"). Recebe o nome sugerido
+    /// e devolve o caminho escolhido, ou nulo se a pessoa cancelou.
+    /// </summary>
+    public Func<string, string?> EscolherArquivoParaSalvar { get; set; } = _ => null;
+
     public ObservableCollection<Venda> Vendas { get; } = new();
 
     [ObservableProperty] private DateTime? _data;
@@ -34,6 +40,7 @@ public partial class VendasViewModel : ViewModelBase
     private Venda? _selecionada;
 
     [ObservableProperty] private string _resumo = "";
+    [ObservableProperty] private string _resumoFormas = "";
 
     public bool TemSelecao => Selecionada is not null;
     public bool PodeCancelar => Selecionada is { Cancelada: false };
@@ -57,7 +64,33 @@ public partial class VendasViewModel : ViewModelBase
         Resumo = $"{validas} venda(s) · Total: {Dinheiro.Formatar(VendaService.TotalValido(lista))}"
                  + (canceladas > 0 ? $" · {canceladas} cancelada(s) (não somadas)" : "");
 
+        // Quanto entrou em cada forma de pagamento (útil para fechar o caixa: o dinheiro tem que bater com a gaveta).
+        ResumoFormas = string.Join("   ·   ", RelatorioService.ResumoPorForma(lista)
+            .Select(r => $"{SelecaoPagamento.Nome(r.Forma)}: {Dinheiro.Formatar(r.TotalCentavos)} ({r.Vendas})"));
+
         if (idSelecionado is int id) Selecionada = Vendas.FirstOrDefault(v => v.Id == id);
+    });
+
+    /// <summary>Salva as vendas do dia mostrado num CSV (uma linha por venda), para abrir no Excel.</summary>
+    [RelayCommand]
+    private Task ExportarVendasAsync() => ExportarAsync("vendas", ExportadorCsv.Vendas);
+
+    /// <summary>Salva os itens vendidos no dia num CSV (uma linha por item), para abrir no Excel.</summary>
+    [RelayCommand]
+    private Task ExportarItensAsync() => ExportarAsync("itens", ExportadorCsv.Itens);
+
+    private Task ExportarAsync(string tipo, Func<IEnumerable<Venda>, string> gerar) => ExecutarAsync(() =>
+    {
+        if (Vendas.Count == 0)
+            throw new RegraDeNegocioException("Não há vendas neste dia para exportar.");
+
+        var dia = (Data ?? DateTime.Today).ToString("yyyy-MM-dd");
+        var caminho = EscolherArquivoParaSalvar($"{tipo}-{dia}.csv");
+        if (caminho is null) return Task.CompletedTask; // a pessoa desistiu na caixa "Salvar como"
+
+        ExportadorCsv.Salvar(caminho, gerar(Vendas.ToList()));
+        MostrarSucesso($"Arquivo salvo: {caminho}");
+        return Task.CompletedTask;
     });
 
     /// <summary>Imprime de novo o cupom da venda selecionada (se a venda foi cancelada, o cupom sai marcado como cancelado).</summary>

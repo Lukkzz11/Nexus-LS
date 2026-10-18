@@ -14,6 +14,9 @@ public static class Dinheiro
     /// <summary>1250 -> "R$ 12,50"</summary>
     public static string Formatar(long centavos) => (centavos / 100m).ToString("C", PtBr);
 
+    /// <summary>123456 -> "1234,56": vírgula decimal, sem símbolo e sem ponto de milhar (para planilhas e CSV).</summary>
+    public static string FormatarSimples(long centavos) => (centavos / 100m).ToString("F2", PtBr);
+
     /// <summary>1250 -> "12,50" (sem símbolo, para preencher um campo de edição)</summary>
     public static string FormatarParaEdicao(long centavos) => (centavos / 100m).ToString("N2", PtBr);
 

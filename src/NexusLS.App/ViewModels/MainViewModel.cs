@@ -4,7 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 namespace NexusLS.App.ViewModels;
 
 /// <summary>Os itens do menu lateral que já têm tela. O menu destaca o item da tela aberta.</summary>
-public enum ItemMenu { Pdv, Caixa, EstoqueDaLoja, Configuracoes }
+public enum ItemMenu { Pdv, Caixa, MaisVendidos, EstoqueDaLoja, Configuracoes }
 
 /// <summary>
 /// ViewModel = a "lógica da tela". Ele guarda os dados que a tela mostra e os comandos dos botões,
@@ -24,12 +24,14 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(PdvAtivo))]
     [NotifyPropertyChangedFor(nameof(CaixaAtivo))]
+    [NotifyPropertyChangedFor(nameof(MaisVendidosAtivo))]
     [NotifyPropertyChangedFor(nameof(EstoqueAtivo))]
     [NotifyPropertyChangedFor(nameof(ConfiguracoesAtivo))]
     private ItemMenu _itemAtivo;
 
     public bool PdvAtivo => ItemAtivo == ItemMenu.Pdv;
     public bool CaixaAtivo => ItemAtivo == ItemMenu.Caixa;
+    public bool MaisVendidosAtivo => ItemAtivo == ItemMenu.MaisVendidos;
     public bool EstoqueAtivo => ItemAtivo == ItemMenu.EstoqueDaLoja;
     public bool ConfiguracoesAtivo => ItemAtivo == ItemMenu.Configuracoes;
 
@@ -44,6 +46,9 @@ public partial class MainViewModel : ObservableObject
 
     [RelayCommand]
     private void IrParaCaixa() => Abrir(new VendasViewModel(Servicos.Vendas, Servicos.Cupons), ItemMenu.Caixa);
+
+    [RelayCommand]
+    private void IrParaMaisVendidos() => Abrir(new MaisVendidosViewModel(Servicos.Relatorios), ItemMenu.MaisVendidos);
 
     [RelayCommand]
     private void IrParaEstoque() => Abrir(new EstoqueLojaViewModel(Servicos.Produtos, Servicos.Estoque), ItemMenu.EstoqueDaLoja);

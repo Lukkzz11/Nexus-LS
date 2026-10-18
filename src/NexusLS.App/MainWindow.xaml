@@ -1,4 +1,4 @@
-﻿<Window x:Class="NexusLS.App.MainWindow"
+<Window x:Class="NexusLS.App.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Nexus LS" Height="760" Width="1280" MinHeight="600" MinWidth="1000"
@@ -18,6 +18,13 @@
         <Style x:Key="MenuCaixa" TargetType="Button" BasedOn="{StaticResource BotaoMenu}">
             <Style.Triggers>
                 <DataTrigger Binding="{Binding CaixaAtivo}" Value="True">
+                    <Setter Property="Background" Value="{StaticResource CorMenuAtivo}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="MenuMaisVendidos" TargetType="Button" BasedOn="{StaticResource BotaoMenu}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding MaisVendidosAtivo}" Value="True">
                     <Setter Property="Background" Value="{StaticResource CorMenuAtivo}" />
                 </DataTrigger>
             </Style.Triggers>
@@ -52,6 +59,8 @@
                 <TextBlock Text="VENDAS" Style="{StaticResource SecaoMenu}" />
                 <Button Content="PDV" Style="{StaticResource MenuPdv}" Command="{Binding IrParaPdvCommand}" />
                 <Button Content="Caixa" Style="{StaticResource MenuCaixa}" Command="{Binding IrParaCaixaCommand}" />
+
+                <Button Content="Mais vendidos" Style="{StaticResource MenuMaisVendidos}" Command="{Binding IrParaMaisVendidosCommand}" />
 
                 <TextBlock Text="ESTOQUE" Style="{StaticResource SecaoMenu}" />
                 <Button Content="Estoque da loja" Style="{StaticResource MenuEstoque}" Command="{Binding IrParaEstoqueCommand}" />
