@@ -1,9 +1,0 @@
-<Solution>
-  <Folder Name="/src/">
-    <Project Path="src/PdvSimples.App/PdvSimples.App.csproj" />
-    <Project Path="src/PdvSimples.Core/PdvSimples.Core.csproj" />
-  </Folder>
-  <Folder Name="/tests/">
-    <Project Path="tests/PdvSimples.Tests/PdvSimples.Tests.csproj" />
-  </Folder>
-</Solution>

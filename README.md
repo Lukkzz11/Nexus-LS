@@ -1,4 +1,4 @@
-﻿# PDV Simples
+# Nexus LS
 
 PDV (frente de caixa) e controle de estoque simples para Windows, feito em C# com .NET e WPF.
 Projeto de aprendizado: sem login, sem internet, uma loja só.
@@ -39,20 +39,20 @@ Na tela Produtos: `Enter` ou `Ctrl+S` salva, `Ctrl+N` limpa para um novo. Na tel
 ## Estrutura do projeto
 
 ```
-PdvSimples.slnx
+NexusLS.slnx
 src/
-  PdvSimples.Core/       Regra de negócio, sem nenhuma referência à interface
+  NexusLS.Core/       Regra de negócio, sem nenhuma referência à interface
     Models/              Produto, Venda, ItemVenda, MovimentacaoEstoque e enums
     Data/                PdvDbContext (acesso ao banco)
     Migrations/          Histórico de versões da estrutura do banco
     Services/            ProdutoService, EstoqueService, VendaService, Dinheiro
-  PdvSimples.App/        Interface WPF (MVVM com CommunityToolkit.Mvvm)
+  NexusLS.App/        Interface WPF (MVVM com CommunityToolkit.Mvvm)
     Views/               Telas (XAML)
     ViewModels/          Lógica de cada tela
     Converters/          Conversores de exibição (centavos -> "R$ 12,50" etc.)
     Resources/           Cores e estilos
 tests/
-  PdvSimples.Tests/      Testes xUnit (SQLite em memória)
+  NexusLS.Tests/      Testes xUnit (SQLite em memória)
 ```
 
 A regra de negócio fica no `Core`, que **não conhece o WPF**. Por isso ela é testada sem abrir janela.
@@ -69,7 +69,7 @@ Na pasta do projeto:
 ```bash
 dotnet build
 dotnet test
-dotnet run --project src/PdvSimples.App
+dotnet run --project src/NexusLS.App
 ```
 
 Na primeira execução o banco é criado sozinho (`Database.Migrate()` ao abrir o programa).
@@ -79,24 +79,25 @@ Na primeira execução o banco é criado sozinho (`Database.Migrate()` ao abrir 
 Todos os dados ficam em **um único arquivo** SQLite:
 
 ```
-%LOCALAPPDATA%\PdvSimples\pdv.db
+%LOCALAPPDATA%\NexusLS\nexus.db
 ```
 
-Normalmente `C:\Users\<seu usuário>\AppData\Local\PdvSimples\pdv.db`. Para abrir a pasta, cole `%LOCALAPPDATA%\PdvSimples` na barra de endereço do Explorer.
+Normalmente `C:\Users\<seu usuário>\AppData\Local\NexusLS\nexus.db`. Para abrir a pasta, cole `%LOCALAPPDATA%\NexusLS` na barra de endereço do Explorer.
 
-- **Backup:** feche o programa e copie o `pdv.db` para um pendrive ou serviço de nuvem. Se houver arquivos `pdv.db-wal` e `pdv.db-shm` ao lado, copie junto.
-- **Restaurar:** com o programa fechado, substitua o `pdv.db` pela cópia.
-- **Começar do zero:** com o programa fechado, apague o `pdv.db`; um novo, vazio, é criado na próxima abertura.
+- **Backup:** feche o programa e copie o `nexus.db` para um pendrive ou serviço de nuvem. Se houver arquivos `nexus.db-wal` e `nexus.db-shm` ao lado, copie junto.
+- **Restaurar:** com o programa fechado, substitua o `nexus.db` pela cópia.
+- **Vindo da versão antiga (PDV Simples):** na primeira abertura o programa copia `%LOCALAPPDATA%\PdvSimples\pdv.db` para `nexus.db`. O arquivo antigo não é apagado.
+- **Começar do zero:** com o programa fechado, apague o `nexus.db`; um novo, vazio, é criado na próxima abertura.
 
 ## Gerar o executável
 
 Gera um único `.exe` que roda em qualquer Windows 64 bits, **sem precisar instalar o .NET**:
 
 ```bash
-dotnet publish src/PdvSimples.App -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publicar
+dotnet publish src/NexusLS.App -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publicar
 ```
 
-O resultado é `publicar\PdvSimples.App.exe` (cerca de 140 MB, porque leva o .NET dentro). Copie esse arquivo para o computador do caixa e crie um atalho na Área de Trabalho. Os dados ficam no `%LOCALAPPDATA%` do computador onde o programa roda.
+O resultado é `publicar\NexusLS.exe` (cerca de 140 MB, porque leva o .NET dentro). Copie esse arquivo para o computador do caixa e crie um atalho na Área de Trabalho. Os dados ficam no `%LOCALAPPDATA%` do computador onde o programa roda.
 
 Um instalador com assistente (`.msi`) não faz parte desta versão. Para um arquivo menor, troque `--self-contained true` por `false`; aí o computador de destino precisa ter o [.NET Desktop Runtime](https://dotnet.microsoft.com/download) 10.
 
@@ -106,7 +107,7 @@ Uma *migration* é um "passo de versão" da estrutura do banco. Depois de altera
 
 ```bash
 dotnet tool restore
-dotnet ef migrations add NomeDaMudanca --project src/PdvSimples.Core
+dotnet ef migrations add NomeDaMudanca --project src/NexusLS.Core
 ```
 
 O programa aplica as migrations pendentes sozinho ao abrir.

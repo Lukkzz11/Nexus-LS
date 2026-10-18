@@ -1,0 +1,141 @@
+<UserControl x:Class="NexusLS.App.Views.EstoqueView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <UserControl.Resources>
+        <!-- Estilo reaproveitado pelas colunas numéricas: alinha à direita -->
+        <Style x:Key="ColunaNumero" TargetType="TextBlock">
+            <Setter Property="HorizontalAlignment" Value="Right" />
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="16" />
+            <ColumnDefinition Width="370" />
+        </Grid.ColumnDefinitions>
+
+        <!-- ===== Lista e histórico ===== -->
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="2*" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Text="Estoque" Style="{StaticResource TituloTela}" Margin="0,0,0,14" />
+
+            <Grid Grid.Row="1" Margin="0,0,0,10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBox Text="{Binding Busca, UpdateSourceTrigger=PropertyChanged}"
+                         ToolTip="Buscar por nome ou código de barras" />
+                <CheckBox Grid.Column="1" Content="Somente abaixo do mínimo" Margin="16,0,0,0"
+                          VerticalAlignment="Center"
+                          IsChecked="{Binding SomenteAbaixoDoMinimo}" />
+            </Grid>
+
+            <Border Grid.Row="2" Background="{StaticResource CorAlerta}" CornerRadius="6" Padding="12,8"
+                    Margin="0,0,0,10"
+                    Visibility="{Binding TemAlerta, Converter={StaticResource BoolVis}}">
+                <TextBlock Text="{Binding TextoAlerta}" FontWeight="SemiBold" />
+            </Border>
+
+            <Border Grid.Row="3" Style="{StaticResource Painel}" Padding="0">
+                <DataGrid ItemsSource="{Binding Produtos}"
+                          SelectedItem="{Binding Selecionado, Mode=TwoWay}"
+                          AutoGenerateColumns="False" IsReadOnly="True"
+                          SelectionMode="Single" SelectionUnit="FullRow"
+                          CanUserAddRows="False" CanUserDeleteRows="False"
+                          HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                          HorizontalGridLinesBrush="#E5E7EB" BorderThickness="0"
+                          Background="White" RowHeight="36">
+                    <DataGrid.RowStyle>
+                        <Style TargetType="DataGridRow">
+                            <Setter Property="Background" Value="White" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding EstoqueBaixo}" Value="True">
+                                    <Setter Property="Background" Value="{StaticResource CorAlerta}" />
+                                </DataTrigger>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="{StaticResource CorSelecao}" />
+                                    <Setter Property="Foreground" Value="{StaticResource CorTexto}" />
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGrid.RowStyle>
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Código" Binding="{Binding CodigoBarras, Mode=OneWay}" Width="140" />
+                        <DataGridTextColumn Header="Produto" Binding="{Binding Nome, Mode=OneWay}" Width="*" />
+                        <DataGridTextColumn Header="Estoque" Binding="{Binding EstoqueAtual, Mode=OneWay}" Width="90"
+                                            ElementStyle="{StaticResource ColunaNumero}" />
+                        <DataGridTextColumn Header="Mínimo" Binding="{Binding EstoqueMinimo, Mode=OneWay}" Width="80"
+                                            ElementStyle="{StaticResource ColunaNumero}" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+
+            <TextBlock Grid.Row="4" Text="Histórico do produto selecionado" FontWeight="SemiBold" Margin="0,14,0,6" />
+
+            <Border Grid.Row="5" Style="{StaticResource Painel}" Padding="0">
+                <DataGrid ItemsSource="{Binding Movimentacoes}"
+                          AutoGenerateColumns="False" IsReadOnly="True" IsHitTestVisible="True"
+                          SelectionMode="Single" CanUserAddRows="False"
+                          HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                          HorizontalGridLinesBrush="#E5E7EB" BorderThickness="0"
+                          Background="White" RowHeight="32">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Data" Width="140"
+                                            Binding="{Binding DataHora, Mode=OneWay, StringFormat='dd/MM/yyyy HH:mm'}" />
+                        <DataGridTextColumn Header="Tipo" Width="170"
+                                            Binding="{Binding Tipo, Mode=OneWay, Converter={StaticResource TipoMov}}" />
+                        <DataGridTextColumn Header="Qtd." Width="70"
+                                            Binding="{Binding Quantidade, Mode=OneWay, StringFormat='{}{0:+#;-#;0}'}"
+                                            ElementStyle="{StaticResource ColunaNumero}" />
+                        <DataGridTextColumn Header="Motivo" Binding="{Binding Motivo, Mode=OneWay}" Width="*" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+        </Grid>
+
+        <!-- ===== Ajuste ===== -->
+        <Border Grid.Column="2" Style="{StaticResource Painel}" VerticalAlignment="Top">
+            <StackPanel>
+                <TextBlock Text="Ajustar estoque" FontSize="18" FontWeight="SemiBold" />
+                <TextBlock Text="{Binding TextoProduto}" TextWrapping="Wrap" Margin="0,8,0,0"
+                           Foreground="{StaticResource CorTextoSuave}" />
+
+                <StackPanel IsEnabled="{Binding TemSelecao}">
+                    <TextBlock Text="Tipo" Style="{StaticResource Rotulo}" />
+                    <ComboBox ItemsSource="{Binding Opcoes}" DisplayMemberPath="Nome"
+                              SelectedItem="{Binding TipoSelecionado}" Padding="8,7" />
+
+                    <TextBlock Text="{Binding RotuloQuantidade}" Style="{StaticResource Rotulo}" />
+                    <TextBox Text="{Binding QuantidadeTexto, UpdateSourceTrigger=PropertyChanged}">
+                        <TextBox.InputBindings>
+                            <KeyBinding Key="Enter" Command="{Binding AplicarCommand}" />
+                        </TextBox.InputBindings>
+                    </TextBox>
+
+                    <TextBlock Text="Motivo (obrigatório para perda e correção)" Style="{StaticResource Rotulo}" />
+                    <TextBox Text="{Binding Motivo, UpdateSourceTrigger=PropertyChanged}">
+                        <TextBox.InputBindings>
+                            <KeyBinding Key="Enter" Command="{Binding AplicarCommand}" />
+                        </TextBox.InputBindings>
+                    </TextBox>
+
+                    <Button Content="Aplicar ajuste (Enter)" Style="{StaticResource BotaoPrimario}"
+                            Command="{Binding AplicarCommand}" HorizontalAlignment="Left" Margin="0,20,0,0" />
+                </StackPanel>
+
+                <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" />
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>
