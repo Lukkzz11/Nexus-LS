@@ -19,8 +19,13 @@ public sealed class BancoDeTeste : IDisposable
         db.Database.Migrate();
     }
 
-    public PdvDbContext CriarContexto() =>
-        new(new DbContextOptionsBuilder<PdvDbContext>().UseSqlite(_conexao).Options);
+    private DbContextOptions<PdvDbContext> Opcoes =>
+        new DbContextOptionsBuilder<PdvDbContext>().UseSqlite(_conexao).Options;
+
+    /// <summary>Fábrica que entrega contextos novos sobre a mesma conexão (usada pelos serviços).</summary>
+    public FabricaContexto Fabrica => new(Opcoes);
+
+    public PdvDbContext CriarContexto() => new(Opcoes);
 
     public void Dispose() => _conexao.Dispose();
 }
