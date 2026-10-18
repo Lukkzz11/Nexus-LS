@@ -1,9 +1,25 @@
 ﻿<Application x:Class="PdvSimples.App.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:PdvSimples.App"
+             xmlns:conv="clr-namespace:PdvSimples.App.Converters"
+             xmlns:vm="clr-namespace:PdvSimples.App.ViewModels"
+             xmlns:views="clr-namespace:PdvSimples.App.Views"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Resources/Estilos.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <conv:CentavosConverter x:Key="Centavos" />
+            <conv:BoolParaTextoConverter x:Key="BoolTexto" />
+            <BooleanToVisibilityConverter x:Key="BoolVis" />
+
+            <!-- Regra do MVVM no WPF: quando a janela mostra um ViewModel, o WPF procura aqui
+                 qual View (tela) desenhar para ele. Assim o ViewModel nunca conhece a tela. -->
+            <DataTemplate DataType="{x:Type vm:ProdutosViewModel}">
+                <views:ProdutosView />
+            </DataTemplate>
+        </ResourceDictionary>
     </Application.Resources>
 </Application>
