@@ -53,7 +53,7 @@
                           HorizontalGridLinesBrush="#E5E7EB" BorderThickness="0"
                           Background="White" RowHeight="36">
                     <DataGrid.RowStyle>
-                        <Style TargetType="DataGridRow">
+                        <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
                             <Setter Property="Background" Value="White" />
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding Ativo}" Value="False">

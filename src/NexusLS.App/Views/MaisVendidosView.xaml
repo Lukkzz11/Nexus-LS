@@ -22,9 +22,9 @@
         <!-- Período e opções -->
         <WrapPanel Grid.Row="1" Margin="0,0,0,6">
             <TextBlock Text="De:" VerticalAlignment="Center" Margin="0,0,8,0" />
-            <DatePicker SelectedDate="{Binding De}" Width="150" VerticalContentAlignment="Center" />
+            <DatePicker SelectedDateFormat="Short" SelectedDate="{Binding De}" Width="150" VerticalContentAlignment="Center" />
             <TextBlock Text="até:" VerticalAlignment="Center" Margin="16,0,8,0" />
-            <DatePicker SelectedDate="{Binding Ate}" Width="150" VerticalContentAlignment="Center" />
+            <DatePicker SelectedDateFormat="Short" SelectedDate="{Binding Ate}" Width="150" VerticalContentAlignment="Center" />
 
             <Button Content="Hoje" Style="{StaticResource BotaoSecundario}" Margin="16,0,0,0" Padding="12,6"
                     Command="{Binding HojeCommand}" />

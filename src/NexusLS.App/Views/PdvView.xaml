@@ -190,7 +190,7 @@
                                             <Button Content="−" Width="38" Padding="0,2" Style="{StaticResource BotaoSecundario}"
                                                     Command="{Binding DataContext.DiminuirCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
                                                     CommandParameter="{Binding}" />
-                                            <TextBox Width="62" Margin="6,0" TextAlignment="Center" FontWeight="Bold"
+                                            <TextBox Width="68" Margin="6,0" TextAlignment="Center" FontWeight="Bold" FontSize="20" Padding="2,6"
                                                      Text="{Binding Quantidade, UpdateSourceTrigger=LostFocus}" />
                                             <Button Content="+" Width="38" Padding="0,2" Style="{StaticResource BotaoSecundario}"
                                                     Command="{Binding DataContext.AumentarCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"

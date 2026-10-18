@@ -92,6 +92,10 @@ tests/
 
 A regra de negócio fica no `Core`, que **não conhece o WPF**, e por isso é testada sem abrir janela. O fluxo do PDV (e as outras telas) é testado nos ViewModels, simulando as teclas.
 
+## Visual
+
+A interface usa a biblioteca **[WPF-UI](https://github.com/lepoco/wpfui)** (estilo Fluent, do Windows 11): barra de título e fundo Mica, caixas de texto, tabelas, listas, abas, calendário e ícones modernos. As cores e os estilos próprios (botões, cartões, menu) ficam em `src/NexusLS.App/Resources/Estilos.xaml`.
+
 ## Requisitos
 
 - Windows 10 ou 11

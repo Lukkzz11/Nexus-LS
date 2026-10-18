@@ -28,7 +28,7 @@
             <StackPanel Grid.Row="1" Margin="0,0,0,10">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="Dia:" VerticalAlignment="Center" Margin="0,0,8,0" />
-                    <DatePicker SelectedDate="{Binding Data}" Width="150" VerticalContentAlignment="Center" />
+                    <DatePicker SelectedDateFormat="Short" SelectedDate="{Binding Data}" Width="150" VerticalContentAlignment="Center" />
                     <Button Content="Exportar vendas (CSV)" Style="{StaticResource BotaoSecundario}" Margin="16,0,0,0"
                             Padding="12,6" Command="{Binding ExportarVendasCommand}"
                             ToolTip="Uma linha por venda, para abrir no Excel" />
@@ -51,7 +51,7 @@
                           HorizontalGridLinesBrush="#E5E7EB" BorderThickness="0"
                           Background="White" RowHeight="36">
                     <DataGrid.RowStyle>
-                        <Style TargetType="DataGridRow">
+                        <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
                             <Setter Property="Background" Value="White" />
                             <Style.Triggers>
                                 <!-- venda cancelada: cinza e riscada, mas continua na lista -->

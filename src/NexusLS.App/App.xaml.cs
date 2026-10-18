@@ -22,6 +22,10 @@ public partial class App : Application
         using (var db = new PdvDbContext(OpcoesBanco))
             db.Database.Migrate();
 
+        // Cor de destaque da biblioteca WPF-UI (foco dos campos, seleção, abas...) igual ao azul do Nexus LS.
+        Wpf.Ui.Appearance.ApplicationAccentColorManager.Apply(
+            System.Windows.Media.Color.FromRgb(0x25, 0x63, 0xEB), Wpf.Ui.Appearance.ApplicationTheme.Light);
+
         // Ao entrar em qualquer campo de texto pelo teclado (Tab), seleciona tudo:
         // quem digita por cima não precisa apagar o "0" que já estava lá.
         EventManager.RegisterClassHandler(typeof(System.Windows.Controls.TextBox),

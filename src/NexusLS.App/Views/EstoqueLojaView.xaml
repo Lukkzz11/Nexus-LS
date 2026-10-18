@@ -63,7 +63,7 @@
                           HorizontalGridLinesBrush="#E5E7EB" BorderThickness="0"
                           Background="White" RowHeight="36">
                     <DataGrid.RowStyle>
-                        <Style TargetType="DataGridRow">
+                        <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
                             <Setter Property="Background" Value="White" />
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding EstoqueBaixo}" Value="True">
@@ -235,7 +235,7 @@
                                               AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single"
                                               CanUserAddRows="False" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
                                               HorizontalGridLinesBrush="#E5E7EB" BorderBrush="{StaticResource CorBorda}"
-                                              Background="White" RowHeight="32" MaxHeight="190">
+                                              Background="White" RowHeight="32" MaxHeight="190" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                                         <DataGrid.Columns>
                                             <DataGridTextColumn Header="Tamanho" Binding="{Binding Tamanho, Mode=OneWay}" Width="*" />
                                             <DataGridTextColumn Header="Estoque" Binding="{Binding Estoque, Mode=OneWay}" Width="90"

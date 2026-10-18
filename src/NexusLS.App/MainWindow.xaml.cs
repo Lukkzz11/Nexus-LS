@@ -1,9 +1,12 @@
-﻿using System.Windows;
-using NexusLS.App.ViewModels;
+﻿using NexusLS.App.ViewModels;
+using Wpf.Ui.Controls;
 
 namespace NexusLS.App;
 
-public partial class MainWindow : Window
+/// <summary>
+/// A janela principal usa a FluentWindow da biblioteca WPF-UI: barra de título e fundo (Mica) no estilo do Windows 11.
+/// </summary>
+public partial class MainWindow : FluentWindow
 {
     public MainWindow()
     {

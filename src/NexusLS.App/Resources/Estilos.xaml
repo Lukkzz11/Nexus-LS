@@ -1,26 +1,30 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <!-- Cores num lugar só: para mudar o visual do programa, basta mexer aqui. -->
-    <SolidColorBrush x:Key="CorFundo" Color="#F3F4F6" />
+    <!--
+        Estilos do programa. Os controles em si (caixas de texto, tabelas, listas, abas, calendário...) vêm da biblioteca
+        WPF-UI, que desenha tudo no estilo do Windows 11. Aqui ficam as cores do Nexus LS e os estilos próprios
+        (botões, cartões, menu). Para mudar o visual, basta mexer nas cores abaixo.
+    -->
+    <SolidColorBrush x:Key="CorFundo" Color="#F3F3F3" />
     <SolidColorBrush x:Key="CorPainel" Color="White" />
-    <SolidColorBrush x:Key="CorMenu" Color="#111827" />
+    <SolidColorBrush x:Key="CorMenu" Color="#F3F3F3" />
     <SolidColorBrush x:Key="CorPrimaria" Color="#2563EB" />
-    <SolidColorBrush x:Key="CorTexto" Color="#111827" />
-    <SolidColorBrush x:Key="CorTextoSuave" Color="#6B7280" />
-    <SolidColorBrush x:Key="CorBorda" Color="#D1D5DB" />
-    <SolidColorBrush x:Key="CorPerigo" Color="#DC2626" />
-    <SolidColorBrush x:Key="CorSucesso" Color="#15803D" />
-    <SolidColorBrush x:Key="CorAlerta" Color="#FEF3C7" />
-    <SolidColorBrush x:Key="CorSelecao" Color="#DBEAFE" />
-    <SolidColorBrush x:Key="CorMenuAtivo" Color="#374151" />
+    <SolidColorBrush x:Key="CorTexto" Color="#1B1B1B" />
+    <SolidColorBrush x:Key="CorTextoSuave" Color="#6B6B6B" />
+    <SolidColorBrush x:Key="CorBorda" Color="#E3E3E3" />
+    <SolidColorBrush x:Key="CorPerigo" Color="#C42B1C" />
+    <SolidColorBrush x:Key="CorSucesso" Color="#0F7B0F" />
+    <SolidColorBrush x:Key="CorAlerta" Color="#FFF4CE" />
+    <SolidColorBrush x:Key="CorSelecao" Color="#DCEBFF" />
+    <SolidColorBrush x:Key="CorMenuAtivo" Color="White" />
 
     <!-- Título de grupo do menu lateral (VENDAS, ESTOQUE, GESTÃO) -->
     <Style x:Key="SecaoMenu" TargetType="TextBlock">
-        <Setter Property="Foreground" Value="#9CA3AF" />
-        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Foreground" Value="#8A8A8A" />
+        <Setter Property="FontSize" Value="11" />
         <Setter Property="FontWeight" Value="SemiBold" />
-        <Setter Property="Margin" Value="18,18,18,4" />
+        <Setter Property="Margin" Value="20,20,18,6" />
     </Style>
 
     <!-- Estilo base dos botões: cantos arredondados, realce ao passar o mouse e ao focar pelo teclado. -->
@@ -36,14 +40,17 @@
                             Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="6"
+                            CornerRadius="8"
                             Padding="{TemplateBinding Padding}">
                         <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                           VerticalAlignment="Center" />
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="borda" Property="Opacity" Value="0.88" />
+                            <Setter TargetName="borda" Property="Opacity" Value="0.9" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="borda" Property="Opacity" Value="0.75" />
                         </Trigger>
                         <Trigger Property="IsKeyboardFocused" Value="True">
                             <Setter TargetName="borda" Property="BorderBrush" Value="{StaticResource CorTexto}" />
@@ -66,7 +73,7 @@
 
     <Style x:Key="BotaoSecundario" TargetType="Button" BasedOn="{StaticResource BotaoBase}">
         <Setter Property="Background" Value="White" />
-        <Setter Property="BorderBrush" Value="{StaticResource CorBorda}" />
+        <Setter Property="BorderBrush" Value="#D6D6D6" />
         <Setter Property="Foreground" Value="{StaticResource CorTexto}" />
     </Style>
 
@@ -76,16 +83,42 @@
         <Setter Property="Foreground" Value="White" />
     </Style>
 
-    <Style x:Key="BotaoMenu" TargetType="Button" BasedOn="{StaticResource BotaoBase}">
+    <!-- Item do menu lateral: fundo transparente, cantos arredondados e um cinza leve ao passar o mouse. -->
+    <Style x:Key="BotaoMenu" TargetType="Button">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderBrush" Value="Transparent" />
-        <Setter Property="Foreground" Value="White" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Foreground" Value="{StaticResource CorTexto}" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="Padding" Value="12,10" />
+        <Setter Property="Margin" Value="10,1" />
+        <Setter Property="Cursor" Value="Hand" />
         <Setter Property="HorizontalContentAlignment" Value="Left" />
-        <Setter Property="Padding" Value="18,12" />
-        <Setter Property="Margin" Value="8,2" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="borda"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="8"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="borda" Property="Opacity" Value="0.75" />
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="borda" Property="BorderBrush" Value="{StaticResource CorPrimaria}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
-    <!-- RadioButton com cara de botão (forma de pagamento): o marcado fica azul. -->
+    <!-- RadioButton com cara de botão: o marcado fica azul. -->
     <Style x:Key="BotaoOpcao" TargetType="RadioButton">
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="FontWeight" Value="SemiBold" />
@@ -95,7 +128,7 @@
             <Setter.Value>
                 <ControlTemplate TargetType="RadioButton">
                     <Border x:Name="borda" Background="White" BorderBrush="{StaticResource CorBorda}"
-                            BorderThickness="1" CornerRadius="6" Padding="8,11">
+                            BorderThickness="1" CornerRadius="8" Padding="8,11">
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
                     <ControlTemplate.Triggers>
@@ -113,25 +146,19 @@
         </Setter>
     </Style>
 
-    <!-- Estilo "implícito": sem x:Key, vale para TODOS os TextBox do programa. -->
-    <Style TargetType="TextBox">
-        <Setter Property="Padding" Value="8,7" />
-        <Setter Property="BorderBrush" Value="{StaticResource CorBorda}" />
-        <Setter Property="VerticalContentAlignment" Value="Center" />
-    </Style>
-
     <Style x:Key="Rotulo" TargetType="TextBlock">
         <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />
         <Setter Property="FontSize" Value="13" />
         <Setter Property="Margin" Value="0,12,0,4" />
     </Style>
 
+    <!-- Cartão: caixa branca de cantos arredondados que agrupa uma parte da tela. -->
     <Style x:Key="Painel" TargetType="Border">
         <Setter Property="Background" Value="{StaticResource CorPainel}" />
         <Setter Property="BorderBrush" Value="{StaticResource CorBorda}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="CornerRadius" Value="8" />
-        <Setter Property="Padding" Value="16" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="Padding" Value="18" />
     </Style>
 
     <!-- Mensagem de sucesso (verde) ou erro (vermelho), conforme MensagemEhErro do ViewModel. -->
@@ -148,8 +175,8 @@
     </Style>
 
     <Style x:Key="TituloTela" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="24" />
-        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="FontSize" Value="26" />
+        <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="Foreground" Value="{StaticResource CorTexto}" />
     </Style>
 </ResourceDictionary>
