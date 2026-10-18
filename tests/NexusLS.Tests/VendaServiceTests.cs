@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using NexusLS.Core.Models;
 using NexusLS.Core.Services;
 using NexusLS.Tests.Infra;
@@ -160,7 +160,7 @@ public class VendaServiceTests
         using var c = await Cenario.CriarAsync();
 
         var venda = await c.Vendas.FinalizarAsync(
-            new PedidoVenda(new[] { new ItemCarrinho(c.CafeId, 2) }, 500, FormaPagamento.Cartao));
+            new PedidoVenda(new[] { new ItemCarrinho(c.CafeId, 2) }, 500, FormaPagamento.CartaoDebito));
 
         Assert.Equal(2000, venda.SubtotalCentavos);
         Assert.Equal(500, venda.DescontoCentavos);

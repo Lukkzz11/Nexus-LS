@@ -110,8 +110,21 @@
                 <TextBlock Text="Nome" Style="{StaticResource Rotulo}" />
                 <TextBox Text="{Binding Nome, UpdateSourceTrigger=PropertyChanged}" />
 
-                <TextBlock Text="Código de barras (opcional)" Style="{StaticResource Rotulo}" />
-                <TextBox Text="{Binding CodigoBarras, UpdateSourceTrigger=PropertyChanged}" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="Código de barras" Style="{StaticResource Rotulo}" />
+                        <TextBox Text="{Binding CodigoBarras, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="Referência" Style="{StaticResource Rotulo}" />
+                        <TextBox Text="{Binding Referencia, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
+                </Grid>
 
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -128,6 +141,9 @@
                         <TextBox Text="{Binding PrecoCusto, UpdateSourceTrigger=PropertyChanged}" />
                     </StackPanel>
                 </Grid>
+
+                <TextBlock Text="Preço de atacado (R$) · vazio = usa o de varejo" Style="{StaticResource Rotulo}" />
+                <TextBox Text="{Binding PrecoAtacado, UpdateSourceTrigger=PropertyChanged}" />
 
                 <TextBlock Text="Estoque mínimo" Style="{StaticResource Rotulo}" />
                 <TextBox Text="{Binding EstoqueMinimo, UpdateSourceTrigger=PropertyChanged}" />

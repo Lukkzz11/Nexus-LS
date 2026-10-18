@@ -51,7 +51,10 @@ public class FormaPagamentoConverter : IValueConverter
     {
         FormaPagamento.Dinheiro => "Dinheiro",
         FormaPagamento.Pix => "Pix",
-        FormaPagamento.Cartao => "Cartão",
+        FormaPagamento.CartaoDebito => "Cartão débito",
+        FormaPagamento.CartaoCredito => "Cartão crédito",
+        FormaPagamento.Cheque => "Cheque",
+        FormaPagamento.APrazo => "A prazo",
         _ => string.Empty
     };
 

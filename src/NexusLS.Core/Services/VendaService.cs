@@ -37,6 +37,10 @@ public class VendaService
 
         var ids = quantidades.Keys.ToList();
         var produtos = await db.Produtos.Where(p => ids.Contains(p.Id)).ToDictionaryAsync(p => p.Id);
+        // Nesta etapa a venda ainda sai da linha "Sem tamanho"; a escolha do tamanho entra na próxima etapa.
+        var semTamanho = await db.TamanhosProduto
+            .Where(t => ids.Contains(t.ProdutoId) && t.Tamanho == Tamanhos.SemTamanho)
+            .ToDictionaryAsync(t => t.ProdutoId);
 
         var venda = new Venda { DataHora = _agora(), FormaPagamento = pedido.FormaPagamento };
         var faltas = new List<string>();
@@ -47,9 +51,10 @@ public class VendaService
                 throw new RegraDeNegocioException("Produto do carrinho não encontrado.");
             if (!produto.Ativo)
                 throw new RegraDeNegocioException($"O produto \"{produto.Nome}\" está desativado.");
-            if (produto.EstoqueAtual < quantidade)
+            var disponivel = semTamanho.TryGetValue(produtoId, out var linha) ? linha.Estoque : 0;
+            if (disponivel < quantidade)
             {
-                faltas.Add($"\"{produto.Nome}\" (pedido: {quantidade}, em estoque: {produto.EstoqueAtual})");
+                faltas.Add($"\"{produto.Nome}\" (pedido: {quantidade}, em estoque: {disponivel})");
                 continue;
             }
 
@@ -57,6 +62,7 @@ public class VendaService
             {
                 ProdutoId = produto.Id,
                 NomeProduto = produto.Nome,                       // cópia do nome e do preço no momento da venda
+                Tamanho = Tamanhos.SemTamanho,
                 PrecoUnitarioCentavos = produto.PrecoVendaCentavos,
                 Quantidade = quantidade,
                 TotalCentavos = produto.PrecoVendaCentavos * quantidade
@@ -77,12 +83,14 @@ public class VendaService
         foreach (var item in venda.Itens)
         {
             produtos[item.ProdutoId].EstoqueAtual -= item.Quantidade;
+            semTamanho[item.ProdutoId].Estoque -= item.Quantidade;
             db.Movimentacoes.Add(new MovimentacaoEstoque
             {
                 ProdutoId = item.ProdutoId,
                 DataHora = venda.DataHora,
                 Tipo = TipoMovimentacao.Venda,
                 Quantidade = -item.Quantidade,
+                Tamanho = item.Tamanho,
                 Motivo = $"Venda #{venda.Id}",
                 VendaId = venda.Id
             });
@@ -107,16 +115,29 @@ public class VendaService
         var agora = _agora();
         var ids = venda.Itens.Select(i => i.ProdutoId).ToList();
         var produtos = await db.Produtos.Where(p => ids.Contains(p.Id)).ToDictionaryAsync(p => p.Id);
+        var grades = await db.TamanhosProduto.Where(t => ids.Contains(t.ProdutoId)).ToListAsync();
 
         foreach (var item in venda.Itens)
         {
             produtos[item.ProdutoId].EstoqueAtual += item.Quantidade;
+
+            // Devolve ao tamanho de onde saiu. Se o tamanho foi removido da grade depois da venda, ele é recriado.
+            var linha = grades.FirstOrDefault(t => t.ProdutoId == item.ProdutoId && t.Tamanho == item.Tamanho);
+            if (linha is null)
+            {
+                linha = new ProdutoTamanho { ProdutoId = item.ProdutoId, Tamanho = item.Tamanho, Estoque = 0 };
+                db.TamanhosProduto.Add(linha);
+                grades.Add(linha);
+            }
+            linha.Estoque += item.Quantidade;
+
             db.Movimentacoes.Add(new MovimentacaoEstoque
             {
                 ProdutoId = item.ProdutoId,
                 DataHora = agora,
                 Tipo = TipoMovimentacao.CancelamentoVenda,
                 Quantidade = item.Quantidade,
+                Tamanho = item.Tamanho,
                 Motivo = $"Cancelamento da venda #{venda.Id}",
                 VendaId = venda.Id
             });

@@ -17,6 +17,73 @@ namespace NexusLS.Core.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.13");
 
+            modelBuilder.Entity("NexusLS.Core.Models.Cliente", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("Ativo")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("DataCadastro")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Documento")
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Observacao")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Telefone")
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Nome");
+
+                    b.ToTable("Clientes");
+                });
+
+            modelBuilder.Entity("NexusLS.Core.Models.ConfiguracaoLoja", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Documento")
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Endereco")
+                        .HasMaxLength(250)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("MensagemCupom")
+                        .HasMaxLength(250)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NomeLoja")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Telefone")
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ConfiguracoesLoja");
+                });
+
             modelBuilder.Entity("NexusLS.Core.Models.ItemVenda", b =>
                 {
                     b.Property<int>("Id")
@@ -36,6 +103,11 @@ namespace NexusLS.Core.Migrations
 
                     b.Property<int>("Quantidade")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("Tamanho")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
 
                     b.Property<long>("TotalCentavos")
                         .HasColumnType("INTEGER");
@@ -68,6 +140,10 @@ namespace NexusLS.Core.Migrations
 
                     b.Property<int>("Quantidade")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("Tamanho")
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("Tipo")
                         .HasColumnType("INTEGER");
@@ -106,11 +182,18 @@ namespace NexusLS.Core.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
+                    b.Property<long>("PrecoAtacadoCentavos")
+                        .HasColumnType("INTEGER");
+
                     b.Property<long>("PrecoCustoCentavos")
                         .HasColumnType("INTEGER");
 
                     b.Property<long>("PrecoVendaCentavos")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("Referencia")
+                        .HasMaxLength(60)
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -118,7 +201,34 @@ namespace NexusLS.Core.Migrations
                         .IsUnique()
                         .HasFilter("\"CodigoBarras\" IS NOT NULL");
 
+                    b.HasIndex("Referencia");
+
                     b.ToTable("Produtos");
+                });
+
+            modelBuilder.Entity("NexusLS.Core.Models.ProdutoTamanho", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Estoque")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ProdutoId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Tamanho")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProdutoId", "Tamanho")
+                        .IsUnique();
+
+                    b.ToTable("TamanhosProduto");
                 });
 
             modelBuilder.Entity("NexusLS.Core.Models.Venda", b =>
@@ -128,6 +238,9 @@ namespace NexusLS.Core.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("Cancelada")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ClienteId")
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime?>("DataCancelamento")
@@ -142,7 +255,13 @@ namespace NexusLS.Core.Migrations
                     b.Property<int>("FormaPagamento")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("Parcelas")
+                        .HasColumnType("INTEGER");
+
                     b.Property<long>("SubtotalCentavos")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TabelaPreco")
                         .HasColumnType("INTEGER");
 
                     b.Property<long>("TotalCentavos")
@@ -155,6 +274,8 @@ namespace NexusLS.Core.Migrations
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ClienteId");
 
                     b.HasIndex("DataHora");
 
@@ -179,6 +300,30 @@ namespace NexusLS.Core.Migrations
                         .IsRequired();
 
                     b.Navigation("Produto");
+                });
+
+            modelBuilder.Entity("NexusLS.Core.Models.ProdutoTamanho", b =>
+                {
+                    b.HasOne("NexusLS.Core.Models.Produto", null)
+                        .WithMany("Tamanhos")
+                        .HasForeignKey("ProdutoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("NexusLS.Core.Models.Venda", b =>
+                {
+                    b.HasOne("NexusLS.Core.Models.Cliente", "Cliente")
+                        .WithMany()
+                        .HasForeignKey("ClienteId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Cliente");
+                });
+
+            modelBuilder.Entity("NexusLS.Core.Models.Produto", b =>
+                {
+                    b.Navigation("Tamanhos");
                 });
 
             modelBuilder.Entity("NexusLS.Core.Models.Venda", b =>

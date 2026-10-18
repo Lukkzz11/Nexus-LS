@@ -63,7 +63,7 @@ public partial class PdvViewModel : ViewModelBase
     // Os três RadioButtons da tela ligam nestas propriedades.
     public bool PagaDinheiro { get => Forma == FormaPagamento.Dinheiro; set { if (value) Forma = FormaPagamento.Dinheiro; } }
     public bool PagaPix { get => Forma == FormaPagamento.Pix; set { if (value) Forma = FormaPagamento.Pix; } }
-    public bool PagaCartao { get => Forma == FormaPagamento.Cartao; set { if (value) Forma = FormaPagamento.Cartao; } }
+    public bool PagaCartao { get => Forma == FormaPagamento.CartaoDebito; set { if (value) Forma = FormaPagamento.CartaoDebito; } }
 
     // ----- Valores calculados (a tela só exibe) -----
     public long SubtotalCentavos => Itens.Sum(i => i.TotalCentavos);
@@ -188,7 +188,7 @@ public partial class PdvViewModel : ViewModelBase
     }
 
     [RelayCommand] private void EscolherPix() => Forma = FormaPagamento.Pix;
-    [RelayCommand] private void EscolherCartao() => Forma = FormaPagamento.Cartao;
+    [RelayCommand] private void EscolherCartao() => Forma = FormaPagamento.CartaoDebito;
 
     /// <summary>F10: grava a venda. O VendaService valida tudo de novo e faz venda + baixa numa transação.</summary>
     [RelayCommand]

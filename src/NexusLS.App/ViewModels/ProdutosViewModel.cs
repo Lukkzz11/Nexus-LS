@@ -35,6 +35,8 @@ public partial class ProdutosViewModel : ViewModelBase
     [ObservableProperty] private string _codigoBarras = "";
     [ObservableProperty] private string _precoVenda = "";
     [ObservableProperty] private string _precoCusto = "";
+    [ObservableProperty] private string _referencia = "";
+    [ObservableProperty] private string _precoAtacado = "";
     [ObservableProperty] private string _estoqueMinimo = "0";
     [ObservableProperty] private string _estoqueInicial = "0";
 
@@ -69,6 +71,8 @@ public partial class ProdutosViewModel : ViewModelBase
         CodigoBarras = value.CodigoBarras ?? "";
         PrecoVenda = Dinheiro.FormatarParaEdicao(value.PrecoVendaCentavos);
         PrecoCusto = Dinheiro.FormatarParaEdicao(value.PrecoCustoCentavos);
+        Referencia = value.Referencia ?? "";
+        PrecoAtacado = value.PrecoAtacadoCentavos > 0 ? Dinheiro.FormatarParaEdicao(value.PrecoAtacadoCentavos) : "";
         EstoqueMinimo = value.EstoqueMinimo.ToString(CultureInfo.InvariantCulture);
         EstoqueAtualEditando = value.EstoqueAtual;
         ProdutoAtivo = value.Ativo;
@@ -98,6 +102,8 @@ public partial class ProdutosViewModel : ViewModelBase
         CodigoBarras = "";
         PrecoVenda = "";
         PrecoCusto = "";
+        Referencia = "";
+        PrecoAtacado = "";
         EstoqueMinimo = "0";
         EstoqueInicial = "0";
         EstoqueAtualEditando = 0;
@@ -149,10 +155,14 @@ public partial class ProdutosViewModel : ViewModelBase
         if (!string.IsNullOrWhiteSpace(PrecoCusto) && !Dinheiro.TentarConverter(PrecoCusto, out custo))
             throw new RegraDeNegocioException("Preço de custo inválido. Exemplo: 8,00");
 
+        long atacado = 0; // vazio = sem preço de atacado (vale o de varejo)
+        if (!string.IsNullOrWhiteSpace(PrecoAtacado) && !Dinheiro.TentarConverter(PrecoAtacado, out atacado))
+            throw new RegraDeNegocioException("Preço de atacado inválido. Exemplo: 9,00");
+
         var minimo = LerInteiro(EstoqueMinimo, "Estoque mínimo");
         var inicial = EhNovo ? LerInteiro(EstoqueInicial, "Estoque inicial") : 0;
 
-        return (new DadosProduto(Nome, CodigoBarras, venda, custo, minimo), inicial);
+        return (new DadosProduto(Nome, CodigoBarras, venda, custo, minimo, Referencia, atacado), inicial);
     }
 
     private static int LerInteiro(string texto, string campo)

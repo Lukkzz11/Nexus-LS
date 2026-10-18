@@ -16,6 +16,9 @@ public class MovimentacaoEstoque
     /// <summary>Variação com sinal: +10 entrada, -2 perda/venda.</summary>
     public int Quantidade { get; set; }
 
+    /// <summary>Tamanho afetado. Vazio (nulo) nos registros antigos, anteriores à grade de tamanhos.</summary>
+    public string? Tamanho { get; set; }
+
     public string? Motivo { get; set; }
 
     /// <summary>Preenchido quando a movimentação veio de uma venda (ou do cancelamento dela).</summary>

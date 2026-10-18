@@ -11,10 +11,12 @@ public sealed class BancoDeTeste : IDisposable
 {
     private readonly SqliteConnection _conexao;
 
-    public BancoDeTeste()
+    /// <param name="aplicarMigracoes">false = banco vazio, para testar a migração de dados antigos passo a passo.</param>
+    public BancoDeTeste(bool aplicarMigracoes = true)
     {
         _conexao = new SqliteConnection("DataSource=:memory:");
         _conexao.Open();
+        if (!aplicarMigracoes) return;
         using var db = CriarContexto();
         db.Database.Migrate();
     }

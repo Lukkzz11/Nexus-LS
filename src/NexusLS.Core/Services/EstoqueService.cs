@@ -11,12 +11,13 @@ public class EstoqueService
     public EstoqueService(IDbContextFactory<PdvDbContext> fabrica) => _fabrica = fabrica;
 
     /// <summary>
-    /// Ajuste manual de estoque. Regras para a quantidade:
+    /// Ajuste manual de estoque de UM tamanho (padrão: "Sem tamanho"). Regras para a quantidade:
     /// Entrada = positiva (soma); Perda = positiva (subtrai); Correção = com sinal (+/-), nunca zero.
-    /// Perda e Correção exigem motivo. O estoque nunca fica negativo.
-    /// Produto e movimentação são gravados juntos: ou grava os dois ou nenhum.
+    /// Perda e Correção exigem motivo. O estoque do tamanho nunca fica negativo.
+    /// Tamanho, total do produto e movimentação são gravados juntos: ou grava tudo ou nada.
     /// </summary>
-    public async Task<Produto> AjustarAsync(int produtoId, TipoMovimentacao tipo, int quantidade, string? motivo)
+    public async Task<Produto> AjustarAsync(
+        int produtoId, TipoMovimentacao tipo, int quantidade, string? motivo, string? tamanho = null)
     {
         int variacao = tipo switch
         {
@@ -35,14 +36,27 @@ public class EstoqueService
         if (tipo != TipoMovimentacao.Entrada && string.IsNullOrWhiteSpace(motivo))
             throw new RegraDeNegocioException("Informe o motivo do ajuste.");
 
+        var nomeTamanho = string.IsNullOrWhiteSpace(tamanho) ? Tamanhos.SemTamanho : tamanho.Trim();
+        if (!string.Equals(nomeTamanho, Tamanhos.SemTamanho, StringComparison.OrdinalIgnoreCase))
+            nomeTamanho = nomeTamanho.ToUpperInvariant();
+        else
+            nomeTamanho = Tamanhos.SemTamanho;
+
         await using var db = await _fabrica.CreateDbContextAsync();
         var produto = await db.Produtos.FindAsync(produtoId)
             ?? throw new RegraDeNegocioException("Produto não encontrado.");
+        var linha = await db.TamanhosProduto
+            .FirstOrDefaultAsync(t => t.ProdutoId == produtoId && t.Tamanho == nomeTamanho)
+            ?? throw new RegraDeNegocioException($"O produto \"{produto.Nome}\" não tem o tamanho {nomeTamanho}.");
 
-        if (produto.EstoqueAtual + variacao < 0)
+        if (linha.Estoque + variacao < 0)
+        {
+            var onde = linha.EhSemTamanho ? "" : $" no tamanho {linha.Tamanho}";
             throw new RegraDeNegocioException(
-                $"Estoque insuficiente: \"{produto.Nome}\" tem {produto.EstoqueAtual} unidade(s).");
+                $"Estoque insuficiente: \"{produto.Nome}\" tem {linha.Estoque} unidade(s){onde}.");
+        }
 
+        linha.Estoque += variacao;
         produto.EstoqueAtual += variacao;
         db.Movimentacoes.Add(new MovimentacaoEstoque
         {
@@ -50,10 +64,11 @@ public class EstoqueService
             DataHora = DateTime.Now,
             Tipo = tipo,
             Quantidade = variacao,
+            Tamanho = linha.Tamanho,
             Motivo = string.IsNullOrWhiteSpace(motivo) ? null : motivo.Trim()
         });
 
-        await db.SaveChangesAsync(); // uma única transação para as duas mudanças
+        await db.SaveChangesAsync(); // uma única transação para as três mudanças
         return produto;
     }
 
