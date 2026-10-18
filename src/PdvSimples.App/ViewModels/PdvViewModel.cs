@@ -36,6 +36,10 @@ public partial class PdvViewModel : ViewModelBase
     /// <summary>Evento: o ViewModel pede "volte o cursor para o campo de busca" e a tela atende.</summary>
     public event Action? FocoNaBuscaSolicitado;
 
+    public event Action? FocoNoValorRecebidoSolicitado;
+
+    public bool CarrinhoVazio => Itens.Count == 0;
+
     // ----- Busca -----
     [ObservableProperty] private string _busca = "";
     [ObservableProperty] private Produto? _resultadoSelecionado;
@@ -77,7 +81,8 @@ public partial class PdvViewModel : ViewModelBase
         get
         {
             if (Forma != FormaPagamento.Dinheiro) return "";
-            if (!Dinheiro.TentarConverter(ValorRecebidoTexto, out var recebido)) return "Informe o valor recebido";
+            if (string.IsNullOrWhiteSpace(ValorRecebidoTexto)) return "Sem troco (valor exato)";
+            if (!Dinheiro.TentarConverter(ValorRecebidoTexto, out var recebido)) return "Valor recebido inválido";
             var diferenca = recebido - TotalCentavos;
             return diferenca >= 0
                 ? $"Troco: {Dinheiro.Formatar(diferenca)}"
@@ -175,7 +180,13 @@ public partial class PdvViewModel : ViewModelBase
         if (ItemSelecionado is not null) RemoverItem(ItemSelecionado);
     }
 
-    [RelayCommand] private void EscolherDinheiro() => Forma = FormaPagamento.Dinheiro;
+    [RelayCommand]
+    private void EscolherDinheiro()
+    {
+        Forma = FormaPagamento.Dinheiro;
+        FocoNoValorRecebidoSolicitado?.Invoke(); // F6 já leva o cursor para digitar quanto o cliente deu
+    }
+
     [RelayCommand] private void EscolherPix() => Forma = FormaPagamento.Pix;
     [RelayCommand] private void EscolherCartao() => Forma = FormaPagamento.Cartao;
 
@@ -193,9 +204,13 @@ public partial class PdvViewModel : ViewModelBase
         long? recebido = null;
         if (Forma == FormaPagamento.Dinheiro)
         {
-            if (!Dinheiro.TentarConverter(ValorRecebidoTexto, out var valor))
-                throw new RegraDeNegocioException("Informe o valor recebido em dinheiro.");
-            recebido = valor;
+            // Campo vazio = cliente pagou o valor exato (sem troco), o caso mais comum.
+            if (string.IsNullOrWhiteSpace(ValorRecebidoTexto))
+                recebido = Math.Max(0, SubtotalCentavos - desconto);
+            else if (Dinheiro.TentarConverter(ValorRecebidoTexto, out var valor))
+                recebido = valor;
+            else
+                throw new RegraDeNegocioException("Valor recebido inválido. Exemplo: 50,00");
         }
 
         var pedido = new PedidoVenda(
@@ -310,6 +325,7 @@ public partial class PdvViewModel : ViewModelBase
     /// <summary>Avisa a tela que os valores calculados mudaram (eles não são [ObservableProperty], então é manual).</summary>
     private void AtualizarTotais()
     {
+        OnPropertyChanged(nameof(CarrinhoVazio));
         OnPropertyChanged(nameof(SubtotalTexto));
         OnPropertyChanged(nameof(TotalCentavos));
         OnPropertyChanged(nameof(TotalTexto));

@@ -22,6 +22,12 @@ public partial class App : Application
         using (var db = new PdvDbContext(OpcoesBanco))
             db.Database.Migrate();
 
+        // Ao entrar em qualquer campo de texto pelo teclado (Tab), seleciona tudo:
+        // quem digita por cima não precisa apagar o "0" que já estava lá.
+        EventManager.RegisterClassHandler(typeof(System.Windows.Controls.TextBox),
+            UIElement.GotKeyboardFocusEvent,
+            new System.Windows.Input.KeyboardFocusChangedEventHandler((s, _) => ((System.Windows.Controls.TextBox)s).SelectAll()));
+
         base.OnStartup(e);
     }
 }

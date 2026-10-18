@@ -26,6 +26,7 @@ public partial class PdvView : UserControl
                 MessageBox.Show(Window.GetWindow(this), mensagem, "PDV Simples",
                     MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
             vm.FocoNaBuscaSolicitado += AoPedirFoco;
+            vm.FocoNoValorRecebidoSolicitado += AoPedirFocoRecebido;
         }
         FocarBusca();
     }
@@ -34,10 +35,23 @@ public partial class PdvView : UserControl
     // Por isso desligamos o evento ao sair, senão Views antigas continuariam "escutando".
     private void AoDescarregar(object sender, RoutedEventArgs e)
     {
-        if (Vm is { } vm) vm.FocoNaBuscaSolicitado -= AoPedirFoco;
+        if (Vm is { } vm)
+        {
+            vm.FocoNaBuscaSolicitado -= AoPedirFoco;
+            vm.FocoNoValorRecebidoSolicitado -= AoPedirFocoRecebido;
+        }
     }
 
     private void AoPedirFoco() => Dispatcher.BeginInvoke(FocarBusca);
+
+    // Prioridade "Input": espera o campo aparecer na tela (ele some quando o pagamento não é dinheiro).
+    private void AoPedirFocoRecebido() => Dispatcher.BeginInvoke(
+        System.Windows.Threading.DispatcherPriority.Input,
+        () =>
+        {
+            CaixaRecebido.Focus();
+            CaixaRecebido.SelectAll();
+        });
 
     private void FocarBusca()
     {

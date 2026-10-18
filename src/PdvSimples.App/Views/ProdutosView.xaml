@@ -101,6 +101,10 @@
         <!-- ===== Formulário ===== -->
         <Border Grid.Column="2" Style="{StaticResource Painel}" VerticalAlignment="Top">
             <StackPanel>
+                <!-- Enter em qualquer campo do formulário salva (o evento de tecla "sobe" dos TextBox até aqui) -->
+                <StackPanel.InputBindings>
+                    <KeyBinding Key="Enter" Command="{Binding SalvarCommand}" />
+                </StackPanel.InputBindings>
                 <TextBlock Text="{Binding TituloFormulario}" FontSize="18" FontWeight="SemiBold" />
 
                 <TextBlock Text="Nome" Style="{StaticResource Rotulo}" />

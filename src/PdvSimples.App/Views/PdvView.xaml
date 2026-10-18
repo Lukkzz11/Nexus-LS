@@ -89,6 +89,12 @@
                         <TextBlock Grid.Column="3" Text="TOTAL" HorizontalAlignment="Right" />
                     </Grid>
 
+                    <TextBlock Grid.Row="1" Text="Carrinho vazio. Leia o código de barras ou digite o nome do produto e tecle Enter."
+                               HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap"
+                               TextAlignment="Center" Margin="40" FontSize="18"
+                               Foreground="{StaticResource CorTextoSuave}"
+                               Visibility="{Binding CarrinhoVazio, Converter={StaticResource BoolVis}}" />
+
                     <ListBox Grid.Row="1" x:Name="ListaItens" ItemsSource="{Binding Itens}"
                              SelectedItem="{Binding ItemSelecionado}"
                              BorderThickness="0" FontSize="22" HorizontalContentAlignment="Stretch">
@@ -185,9 +191,13 @@
                 </UniformGrid>
 
                 <StackPanel Visibility="{Binding ExigeValorRecebido, Converter={StaticResource BoolVis}}">
-                    <TextBlock Text="Valor recebido (R$)" Style="{StaticResource Rotulo}" />
-                    <TextBox FontSize="24"
-                             Text="{Binding ValorRecebidoTexto, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBlock Text="Valor recebido (R$) · vazio = valor exato" Style="{StaticResource Rotulo}" />
+                    <TextBox x:Name="CaixaRecebido" FontSize="24"
+                             Text="{Binding ValorRecebidoTexto, UpdateSourceTrigger=PropertyChanged}">
+                        <TextBox.InputBindings>
+                            <KeyBinding Key="Enter" Command="{Binding FinalizarCommand}" />
+                        </TextBox.InputBindings>
+                    </TextBox>
                     <TextBlock Text="{Binding TextoTroco}" FontSize="22" FontWeight="Bold" Margin="0,8,0,0"
                                Foreground="{StaticResource CorSucesso}" />
                 </StackPanel>

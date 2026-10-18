@@ -1,4 +1,4 @@
-# PDV Simples
+﻿# PDV Simples
 
 PDV (frente de caixa) e controle de estoque simples para Windows, feito em C# com .NET e WPF.
 Projeto de aprendizado: sem login, sem internet, uma loja só.
@@ -20,12 +20,12 @@ Projeto de aprendizado: sem login, sem internet, uma loja só.
 | `Enter` | Adiciona o produto (código de barras exato ou nome) |
 | `3*789` + `Enter` | Adiciona 3 unidades do código/nome `789` |
 | `↑` `↓` | Escolhe na lista quando a busca por nome acha vários produtos |
-| `F6` / `F7` / `F8` | Dinheiro / Pix / Cartão |
+| `F6` / `F7` / `F8` | Dinheiro (já leva o cursor ao valor recebido; `Enter` lá finaliza) / Pix / Cartão |
 | `Del` | Remove o item selecionado do carrinho |
 | `F10` | Finaliza a venda |
 | `Esc` | Fecha a lista de resultados; sem lista, cancela a venda (pede confirmação) |
 
-Na tela Produtos: `Ctrl+N` (novo) e `Ctrl+S` (salvar). Na tela Estoque: `Enter` aplica o ajuste.
+Na tela Produtos: `Enter` ou `Ctrl+S` salva, `Ctrl+N` limpa para um novo. Na tela Estoque: `Enter` aplica o ajuste.
 
 ## Regras importantes
 
@@ -114,3 +114,4 @@ O programa aplica as migrations pendentes sozinho ao abrir.
 ## Fora do escopo desta versão
 
 Login, nuvem, multiempresa, impressora fiscal/cupom, relatórios avançados, financeiro e clientes.
+
