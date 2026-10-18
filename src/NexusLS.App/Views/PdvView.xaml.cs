@@ -16,7 +16,19 @@ public partial class PdvView : UserControl
         Unloaded += AoDescarregar;
         PreviewKeyDown += AoTeclarPrevio;
         KeyDown += AoTeclar;
+        PreviewTextInput += AoDigitar;
     }
+
+    /// <summary>Na janela de tamanho, digitar a letra ou o número do tamanho salta direto para ele.</summary>
+    private void AoDigitar(object sender, TextCompositionEventArgs e)
+    {
+        if (Vm is { } vm && vm.Etapa == EtapaPdv.Tamanho)
+            e.Handled = vm.ProcessarTexto(e.Text);
+    }
+
+    /// <summary>O campo da quantidade só aceita números.</summary>
+    private void SoNumeros(object sender, TextCompositionEventArgs e) =>
+        e.Handled = e.Text.Any(c => !char.IsAsciiDigit(c));
 
     private PdvViewModel? Vm => DataContext as PdvViewModel;
 
@@ -51,6 +63,10 @@ public partial class PdvView : UserControl
             case AlvoFoco.Busca:
                 CaixaBusca.Focus();
                 CaixaBusca.SelectAll();
+                break;
+            case AlvoFoco.Quantidade:
+                CaixaQuantidade.Focus();
+                CaixaQuantidade.SelectAll(); // o "1" fica selecionado: é só digitar o número para trocar
                 break;
             case AlvoFoco.Desconto:
                 CaixaDesconto.Focus();
@@ -91,9 +107,9 @@ public partial class PdvView : UserControl
                 Focar(AlvoFoco.Busca);
                 e.Handled = true;
                 return;
-            case Key.F8:
-                vm.AlternarTabelaCommand.Execute(null);
-                e.Handled = true;
+            // Espaço com a busca VAZIA troca varejo/atacado. Com texto digitado, o espaço é só um espaço (ex.: "camiseta azul").
+            case Key.Space when vm.Etapa == EtapaPdv.Busca && vm.Busca.Length == 0 && CaixaBusca.IsKeyboardFocused:
+                e.Handled = vm.ProcessarTecla(ComandoTecla.Espaco);
                 return;
             // O F10 é uma "tecla de sistema" no Windows (ativa o menu da janela): o WPF não o entrega como
             // tecla normal, e um KeyBinding no XAML não funcionaria. Por isso é tratado aqui.

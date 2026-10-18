@@ -42,7 +42,7 @@
         </Style>
     </UserControl.Resources>
 
-    <!-- Atalhos de teclado ficam no código da View (PdvView.xaml.cs): F2, F8, F10, setas, Enter e Esc. -->
+    <!-- Atalhos de teclado ficam no código da View (PdvView.xaml.cs): F2, F10, Espaço, setas, Enter e Esc. -->
     <Grid>
         <!-- ================= Tela principal ================= -->
         <Grid>
@@ -224,15 +224,28 @@
 
                 <TextBlock Grid.Row="5" Margin="0,10,0,0" FontSize="13" Foreground="{StaticResource CorTextoSuave}"
                            TextWrapping="Wrap"
-                           Text="F2 Buscar · Enter escolhe o produto · Enter com a busca vazia fecha a venda (ou F10) · F8 Varejo/Atacado · Del remove o item · Esc fecha a janela atual" />
+                           Text="F2 Buscar · Enter escolhe o produto · Enter com a busca vazia fecha a venda (ou F10) · Espaço com a busca vazia troca Varejo/Atacado · Del remove o item · Esc fecha a janela atual" />
             </Grid>
 
             <!-- ===== Resumo da venda ===== -->
             <Border Grid.Column="2" Style="{StaticResource Painel}" VerticalAlignment="Top">
                 <StackPanel>
-                    <TextBlock Text="Tabela de preço (F8)" Style="{StaticResource Rotulo}" Margin="0,0,0,4" />
-                    <Button Content="{Binding TabelaTexto}" Style="{StaticResource BotaoSecundario}" FontSize="18"
-                            Command="{Binding AlternarTabelaCommand}" Focusable="False" />
+                    <TextBlock Text="Tabela de preço (Espaço troca)" Style="{StaticResource Rotulo}" Margin="0,0,0,4" />
+                    <!-- No atacado o botão fica laranja, para ninguém esquecer em que tabela está vendendo. -->
+                    <Button Content="{Binding TabelaTexto}" FontSize="18" Focusable="False"
+                            Command="{Binding AlternarTabelaCommand}">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource BotaoSecundario}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding EhAtacado}" Value="True">
+                                        <Setter Property="Background" Value="#FFEDD5" />
+                                        <Setter Property="BorderBrush" Value="#EA580C" />
+                                        <Setter Property="Foreground" Value="#9A3412" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
 
                     <TextBlock Text="SUBTOTAL" Style="{StaticResource Rotulo}" Margin="0,20,0,0" />
                     <TextBlock Text="{Binding SubtotalTexto}" FontSize="52" FontWeight="Bold"
@@ -267,7 +280,7 @@
                     </ItemsControl>
                     <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" />
                     <TextBlock Style="{StaticResource DicaModal}"
-                               Text="← → ↑ ↓ escolhem o tamanho · Enter confirma · Esc volta à busca" />
+                               Text="← → ↑ ↓ ou digite a letra/número do tamanho (M, GG, 38) · Enter confirma · Esc volta à busca" />
                 </StackPanel>
             </Border>
 
@@ -281,15 +294,19 @@
                     <TextBlock Text="{Binding TamanhoModalTexto}" FontSize="18" FontWeight="SemiBold" />
                     <TextBlock Text="▲" FontSize="26" HorizontalAlignment="Center" Margin="0,16,0,0"
                                Foreground="{StaticResource CorTextoSuave}" />
-                    <TextBlock Text="{Binding QuantidadeValor}" FontSize="84" FontWeight="Bold" HorizontalAlignment="Center"
-                               Foreground="{StaticResource CorPrimaria}" />
+                    <!-- Digite o número ou use ↑ ↓. O texto já vem selecionado: é só digitar por cima. -->
+                    <TextBox x:Name="CaixaQuantidade" Text="{Binding QuantidadeTexto, UpdateSourceTrigger=PropertyChanged}"
+                             FontSize="72" FontWeight="Bold" TextAlignment="Center" HorizontalAlignment="Center"
+                             Width="220" Padding="0,4" MaxLength="4"
+                             Foreground="{StaticResource CorPrimaria}"
+                             PreviewTextInput="SoNumeros" InputMethod.IsInputMethodEnabled="False" />
                     <TextBlock Text="▼" FontSize="26" HorizontalAlignment="Center"
                                Foreground="{StaticResource CorTextoSuave}" />
                     <TextBlock Text="{Binding QuantidadeMaximoTexto}" HorizontalAlignment="Center" Margin="0,8,0,0"
                                Foreground="{StaticResource CorTextoSuave}" />
                     <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" HorizontalAlignment="Center" />
                     <TextBlock Style="{StaticResource DicaModal}" TextAlignment="Center"
-                               Text="↑ soma · ↓ subtrai (mínimo 1) · Enter confirma · Esc volta à busca" />
+                               Text="Digite o número ou use ↑ ↓ · Enter confirma · Esc volta à busca" />
                 </StackPanel>
             </Border>
 

@@ -635,4 +635,205 @@ public sealed class FluxoPdvTeclado : IDisposable
         Assert.Contains("12.345.678/0001-90", cupom);
         Assert.Contains("Volte sempre!", cupom);
     }
+
+    // ---------- quantidade digitada ----------
+
+    private async Task AbrirQuantidadeDoBoneAsync()
+    {
+        await PrepararAsync();
+        await BuscarEEscolherAsync("Boné");
+        Tecla(ComandoTecla.Enter);                         // tamanho → quantidade
+        Assert.Equal(EtapaPdv.Quantidade, _vm.Etapa);
+    }
+
+    [Fact]
+    public async Task Digitar_o_numero_na_quantidade_e_Enter_adiciona_essa_quantidade()
+    {
+        await AbrirQuantidadeDoBoneAsync();
+        Assert.Equal("1", _vm.QuantidadeTexto);
+
+        _vm.QuantidadeTexto = "7";                         // o operador digita 7 por cima do "1"
+        Tecla(ComandoTecla.Enter);
+
+        Assert.Equal(EtapaPdv.Busca, _vm.Etapa);
+        Assert.Equal(7, Assert.Single(_vm.Itens).Quantidade);
+    }
+
+    [Fact]
+    public async Task As_setas_partem_do_numero_digitado()
+    {
+        await AbrirQuantidadeDoBoneAsync();
+
+        _vm.QuantidadeTexto = "5";
+        Tecla(ComandoTecla.Cima, ComandoTecla.Cima);
+        Assert.Equal("7", _vm.QuantidadeTexto);
+
+        Tecla(ComandoTecla.Baixo);
+        Assert.Equal("6", _vm.QuantidadeTexto);
+        Tecla(ComandoTecla.Enter);
+
+        Assert.Equal(6, _vm.Itens.Single().Quantidade);
+    }
+
+    [Fact]
+    public async Task Digitar_mais_que_o_estoque_vira_o_maximo_com_aviso()
+    {
+        await AbrirQuantidadeDoBoneAsync();                // boné tem 10 em estoque
+
+        _vm.QuantidadeTexto = "99";
+
+        Assert.Equal("10", _vm.QuantidadeTexto);
+        Assert.True(_vm.MensagemEhErro);
+        Assert.Contains("Só há 10", _vm.Mensagem);
+    }
+
+    [Fact]
+    public async Task Letras_e_simbolos_digitados_ou_colados_sao_removidos()
+    {
+        await AbrirQuantidadeDoBoneAsync();
+
+        _vm.QuantidadeTexto = "a3b-";
+
+        Assert.Equal("3", _vm.QuantidadeTexto);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("0")]
+    [InlineData("00")]
+    public async Task Quantidade_vazia_ou_zero_nao_confirma(string texto)
+    {
+        await AbrirQuantidadeDoBoneAsync();
+
+        _vm.QuantidadeTexto = texto;
+        Tecla(ComandoTecla.Enter);
+
+        Assert.Equal(EtapaPdv.Quantidade, _vm.Etapa);      // continua na janela
+        Assert.True(_vm.MensagemEhErro);
+        Assert.Empty(_vm.Itens);
+    }
+
+    [Fact]
+    public async Task Seta_para_baixo_nunca_passa_de_1_nem_deixa_o_campo_vazio()
+    {
+        await AbrirQuantidadeDoBoneAsync();
+
+        _vm.QuantidadeTexto = "";
+        Tecla(ComandoTecla.Baixo);
+
+        Assert.Equal("1", _vm.QuantidadeTexto);
+    }
+
+    [Fact]
+    public async Task Cada_item_novo_comeca_a_quantidade_em_1_de_novo()
+    {
+        await AbrirQuantidadeDoBoneAsync();
+        _vm.QuantidadeTexto = "4";
+        Tecla(ComandoTecla.Enter);
+
+        await BuscarEEscolherAsync("Camiseta");
+        Tecla(ComandoTecla.Enter);
+
+        Assert.Equal("1", _vm.QuantidadeTexto);
+    }
+
+    // ---------- espaço troca varejo/atacado ----------
+
+    [Fact]
+    public async Task Espaco_com_a_busca_vazia_alterna_varejo_e_atacado()
+    {
+        await PrepararAsync();
+        Assert.Equal("VAREJO", _vm.TabelaTexto);
+
+        Assert.True(_vm.ProcessarTecla(ComandoTecla.Espaco));
+        Assert.Equal("ATACADO", _vm.TabelaTexto);
+        Assert.True(_vm.EhAtacado);
+
+        Assert.True(_vm.ProcessarTecla(ComandoTecla.Espaco));
+        Assert.Equal("VAREJO", _vm.TabelaTexto);
+    }
+
+    [Fact]
+    public async Task Espaco_com_texto_na_busca_nao_alterna_e_fica_para_o_campo()
+    {
+        await PrepararAsync();
+        _vm.Busca = "camiseta";
+
+        var usado = _vm.ProcessarTecla(ComandoTecla.Espaco);
+
+        Assert.False(usado);                                // quem digita "camiseta azul" continua digitando
+        Assert.Equal("VAREJO", _vm.TabelaTexto);
+    }
+
+    [Fact]
+    public async Task Espaco_nao_faz_nada_com_uma_janela_aberta()
+    {
+        await PrepararAsync();
+        await BuscarEEscolherAsync("Camiseta");              // janela de tamanho
+
+        _vm.ProcessarTecla(ComandoTecla.Espaco);
+
+        Assert.Equal("VAREJO", _vm.TabelaTexto);
+        Assert.Equal(EtapaPdv.Tamanho, _vm.Etapa);
+    }
+
+    [Fact]
+    public async Task O_preco_da_janela_de_tamanho_muda_com_o_espaco()
+    {
+        await PrepararAsync();
+        _vm.ProcessarTecla(ComandoTecla.Espaco);             // atacado
+
+        await BuscarEEscolherAsync("Camiseta");
+
+        Assert.Contains("35,00", _vm.ProdutoModalTexto);
+    }
+
+    // ---------- digitar o tamanho ----------
+
+    [Fact]
+    public async Task Digitar_a_letra_do_tamanho_salta_direto_para_ele()
+    {
+        await PrepararAsync();
+        await BuscarEEscolherAsync("Camiseta");              // P, M, G
+
+        Assert.True(_vm.ProcessarTexto("g"));
+
+        Assert.True(_vm.OpcoesTamanho[2].Selecionada);        // G
+        Assert.False(_vm.OpcoesTamanho[0].Selecionada);
+        Tecla(ComandoTecla.Enter);                            // G está esgotado nesse cenário
+        Assert.Equal(EtapaPdv.Tamanho, _vm.Etapa);
+        Assert.Contains("esgotado", _vm.Mensagem);
+    }
+
+    [Fact]
+    public async Task Digitar_M_escolhe_o_M_e_Enter_segue_para_a_quantidade()
+    {
+        await PrepararAsync();
+        await BuscarEEscolherAsync("Camiseta");
+
+        _vm.ProcessarTexto("M");
+        Tecla(ComandoTecla.Enter);
+
+        Assert.Equal(EtapaPdv.Quantidade, _vm.Etapa);
+        Assert.Contains("M", _vm.TamanhoModalTexto);
+    }
+
+    [Fact]
+    public async Task Texto_que_nao_e_tamanho_nao_mexe_na_selecao_mas_e_consumido()
+    {
+        await PrepararAsync();
+        await BuscarEEscolherAsync("Camiseta");
+        var antes = _vm.OpcoesTamanho.ToList().FindIndex(o => o.Selecionada);
+
+        Assert.True(_vm.ProcessarTexto("z"));
+
+        Assert.Equal(antes, _vm.OpcoesTamanho.ToList().FindIndex(o => o.Selecionada));
+    }
+
+    [Fact]
+    public async Task Digitar_texto_fora_da_janela_de_tamanho_nao_e_consumido()
+    {
+        await PrepararAsync();
+        Assert.False(_vm.ProcessarTexto("m"));                // na busca, a letra vai para o campo de busca
+    }
 }

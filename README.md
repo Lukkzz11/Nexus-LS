@@ -27,8 +27,8 @@ BUSCA vazia + carrinho cheio ─Enter→ DESCONTO ─Enter→ PAGAMENTO ─Enter
 
 - O foco volta sempre para a busca. A busca aceita nome, referência ou código de barras.
 - **Enter na busca:** se você desceu com ↑ ↓, vale o item destacado; senão o código de barras exato tem prioridade (leitor); senão vale o primeiro resultado.
-- **Tamanho:** sempre abre ao escolher o produto. Grade de 3 colunas, navegue com ← → ↑ ↓. No **atacado** aparece também a opção "Sem tamanho".
-- **Quantidade:** ↑ soma, ↓ subtrai (mínimo 1), limitada ao estoque do tamanho.
+- **Tamanho:** sempre abre ao escolher o produto. Grade de 3 colunas, navegue com ← → ↑ ↓ ou digite a letra/número do tamanho (M, GG, 38). No **atacado** aparece também a opção "Sem tamanho".
+- **Quantidade:** digite o número ou use ↑ soma / ↓ subtrai (mínimo 1); limitada ao estoque do tamanho.
 - **Desconto:** ← escolhe R$, → escolhe %. Pode ficar vazio.
 - **Pagamento:** dinheiro, Pix, cartão débito, cartão crédito (1 a 4 parcelas), cheque e a prazo (exige cliente). ← → trocam a forma, ↑ ↓ mudam as parcelas. No dinheiro o valor recebido já vem com o total, o troco é calculado e não deixa finalizar com valor menor. Na venda a prazo, digite o nome do cliente: se ele não existir, o primeiro Enter o cadastra.
 - **Sucesso:** botões Reimprimir cupom e Nova venda (← → alternam, Enter confirma).
@@ -39,7 +39,7 @@ BUSCA vazia + carrinho cheio ─Enter→ DESCONTO ─Enter→ PAGAMENTO ─Enter
 | Tecla | Ação |
 |---|---|
 | `F2` | Foco na busca (e seleciona o texto) |
-| `F8` | Alterna a tabela de preço: varejo / atacado |
+| `Espaço` | Com a busca vazia, alterna a tabela de preço: varejo / atacado |
 | `F10` | Atalho extra: avança para o fechamento da venda (como Enter com a busca vazia) |
 | `Enter` | Avança a etapa |
 | `Esc` | Fecha a janela atual e volta à busca (não esvazia o carrinho) |

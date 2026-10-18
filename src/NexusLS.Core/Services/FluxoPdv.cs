@@ -25,6 +25,14 @@ public class GradeTamanhos
     public int Indice { get; private set; }
     public ProdutoTamanho? Selecionado => _opcoes.Count == 0 ? null : _opcoes[Indice];
 
+    /// <summary>Vai direto para a opção de índice <paramref name="indice"/> (usado ao digitar a letra ou o número do tamanho).</summary>
+    public bool IrPara(int indice)
+    {
+        if (indice < 0 || indice >= _opcoes.Count || indice == Indice) return false;
+        Indice = indice;
+        return true;
+    }
+
     /// <summary>← → andam de um em um; ↑ ↓ pulam uma linha (3). Não passa das pontas. Devolve se mexeu.</summary>
     public bool Mover(DirecaoGrade direcao)
     {

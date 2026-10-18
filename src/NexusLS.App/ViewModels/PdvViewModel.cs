@@ -11,10 +11,10 @@ namespace NexusLS.App.ViewModels;
 public enum EtapaPdv { Busca, Tamanho, Quantidade, Desconto, Pagamento, Sucesso }
 
 /// <summary>As teclas que o fluxo entende. A tela traduz as teclas do WPF para estas.</summary>
-public enum ComandoTecla { Enter, Esc, Esquerda, Direita, Cima, Baixo, F10 }
+public enum ComandoTecla { Enter, Esc, Esquerda, Direita, Cima, Baixo, F10, Espaco }
 
 /// <summary>Para onde o ViewModel pede que o cursor vá (a tela é quem sabe mexer no foco).</summary>
-public enum AlvoFoco { Busca, Modal, Desconto, ValorRecebido, Cliente }
+public enum AlvoFoco { Busca, Modal, Quantidade, Desconto, ValorRecebido, Cliente }
 
 /// <summary>
 /// Frente de caixa. Fluxo, tudo pelo teclado:
@@ -120,7 +120,14 @@ public partial class PdvViewModel : ViewModelBase, IEditorCarrinho
     // ----- Modal de tamanho / quantidade -----
     [ObservableProperty] private string _produtoModalTexto = "";
     [ObservableProperty] private string _tamanhoModalTexto = "";
-    [ObservableProperty] private int _quantidadeValor = 1;
+    // A quantidade é um campo de texto: dá para digitar o número, e as setas ↑ ↓ mudam o mesmo texto.
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(QuantidadeValor))]
+    private string _quantidadeTexto = "1";
+
+    /// <summary>A quantidade digitada como número (1 se o campo estiver vazio ou inválido).</summary>
+    public int QuantidadeValor =>
+        int.TryParse(QuantidadeTexto, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var v) && v >= 1 ? v : 1;
     [ObservableProperty] private string _quantidadeMaximoTexto = "";
 
     // ----- Modal de desconto -----
@@ -149,6 +156,25 @@ public partial class PdvViewModel : ViewModelBase, IEditorCarrinho
     {
         _desceu = false;
         _ = AtualizarResultadosAsync(value);
+    }
+
+    /// <summary>
+    /// Enquanto se digita a quantidade: só números, e nunca acima do que há em estoque (o excesso vira o máximo, com aviso).
+    /// </summary>
+    partial void OnQuantidadeTextoChanged(string value)
+    {
+        var digitos = new string(value.Where(char.IsAsciiDigit).ToArray());
+        if (digitos != value)
+        {
+            QuantidadeTexto = digitos; // tira letras e símbolos de quem colou texto
+            return;
+        }
+
+        if (_quantidadeSel is { } sel && int.TryParse(digitos, out var numero) && numero > sel.Maximo)
+        {
+            QuantidadeTexto = sel.Maximo.ToString();
+            MostrarErro($"Só há {sel.Maximo} unidade(s) disponíveis.");
+        }
     }
 
     partial void OnDescontoTextoChanged(string value)
@@ -210,6 +236,10 @@ public partial class PdvViewModel : ViewModelBase, IEditorCarrinho
                 MoverResultado(tecla == ComandoTecla.Baixo ? +1 : -1);
                 _desceu = true; // a partir daqui o Enter usa o item destacado
                 return true;
+            case ComandoTecla.Espaco:
+                if (Busca.Length > 0) return false; // espaço no meio de um nome é só um espaço
+                AlternarTabela();                   // com a busca vazia, o espaço troca varejo/atacado
+                return true;
             case ComandoTecla.Esc:
                 if (Resultados.Count > 0) Resultados.Clear();
                 else if (Busca.Length > 0) Busca = "";
@@ -239,13 +269,19 @@ public partial class PdvViewModel : ViewModelBase, IEditorCarrinho
         switch (tecla)
         {
             case ComandoTecla.Cima:
-                if (_quantidadeSel!.Aumentar()) Mensagem = "";
-                else MostrarErro($"Só há {_quantidadeSel.Maximo} unidade(s) disponíveis.");
-                QuantidadeValor = _quantidadeSel.Valor;
+                if (QuantidadeValor >= _quantidadeSel!.Maximo)
+                {
+                    QuantidadeTexto = _quantidadeSel.Maximo.ToString();
+                    MostrarErro($"Só há {_quantidadeSel.Maximo} unidade(s) disponíveis.");
+                }
+                else
+                {
+                    QuantidadeTexto = (QuantidadeValor + 1).ToString();
+                    Mensagem = "";
+                }
                 return true;
             case ComandoTecla.Baixo:
-                _quantidadeSel!.Diminuir();
-                QuantidadeValor = _quantidadeSel.Valor;
+                QuantidadeTexto = Math.Max(1, QuantidadeValor - 1).ToString();
                 Mensagem = "";
                 return true;
             case ComandoTecla.Enter: ConfirmarQuantidade(); return true;
@@ -314,6 +350,42 @@ public partial class PdvViewModel : ViewModelBase, IEditorCarrinho
         }
     }
 
+    // ================= Digitar o tamanho =================
+
+    private string _digitadoNoTamanho = "";
+    private DateTime _digitadoNoTamanhoEm = DateTime.MinValue;
+
+    /// <summary>
+    /// Na janela de tamanho, digitar "M", "GG" ou "38" salta direto para esse tamanho (letras seguidas, digitadas
+    /// em menos de um segundo, formam o nome). Devolve true se o texto foi usado.
+    /// </summary>
+    public bool ProcessarTexto(string texto)
+    {
+        if (Etapa != EtapaPdv.Tamanho || _grade is null || string.IsNullOrWhiteSpace(texto)) return false;
+
+        var agora = DateTime.UtcNow;
+        if (agora - _digitadoNoTamanhoEm > TimeSpan.FromMilliseconds(900)) _digitadoNoTamanho = "";
+        _digitadoNoTamanhoEm = agora;
+        _digitadoNoTamanho += texto.Trim();
+
+        var indice = AcharTamanho(_digitadoNoTamanho);
+        if (indice < 0)
+        {
+            _digitadoNoTamanho = texto.Trim(); // não achou: recomeça só com a última tecla
+            indice = AcharTamanho(_digitadoNoTamanho);
+        }
+
+        if (indice >= 0 && _grade.IrPara(indice))
+        {
+            AtualizarSelecaoTamanho();
+            Mensagem = "";
+        }
+        return true;
+    }
+
+    private int AcharTamanho(string comeco) =>
+        _grade!.Opcoes.ToList().FindIndex(o => o.Tamanho.StartsWith(comeco, StringComparison.OrdinalIgnoreCase));
+
     // ================= Atalhos globais =================
 
     /// <summary>F2: foco na busca (e a tela seleciona o texto). Se há uma modal do fluxo aberta, ela é fechada.</summary>
@@ -335,7 +407,7 @@ public partial class PdvViewModel : ViewModelBase, IEditorCarrinho
         Sincronizar();
         OnPropertyChanged(nameof(TabelaTexto));
         OnPropertyChanged(nameof(EhAtacado));
-        MostrarSucesso($"Tabela de preço: {TabelaTexto}.");
+        MostrarSucesso($"Tabela de preço: {TabelaTexto}. (Espaço, com a busca vazia, troca de novo)");
         FocoSolicitado?.Invoke(AlvoFoco.Busca);
     }
 
@@ -451,7 +523,7 @@ public partial class PdvViewModel : ViewModelBase, IEditorCarrinho
 
         _tamanhoAtual = _gradeReal.First(t => t.Tamanho == escolhido.Tamanho);
         _quantidadeSel = new SeletorQuantidade(escolhido.Estoque);
-        QuantidadeValor = 1;
+        QuantidadeTexto = "1";
         TamanhoModalTexto = escolhido.Tamanho == Tamanhos.SemTamanho ? "Sem tamanho" : $"Tamanho {escolhido.Tamanho}";
         QuantidadeMaximoTexto = $"Disponível: {escolhido.Estoque}";
         Mensagem = "";
@@ -462,7 +534,13 @@ public partial class PdvViewModel : ViewModelBase, IEditorCarrinho
     {
         try
         {
-            var quantidade = _quantidadeSel!.Valor;
+            if (!int.TryParse(QuantidadeTexto, System.Globalization.NumberStyles.None,
+                    System.Globalization.CultureInfo.InvariantCulture, out var quantidade) || quantidade < 1)
+            {
+                MostrarErro("Digite uma quantidade de 1 em diante.");
+                return;
+            }
+
             var linha = _carrinho.Adicionar(_produtoAtual!, _tamanhoAtual!, quantidade);
 
             Busca = "";
@@ -819,6 +897,7 @@ public partial class PdvViewModel : ViewModelBase, IEditorCarrinho
         FocoSolicitado?.Invoke(etapa switch
         {
             EtapaPdv.Busca => AlvoFoco.Busca,
+            EtapaPdv.Quantidade => AlvoFoco.Quantidade,
             EtapaPdv.Desconto => AlvoFoco.Desconto,
             EtapaPdv.Pagamento => EmDinheiro ? AlvoFoco.ValorRecebido : EmAPrazo ? AlvoFoco.Cliente : AlvoFoco.Modal,
             _ => AlvoFoco.Modal
