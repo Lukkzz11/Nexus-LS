@@ -76,6 +76,34 @@
         <Setter Property="Margin" Value="8,2" />
     </Style>
 
+    <!-- RadioButton com cara de botão (forma de pagamento): o marcado fica azul. -->
+    <Style x:Key="BotaoOpcao" TargetType="RadioButton">
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="FontSize" Value="17" />
+        <Setter Property="Foreground" Value="{StaticResource CorTexto}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Border x:Name="borda" Background="White" BorderBrush="{StaticResource CorBorda}"
+                            BorderThickness="1" CornerRadius="6" Padding="8,11">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="borda" Property="Background" Value="{StaticResource CorPrimaria}" />
+                            <Setter TargetName="borda" Property="BorderBrush" Value="{StaticResource CorPrimaria}" />
+                            <Setter Property="Foreground" Value="White" />
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="borda" Property="BorderBrush" Value="{StaticResource CorTexto}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- Estilo "implícito": sem x:Key, vale para TODOS os TextBox do programa. -->
     <Style TargetType="TextBox">
         <Setter Property="Padding" Value="8,7" />

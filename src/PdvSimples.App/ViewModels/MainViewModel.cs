@@ -11,10 +11,16 @@ namespace PdvSimples.App.ViewModels;
 /// </summary>
 public partial class MainViewModel : ObservableObject
 {
+    // O PDV é criado uma vez só: se o operador for olhar o estoque no meio de uma venda, o carrinho continua lá.
+    private readonly PdvViewModel _pdv = new(Servicos.Produtos, Servicos.Vendas);
+
     [ObservableProperty]
     private object? _telaAtual;
 
-    public MainViewModel() => IrParaProdutos();
+    public MainViewModel() => IrParaPdv();
+
+    [RelayCommand]
+    private void IrParaPdv() => TelaAtual = _pdv;
 
     [RelayCommand]
     private void IrParaProdutos() => TelaAtual = new ProdutosViewModel(Servicos.Produtos);

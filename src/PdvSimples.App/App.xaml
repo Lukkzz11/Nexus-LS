@@ -21,6 +21,9 @@
             <DataTemplate DataType="{x:Type vm:ProdutosViewModel}">
                 <views:ProdutosView />
             </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:PdvViewModel}">
+                <views:PdvView />
+            </DataTemplate>
             <DataTemplate DataType="{x:Type vm:EstoqueViewModel}">
                 <views:EstoqueView />
             </DataTemplate>
