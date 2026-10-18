@@ -1,0 +1,145 @@
+<UserControl x:Class="NexusLS.App.Views.ClientesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <UserControl.Resources>
+        <Style x:Key="ColunaNumero" TargetType="TextBlock">
+            <Setter Property="HorizontalAlignment" Value="Right" />
+        </Style>
+    </UserControl.Resources>
+
+    <UserControl.InputBindings>
+        <KeyBinding Key="N" Modifiers="Ctrl" Command="{Binding NovoCommand}" />
+        <KeyBinding Key="S" Modifiers="Ctrl" Command="{Binding SalvarCommand}" />
+    </UserControl.InputBindings>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="16" />
+            <ColumnDefinition Width="400" />
+        </Grid.ColumnDefinitions>
+
+        <!-- ===== Lista e histórico ===== -->
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="2*" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Text="Clientes" Style="{StaticResource TituloTela}" Margin="0,0,0,14" />
+
+            <Grid Grid.Row="1" Margin="0,0,0,10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBox Text="{Binding Busca, UpdateSourceTrigger=PropertyChanged}"
+                         ToolTip="Buscar por nome, documento ou telefone" />
+                <CheckBox Grid.Column="1" Content="Mostrar inativos" Margin="16,0,0,0" VerticalAlignment="Center"
+                          IsChecked="{Binding MostrarInativos}" />
+            </Grid>
+
+            <Border Grid.Row="2" Style="{StaticResource Painel}" Padding="0">
+                <DataGrid ItemsSource="{Binding Clientes}"
+                          SelectedItem="{Binding Selecionado, Mode=TwoWay}"
+                          AutoGenerateColumns="False" IsReadOnly="True"
+                          SelectionMode="Single" SelectionUnit="FullRow"
+                          CanUserAddRows="False" CanUserDeleteRows="False"
+                          HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                          HorizontalGridLinesBrush="#E5E7EB" BorderThickness="0"
+                          Background="White" RowHeight="36">
+                    <DataGrid.RowStyle>
+                        <Style TargetType="DataGridRow">
+                            <Setter Property="Background" Value="White" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Ativo}" Value="False">
+                                    <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />
+                                </DataTrigger>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="{StaticResource CorSelecao}" />
+                                    <Setter Property="Foreground" Value="{StaticResource CorTexto}" />
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGrid.RowStyle>
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Nome" Binding="{Binding Nome, Mode=OneWay}" Width="*" />
+                        <DataGridTextColumn Header="Documento" Binding="{Binding Documento, Mode=OneWay}" Width="160" />
+                        <DataGridTextColumn Header="Telefone" Binding="{Binding Telefone, Mode=OneWay}" Width="150" />
+                        <DataGridTextColumn Header="Situação" Width="80"
+                                            Binding="{Binding Ativo, Mode=OneWay, Converter={StaticResource BoolTexto}, ConverterParameter='Ativo|Inativo'}" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+
+            <StackPanel Grid.Row="3" Margin="0,14,0,6">
+                <TextBlock Text="Compras do cliente selecionado" FontWeight="SemiBold" />
+                <TextBlock Text="{Binding ResumoCompras}" Foreground="{StaticResource CorTextoSuave}" Margin="0,2,0,0" />
+                <TextBlock Text="{Binding ResumoAPrazo}" Foreground="{StaticResource CorTextoSuave}" TextWrapping="Wrap" />
+            </StackPanel>
+
+            <Border Grid.Row="4" Style="{StaticResource Painel}" Padding="0">
+                <DataGrid ItemsSource="{Binding Compras}"
+                          AutoGenerateColumns="False" IsReadOnly="True"
+                          SelectionMode="Single" CanUserAddRows="False"
+                          HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                          HorizontalGridLinesBrush="#E5E7EB" BorderThickness="0"
+                          Background="White" RowHeight="32">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Nº" Binding="{Binding Id, Mode=OneWay}" Width="70" />
+                        <DataGridTextColumn Header="Data" Width="150"
+                                            Binding="{Binding DataHora, Mode=OneWay, StringFormat='dd/MM/yyyy HH:mm'}" />
+                        <DataGridTextColumn Header="Pagamento" Width="*"
+                                            Binding="{Binding FormaPagamento, Mode=OneWay, Converter={StaticResource FormaPag}}" />
+                        <DataGridTextColumn Header="Total" Width="120" ElementStyle="{StaticResource ColunaNumero}"
+                                            Binding="{Binding TotalCentavos, Mode=OneWay, Converter={StaticResource Centavos}}" />
+                        <DataGridTextColumn Header="Situação" Width="100"
+                                            Binding="{Binding Cancelada, Mode=OneWay, Converter={StaticResource BoolTexto}, ConverterParameter='Cancelada|Concluída'}" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+        </Grid>
+
+        <!-- ===== Cadastro ===== -->
+        <Border Grid.Column="2" Style="{StaticResource Painel}" VerticalAlignment="Top">
+            <StackPanel>
+                <!-- Enter em qualquer campo do formulário salva -->
+                <StackPanel.InputBindings>
+                    <KeyBinding Key="Enter" Command="{Binding SalvarCommand}" />
+                </StackPanel.InputBindings>
+                <TextBlock Text="{Binding TituloFormulario}" FontSize="18" FontWeight="SemiBold" />
+
+                <TextBlock Text="Nome" Style="{StaticResource Rotulo}" />
+                <TextBox Text="{Binding Nome, UpdateSourceTrigger=PropertyChanged}" />
+
+                <TextBlock Text="CPF ou CNPJ" Style="{StaticResource Rotulo}" />
+                <TextBox Text="{Binding Documento, UpdateSourceTrigger=PropertyChanged}" />
+
+                <TextBlock Text="Telefone" Style="{StaticResource Rotulo}" />
+                <TextBox Text="{Binding Telefone, UpdateSourceTrigger=PropertyChanged}" />
+
+                <TextBlock Text="Observação" Style="{StaticResource Rotulo}" />
+                <TextBox Text="{Binding Observacao, UpdateSourceTrigger=PropertyChanged}" Height="70"
+                         TextWrapping="Wrap" AcceptsReturn="True" VerticalContentAlignment="Top" />
+
+                <StackPanel Orientation="Horizontal" Margin="0,20,0,0">
+                    <Button Content="Salvar (Ctrl+S)" Style="{StaticResource BotaoPrimario}"
+                            Command="{Binding SalvarCommand}" />
+                    <Button Content="Novo (Ctrl+N)" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0"
+                            Command="{Binding NovoCommand}" />
+                </StackPanel>
+
+                <Button Content="{Binding TextoBotaoAtivo}" Style="{StaticResource BotaoPerigo}"
+                        Margin="0,10,0,0" HorizontalAlignment="Left"
+                        Command="{Binding AlternarAtivoCommand}"
+                        Visibility="{Binding EstaEditando, Converter={StaticResource BoolVis}}" />
+
+                <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" />
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

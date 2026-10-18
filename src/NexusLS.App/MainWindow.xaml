@@ -7,38 +7,16 @@
         FontFamily="Segoe UI" FontSize="15">
 
     <Window.Resources>
-        <!-- Um estilo por item do menu: o da tela aberta fica destacado. -->
-        <Style x:Key="MenuPdv" TargetType="Button" BasedOn="{StaticResource BotaoMenu}">
+        <!-- Um estilo só para todos os itens do menu: o botão cujo Tag é igual ao item ativo fica destacado. -->
+        <Style x:Key="ItemDoMenu" TargetType="Button" BasedOn="{StaticResource BotaoMenu}">
             <Style.Triggers>
-                <DataTrigger Binding="{Binding PdvAtivo}" Value="True">
-                    <Setter Property="Background" Value="{StaticResource CorMenuAtivo}" />
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
-        <Style x:Key="MenuCaixa" TargetType="Button" BasedOn="{StaticResource BotaoMenu}">
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding CaixaAtivo}" Value="True">
-                    <Setter Property="Background" Value="{StaticResource CorMenuAtivo}" />
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
-        <Style x:Key="MenuMaisVendidos" TargetType="Button" BasedOn="{StaticResource BotaoMenu}">
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding MaisVendidosAtivo}" Value="True">
-                    <Setter Property="Background" Value="{StaticResource CorMenuAtivo}" />
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
-        <Style x:Key="MenuEstoque" TargetType="Button" BasedOn="{StaticResource BotaoMenu}">
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding EstoqueAtivo}" Value="True">
-                    <Setter Property="Background" Value="{StaticResource CorMenuAtivo}" />
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
-        <Style x:Key="MenuConfiguracoes" TargetType="Button" BasedOn="{StaticResource BotaoMenu}">
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding ConfiguracoesAtivo}" Value="True">
+                <DataTrigger Value="True">
+                    <DataTrigger.Binding>
+                        <MultiBinding Converter="{StaticResource IgualTag}">
+                            <Binding Path="ItemAtivo" />
+                            <Binding Path="Tag" RelativeSource="{RelativeSource Self}" />
+                        </MultiBinding>
+                    </DataTrigger.Binding>
                     <Setter Property="Background" Value="{StaticResource CorMenuAtivo}" />
                 </DataTrigger>
             </Style.Triggers>
@@ -53,21 +31,25 @@
 
         <!-- Menu lateral, agrupado: Vendas, Estoque, Gestão -->
         <Border Background="{StaticResource CorMenu}">
-            <StackPanel>
-                <TextBlock Text="Nexus LS" Foreground="White" FontSize="20" FontWeight="Bold" Margin="18,22,18,10" />
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <TextBlock Text="Nexus LS" Foreground="White" FontSize="20" FontWeight="Bold" Margin="18,22,18,10" />
 
-                <TextBlock Text="VENDAS" Style="{StaticResource SecaoMenu}" />
-                <Button Content="PDV" Style="{StaticResource MenuPdv}" Command="{Binding IrParaPdvCommand}" />
-                <Button Content="Caixa" Style="{StaticResource MenuCaixa}" Command="{Binding IrParaCaixaCommand}" />
+                    <TextBlock Text="VENDAS" Style="{StaticResource SecaoMenu}" />
+                    <Button Content="PDV" Tag="Pdv" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaPdvCommand}" />
+                    <Button Content="Caixa" Tag="Caixa" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaCaixaCommand}" />
+                    <Button Content="Mais vendidos" Tag="MaisVendidos" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaMaisVendidosCommand}" />
 
-                <Button Content="Mais vendidos" Style="{StaticResource MenuMaisVendidos}" Command="{Binding IrParaMaisVendidosCommand}" />
+                    <TextBlock Text="ESTOQUE" Style="{StaticResource SecaoMenu}" />
+                    <Button Content="Estoque da loja" Tag="EstoqueDaLoja" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaEstoqueCommand}" />
+                    <Button Content="Etiquetas" Tag="Etiquetas" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaEtiquetasCommand}" />
 
-                <TextBlock Text="ESTOQUE" Style="{StaticResource SecaoMenu}" />
-                <Button Content="Estoque da loja" Style="{StaticResource MenuEstoque}" Command="{Binding IrParaEstoqueCommand}" />
-
-                <TextBlock Text="GESTÃO" Style="{StaticResource SecaoMenu}" />
-                <Button Content="Configurações" Style="{StaticResource MenuConfiguracoes}" Command="{Binding IrParaConfiguracoesCommand}" />
-            </StackPanel>
+                    <TextBlock Text="GESTÃO" Style="{StaticResource SecaoMenu}" />
+                    <Button Content="Clientes" Tag="Clientes" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaClientesCommand}" />
+                    <Button Content="Relatórios" Tag="Relatorios" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaRelatoriosCommand}" />
+                    <Button Content="Configurações" Tag="Configuracoes" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaConfiguracoesCommand}" />
+                </StackPanel>
+            </ScrollViewer>
         </Border>
 
         <!-- Área da tela atual. O ContentControl mostra o ViewModel e o WPF escolhe a View (veja App.xaml). -->

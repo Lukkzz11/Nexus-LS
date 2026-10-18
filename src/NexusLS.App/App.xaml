@@ -15,6 +15,7 @@
             <conv:BoolParaTextoConverter x:Key="BoolTexto" />
             <conv:TipoMovimentacaoConverter x:Key="TipoMov" />
             <conv:FormaPagamentoConverter x:Key="FormaPag" />
+            <conv:IgualAoTagConverter x:Key="IgualTag" />
             <conv:BoolInversoVisibilidadeConverter x:Key="BoolInverso" />
             <BooleanToVisibilityConverter x:Key="BoolVis" />
 
@@ -32,7 +33,15 @@
             <DataTemplate DataType="{x:Type vm:MaisVendidosViewModel}">
                 <views:MaisVendidosView />
             </DataTemplate>
-            <DataTemplate DataType="{x:Type vm:ConfiguracoesViewModel}">
+            <DataTemplate DataType="{x:Type vm:ClientesViewModel}">
+                <views:ClientesView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:RelatoriosViewModel}">
+                <views:RelatoriosView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:EtiquetasViewModel}">
+                <views:EtiquetasView />
+            </DataTemplate>            <DataTemplate DataType="{x:Type vm:ConfiguracoesViewModel}">
                 <views:ConfiguracoesView />
             </DataTemplate>
         </ResourceDictionary>

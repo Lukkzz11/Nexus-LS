@@ -6,6 +6,14 @@ namespace NexusLS.Core.Services;
 
 public record DadosCliente(string Nome, string? Documento = null, string? Telefone = null, string? Observacao = null);
 
+/// <summary>
+/// As compras de um cliente. "A prazo" é só um aviso do que foi vendido nessa forma: o programa não controla
+/// recebimentos (o financeiro está fora do escopo), então não há baixa nem saldo.
+/// </summary>
+/// <param name="Vendas">Da mais recente para a mais antiga, inclusive as canceladas.</param>
+public record HistoricoCliente(
+    IReadOnlyList<Venda> Vendas, int Compras, long TotalCompradoCentavos, long TotalAPrazoCentavos, DateTime? UltimaCompra);
+
 public class ClienteService
 {
     private readonly IDbContextFactory<PdvDbContext> _fabrica;
@@ -61,6 +69,24 @@ public class ClienteService
                 (c.Telefone != null && EF.Functions.Like(c.Telefone, padrao)));
         }
         return await consulta.OrderBy(c => c.Nome).ToListAsync();
+    }
+
+    /// <summary>Vendas do cliente com os totais (as canceladas aparecem na lista mas não somam).</summary>
+    public async Task<HistoricoCliente> HistoricoAsync(int clienteId)
+    {
+        await using var db = await _fabrica.CreateDbContextAsync();
+        var vendas = await db.Vendas.AsNoTracking().Include(v => v.Itens)
+            .Where(v => v.ClienteId == clienteId)
+            .OrderByDescending(v => v.DataHora).ThenByDescending(v => v.Id)
+            .ToListAsync();
+
+        var validas = vendas.Where(v => !v.Cancelada).ToList();
+        return new HistoricoCliente(
+            vendas,
+            validas.Count,
+            validas.Sum(v => v.TotalCentavos),
+            validas.Where(v => v.FormaPagamento == FormaPagamento.APrazo).Sum(v => v.TotalCentavos),
+            validas.Count == 0 ? null : validas.Max(v => v.DataHora));
     }
 
     private async Task DefinirAtivoAsync(int id, bool ativo)

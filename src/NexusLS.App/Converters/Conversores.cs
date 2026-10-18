@@ -62,6 +62,20 @@ public class FormaPagamentoConverter : IValueConverter
         throw new NotSupportedException();
 }
 
+/// <summary>
+/// Verdadeiro quando o texto do primeiro valor (o item ativo do menu) é igual ao segundo (o Tag do botão).
+/// É o que faz o menu destacar o botão da tela aberta.
+/// </summary>
+public class IgualAoTagConverter : IMultiValueConverter
+{
+    public object Convert(object[] values, Type targetType, object? parameter, CultureInfo culture) =>
+        values.Length == 2 && values[0] is not null && values[1] is not null
+        && string.Equals(values[0].ToString(), values[1].ToString(), StringComparison.Ordinal);
+
+    public object[] ConvertBack(object value, Type[] targetTypes, object? parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}
+
 /// <summary>true/false -> texto. O parâmetro tem os dois textos separados por "|", ex.: "Ativo|Inativo".</summary>
 public class BoolParaTextoConverter : IValueConverter
 {

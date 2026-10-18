@@ -6,6 +6,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using NexusLS.App.ViewModels;
 using NexusLS.App.Views;
+using NexusLS.Core.Etiquetas;
 using NexusLS.Core.Models;
 using NexusLS.Core.Services;
 using NexusLS.Tests.Infra;
@@ -195,6 +196,64 @@ public sealed class CapturaDeTelas : IDisposable
 
         Capturador.Desenhar(() => new VendasView { DataContext = caixa }, Path.Combine(saida, "14-caixa.png"), 1400, 820);
         Capturador.Desenhar(() => new MaisVendidosView { DataContext = ranking }, Path.Combine(saida, "15-mais-vendidos.png"), 1400, 820);
+    }
+
+    [Fact]
+    public async Task Gera_as_telas_de_clientes_relatorios_e_etiquetas()
+    {
+        var saida = Environment.GetEnvironmentVariable("NEXUSLS_PRINTS");
+        if (string.IsNullOrWhiteSpace(saida)) return;
+        Directory.CreateDirectory(saida);
+
+        var produtos = new ProdutoService(_banco.Fabrica);
+        var estoque = new EstoqueService(_banco.Fabrica);
+        var vendas = new VendaService(_banco.Fabrica);
+        var clientes = new ClienteService(_banco.Fabrica);
+        var camiseta = await produtos.CadastrarAsync(new DadosProduto("Camiseta Basica Algodao", "7891234567895", 5990, 2000, 2, "REF-100", 3990), 0);
+        foreach (var t in new[] { "P", "M", "G" })
+        {
+            await produtos.AdicionarTamanhoAsync(camiseta.Id, t);
+            await estoque.AjustarAsync(camiseta.Id, TipoMovimentacao.Entrada, 50, null, t);
+        }
+        var bone = await produtos.CadastrarAsync(new DadosProduto("Bone Aba Reta", "555123456789", 2990, 800, 5), 100);
+        var maria = await clientes.CadastrarAsync(new DadosCliente("Maria Souza", "123.456.789-00", "(11) 99999-0000", "Prefere avisar por WhatsApp"));
+        await clientes.CadastrarAsync(new DadosCliente("Marcos Lima", null, "(11) 98888-7777"));
+        await vendas.FinalizarAsync(new PedidoVenda(new[] { new ItemCarrinho(camiseta.Id, 2, "M"), new ItemCarrinho(bone.Id, 1) }, 0, FormaPagamento.Pix, ClienteId: maria.Id));
+        await vendas.FinalizarAsync(new PedidoVenda(new[] { new ItemCarrinho(camiseta.Id, 3, "G") }, 1000, FormaPagamento.APrazo, ClienteId: maria.Id));
+        await vendas.FinalizarAsync(new PedidoVenda(new[] { new ItemCarrinho(bone.Id, 4) }, 0, FormaPagamento.Dinheiro, 20000));
+
+        ClientesViewModel? cli = null;
+        RelatoriosViewModel? rel = null;
+        EtiquetasViewModel? etq = null;
+        Capturador.Rodar(() =>
+        {
+            cli = new ClientesViewModel(clientes);
+            rel = new RelatoriosViewModel(new RelatorioService(_banco.Fabrica));
+            etq = new EtiquetasViewModel(produtos);
+        });
+        for (var i = 0; i < 300 && (cli!.Clientes.Count < 2 || rel!.Vendas.Count < 3); i++) await Task.Delay(10);
+        Capturador.Rodar(() => cli!.Selecionado = cli.Clientes.First(c => c.Nome.StartsWith("Maria")));
+        for (var i = 0; i < 300 && cli!.Compras.Count < 2; i++) await Task.Delay(10);
+
+        Capturador.Rodar(() => etq!.Busca = "Camiseta");
+        Capturador.Rodar(() => etq!.EscolherPrimeiroCommand.Execute(null));
+        for (var i = 0; i < 300 && etq!.OpcoesDeTamanho.Count < 4; i++) await Task.Delay(10);
+        Capturador.Rodar(() =>
+        {
+            etq!.QuantidadeTexto = "3";
+            etq.AdicionarTodosOsTamanhosCommand.Execute(null);
+            etq.Busca = "Bone";
+        });
+        await Task.Delay(300);
+        Capturador.Rodar(() => etq!.EscolherPrimeiroCommand.Execute(null));
+        for (var i = 0; i < 300 && etq!.OpcoesDeTamanho.Count != 1; i++) await Task.Delay(10);
+        Capturador.Rodar(() => { etq!.QuantidadeTexto = "2"; etq.AdicionarCommand.Execute(null); });
+
+        Capturador.Desenhar(() => new ClientesView { DataContext = cli }, Path.Combine(saida, "16-clientes.png"), 1400, 820);
+        Capturador.Desenhar(() => new RelatoriosView { DataContext = rel }, Path.Combine(saida, "17-relatorios.png"), 1400, 820);
+        Capturador.Desenhar(() => new EtiquetasView { DataContext = etq }, Path.Combine(saida, "18-etiquetas-bobina.png"), 1400, 900);
+        Capturador.Rodar(() => { etq!.FormatoSelecionado = FormatoEtiqueta.FolhaA4Tres_por_Sete; etq.PrimeiraPosicaoTexto = "4"; });
+        Capturador.Desenhar(() => new EtiquetasView { DataContext = etq }, Path.Combine(saida, "19-etiquetas-folha.png"), 1400, 900);
     }
 }
 

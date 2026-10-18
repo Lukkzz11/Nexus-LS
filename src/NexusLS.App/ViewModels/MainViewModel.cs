@@ -3,8 +3,8 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace NexusLS.App.ViewModels;
 
-/// <summary>Os itens do menu lateral que já têm tela. O menu destaca o item da tela aberta.</summary>
-public enum ItemMenu { Pdv, Caixa, MaisVendidos, EstoqueDaLoja, Configuracoes }
+/// <summary>Os itens do menu lateral. O nome do item é também o "Tag" do botão: assim o menu destaca o da tela aberta.</summary>
+public enum ItemMenu { Pdv, Caixa, MaisVendidos, EstoqueDaLoja, Etiquetas, Clientes, Relatorios, Configuracoes }
 
 /// <summary>
 /// ViewModel = a "lógica da tela". Ele guarda os dados que a tela mostra e os comandos dos botões,
@@ -22,18 +22,7 @@ public partial class MainViewModel : ObservableObject
     private object? _telaAtual;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(PdvAtivo))]
-    [NotifyPropertyChangedFor(nameof(CaixaAtivo))]
-    [NotifyPropertyChangedFor(nameof(MaisVendidosAtivo))]
-    [NotifyPropertyChangedFor(nameof(EstoqueAtivo))]
-    [NotifyPropertyChangedFor(nameof(ConfiguracoesAtivo))]
     private ItemMenu _itemAtivo;
-
-    public bool PdvAtivo => ItemAtivo == ItemMenu.Pdv;
-    public bool CaixaAtivo => ItemAtivo == ItemMenu.Caixa;
-    public bool MaisVendidosAtivo => ItemAtivo == ItemMenu.MaisVendidos;
-    public bool EstoqueAtivo => ItemAtivo == ItemMenu.EstoqueDaLoja;
-    public bool ConfiguracoesAtivo => ItemAtivo == ItemMenu.Configuracoes;
 
     public MainViewModel()
     {
@@ -41,21 +30,19 @@ public partial class MainViewModel : ObservableObject
         _ = _pdv.RestaurarRascunhoAsync(); // se a venda anterior ficou no meio, ela volta
     }
 
-    [RelayCommand]
-    private void IrParaPdv() => Abrir(_pdv, ItemMenu.Pdv);
+    // Vendas
+    [RelayCommand] private void IrParaPdv() => Abrir(_pdv, ItemMenu.Pdv);
+    [RelayCommand] private void IrParaCaixa() => Abrir(new VendasViewModel(Servicos.Vendas, Servicos.Cupons), ItemMenu.Caixa);
+    [RelayCommand] private void IrParaMaisVendidos() => Abrir(new MaisVendidosViewModel(Servicos.Relatorios), ItemMenu.MaisVendidos);
 
-    [RelayCommand]
-    private void IrParaCaixa() => Abrir(new VendasViewModel(Servicos.Vendas, Servicos.Cupons), ItemMenu.Caixa);
+    // Estoque
+    [RelayCommand] private void IrParaEstoque() => Abrir(new EstoqueLojaViewModel(Servicos.Produtos, Servicos.Estoque), ItemMenu.EstoqueDaLoja);
+    [RelayCommand] private void IrParaEtiquetas() => Abrir(new EtiquetasViewModel(Servicos.Produtos), ItemMenu.Etiquetas);
 
-    [RelayCommand]
-    private void IrParaMaisVendidos() => Abrir(new MaisVendidosViewModel(Servicos.Relatorios), ItemMenu.MaisVendidos);
-
-    [RelayCommand]
-    private void IrParaEstoque() => Abrir(new EstoqueLojaViewModel(Servicos.Produtos, Servicos.Estoque), ItemMenu.EstoqueDaLoja);
-
-    [RelayCommand]
-    private void IrParaConfiguracoes() =>
-        Abrir(new ConfiguracoesViewModel(Servicos.Configuracao, Servicos.Cupons), ItemMenu.Configuracoes);
+    // Gestão
+    [RelayCommand] private void IrParaClientes() => Abrir(new ClientesViewModel(Servicos.Clientes), ItemMenu.Clientes);
+    [RelayCommand] private void IrParaRelatorios() => Abrir(new RelatoriosViewModel(Servicos.Relatorios), ItemMenu.Relatorios);
+    [RelayCommand] private void IrParaConfiguracoes() => Abrir(new ConfiguracoesViewModel(Servicos.Configuracao, Servicos.Cupons), ItemMenu.Configuracoes);
 
     private void Abrir(object tela, ItemMenu item)
     {
