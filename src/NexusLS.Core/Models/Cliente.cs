@@ -14,4 +14,7 @@ public class Cliente
     public bool Ativo { get; set; } = true;
 
     public DateTime DataCadastro { get; set; }
+
+    /// <summary>Quanto o cliente pode dever a prazo ao mesmo tempo. Zero = sem limite.</summary>
+    public long LimiteCreditoCentavos { get; set; }
 }

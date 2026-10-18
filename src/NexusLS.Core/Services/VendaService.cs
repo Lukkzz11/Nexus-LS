@@ -112,6 +112,8 @@ public class VendaService
         venda.SubtotalCentavos = venda.Itens.Sum(i => i.TotalCentavos);
         venda.ClienteId = await ValidarClienteAsync(db, pedido);
         CalcularDescontoEPagamento(venda, pedido);
+        if (venda.FormaPagamento == FormaPagamento.APrazo && venda.ClienteId is int clienteId)
+            await ValidarLimiteAsync(db, clienteId, venda.TotalCentavos);
 
         // 5) 1º passo: grava a venda para o banco gerar o Id dela.
         db.Vendas.Add(venda);
@@ -158,6 +160,14 @@ public class VendaService
             ?? throw new RegraDeNegocioException("Venda não encontrada.");
         if (venda.Cancelada)
             throw new RegraDeNegocioException("Esta venda já está cancelada.");
+
+        if (venda.FormaPagamento == FormaPagamento.APrazo && venda.ClienteId is int cid)
+        {
+            var titulo = (await ClienteService.ContaAsync(db, cid)).Titulos.FirstOrDefault(t => t.VendaId == venda.Id);
+            if (titulo is { PagoCentavos: > 0 })
+                throw new RegraDeNegocioException(
+                    $"Esta venda a prazo já recebeu {Dinheiro.Formatar(titulo.PagoCentavos)} em pagamentos e não pode ser cancelada.");
+        }
 
         var agora = _agora();
         var ids = venda.Itens.Select(i => i.ProdutoId).ToList();
@@ -219,6 +229,18 @@ public class VendaService
         vendas.Where(v => !v.Cancelada).Sum(v => v.TotalCentavos);
 
     // ================= Regras de apoio =================
+
+    /// <summary>Venda a prazo não pode deixar a dívida do cliente passar do limite dele (zero = sem limite).</summary>
+    private static async Task ValidarLimiteAsync(PdvDbContext db, int clienteId, long totalCentavos)
+    {
+        var limite = await db.Clientes.AsNoTracking().Where(c => c.Id == clienteId).Select(c => c.LimiteCreditoCentavos).FirstAsync();
+        if (limite <= 0) return;
+
+        var devedor = (await ClienteService.ContaAsync(db, clienteId)).SaldoDevedorCentavos;
+        if (devedor + totalCentavos > limite)
+            throw new RegraDeNegocioException(
+                $"Limite de crédito excedido: o cliente já deve {Dinheiro.Formatar(devedor)} e o limite é {Dinheiro.Formatar(limite)}.");
+    }
 
     /// <summary>O nome do operador salvo em Configurações ("Caixa" se ninguém configurou).</summary>
     private static async Task<string> NomeDoOperadorAsync(PdvDbContext db)

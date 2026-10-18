@@ -134,7 +134,7 @@ public sealed class ClientesTelaTests : IDisposable
         Assert.Contains("2 compra(s)", resumo);
         Assert.Contains("R$ 80,00", resumo);
         Assert.Contains("R$ 60,00", _vm.ResumoAPrazo.Replace(' ', ' '));
-        Assert.Contains("não controla", _vm.ResumoAPrazo);
+        Assert.Contains("Deve", _vm.ResumoDivida);
     }
 
     [Fact]

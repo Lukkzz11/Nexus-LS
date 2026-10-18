@@ -62,7 +62,7 @@ Enter repetido (tecla segurada) é ignorado; Enter já tratado por outro element
 - Cada produto tem **dois preços**: varejo e atacado. Atacado vazio vale o de varejo.
 - O item da venda guarda o nome, o tamanho e o preço **da hora da venda**.
 - Todo produto tem a opção "Sem tamanho" (onde fica o estoque de quem não usa grade).
-- **Venda a prazo** só registra a venda com o cliente. O programa **não controla recebimentos** (financeiro está fora do escopo).
+- **Venda a prazo** exige cliente e vira uma dívida (vence em 30 dias). Em Clientes você recebe pagamentos parciais: cada pagamento abate primeiro a venda mais antiga. O limite de crédito do cliente (zero = sem limite) bloqueia vendas a prazo que o ultrapassem, e uma venda a prazo que já recebeu pagamento não pode ser cancelada. Pagamentos recebidos entram no esperado do caixa aberto. Não há cobrança, juros nem carnê.
 
 ## Cupom e etiquetas
 
@@ -156,4 +156,4 @@ O programa aplica as migrations pendentes sozinho ao abrir, preservando os dados
 
 ## Fora do escopo desta versão
 
-Login, nuvem, multiempresa, loja online, financeiro completo (contas a receber), fábrica, funcionários, impressora fiscal.
+Login, nuvem, multiempresa, loja online, financeiro completo (cobrança, juros, carnê), fábrica, funcionários, impressora fiscal.

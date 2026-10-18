@@ -33,6 +33,9 @@ namespace NexusLS.Core.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("TEXT");
 
+                    b.Property<long>("LimiteCreditoCentavos")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Nome")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -251,6 +254,39 @@ namespace NexusLS.Core.Migrations
                     b.ToTable("MovimentosCaixa");
                 });
 
+            modelBuilder.Entity("NexusLS.Core.Models.PagamentoCliente", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ClienteId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("DataHora")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Forma")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Observacao")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Operador")
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("ValorCentavos")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClienteId");
+
+                    b.ToTable("PagamentosCliente");
+                });
+
             modelBuilder.Entity("NexusLS.Core.Models.Produto", b =>
                 {
                     b.Property<int>("Id")
@@ -450,6 +486,15 @@ namespace NexusLS.Core.Migrations
                     b.HasOne("NexusLS.Core.Models.TurnoCaixa", null)
                         .WithMany()
                         .HasForeignKey("TurnoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("NexusLS.Core.Models.PagamentoCliente", b =>
+                {
+                    b.HasOne("NexusLS.Core.Models.Cliente", null)
+                        .WithMany()
+                        .HasForeignKey("ClienteId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

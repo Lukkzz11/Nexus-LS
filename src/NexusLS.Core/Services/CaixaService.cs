@@ -18,15 +18,18 @@ public record ResumoTurno(
     long ReforcosCentavos,
     long DespesasCentavos,
     long EntradasAvulsasCentavos,
-    IReadOnlyList<MovimentoCaixa> Movimentos)
+    IReadOnlyList<MovimentoCaixa> Movimentos,
+    long RecebimentosDinheiroCentavos = 0,
+    long RecebimentosCartaoCentavos = 0,
+    long RecebimentosPixCentavos = 0)
 {
     /// <summary>O dinheiro que tem que estar na gaveta: troco inicial + vendas em dinheiro + reforços/entradas − sangrias/despesas.</summary>
     public long EsperadoDinheiroCentavos =>
-        Turno.TrocoInicialCentavos + VendasDinheiroCentavos + ReforcosCentavos + EntradasAvulsasCentavos
+        Turno.TrocoInicialCentavos + VendasDinheiroCentavos + RecebimentosDinheiroCentavos + ReforcosCentavos + EntradasAvulsasCentavos
         - SangriasCentavos - DespesasCentavos;
 
-    public long EsperadoCartaoCentavos => VendasCartaoCentavos;
-    public long EsperadoPixCentavos => VendasPixCentavos;
+    public long EsperadoCartaoCentavos => VendasCartaoCentavos + RecebimentosCartaoCentavos;
+    public long EsperadoPixCentavos => VendasPixCentavos + RecebimentosPixCentavos;
 }
 
 /// <summary>Valores contados pelo operador no fechamento.</summary>
@@ -194,6 +197,11 @@ public class CaixaService
             .OrderBy(m => m.DataHora).ThenBy(m => m.Id).ToList();
         long Mov(TipoMovimentoCaixa t) => movimentos.Where(m => m.Tipo == t).Sum(m => m.ValorCentavos);
 
+        // Dívidas de clientes pagas durante o turno também entram na gaveta, na maquininha ou no Pix.
+        var recebimentos = (await db.PagamentosCliente.AsNoTracking().ToListAsync())
+            .Where(p => p.DataHora >= turno.DataAbertura && p.DataHora <= fim).ToList();
+        long Rec(params FormaPagamento[] formas) => recebimentos.Where(p => formas.Contains(p.Forma)).Sum(p => p.ValorCentavos);
+
         return new ResumoTurno(
             turno, validas.Count, vendas.Count - validas.Count,
             Soma(FormaPagamento.Dinheiro),
@@ -203,7 +211,10 @@ public class CaixaService
             Soma(FormaPagamento.APrazo),
             Mov(TipoMovimentoCaixa.Sangria), Mov(TipoMovimentoCaixa.Reforco),
             Mov(TipoMovimentoCaixa.Despesa), Mov(TipoMovimentoCaixa.EntradaAvulsa),
-            movimentos);
+            movimentos,
+            Rec(FormaPagamento.Dinheiro),
+            Rec(FormaPagamento.CartaoDebito, FormaPagamento.CartaoCredito),
+            Rec(FormaPagamento.Pix));
     }
 
     private static async Task<string> NomeDoOperadorAsync(PdvDbContext db)

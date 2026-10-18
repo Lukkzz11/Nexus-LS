@@ -6,7 +6,12 @@ using NexusLS.Core.Services;
 
 namespace NexusLS.App.ViewModels;
 
-/// <summary>Cadastro de clientes (nome, documento, telefone, observação) com o histórico de compras de cada um.</summary>
+public record OpcaoForma(string Texto, FormaPagamento Forma);
+
+/// <summary>Uma venda a prazo na tela, com os textos prontos.</summary>
+public record LinhaTitulo(int VendaId, string Data, string Vencimento, string Total, string Pago, string Saldo, string Situacao);
+
+/// <summary>Cadastro de clientes (nome, documento, telefone, limite de crédito, observação) com o histórico de compras e a dívida a prazo de cada um.</summary>
 public partial class ClientesViewModel : ViewModelBase
 {
     private readonly ClienteService _clientes;
@@ -16,12 +21,23 @@ public partial class ClientesViewModel : ViewModelBase
     public ClientesViewModel(ClienteService clientes)
     {
         _clientes = clientes;
+        _pagamentoForma = FormasDePagamento[0];
         Novo();
         _ = BuscarAsync();
     }
 
     public ObservableCollection<Cliente> Clientes { get; } = new();
     public ObservableCollection<Venda> Compras { get; } = new();
+    public ObservableCollection<LinhaTitulo> Titulos { get; } = new();
+
+    public IReadOnlyList<OpcaoForma> FormasDePagamento { get; } = new[]
+    {
+        new OpcaoForma("Dinheiro", FormaPagamento.Dinheiro),
+        new OpcaoForma("Pix", FormaPagamento.Pix),
+        new OpcaoForma("Cartão de débito", FormaPagamento.CartaoDebito),
+        new OpcaoForma("Cartão de crédito", FormaPagamento.CartaoCredito),
+        new OpcaoForma("Cheque", FormaPagamento.Cheque)
+    };
 
     // ----- Lista -----
     [ObservableProperty] private string _busca = "";
@@ -33,6 +49,13 @@ public partial class ClientesViewModel : ViewModelBase
     [ObservableProperty] private string _documento = "";
     [ObservableProperty] private string _telefone = "";
     [ObservableProperty] private string _observacao = "";
+    [ObservableProperty] private string _limiteTexto = "";
+
+    // ----- Recebimento de dívida -----
+    [ObservableProperty] private string _pagamentoValorTexto = "";
+    [ObservableProperty] private OpcaoForma _pagamentoForma = null!;
+    [ObservableProperty] private string _pagamentoObservacao = "";
+    [ObservableProperty] private string _resumoDivida = "";
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(EstaEditando))]
@@ -92,7 +115,12 @@ public partial class ClientesViewModel : ViewModelBase
         Documento = "";
         Telefone = "";
         Observacao = "";
+        LimiteTexto = "";
         ClienteAtivo = true;
+        ResumoDivida = "";
+        Titulos.Clear();
+        PagamentoValorTexto = "";
+        PagamentoObservacao = "";
         ResumoCompras = "";
         ResumoAPrazo = "";
         Compras.Clear();
@@ -102,7 +130,10 @@ public partial class ClientesViewModel : ViewModelBase
     [RelayCommand]
     private Task SalvarAsync() => ExecutarAsync(async () =>
     {
-        var dados = new DadosCliente(Nome, Documento, Telefone, Observacao);
+        long limite = 0;
+        if (!string.IsNullOrWhiteSpace(LimiteTexto) && !Dinheiro.TentarConverter(LimiteTexto, out limite))
+            throw new RegraDeNegocioException("Limite de crédito inválido. Digite um valor como 500,00 (vazio = sem limite).");
+        var dados = new DadosCliente(Nome, Documento, Telefone, Observacao, limite);
 
         if (IdEditando is int id)
         {
@@ -141,6 +172,7 @@ public partial class ClientesViewModel : ViewModelBase
         Documento = cliente.Documento ?? "";
         Telefone = cliente.Telefone ?? "";
         Observacao = cliente.Observacao ?? "";
+        LimiteTexto = cliente.LimiteCreditoCentavos > 0 ? Dinheiro.FormatarParaEdicao(cliente.LimiteCreditoCentavos) : "";
         ClienteAtivo = cliente.Ativo;
         Mensagem = "";
 
@@ -158,8 +190,35 @@ public partial class ClientesViewModel : ViewModelBase
         ResumoCompras = h.Compras == 0
             ? "Ainda não comprou."
             : $"{h.Compras} compra(s) · Total {Dinheiro.Formatar(h.TotalCompradoCentavos)} · Última em {h.UltimaCompra:dd/MM/yyyy}";
-        ResumoAPrazo = h.TotalAPrazoCentavos > 0
-            ? $"Vendido a prazo: {Dinheiro.Formatar(h.TotalAPrazoCentavos)} (o programa não controla os recebimentos)"
-            : "";
+        ResumoAPrazo = h.TotalAPrazoCentavos > 0 ? $"Vendido a prazo: {Dinheiro.Formatar(h.TotalAPrazoCentavos)}" : "";
+
+        var conta = await _clientes.ContaAsync(clienteId);
+        var agora = DateTime.Now;
+        Titulos.Clear();
+        foreach (var t in conta.Titulos)
+            Titulos.Add(new LinhaTitulo(t.VendaId, $"{t.DataVenda:dd/MM/yyyy}", $"{t.Vencimento:dd/MM/yyyy}",
+                Dinheiro.Formatar(t.TotalCentavos), Dinheiro.Formatar(t.PagoCentavos), Dinheiro.Formatar(t.SaldoCentavos),
+                t.Quitado ? "Pago" : t.VencidoEm(agora) ? "VENCIDO" : "Em aberto"));
+
+        var vencido = conta.Titulos.Where(t => t.VencidoEm(agora)).Sum(t => t.SaldoCentavos);
+        ResumoDivida = conta.Titulos.Count == 0
+            ? "Sem vendas a prazo."
+            : $"Deve {Dinheiro.Formatar(conta.SaldoDevedorCentavos)} · Já pagou {Dinheiro.Formatar(conta.TotalPagoCentavos)}"
+              + (vencido > 0 ? $" · VENCIDO: {Dinheiro.Formatar(vencido)}" : "");
     }
+
+    /// <summary>Recebe um pagamento da dívida do cliente aberto; ele abate as vendas mais antigas primeiro.</summary>
+    [RelayCommand]
+    private Task ReceberPagamentoAsync() => ExecutarAsync(async () =>
+    {
+        if (IdEditando is not int id) return;
+        if (!Dinheiro.TentarConverter(PagamentoValorTexto, out var valor))
+            throw new RegraDeNegocioException("Valor inválido. Digite um valor como 50,00.");
+
+        await _clientes.RegistrarPagamentoAsync(id, valor, PagamentoForma.Forma, PagamentoObservacao);
+        PagamentoValorTexto = "";
+        PagamentoObservacao = "";
+        await CarregarHistoricoAsync(id);
+        MostrarSucesso($"Pagamento de {Dinheiro.Formatar(valor)} registrado.");
+    });
 }

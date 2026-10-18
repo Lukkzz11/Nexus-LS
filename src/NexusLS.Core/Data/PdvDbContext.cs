@@ -18,6 +18,7 @@ public class PdvDbContext : DbContext
     public DbSet<ItemVenda> ItensVenda => Set<ItemVenda>();
     public DbSet<Cliente> Clientes => Set<Cliente>();
     public DbSet<ConfiguracaoLoja> ConfiguracoesLoja => Set<ConfiguracaoLoja>();
+    public DbSet<PagamentoCliente> PagamentosCliente => Set<PagamentoCliente>();
     public DbSet<TurnoCaixa> TurnosCaixa => Set<TurnoCaixa>();
     public DbSet<MovimentoCaixa> MovimentosCaixa => Set<MovimentoCaixa>();
     public DbSet<FechamentoCaixa> FechamentosCaixa => Set<FechamentoCaixa>();
@@ -85,6 +86,14 @@ public class PdvDbContext : DbContext
             e.Property(c => c.MensagemCupom).HasMaxLength(250);
             e.Property(c => c.ImpressoraCupom).HasMaxLength(200);
             e.Property(c => c.NomeOperador).IsRequired().HasMaxLength(80);
+        });
+
+        modelBuilder.Entity<PagamentoCliente>(e =>
+        {
+            e.Property(p => p.Observacao).HasMaxLength(200);
+            e.Property(p => p.Operador).HasMaxLength(80);
+            e.HasOne<Cliente>().WithMany().HasForeignKey(p => p.ClienteId).OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(p => p.ClienteId);
         });
 
         modelBuilder.Entity<TurnoCaixa>(e =>

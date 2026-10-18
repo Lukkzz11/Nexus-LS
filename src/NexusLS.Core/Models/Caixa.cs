@@ -60,3 +60,15 @@ public class FechamentoCaixa
     public long DiferencaPixCentavos => ConferidoPixCentavos - EsperadoPixCentavos;
     public long DiferencaTotalCentavos => DiferencaDinheiroCentavos + DiferencaCartaoCentavos + DiferencaPixCentavos;
 }
+
+/// <summary>Dinheiro que um cliente pagou da dívida a prazo. Nunca é apagado.</summary>
+public class PagamentoCliente
+{
+    public int Id { get; set; }
+    public int ClienteId { get; set; }
+    public DateTime DataHora { get; set; }
+    public long ValorCentavos { get; set; }
+    public FormaPagamento Forma { get; set; }
+    public string? Observacao { get; set; }
+    public string? Operador { get; set; }
+}
