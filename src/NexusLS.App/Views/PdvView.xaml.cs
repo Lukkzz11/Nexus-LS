@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Threading;
 using NexusLS.App.ViewModels;
 
 namespace NexusLS.App.Views;
@@ -13,7 +14,8 @@ public partial class PdvView : UserControl
         InitializeComponent();
         Loaded += AoCarregar;
         Unloaded += AoDescarregar;
-        PreviewKeyDown += AoTeclar;
+        PreviewKeyDown += AoTeclarPrevio;
+        KeyDown += AoTeclar;
     }
 
     private PdvViewModel? Vm => DataContext as PdvViewModel;
@@ -26,62 +28,114 @@ public partial class PdvView : UserControl
             vm.Confirmar = mensagem =>
                 MessageBox.Show(Window.GetWindow(this), mensagem, "Nexus LS",
                     MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
-            vm.FocoNaBuscaSolicitado += AoPedirFoco;
-            vm.FocoNoValorRecebidoSolicitado += AoPedirFocoRecebido;
+            vm.FocoSolicitado += AoPedirFoco;
         }
-        FocarBusca();
+        Focar(AlvoFoco.Busca);
     }
 
     // O mesmo ViewModel do PDV vive o programa todo, mas a View é recriada a cada visita à tela.
     // Por isso desligamos o evento ao sair, senão Views antigas continuariam "escutando".
     private void AoDescarregar(object sender, RoutedEventArgs e)
     {
-        if (Vm is { } vm)
-        {
-            vm.FocoNaBuscaSolicitado -= AoPedirFoco;
-            vm.FocoNoValorRecebidoSolicitado -= AoPedirFocoRecebido;
-        }
+        if (Vm is { } vm) vm.FocoSolicitado -= AoPedirFoco;
     }
 
-    private void AoPedirFoco() => Dispatcher.BeginInvoke(FocarBusca);
+    private void AoPedirFoco(AlvoFoco alvo) =>
+        // Prioridade baixa: espera a tela terminar de mostrar/esconder as janelas antes de mover o cursor.
+        Dispatcher.BeginInvoke(DispatcherPriority.Background, () => Focar(alvo));
 
-    // Prioridade "Input": espera o campo aparecer na tela (ele some quando o pagamento não é dinheiro).
-    private void AoPedirFocoRecebido() => Dispatcher.BeginInvoke(
-        System.Windows.Threading.DispatcherPriority.Input,
-        () =>
-        {
-            CaixaRecebido.Focus();
-            CaixaRecebido.SelectAll();
-        });
-
-    private void FocarBusca()
+    private void Focar(AlvoFoco alvo)
     {
-        CaixaBusca.Focus();
-        CaixaBusca.SelectAll();
+        switch (alvo)
+        {
+            case AlvoFoco.Busca:
+                CaixaBusca.Focus();
+                CaixaBusca.SelectAll();
+                break;
+            case AlvoFoco.Desconto:
+                CaixaDesconto.Focus();
+                CaixaDesconto.SelectAll();
+                break;
+            case AlvoFoco.ValorRecebido:
+                CaixaRecebido.Focus();
+                CaixaRecebido.SelectAll();
+                break;
+            case AlvoFoco.Cliente:
+                CaixaCliente.Focus();
+                CaixaCliente.SelectAll();
+                break;
+            default:
+                Sobreposicao.Focus(); // modais sem campo de texto: o próprio painel recebe as setas
+                break;
+        }
     }
 
     /// <summary>
-    /// F2 e F10 tratados aqui. O F10 é uma "tecla de sistema" no Windows (ativa o menu da janela),
-    /// por isso o WPF não o entrega como uma tecla normal e um KeyBinding no XAML não funcionaria.
+    /// Teclas que precisam ser vistas ANTES dos campos de texto (que usariam as setas para mexer o cursor).
+    /// </summary>
+    private void AoTeclarPrevio(object sender, KeyEventArgs e)
+    {
+        if (Vm is not { } vm) return;
+
+        // Proteção: tecla Enter segurada gera vários Enter; só o primeiro vale.
+        if (e.Key == Key.Enter && e.IsRepeat)
+        {
+            e.Handled = true;
+            return;
+        }
+
+        switch (e.Key)
+        {
+            case Key.F2:
+                vm.PedirBusca();
+                Focar(AlvoFoco.Busca);
+                e.Handled = true;
+                return;
+            case Key.F8:
+                vm.AlternarTabelaCommand.Execute(null);
+                e.Handled = true;
+                return;
+            // O F10 é uma "tecla de sistema" no Windows (ativa o menu da janela): o WPF não o entrega como
+            // tecla normal, e um KeyBinding no XAML não funcionaria. Por isso é tratado aqui.
+            case Key.System when e.SystemKey == Key.F10:
+                e.Handled = vm.ProcessarTecla(ComandoTecla.F10);
+                return;
+        }
+
+        // Campos da linha do carrinho: Enter confirma o valor digitado e volta para a busca; as setas ficam com o campo.
+        if (e.OriginalSource is TextBox caixa && caixa.DataContext is ItemCarrinhoViewModel)
+        {
+            if (e.Key == Key.Enter)
+            {
+                BindingOperations.GetBindingExpression(caixa, TextBox.TextProperty)?.UpdateSource();
+                Focar(AlvoFoco.Busca);
+                e.Handled = true;
+            }
+            return;
+        }
+
+        var comando = e.Key switch
+        {
+            Key.Left => (ComandoTecla?)ComandoTecla.Esquerda,
+            Key.Right => ComandoTecla.Direita,
+            Key.Up => ComandoTecla.Cima,
+            Key.Down => ComandoTecla.Baixo,
+            _ => null
+        };
+        if (comando is { } c && vm.ProcessarTecla(c)) e.Handled = true;
+    }
+
+    /// <summary>
+    /// Enter e Esc: tratados na fase de "subida" do evento. Se um botão ou outro elemento já tratou o Enter
+    /// (e.Handled), o fluxo do PDV não o recebe de novo.
     /// </summary>
     private void AoTeclar(object sender, KeyEventArgs e)
     {
-        if (e.Key == Key.F2)
-        {
-            FocarBusca();
-            e.Handled = true;
-        }
-        else if (e.Key == Key.System && e.SystemKey == Key.F10 && Vm is { } vm)
-        {
-            vm.FinalizarCommand.Execute(null);
-            e.Handled = true;
-        }
-        else if (e.Key == Key.Enter && e.OriginalSource is TextBox caixa && caixa.DataContext is ItemCarrinhoViewModel)
-        {
-            // Enter num campo da linha do carrinho: confirma o valor digitado e volta para a busca.
-            BindingOperations.GetBindingExpression(caixa, TextBox.TextProperty)?.UpdateSource();
-            FocarBusca();
-            e.Handled = true;
-        }
+        if (e.Handled || Vm is not { } vm) return;
+
+        if (e.Key == Key.Enter && !e.IsRepeat)
+            e.Handled = vm.ProcessarTecla(ComandoTecla.Enter);
+        else if (e.Key == Key.Escape)
+            e.Handled = vm.ProcessarTecla(ComandoTecla.Esc);
     }
 }

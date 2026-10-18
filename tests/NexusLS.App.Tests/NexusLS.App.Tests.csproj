@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Testa os ViewModels da interface (o fluxo do PDV pelo teclado) sem abrir janela. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.4" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\NexusLS.Core\NexusLS.Core.csproj" />
+    <ProjectReference Include="..\..\src\NexusLS.App\NexusLS.App.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Reaproveita o banco SQLite em memória dos testes do Core. -->
+    <Compile Include="..\NexusLS.Tests\Infra\BancoDeTeste.cs" Link="Infra\BancoDeTeste.cs" />
+  </ItemGroup>
+
+</Project>

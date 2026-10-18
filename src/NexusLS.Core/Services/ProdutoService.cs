@@ -111,6 +111,21 @@ public class ProdutoService
             .FirstOrDefaultAsync(p => p.Ativo && p.CodigoBarras == codigo);
     }
 
+    /// <summary>
+    /// A escolha do Enter na busca do PDV: se o operador desceu com ↑↓ até um item, vale esse (<paramref name="destacado"/>);
+    /// senão o código de barras exato tem prioridade (leitor); senão vale o primeiro resultado da busca. Nulo se não achar nada.
+    /// </summary>
+    public async Task<Produto?> EscolherParaVendaAsync(string texto, Produto? destacado = null)
+    {
+        if (destacado is not null) return destacado;
+
+        texto = texto.Trim();
+        if (texto.Length == 0) return null;
+
+        return await ObterPorCodigoBarrasAsync(texto)
+            ?? (await BuscarAsync(texto)).FirstOrDefault();
+    }
+
     // ================= Grade de tamanhos =================
 
     /// <summary>A grade do produto: "Sem tamanho" primeiro, depois os tamanhos na ordem em que foram cadastrados.</summary>
