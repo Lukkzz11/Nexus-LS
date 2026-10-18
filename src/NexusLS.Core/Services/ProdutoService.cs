@@ -23,10 +23,13 @@ public class ProdutoService
 
         await using var db = await _fabrica.CreateDbContextAsync();
         await GarantirCodigoLivreAsync(db, codigo, null);
+        await GarantirNaoDuplicadoAsync(db, dados.Nome, referencia, null);
 
         var produto = new Produto
         {
             Nome = dados.Nome.Trim(),
+            CodigoInterno = await ProximoCodigoInternoAsync(db),
+            Categoria = Limpar(dados.Categoria),
             CodigoBarras = codigo,
             Referencia = referencia,
             PrecoVendaCentavos = dados.PrecoVendaCentavos,
@@ -64,8 +67,11 @@ public class ProdutoService
         var produto = await db.Produtos.FindAsync(id)
             ?? throw new RegraDeNegocioException("Produto não encontrado.");
         await GarantirCodigoLivreAsync(db, codigo, id);
+        await GarantirNaoDuplicadoAsync(db, dados.Nome, referencia, id);
 
         produto.Nome = dados.Nome.Trim();
+        produto.Categoria = Limpar(dados.Categoria);
+        produto.CodigoInterno ??= await ProximoCodigoInternoAsync(db); // produtos antigos ganham o código ao serem editados
         produto.CodigoBarras = codigo;
         produto.Referencia = referencia;
         produto.PrecoVendaCentavos = dados.PrecoVendaCentavos;
@@ -96,6 +102,8 @@ public class ProdutoService
             consulta = consulta.Where(p =>
                 EF.Functions.Like(p.Nome, padrao) ||
                 (p.Referencia != null && EF.Functions.Like(p.Referencia, padrao)) ||
+                (p.CodigoInterno != null && EF.Functions.Like(p.CodigoInterno, padrao)) ||
+                (p.Categoria != null && EF.Functions.Like(p.Categoria, padrao)) ||
                 (p.CodigoBarras != null && EF.Functions.Like(p.CodigoBarras, padrao)));
         }
 
@@ -108,7 +116,7 @@ public class ProdutoService
         await using var db = await _fabrica.CreateDbContextAsync();
         var codigo = codigoBarras.Trim();
         return await db.Produtos.AsNoTracking()
-            .FirstOrDefaultAsync(p => p.Ativo && p.CodigoBarras == codigo);
+            .FirstOrDefaultAsync(p => p.Ativo && (p.CodigoBarras == codigo || p.CodigoInterno == codigo));
     }
 
     /// <summary>
@@ -124,6 +132,27 @@ public class ProdutoService
 
         return await ObterPorCodigoBarrasAsync(texto)
             ?? (await BuscarAsync(texto)).FirstOrDefault();
+    }
+
+    /// <summary>O próximo código de barras EAN-13 interno livre (prefixo 2). Só gera: quem grava é o cadastro do produto.</summary>
+    public async Task<string> GerarCodigoBarrasInternoAsync()
+    {
+        await using var db = await _fabrica.CreateDbContextAsync();
+        var existentes = await db.Produtos.AsNoTracking()
+            .Where(p => p.CodigoBarras != null && p.CodigoBarras.StartsWith("2") && p.CodigoBarras.Length == 13)
+            .Select(p => p.CodigoBarras!).ToListAsync();
+
+        var maior = existentes.Select(CodigoBarrasInterno.SequenciaDe).Where(s => s is not null).Select(s => s!.Value)
+            .DefaultIfEmpty(0).Max();
+        return CodigoBarrasInterno.Montar(maior + 1);
+    }
+
+    /// <summary>Categorias já usadas nos produtos, em ordem alfabética (para sugerir na digitação).</summary>
+    public async Task<List<string>> ListarCategoriasAsync()
+    {
+        await using var db = await _fabrica.CreateDbContextAsync();
+        return await db.Produtos.AsNoTracking().Where(p => p.Categoria != null)
+            .Select(p => p.Categoria!).Distinct().OrderBy(c => c).ToListAsync();
     }
 
     // ================= Grade de tamanhos =================
@@ -209,6 +238,34 @@ public class ProdutoService
         var codigo = string.IsNullOrWhiteSpace(dados.CodigoBarras) ? null : dados.CodigoBarras.Trim();
         var referencia = string.IsNullOrWhiteSpace(dados.Referencia) ? null : dados.Referencia.Trim();
         return (codigo, referencia);
+    }
+
+    private static string? Limpar(string? texto) => string.IsNullOrWhiteSpace(texto) ? null : texto.Trim();
+
+    /// <summary>INT-000001, INT-000002... sempre o maior já usado + 1 (nunca reaproveita número).</summary>
+    private static async Task<string> ProximoCodigoInternoAsync(PdvDbContext db)
+    {
+        var codigos = await db.Produtos.AsNoTracking().Where(p => p.CodigoInterno != null)
+            .Select(p => p.CodigoInterno!).ToListAsync();
+        var maior = codigos
+            .Select(c => c.StartsWith("INT-") && int.TryParse(c.AsSpan(4), out var n) ? n : 0)
+            .DefaultIfEmpty(0).Max();
+        return $"INT-{maior + 1:D6}";
+    }
+
+    /// <summary>Dois produtos ATIVOS não podem ter o mesmo nome E a mesma referência (nome igual com referência diferente pode).</summary>
+    private static async Task GarantirNaoDuplicadoAsync(PdvDbContext db, string nome, string? referencia, int? idIgnorado)
+    {
+        var nomeMinusculo = nome.Trim().ToLower();
+        var candidatos = await db.Produtos.AsNoTracking()
+            .Where(p => p.Ativo && p.Id != idIgnorado && p.Nome.ToLower() == nomeMinusculo)
+            .Select(p => p.Referencia).ToListAsync();
+
+        if (candidatos.Any(r => string.Equals(r, referencia, StringComparison.OrdinalIgnoreCase)))
+            throw new RegraDeNegocioException(
+                referencia is null
+                    ? "Já existe um produto com esse nome. Se for outro modelo, informe uma referência diferente."
+                    : "Já existe um produto com esse nome e essa referência.");
     }
 
     private static async Task GarantirCodigoLivreAsync(PdvDbContext db, string? codigo, int? idIgnorado)

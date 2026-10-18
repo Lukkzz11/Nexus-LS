@@ -82,6 +82,7 @@
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Código" Binding="{Binding CodigoBarras, Mode=OneWay}" Width="120" />
                         <DataGridTextColumn Header="Ref." Binding="{Binding Referencia, Mode=OneWay}" Width="90" />
+                        <DataGridTextColumn Header="Categoria" Binding="{Binding Categoria, Mode=OneWay}" Width="110" />
                         <DataGridTextColumn Header="Produto" Binding="{Binding Nome, Mode=OneWay}" Width="*" />
                         <DataGridTextColumn Header="Varejo" Width="95" ElementStyle="{StaticResource ColunaNumero}"
                                             Binding="{Binding PrecoVendaCentavos, Mode=OneWay, Converter={StaticResource Centavos}}" />
@@ -150,11 +151,39 @@
                                     </Grid.ColumnDefinitions>
                                     <StackPanel>
                                         <TextBlock Text="Código de barras" Style="{StaticResource Rotulo}" />
-                                        <TextBox Text="{Binding CodigoBarras, UpdateSourceTrigger=PropertyChanged}" />
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox Text="{Binding CodigoBarras, UpdateSourceTrigger=PropertyChanged}" />
+                                            <Button Grid.Column="1" Content="Gerar" Style="{StaticResource BotaoSecundario}"
+                                                    Margin="6,0,0,0" Padding="10,4" Command="{Binding GerarCodigoBarrasCommand}"
+                                                    AutomationProperties.Name="Gerar código de barras"
+                                                    ToolTip="Cria um código EAN-13 interno (começa com 2) que não repete" />
+                                        </Grid>
                                     </StackPanel>
                                     <StackPanel Grid.Column="2">
                                         <TextBlock Text="Referência" Style="{StaticResource Rotulo}" />
                                         <TextBox Text="{Binding Referencia, UpdateSourceTrigger=PropertyChanged}" />
+                                    </StackPanel>
+                                </Grid>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="12" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Categoria" Style="{StaticResource Rotulo}" />
+                                        <TextBox Text="{Binding Categoria, UpdateSourceTrigger=PropertyChanged}"
+                                                 AutomationProperties.Name="Categoria" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Código interno" Style="{StaticResource Rotulo}" />
+                                        <TextBox Text="{Binding CodigoInterno, Mode=OneWay}" IsReadOnly="True"
+                                                 ToolTip="Gerado pelo sistema (INT-000001...)" />
                                     </StackPanel>
                                 </Grid>
 
@@ -190,6 +219,18 @@
                                         <TextBox Text="{Binding EstoqueMinimo, UpdateSourceTrigger=PropertyChanged}" />
                                     </StackPanel>
                                 </Grid>
+
+                                <!-- Calculadora de preço -->
+                                <TextBlock Text="{Binding TextoMargem}" TextWrapping="Wrap" Margin="0,8,0,0"
+                                           Foreground="{StaticResource CorTextoSuave}" />
+                                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                    <TextBlock Text="Margem desejada (%)" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                    <TextBox Width="80" Text="{Binding MargemDesejada, UpdateSourceTrigger=PropertyChanged}"
+                                             AutomationProperties.Name="Margem desejada" />
+                                    <Button Content="Calcular preço" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0"
+                                            Padding="10,4" Command="{Binding CalcularPrecoCommand}"
+                                            ToolTip="Calcula o preço de varejo a partir do custo e da margem" />
+                                </StackPanel>
 
                                 <!-- Produto novo: estoque inicial (vai para "Sem tamanho"; tamanhos têm a própria aba) -->
                                 <StackPanel Visibility="{Binding EhNovo, Converter={StaticResource BoolVis}}">

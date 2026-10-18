@@ -30,6 +30,9 @@ public class PdvDbContext : DbContext
             e.Property(p => p.Nome).IsRequired().HasMaxLength(200);
             e.Property(p => p.CodigoBarras).HasMaxLength(50);
             e.Property(p => p.Referencia).HasMaxLength(60);
+            e.Property(p => p.CodigoInterno).HasMaxLength(20);
+            e.Property(p => p.Categoria).HasMaxLength(60);
+            e.HasIndex(p => p.CodigoInterno).IsUnique().HasFilter("\"CodigoInterno\" IS NOT NULL");
             // Código de barras não pode repetir, mas vários produtos podem ficar sem código (nulo).
             e.HasIndex(p => p.CodigoBarras).IsUnique().HasFilter("\"CodigoBarras\" IS NOT NULL");
             e.HasIndex(p => p.Referencia);

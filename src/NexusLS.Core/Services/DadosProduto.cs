@@ -13,4 +13,5 @@ public record DadosProduto(
     long PrecoCustoCentavos,
     int EstoqueMinimo,
     string? Referencia = null,
-    long PrecoAtacadoCentavos = 0);
+    long PrecoAtacadoCentavos = 0,
+    string? Categoria = null);

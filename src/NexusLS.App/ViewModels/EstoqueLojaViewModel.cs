@@ -62,6 +62,10 @@ public partial class EstoqueLojaViewModel : ViewModelBase
     [ObservableProperty] private string _precoVenda = "";
     [ObservableProperty] private string _precoAtacado = "";
     [ObservableProperty] private string _precoCusto = "";
+    [ObservableProperty] private string _categoria = "";
+    [ObservableProperty] private string _codigoInterno = "";
+    [ObservableProperty] private string _margemDesejada = "";
+    [ObservableProperty] private string _textoMargem = "";
     [ObservableProperty] private string _estoqueMinimo = "0";
     [ObservableProperty] private string _estoqueInicial = "0";
 
@@ -152,6 +156,52 @@ public partial class EstoqueLojaViewModel : ViewModelBase
 
     // ================= Cadastro do produto =================
 
+    partial void OnPrecoVendaChanged(string value) => AtualizarTextoMargem();
+    partial void OnPrecoCustoChanged(string value) => AtualizarTextoMargem();
+
+    /// <summary>Mostra a margem e o markup do preço digitado, para o operador ver se o produto dá lucro.</summary>
+    private void AtualizarTextoMargem()
+    {
+        if (!Dinheiro.TentarConverter(PrecoVenda, out var venda) || !Dinheiro.TentarConverter(PrecoCusto, out var custo) || custo == 0)
+        {
+            TextoMargem = "";
+            return;
+        }
+        var margem = CalculadoraPreco.Margem(venda, custo);
+        var markup = CalculadoraPreco.Markup(venda, custo);
+        TextoMargem = $"Margem {margem:0.##}% (lucro sobre o preço) · Markup {markup:0.##}% (lucro sobre o custo)"
+                      + (venda < custo ? " · ATENÇÃO: preço abaixo do custo!" : "");
+    }
+
+    /// <summary>Calcula o preço de varejo que dá a margem desejada sobre o custo e põe no campo (sem salvar).</summary>
+    [RelayCommand]
+    private void CalcularPreco()
+    {
+        try
+        {
+            if (!Dinheiro.TentarConverter(PrecoCusto, out var custo) || custo <= 0)
+                throw new RegraDeNegocioException("Informe o preço de custo para calcular o preço de venda.");
+            if (!decimal.TryParse(MargemDesejada.Replace("%", "").Trim(), NumberStyles.AllowDecimalPoint,
+                    new CultureInfo("pt-BR"), out var margem))
+                throw new RegraDeNegocioException("Informe a margem desejada em %, por exemplo 40.");
+
+            PrecoVenda = Dinheiro.FormatarParaEdicao(CalculadoraPreco.PrecoPorMargem(custo, margem));
+            MostrarSucesso("Preço de varejo calculado. Confira e salve.");
+        }
+        catch (RegraDeNegocioException ex)
+        {
+            MostrarErro(ex.Message);
+        }
+    }
+
+    /// <summary>Preenche o campo com o próximo código de barras interno (EAN-13, prefixo 2) livre.</summary>
+    [RelayCommand]
+    private Task GerarCodigoBarrasAsync() => ExecutarAsync(async () =>
+    {
+        CodigoBarras = await _produtos.GerarCodigoBarrasInternoAsync();
+        MostrarSucesso("Código de barras gerado. Salve o produto para reservá-lo.");
+    });
+
     [RelayCommand]
     private void Novo()
     {
@@ -167,6 +217,9 @@ public partial class EstoqueLojaViewModel : ViewModelBase
         PrecoVenda = "";
         PrecoAtacado = "";
         PrecoCusto = "";
+        Categoria = "";
+        CodigoInterno = "";
+        MargemDesejada = "";
         EstoqueMinimo = "0";
         EstoqueInicial = "0";
         ProdutoAtivo = true;
@@ -231,7 +284,7 @@ public partial class EstoqueLojaViewModel : ViewModelBase
         var minimo = LerInteiro(EstoqueMinimo, "Estoque mínimo");
         var inicial = EhNovo ? LerInteiro(EstoqueInicial, "Estoque inicial") : 0;
 
-        return (new DadosProduto(Nome, CodigoBarras, venda, custo, minimo, Referencia, atacado), inicial);
+        return (new DadosProduto(Nome, CodigoBarras, venda, custo, minimo, Referencia, atacado, Categoria), inicial);
     }
 
     private static int LerInteiro(string texto, string campo)
@@ -250,6 +303,8 @@ public partial class EstoqueLojaViewModel : ViewModelBase
         Nome = produto.Nome;
         CodigoBarras = produto.CodigoBarras ?? "";
         Referencia = produto.Referencia ?? "";
+        Categoria = produto.Categoria ?? "";
+        CodigoInterno = produto.CodigoInterno ?? "";
         PrecoVenda = Dinheiro.FormatarParaEdicao(produto.PrecoVendaCentavos);
         PrecoAtacado = produto.PrecoAtacadoCentavos > 0 ? Dinheiro.FormatarParaEdicao(produto.PrecoAtacadoCentavos) : "";
         PrecoCusto = Dinheiro.FormatarParaEdicao(produto.PrecoCustoCentavos);

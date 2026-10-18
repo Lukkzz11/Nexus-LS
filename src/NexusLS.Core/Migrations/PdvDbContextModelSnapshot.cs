@@ -296,8 +296,16 @@ namespace NexusLS.Core.Migrations
                     b.Property<bool>("Ativo")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("Categoria")
+                        .HasMaxLength(60)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("CodigoBarras")
                         .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CodigoInterno")
+                        .HasMaxLength(20)
                         .HasColumnType("TEXT");
 
                     b.Property<int>("EstoqueAtual")
@@ -329,6 +337,10 @@ namespace NexusLS.Core.Migrations
                     b.HasIndex("CodigoBarras")
                         .IsUnique()
                         .HasFilter("\"CodigoBarras\" IS NOT NULL");
+
+                    b.HasIndex("CodigoInterno")
+                        .IsUnique()
+                        .HasFilter("\"CodigoInterno\" IS NOT NULL");
 
                     b.HasIndex("Referencia");
 

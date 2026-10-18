@@ -16,6 +16,12 @@ public class Produto
 
     public string Nome { get; set; } = string.Empty;
 
+    /// <summary>Código interno automático (INT-000001), gerado pelo sistema e sempre único.</summary>
+    public string? CodigoInterno { get; set; }
+
+    /// <summary>Grupo do produto (ex.: Camisetas, Bonés), usado nos relatórios.</summary>
+    public string? Categoria { get; set; }
+
     /// <summary>Preço de varejo.</summary>
     public long PrecoVendaCentavos { get; set; }
 

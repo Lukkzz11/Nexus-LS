@@ -13,7 +13,7 @@ O menu lateral tem três grupos:
 | | **Caixa** | Vendas de um dia, resumo por forma de pagamento, detalhe, **cancelar** venda (pede o motivo, registra quem e quando cancelou, devolve o estoque se você quiser; a venda nunca é apagada), reimprimir cupom e exportar CSV. |
 | | **Fechamento** | Abrir o caixa com troco inicial, registrar sangria, reforço, despesa e entrada avulsa, e fechar conferindo dinheiro, cartão e Pix contra o esperado. Diferença exige observação. Fechamentos nunca mudam: conferir de novo cria uma nova versão. |
 | | **Mais vendidos** | Ranking de produtos num período, com opção de separar por tamanho, e exportar CSV. |
-| **Estoque** | **Estoque da loja** | Lista de produtos, cadastro (preço de varejo e de atacado, custo, mínimo, referência, código de barras), grade de tamanhos com estoque de cada um e ajuste de estoque com motivo (entrada, perda, correção). Itens abaixo do mínimo ficam em amarelo. Todo ajuste vira uma linha no histórico. |
+| **Estoque** | **Estoque da loja** | Lista de produtos, cadastro (preço de varejo e de atacado, custo, mínimo, referência, categoria, código de barras com botão **Gerar** para EAN-13 interno, código interno automático INT-000001 e calculadora de margem/preço), grade de tamanhos com estoque de cada um e ajuste de estoque com motivo (entrada, perda, correção). Itens abaixo do mínimo ficam em amarelo. Todo ajuste vira uma linha no histórico. |
 | | **Etiquetas** | Etiquetas com nome, preço, tamanho e código de barras (Code 128), em bobina ou folha A4, com prévia. |
 | **Gestão** | **Clientes** | Cadastro e histórico de compras de cada cliente. |
 | | **Relatórios** | Vendas por período: total, número de vendas, ticket médio, descontos, canceladas, por dia, por forma de pagamento, e exportar CSV (vendas e itens). |
@@ -27,6 +27,7 @@ BUSCA vazia + carrinho cheio ─Enter→ DESCONTO ─Enter→ PAGAMENTO ─Enter
 ```
 
 - O foco volta sempre para a busca. A busca aceita nome, referência ou código de barras.
+- **Cadastro de produto:** o código interno (INT-000001...) é automático e nunca repete; o botão Gerar cria um código de barras EAN-13 que começa com 2 (faixa de uso interno). Não se cadastra dois produtos ativos com o mesmo nome e a mesma referência. Margem = lucro sobre o preço; markup = lucro sobre o custo.
 - **Enter na busca:** se você desceu com ↑ ↓, vale o item destacado; senão o código de barras exato tem prioridade (leitor); senão vale o primeiro resultado.
 - **Tamanho:** sempre abre ao escolher o produto. Grade de 3 colunas, navegue com ← → ↑ ↓ ou digite a letra/número do tamanho (M, GG, 38). No **atacado** aparece também a opção "Sem tamanho".
 - **Quantidade:** digite o número ou use ↑ soma / ↓ subtrai (mínimo 1); limitada ao estoque do tamanho.
