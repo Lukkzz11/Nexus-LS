@@ -1,0 +1,142 @@
+<UserControl x:Class="PdvSimples.App.Views.VendasView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <UserControl.Resources>
+        <Style x:Key="ColunaNumero" TargetType="TextBlock">
+            <Setter Property="HorizontalAlignment" Value="Right" />
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="16" />
+            <ColumnDefinition Width="400" />
+        </Grid.ColumnDefinitions>
+
+        <!-- ===== Lista de vendas ===== -->
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Text="Vendas" Style="{StaticResource TituloTela}" Margin="0,0,0,14" />
+
+            <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
+                <TextBlock Text="Dia:" VerticalAlignment="Center" Margin="0,0,8,0" />
+                <DatePicker SelectedDate="{Binding Data}" Width="150" VerticalContentAlignment="Center" />
+                <TextBlock Text="{Binding Resumo}" VerticalAlignment="Center" Margin="20,0,0,0" FontWeight="SemiBold" />
+            </StackPanel>
+
+            <Border Grid.Row="2" Style="{StaticResource Painel}" Padding="0">
+                <DataGrid ItemsSource="{Binding Vendas}"
+                          SelectedItem="{Binding Selecionada, Mode=TwoWay}"
+                          AutoGenerateColumns="False" IsReadOnly="True"
+                          SelectionMode="Single" SelectionUnit="FullRow"
+                          CanUserAddRows="False" CanUserDeleteRows="False"
+                          HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                          HorizontalGridLinesBrush="#E5E7EB" BorderThickness="0"
+                          Background="White" RowHeight="36">
+                    <DataGrid.RowStyle>
+                        <Style TargetType="DataGridRow">
+                            <Setter Property="Background" Value="White" />
+                            <Style.Triggers>
+                                <!-- venda cancelada: cinza e riscada, mas continua na lista -->
+                                <DataTrigger Binding="{Binding Cancelada}" Value="True">
+                                    <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />
+                                </DataTrigger>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="{StaticResource CorSelecao}" />
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGrid.RowStyle>
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Nº" Binding="{Binding Id, Mode=OneWay}" Width="70" />
+                        <DataGridTextColumn Header="Hora" Binding="{Binding DataHora, Mode=OneWay, StringFormat='HH:mm'}" Width="80" />
+                        <DataGridTextColumn Header="Pagamento" Width="*"
+                                            Binding="{Binding FormaPagamento, Mode=OneWay, Converter={StaticResource FormaPag}}" />
+                        <DataGridTextColumn Header="Total" Width="120" ElementStyle="{StaticResource ColunaNumero}"
+                                            Binding="{Binding TotalCentavos, Mode=OneWay, Converter={StaticResource Centavos}}" />
+                        <DataGridTextColumn Header="Situação" Width="110"
+                                            Binding="{Binding Cancelada, Mode=OneWay, Converter={StaticResource BoolTexto}, ConverterParameter='Cancelada|Concluída'}" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+        </Grid>
+
+        <!-- ===== Detalhe ===== -->
+        <Border Grid.Column="2" Style="{StaticResource Painel}" VerticalAlignment="Top">
+            <StackPanel>
+                <TextBlock Text="Detalhe da venda" FontSize="18" FontWeight="SemiBold" />
+
+                <TextBlock Text="Selecione uma venda na lista." Margin="0,8,0,0"
+                           Foreground="{StaticResource CorTextoSuave}"
+                           Visibility="{Binding TemSelecao, Converter={StaticResource BoolInverso}}" />
+
+                <StackPanel Visibility="{Binding TemSelecao, Converter={StaticResource BoolVis}}">
+                    <TextBlock Margin="0,8,0,0" FontWeight="SemiBold" FontSize="16"
+                               Text="{Binding Selecionada.Id, StringFormat='Venda nº {0}'}" />
+                    <TextBlock Text="{Binding Selecionada.DataHora, StringFormat='dd/MM/yyyy HH:mm'}"
+                               Foreground="{StaticResource CorTextoSuave}" />
+
+                    <ItemsControl ItemsSource="{Binding Selecionada.Itens}" Margin="0,12,0,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,2">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock TextTrimming="CharacterEllipsis">
+                                        <Run Text="{Binding Quantidade, Mode=OneWay}" FontWeight="Bold" />
+                                        <Run Text="×" />
+                                        <Run Text="{Binding NomeProduto, Mode=OneWay}" />
+                                    </TextBlock>
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding TotalCentavos, Converter={StaticResource Centavos}}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <Separator Margin="0,12" />
+
+                    <Grid>
+                        <TextBlock Text="Subtotal" Foreground="{StaticResource CorTextoSuave}" />
+                        <TextBlock HorizontalAlignment="Right"
+                                   Text="{Binding Selecionada.SubtotalCentavos, Converter={StaticResource Centavos}}" />
+                    </Grid>
+                    <Grid Margin="0,2,0,0">
+                        <TextBlock Text="Desconto" Foreground="{StaticResource CorTextoSuave}" />
+                        <TextBlock HorizontalAlignment="Right"
+                                   Text="{Binding Selecionada.DescontoCentavos, Converter={StaticResource Centavos}}" />
+                    </Grid>
+                    <Grid Margin="0,4,0,0">
+                        <TextBlock Text="Total" FontWeight="Bold" FontSize="18" />
+                        <TextBlock HorizontalAlignment="Right" FontWeight="Bold" FontSize="18"
+                                   Text="{Binding Selecionada.TotalCentavos, Converter={StaticResource Centavos}}" />
+                    </Grid>
+                    <Grid Margin="0,6,0,0">
+                        <TextBlock Text="{Binding Selecionada.FormaPagamento, Converter={StaticResource FormaPag}}"
+                                   Foreground="{StaticResource CorTextoSuave}" />
+                        <TextBlock HorizontalAlignment="Right" Foreground="{StaticResource CorTextoSuave}"
+                                   Text="{Binding Selecionada.TrocoCentavos, Converter={StaticResource Centavos}, StringFormat='troco {0}'}" />
+                    </Grid>
+
+                    <TextBlock Margin="0,12,0,0" Foreground="{StaticResource CorPerigo}" FontWeight="SemiBold"
+                               Text="{Binding Selecionada.DataCancelamento, StringFormat='Cancelada em dd/MM/yyyy HH:mm'}" />
+
+                    <Button Content="Cancelar venda" Style="{StaticResource BotaoPerigo}"
+                            HorizontalAlignment="Left" Margin="0,16,0,0"
+                            Command="{Binding CancelarVendaCommand}" />
+                </StackPanel>
+
+                <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" />
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

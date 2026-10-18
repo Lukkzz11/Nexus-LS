@@ -14,6 +14,8 @@
             <conv:CentavosConverter x:Key="Centavos" />
             <conv:BoolParaTextoConverter x:Key="BoolTexto" />
             <conv:TipoMovimentacaoConverter x:Key="TipoMov" />
+            <conv:FormaPagamentoConverter x:Key="FormaPag" />
+            <conv:BoolInversoVisibilidadeConverter x:Key="BoolInverso" />
             <BooleanToVisibilityConverter x:Key="BoolVis" />
 
             <!-- Regra do MVVM no WPF: quando a janela mostra um ViewModel, o WPF procura aqui
@@ -23,6 +25,9 @@
             </DataTemplate>
             <DataTemplate DataType="{x:Type vm:PdvViewModel}">
                 <views:PdvView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:VendasViewModel}">
+                <views:VendasView />
             </DataTemplate>
             <DataTemplate DataType="{x:Type vm:EstoqueViewModel}">
                 <views:EstoqueView />

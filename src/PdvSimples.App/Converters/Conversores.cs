@@ -35,6 +35,30 @@ public class TipoMovimentacaoConverter : IValueConverter
         throw new NotSupportedException();
 }
 
+/// <summary>Visível quando o valor é FALSE (o contrário do BooleanToVisibilityConverter).</summary>
+public class BoolInversoVisibilidadeConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        value is true ? System.Windows.Visibility.Collapsed : System.Windows.Visibility.Visible;
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}
+
+public class FormaPagamentoConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => value switch
+    {
+        FormaPagamento.Dinheiro => "Dinheiro",
+        FormaPagamento.Pix => "Pix",
+        FormaPagamento.Cartao => "Cartão",
+        _ => string.Empty
+    };
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}
+
 /// <summary>true/false -> texto. O parâmetro tem os dois textos separados por "|", ex.: "Ativo|Inativo".</summary>
 public class BoolParaTextoConverter : IValueConverter
 {
