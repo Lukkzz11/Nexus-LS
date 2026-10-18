@@ -223,7 +223,7 @@ public class GradeTamanhosTests
         Assert.Equal(Tamanhos.SemTamanho, Assert.Single(venda.Itens).Tamanho);
         ConferirTotal(banco);
 
-        await vendas.CancelarAsync(venda.Id);
+        await vendas.CancelarAsync(venda.Id, "Teste");
 
         Assert.Equal(5, (await produtos.ListarTamanhosAsync(id)).Single(t => t.EhSemTamanho).Estoque);
         ConferirTotal(banco);

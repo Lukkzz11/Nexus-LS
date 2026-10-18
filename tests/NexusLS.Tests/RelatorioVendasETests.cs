@@ -41,7 +41,7 @@ public class RelatorioVendasTests
         await c.VenderAsync(2, desconto: 100);     // 40,00 - 1,00 = 39,00
         await c.VenderAsync(3);                    // 60,00
         var cancelada = await c.VenderAsync(50);
-        await c.Vendas.CancelarAsync(cancelada.Id);
+        await c.Vendas.CancelarAsync(cancelada.Id, "Teste");
 
         var r = await c.Relatorio.VendasPorPeriodoAsync(c.Agora, c.Agora);
 
@@ -145,7 +145,7 @@ public class HistoricoClienteTests
         agora = agora.AddDays(5);
         await Vender(3, FormaPagamento.APrazo, maria.Id);                         // 60,00 a prazo
         var cancelada = await Vender(10, FormaPagamento.APrazo, maria.Id);        // não conta
-        await vendas.CancelarAsync(cancelada.Id);
+        await vendas.CancelarAsync(cancelada.Id, "Teste");
         await Vender(7, FormaPagamento.Pix, outra.Id);                            // de outra pessoa
 
         var h = await clientes.HistoricoAsync(maria.Id);

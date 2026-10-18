@@ -185,7 +185,7 @@ public sealed class RelatoriosTelaTests : IDisposable
         await VenderAsync(2);                                   // 40,00
         await VenderAsync(3, FormaPagamento.Dinheiro);          // 60,00
         var cancelada = await _vendas.FinalizarAsync(new PedidoVenda(new[] { new ItemCarrinho(_boneId, 9) }, 0, FormaPagamento.Pix));
-        await _vendas.CancelarAsync(cancelada.Id);
+        await _vendas.CancelarAsync(cancelada.Id, "Teste");
 
         var vm = new RelatoriosViewModel(_relatorio);
         await Espera.AteAsync(() => vm.Vendas.Count == 3, "relatório");

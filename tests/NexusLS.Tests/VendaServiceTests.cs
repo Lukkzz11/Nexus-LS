@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using NexusLS.Core.Models;
 using NexusLS.Core.Services;
 using NexusLS.Tests.Infra;
@@ -225,7 +225,7 @@ public class VendaServiceTests
         using var c = await Cenario.CriarAsync();
         var venda = await c.Vendas.FinalizarAsync(Pix(I(c.CafeId, 2), I(c.PaoId, 4)));
 
-        var cancelada = await c.Vendas.CancelarAsync(venda.Id);
+        var cancelada = await c.Vendas.CancelarAsync(venda.Id, "Teste");
 
         Assert.True(cancelada.Cancelada);
         Assert.Equal(5, c.Estoque(c.CafeId));
@@ -243,7 +243,7 @@ public class VendaServiceTests
         using var c = await Cenario.CriarAsync();
         var venda = await c.Vendas.FinalizarAsync(Pix(I(c.CafeId, 2)));
 
-        await c.Vendas.CancelarAsync(venda.Id);
+        await c.Vendas.CancelarAsync(venda.Id, "Teste");
 
         using var db = c.Banco.CriarContexto();
         var mov = db.Movimentacoes.Single(m => m.Tipo == TipoMovimentacao.CancelamentoVenda);
@@ -256,9 +256,9 @@ public class VendaServiceTests
     {
         using var c = await Cenario.CriarAsync();
         var venda = await c.Vendas.FinalizarAsync(Pix(I(c.CafeId, 2)));
-        await c.Vendas.CancelarAsync(venda.Id);
+        await c.Vendas.CancelarAsync(venda.Id, "Teste");
 
-        await Assert.ThrowsAsync<RegraDeNegocioException>(() => c.Vendas.CancelarAsync(venda.Id));
+        await Assert.ThrowsAsync<RegraDeNegocioException>(() => c.Vendas.CancelarAsync(venda.Id, "Teste"));
 
         Assert.Equal(5, c.Estoque(c.CafeId));
     }
@@ -267,7 +267,76 @@ public class VendaServiceTests
     public async Task Cancelar_venda_inexistente_falha()
     {
         using var c = await Cenario.CriarAsync();
-        await Assert.ThrowsAsync<RegraDeNegocioException>(() => c.Vendas.CancelarAsync(123));
+        await Assert.ThrowsAsync<RegraDeNegocioException>(() => c.Vendas.CancelarAsync(123, "Teste"));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("  ")]
+    [InlineData("ab")]
+    public async Task Cancelar_exige_motivo_com_pelo_menos_3_letras(string motivo)
+    {
+        using var c = await Cenario.CriarAsync();
+        var venda = await c.Vendas.FinalizarAsync(Pix(I(c.CafeId, 2)));
+
+        await Assert.ThrowsAsync<RegraDeNegocioException>(() => c.Vendas.CancelarAsync(venda.Id, motivo));
+
+        using var db = c.Banco.CriarContexto();
+        Assert.False(db.Vendas.Single().Cancelada);
+        Assert.Equal(3, c.Estoque(c.CafeId));
+    }
+
+    [Fact]
+    public async Task Cancelar_guarda_motivo_quem_cancelou_e_que_o_estoque_voltou()
+    {
+        using var c = await Cenario.CriarAsync();
+        var venda = await c.Vendas.FinalizarAsync(Pix(I(c.CafeId, 2)));
+
+        await c.Vendas.CancelarAsync(venda.Id, "  Cliente desistiu ", true, "Maria");
+
+        using var db = c.Banco.CriarContexto();
+        var salva = db.Vendas.Single();
+        Assert.Equal("Cliente desistiu", salva.MotivoCancelamento);
+        Assert.Equal("Maria", salva.CanceladoPor);
+        Assert.True(salva.EstoqueDevolvido);
+    }
+
+    [Fact]
+    public async Task Cancelar_sem_devolver_estoque_nao_mexe_no_estoque_nem_cria_movimentacao()
+    {
+        using var c = await Cenario.CriarAsync();
+        var venda = await c.Vendas.FinalizarAsync(Pix(I(c.CafeId, 2)));
+
+        await c.Vendas.CancelarAsync(venda.Id, "Peça danificada", devolverEstoque: false);
+
+        Assert.Equal(3, c.Estoque(c.CafeId));
+        using var db = c.Banco.CriarContexto();
+        Assert.False(db.Vendas.Single().EstoqueDevolvido);
+        Assert.Empty(db.Movimentacoes.Where(m => m.Tipo == TipoMovimentacao.CancelamentoVenda));
+    }
+
+    [Fact]
+    public async Task Venda_e_cancelamento_usam_o_operador_das_configuracoes()
+    {
+        using var c = await Cenario.CriarAsync();
+        var config = new ConfiguracaoService(c.Banco.Fabrica);
+        await config.SalvarAsync(new DadosLoja("Loja", NomeOperador: "João"));
+
+        var venda = await c.Vendas.FinalizarAsync(Pix(I(c.CafeId, 1)));
+        await c.Vendas.CancelarAsync(venda.Id, "Engano");
+
+        using var db = c.Banco.CriarContexto();
+        var salva = db.Vendas.Single();
+        Assert.Equal("João", salva.Operador);
+        Assert.Equal("João", salva.CanceladoPor);
+    }
+
+    [Fact]
+    public async Task Sem_configuracao_o_operador_padrao_e_Caixa()
+    {
+        using var c = await Cenario.CriarAsync();
+        var venda = await c.Vendas.FinalizarAsync(Pix(I(c.CafeId, 1)));
+        Assert.Equal("Caixa", venda.Operador);
     }
 
     [Fact]
@@ -277,7 +346,7 @@ public class VendaServiceTests
         var venda = await c.Vendas.FinalizarAsync(Pix(I(c.CafeId, 2)));
         await new ProdutoService(c.Banco.Fabrica).DesativarAsync(c.CafeId);
 
-        await c.Vendas.CancelarAsync(venda.Id);
+        await c.Vendas.CancelarAsync(venda.Id, "Teste");
 
         Assert.Equal(5, c.Estoque(c.CafeId));
     }
@@ -293,7 +362,7 @@ public class VendaServiceTests
         c.Agora = Hoje;
         await c.Vendas.FinalizarAsync(Pix(I(c.CafeId, 1)));           // hoje, 10,00
         var cancelar = await c.Vendas.FinalizarAsync(Pix(I(c.PaoId, 2))); // hoje, 5,00
-        await c.Vendas.CancelarAsync(cancelar.Id);
+        await c.Vendas.CancelarAsync(cancelar.Id, "Teste");
 
         var doDia = await c.Vendas.ListarDoDiaAsync();
 

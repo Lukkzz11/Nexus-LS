@@ -25,9 +25,19 @@ public class Venda
     public int? ClienteId { get; set; }
     public Cliente? Cliente { get; set; }
 
+    /// <summary>Nome de quem fez a venda (vem de Configurações → Operador).</summary>
+    public string? Operador { get; set; }
+
     /// <summary>Venda cancelada nunca é apagada; apenas marcada.</summary>
     public bool Cancelada { get; set; }
     public DateTime? DataCancelamento { get; set; }
+
+    /// <summary>Por que a venda foi cancelada (obrigatório ao cancelar), e quem cancelou.</summary>
+    public string? MotivoCancelamento { get; set; }
+    public string? CanceladoPor { get; set; }
+
+    /// <summary>Ao cancelar, os itens voltaram ao estoque? (Pode-se cancelar sem devolver, ex.: peça danificada.)</summary>
+    public bool EstoqueDevolvido { get; set; }
 
     public List<ItemVenda> Itens { get; set; } = new();
 }

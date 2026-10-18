@@ -180,7 +180,7 @@ public sealed class CapturaDeTelas : IDisposable
         await vendas.FinalizarAsync(new PedidoVenda(new[] { new ItemCarrinho(bone.Id, 4) }, 0, FormaPagamento.CartaoCredito, Parcelas: 2));
         await vendas.FinalizarAsync(new PedidoVenda(new[] { new ItemCarrinho(camiseta.Id, 3, "G") }, 1000, FormaPagamento.APrazo, ClienteId: maria.Id));
         var cancelada = await vendas.FinalizarAsync(new PedidoVenda(new[] { new ItemCarrinho(bone.Id, 9) }, 0, FormaPagamento.Pix));
-        await vendas.CancelarAsync(cancelada.Id);
+        await vendas.CancelarAsync(cancelada.Id, "Teste");
 
         var cupons = new CupomService(_banco.Fabrica, new ConfiguracaoService(_banco.Fabrica), new ImpressoraDeMentira());
         VendasViewModel? caixa = null;

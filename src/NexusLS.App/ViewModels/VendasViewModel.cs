@@ -1,10 +1,13 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NexusLS.Core.Models;
 using NexusLS.Core.Services;
 
 namespace NexusLS.App.ViewModels;
+
+/// <summary>As respostas do cancelamento: o motivo e se os itens voltam ao estoque.</summary>
+public record DadosCancelamento(string Motivo, bool DevolverEstoque);
 
 public partial class VendasViewModel : ViewModelBase
 {
@@ -24,6 +27,12 @@ public partial class VendasViewModel : ViewModelBase
     public Func<string, bool> Confirmar { get; set; } = _ => true;
 
     /// <summary>
+    /// A tela define como pedir o motivo do cancelamento (e se o estoque volta). Recebe a pergunta e devolve
+    /// as respostas, ou nulo se a pessoa desistiu. O padrão (usado nos testes) responde com um motivo fixo.
+    /// </summary>
+    public Func<string, DadosCancelamento?> PedirCancelamento { get; set; } = _ => new DadosCancelamento("Cancelamento pelo operador", true);
+
+    /// <summary>
     /// A tela define como o operador escolhe onde salvar o arquivo (caixa "Salvar como"). Recebe o nome sugerido
     /// e devolve o caminho escolhido, ou nulo se a pessoa cancelou.
     /// </summary>
@@ -36,6 +45,8 @@ public partial class VendasViewModel : ViewModelBase
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(PodeCancelar))]
     [NotifyPropertyChangedFor(nameof(TemSelecao))]
+    [NotifyPropertyChangedFor(nameof(TextoOperador))]
+    [NotifyPropertyChangedFor(nameof(TextoCancelamento))]
     [NotifyCanExecuteChangedFor(nameof(CancelarVendaCommand))]
     private Venda? _selecionada;
 
@@ -43,6 +54,17 @@ public partial class VendasViewModel : ViewModelBase
     [ObservableProperty] private string _resumoFormas = "";
 
     public bool TemSelecao => Selecionada is not null;
+
+    /// <summary>Linha de texto sobre quem vendeu (vazia se a venda é antiga e não tem operador).</summary>
+    public string TextoOperador => Selecionada?.Operador is { Length: > 0 } o ? $"Operador: {o}" : "";
+
+    /// <summary>Quem cancelou, quando, por quê e se o estoque voltou. Vazio se a venda não foi cancelada.</summary>
+    public string TextoCancelamento => Selecionada is { Cancelada: true } v
+        ? $"Cancelada em {v.DataCancelamento:dd/MM/yyyy HH:mm}"
+          + (string.IsNullOrWhiteSpace(v.CanceladoPor) ? "" : $" por {v.CanceladoPor}")
+          + (string.IsNullOrWhiteSpace(v.MotivoCancelamento) ? "" : $"{Environment.NewLine}Motivo: {v.MotivoCancelamento}")
+          + (v.EstoqueDevolvido ? $"{Environment.NewLine}Estoque devolvido." : $"{Environment.NewLine}Estoque NÃO foi devolvido.")
+        : "";
     public bool PodeCancelar => Selecionada is { Cancelada: false };
 
     partial void OnDataChanged(DateTime? value) => _ = CarregarAsync();
@@ -107,11 +129,11 @@ public partial class VendasViewModel : ViewModelBase
     {
         if (Selecionada is not { Cancelada: false } venda) return;
 
-        if (!Confirmar($"Cancelar a venda #{venda.Id} de {Dinheiro.Formatar(venda.TotalCentavos)}?\nO estoque dos itens será devolvido."))
-            return;
+        var dados = PedirCancelamento($"Cancelar a venda #{venda.Id} de {Dinheiro.Formatar(venda.TotalCentavos)}?");
+        if (dados is null) return;
 
-        await _vendas.CancelarAsync(venda.Id);
+        await _vendas.CancelarAsync(venda.Id, dados.Motivo, dados.DevolverEstoque);
         await CarregarAsync();
-        MostrarSucesso($"Venda #{venda.Id} cancelada e estoque devolvido.");
+        MostrarSucesso($"Venda #{venda.Id} cancelada" + (dados.DevolverEstoque ? " e estoque devolvido." : "; o estoque não foi alterado."));
     });
 }

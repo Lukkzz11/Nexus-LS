@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Text;
 using NexusLS.App.ViewModels;
 using NexusLS.Core.Models;
@@ -73,7 +73,7 @@ public sealed class CaixaEMaisVendidosTests : IDisposable
         await VenderAsync(FormaPagamento.Pix, I(_boneId, 1));           // 20,00
         await VenderAsync(FormaPagamento.Pix, I(_boneId, 1));           // 20,00
         var cancelada = await VenderAsync(FormaPagamento.Dinheiro, I(_boneId, 10));
-        await _vendas.CancelarAsync(cancelada.Id);
+        await _vendas.CancelarAsync(cancelada.Id, "Teste");
 
         var caixa = NovoCaixa();
         await AteAsync(() => caixa.Vendas.Count == 4, "lista do dia");
@@ -86,12 +86,36 @@ public sealed class CaixaEMaisVendidosTests : IDisposable
     }
 
     [Fact]
+    public async Task Cancelar_na_tela_pede_o_motivo_e_mostra_quem_cancelou_e_o_estoque()
+    {
+        await PrepararAsync();
+        await VenderAsync(FormaPagamento.Dinheiro, I(_boneId, 2));
+        var caixa = NovoCaixa();
+        await AteAsync(() => caixa.Vendas.Count == 1, "lista do dia");
+        caixa.Selecionada = caixa.Vendas[0];
+
+        caixa.PedirCancelamento = _ => null; // a pessoa desistiu
+        await caixa.CancelarVendaCommand.ExecuteAsync(null);
+        Assert.False(caixa.Vendas[0].Cancelada);
+        Assert.Equal("", caixa.TextoCancelamento);
+
+        caixa.PedirCancelamento = _ => new DadosCancelamento("Cliente desistiu", false);
+        await caixa.CancelarVendaCommand.ExecuteAsync(null);
+        await AteAsync(() => caixa.Vendas.Count == 1 && caixa.Vendas[0].Cancelada, "venda cancelada");
+        caixa.Selecionada = caixa.Vendas[0];
+
+        Assert.Contains("Cliente desistiu", caixa.TextoCancelamento);
+        Assert.Contains("NÃO foi devolvido", caixa.TextoCancelamento);
+        Assert.Contains("Operador: Caixa", caixa.TextoOperador);
+    }
+
+    [Fact]
     public async Task Exportar_vendas_grava_o_csv_com_todas_as_vendas_do_dia_inclusive_a_cancelada_marcada()
     {
         await PrepararAsync();
         await VenderAsync(FormaPagamento.Dinheiro, I(_boneId, 2));
         var cancelada = await VenderAsync(FormaPagamento.Pix, I(_boneId, 1));
-        await _vendas.CancelarAsync(cancelada.Id);
+        await _vendas.CancelarAsync(cancelada.Id, "Teste");
         var caixa = NovoCaixa();
         await AteAsync(() => caixa.Vendas.Count == 2, "lista do dia");
         var destino = Arquivo("vendas.csv");
@@ -107,8 +131,8 @@ public sealed class CaixaEMaisVendidosTests : IDisposable
         Assert.StartsWith("﻿", File.ReadAllText(destino, new UTF8Encoding(false))); // BOM: o Excel lê os acentos
         var linhas = csv.Split("\r\n", StringSplitOptions.RemoveEmptyEntries);
         Assert.Equal(3, linhas.Length);                       // cabeçalho + 2 vendas
-        Assert.Contains(linhas, l => l.Contains("Dinheiro") && l.EndsWith("Concluída"));
-        Assert.Contains(linhas, l => l.Contains("Pix") && l.EndsWith("Cancelada"));
+        Assert.Contains(linhas, l => l.Contains("Dinheiro") && l.Contains(";Concluída;Caixa"));
+        Assert.Contains(linhas, l => l.Contains("Pix") && l.Contains(";Cancelada;") && l.EndsWith(";Teste"));
     }
 
     [Fact]

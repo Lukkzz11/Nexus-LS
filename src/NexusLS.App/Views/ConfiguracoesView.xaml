@@ -1,4 +1,4 @@
-<UserControl x:Class="NexusLS.App.Views.ConfiguracoesView"
+﻿<UserControl x:Class="NexusLS.App.Views.ConfiguracoesView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
@@ -33,6 +33,9 @@
 
                         <TextBlock Text="Telefone" Style="{StaticResource Rotulo}" />
                         <TextBox Text="{Binding Telefone, UpdateSourceTrigger=PropertyChanged}" />
+
+                        <TextBlock Text="Nome do operador (aparece nas vendas e cancelamentos)" Style="{StaticResource Rotulo}" />
+                        <TextBox Text="{Binding NomeOperador, UpdateSourceTrigger=PropertyChanged}" />
 
                         <TextBlock Text="Mensagem no rodapé do cupom" Style="{StaticResource Rotulo}" />
                         <TextBox Text="{Binding RodapeCupom, UpdateSourceTrigger=PropertyChanged}" />

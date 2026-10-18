@@ -85,6 +85,11 @@ namespace NexusLS.Core.Migrations
                         .HasMaxLength(120)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("NomeOperador")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Telefone")
                         .HasMaxLength(30)
                         .HasColumnType("TEXT");
@@ -250,6 +255,10 @@ namespace NexusLS.Core.Migrations
                     b.Property<bool>("Cancelada")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("CanceladoPor")
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT");
+
                     b.Property<int?>("ClienteId")
                         .HasColumnType("INTEGER");
 
@@ -262,8 +271,19 @@ namespace NexusLS.Core.Migrations
                     b.Property<long>("DescontoCentavos")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("EstoqueDevolvido")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("FormaPagamento")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("MotivoCancelamento")
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Operador")
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("Parcelas")
                         .HasColumnType("INTEGER");

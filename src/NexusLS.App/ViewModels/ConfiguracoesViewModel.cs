@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NexusLS.App.Impressao;
@@ -39,6 +39,7 @@ public partial class ConfiguracoesViewModel : ViewModelBase
     [ObservableProperty] private string _documento = "";
     [ObservableProperty] private string _endereco = "";
     [ObservableProperty] private string _telefone = "";
+    [ObservableProperty] private string _nomeOperador = "Caixa";
     [ObservableProperty] private string _rodapeCupom = "";
     [ObservableProperty] private string _impressoraSelecionada;
     [ObservableProperty] private OpcaoLargura _larguraSelecionada;
@@ -60,6 +61,7 @@ public partial class ConfiguracoesViewModel : ViewModelBase
         Documento = c.Documento ?? "";
         Endereco = c.Endereco ?? "";
         Telefone = c.Telefone ?? "";
+        NomeOperador = c.NomeOperador;
         RodapeCupom = c.MensagemCupom ?? "";
         ImprimirAoFinalizar = c.ImprimirCupomAoFinalizar;
         LarguraSelecionada = Larguras.FirstOrDefault(l => l.Colunas == c.LarguraCupom)
@@ -97,7 +99,7 @@ public partial class ConfiguracoesViewModel : ViewModelBase
     private DadosLoja DadosDoFormulario() => new(
         NomeLoja, Documento, Endereco, Telefone, RodapeCupom,
         ImpressoraSelecionada == ImpressoraWindows.ImpressoraPadrao ? null : ImpressoraSelecionada,
-        LarguraSelecionada.Colunas, ImprimirAoFinalizar);
+        LarguraSelecionada.Colunas, ImprimirAoFinalizar, NomeOperador);
 
     private ConfiguracaoLoja ConfigDoFormulario()
     {

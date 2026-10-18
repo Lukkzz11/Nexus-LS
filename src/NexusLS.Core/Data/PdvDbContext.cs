@@ -52,6 +52,9 @@ public class PdvDbContext : DbContext
             e.HasMany(v => v.Itens).WithOne().HasForeignKey(i => i.VendaId);
             e.HasOne(v => v.Cliente).WithMany().HasForeignKey(v => v.ClienteId).OnDelete(DeleteBehavior.Restrict);
             e.HasIndex(v => v.DataHora);
+            e.Property(v => v.Operador).HasMaxLength(80);
+            e.Property(v => v.MotivoCancelamento).HasMaxLength(300);
+            e.Property(v => v.CanceladoPor).HasMaxLength(80);
         });
 
         modelBuilder.Entity<ItemVenda>(e =>
@@ -78,6 +81,7 @@ public class PdvDbContext : DbContext
             e.Property(c => c.Telefone).HasMaxLength(30);
             e.Property(c => c.MensagemCupom).HasMaxLength(250);
             e.Property(c => c.ImpressoraCupom).HasMaxLength(200);
+            e.Property(c => c.NomeOperador).IsRequired().HasMaxLength(80);
         });
     }
 }

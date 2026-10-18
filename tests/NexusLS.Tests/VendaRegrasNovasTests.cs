@@ -90,7 +90,7 @@ public class VendaRegrasNovasTests
         using var c = await Cenario.CriarAsync();
         var venda = await c.Vendas.FinalizarAsync(Pix(I(c.CamisetaId, 2, "P"), I(c.CamisetaId, 1, "M")));
 
-        await c.Vendas.CancelarAsync(venda.Id);
+        await c.Vendas.CancelarAsync(venda.Id, "Teste");
 
         Assert.Equal(3, c.EstoqueDe(c.CamisetaId, "P"));
         Assert.Equal(5, c.EstoqueDe(c.CamisetaId, "M"));

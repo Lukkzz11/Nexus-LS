@@ -18,6 +18,9 @@ public class ConfiguracaoLoja
     /// <summary>Quantos caracteres cabem numa linha do cupom (32 = bobina de 58 mm, 42 ou 48 = bobina de 80 mm).</summary>
     public int LarguraCupom { get; set; } = 42;
 
+    /// <summary>Nome de quem está no caixa. Aparece nas vendas, nos cancelamentos e nos relatórios.</summary>
+    public string NomeOperador { get; set; } = "Caixa";
+
     /// <summary>Imprime o cupom sozinho quando a venda é finalizada.</summary>
     public bool ImprimirCupomAoFinalizar { get; set; } = true;
 }

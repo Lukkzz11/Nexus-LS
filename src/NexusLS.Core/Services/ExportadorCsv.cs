@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text;
 using NexusLS.Core.Models;
 
@@ -17,7 +17,7 @@ public static class ExportadorCsv
     {
         var csv = new StringBuilder();
         Linha(csv, "Nº", "Data", "Cliente", "Tabela", "Pagamento", "Parcelas", "Subtotal", "Desconto", "Total",
-            "Recebido", "Troco", "Situação");
+            "Recebido", "Troco", "Situação", "Operador", "Motivo do cancelamento");
 
         foreach (var v in vendas.OrderBy(v => v.DataHora).ThenBy(v => v.Id))
         {
@@ -33,7 +33,9 @@ public static class ExportadorCsv
                 Valor(v.TotalCentavos),
                 v.ValorRecebidoCentavos is long r ? Valor(r) : "",
                 v.FormaPagamento == FormaPagamento.Dinheiro ? Valor(v.TrocoCentavos) : "",
-                v.Cancelada ? "Cancelada" : "Concluída");
+                v.Cancelada ? "Cancelada" : "Concluída",
+                v.Operador ?? "",
+                v.MotivoCancelamento ?? "");
         }
         return csv.ToString();
     }

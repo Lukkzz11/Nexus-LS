@@ -72,8 +72,10 @@ public class VendaService
             throw new RegraDeNegocioException("Estoque insuficiente para: " + string.Join("; ", faltas) + ".");
 
         // 4) Monta a venda.
+        var operador = await NomeDoOperadorAsync(db);
         var venda = new Venda
         {
+            Operador = operador,
             DataHora = _agora(),
             FormaPagamento = pedido.FormaPagamento,
             TabelaPreco = pedido.TabelaPreco,
@@ -137,9 +139,18 @@ public class VendaService
         return venda;
     }
 
-    /// <summary>Cancela a venda e devolve o estoque. O registro NUNCA é apagado, só marcado.</summary>
-    public async Task<Venda> CancelarAsync(int vendaId)
+    /// <summary>
+    /// Cancela a venda. O registro NUNCA é apagado: fica marcado como cancelado, com o motivo (obrigatório),
+    /// quem cancelou e quando. Os itens voltam ao estoque, a não ser que se escolha não devolver
+    /// (por exemplo, peça danificada ou já entregue).
+    /// </summary>
+    /// <param name="canceladoPor">Nome de quem cancela; se vazio, vale o operador configurado.</param>
+    public async Task<Venda> CancelarAsync(int vendaId, string motivo, bool devolverEstoque = true, string? canceladoPor = null)
     {
+        motivo = (motivo ?? "").Trim();
+        if (motivo.Length < 3)
+            throw new RegraDeNegocioException("Informe o motivo do cancelamento (pelo menos 3 letras).");
+
         await using var db = await _fabrica.CreateDbContextAsync();
         await using var transacao = await db.Database.BeginTransactionAsync();
 
@@ -153,7 +164,7 @@ public class VendaService
         var produtos = await db.Produtos.Where(p => ids.Contains(p.Id)).ToDictionaryAsync(p => p.Id);
         var grades = await db.TamanhosProduto.Where(t => ids.Contains(t.ProdutoId)).ToListAsync();
 
-        foreach (var item in venda.Itens)
+        foreach (var item in devolverEstoque ? venda.Itens : new List<ItemVenda>())
         {
             produtos[item.ProdutoId].EstoqueAtual += item.Quantidade;
 
@@ -174,13 +185,16 @@ public class VendaService
                 Tipo = TipoMovimentacao.CancelamentoVenda,
                 Quantidade = item.Quantidade,
                 Tamanho = item.Tamanho,
-                Motivo = $"Cancelamento da venda #{venda.Id}",
+                Motivo = $"Cancelamento da venda #{venda.Id}: {motivo}",
                 VendaId = venda.Id
             });
         }
 
         venda.Cancelada = true;
         venda.DataCancelamento = agora;
+        venda.MotivoCancelamento = motivo;
+        venda.CanceladoPor = string.IsNullOrWhiteSpace(canceladoPor) ? await NomeDoOperadorAsync(db) : canceladoPor.Trim();
+        venda.EstoqueDevolvido = devolverEstoque;
 
         await db.SaveChangesAsync();
         await transacao.CommitAsync();
@@ -205,6 +219,14 @@ public class VendaService
         vendas.Where(v => !v.Cancelada).Sum(v => v.TotalCentavos);
 
     // ================= Regras de apoio =================
+
+    /// <summary>O nome do operador salvo em Configurações ("Caixa" se ninguém configurou).</summary>
+    private static async Task<string> NomeDoOperadorAsync(PdvDbContext db)
+    {
+        var nome = await db.ConfiguracoesLoja.AsNoTracking()
+            .Where(c => c.Id == 1).Select(c => c.NomeOperador).FirstOrDefaultAsync();
+        return string.IsNullOrWhiteSpace(nome) ? "Caixa" : nome;
+    }
 
     /// <summary>Nulo/vazio/"sem tamanho" viram "Sem tamanho"; os demais ficam em maiúsculas (m -> M).</summary>
     private static string NomeTamanho(string? tamanho)
