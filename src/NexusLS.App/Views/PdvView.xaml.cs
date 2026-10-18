@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 using NexusLS.App.ViewModels;
 
@@ -73,6 +74,13 @@ public partial class PdvView : UserControl
         else if (e.Key == Key.System && e.SystemKey == Key.F10 && Vm is { } vm)
         {
             vm.FinalizarCommand.Execute(null);
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Enter && e.OriginalSource is TextBox caixa && caixa.DataContext is ItemCarrinhoViewModel)
+        {
+            // Enter num campo da linha do carrinho: confirma o valor digitado e volta para a busca.
+            BindingOperations.GetBindingExpression(caixa, TextBox.TextProperty)?.UpdateSource();
+            FocarBusca();
             e.Handled = true;
         }
     }

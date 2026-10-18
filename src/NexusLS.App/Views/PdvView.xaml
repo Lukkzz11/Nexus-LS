@@ -78,15 +78,20 @@
                     <Grid Margin="14,10" TextElement.Foreground="{StaticResource CorTextoSuave}" TextElement.FontSize="13">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="120" />
+                            <ColumnDefinition Width="140" />
                             <ColumnDefinition Width="170" />
-                            <ColumnDefinition Width="130" />
+                            <ColumnDefinition Width="150" />
                             <ColumnDefinition Width="44" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="PRODUTO" />
-                        <TextBlock Grid.Column="1" Text="UNITÁRIO" HorizontalAlignment="Right" />
-                        <TextBlock Grid.Column="2" Text="QTD." HorizontalAlignment="Center" />
-                        <TextBlock Grid.Column="3" Text="TOTAL" HorizontalAlignment="Right" />
+                        <TextBlock Text="PRODUTO" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1" Text="UNITÁRIO (editável)" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                   ToolTip="Digite o preço de uma unidade. Apague o campo para voltar ao preço da tabela." />
+                        <TextBlock Grid.Column="2" Text="QTD." HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="3" Text="TOTAL (editável)" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                   ToolTip="Digite o total da linha (ex.: 3 por R$ 100). Apague o campo para voltar ao preço da tabela." />
+                        <Button Grid.Column="4" Content="Esvaziar" FontSize="12" Padding="6,3" HorizontalAlignment="Right"
+                                Style="{StaticResource BotaoSecundario}" ToolTip="Esvaziar o carrinho (pede confirmação)"
+                                Command="{Binding EsvaziarCommand}" />
                     </Grid>
 
                     <TextBlock Grid.Row="1" Text="Carrinho vazio. Leia o código de barras ou digite o nome do produto e tecle Enter."
@@ -126,15 +131,30 @@
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="120" />
+                                        <ColumnDefinition Width="140" />
                                         <ColumnDefinition Width="170" />
-                                        <ColumnDefinition Width="130" />
+                                        <ColumnDefinition Width="150" />
                                         <ColumnDefinition Width="44" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="{Binding Nome}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                                    <TextBlock Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center"
-                                               Foreground="{StaticResource CorTextoSuave}"
-                                               Text="{Binding PrecoCentavos, Converter={StaticResource Centavos}}" />
+                                    <TextBlock VerticalAlignment="Center" TextTrimming="CharacterEllipsis">
+                                        <Run Text="{Binding Nome, Mode=OneWay}" />
+                                        <Run Text="{Binding TamanhoTexto, Mode=OneWay}" FontSize="15"
+                                             Foreground="{StaticResource CorTextoSuave}" />
+                                    </TextBlock>
+
+                                    <!-- Preço de uma unidade: editável. Enter confirma; vazio volta ao preço da tabela. -->
+                                    <TextBox Grid.Column="1" Margin="6,0" TextAlignment="Right" FontSize="20"
+                                             Text="{Binding PrecoUnitarioTexto, UpdateSourceTrigger=LostFocus}">
+                                        <TextBox.Style>
+                                            <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding PrecoEditado}" Value="True">
+                                                        <Setter Property="Background" Value="{StaticResource CorAlerta}" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBox.Style>
+                                    </TextBox>
 
                                     <!-- Quantidade editável: − [número] + -->
                                     <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Center">
@@ -148,8 +168,19 @@
                                                 CommandParameter="{Binding}" />
                                     </StackPanel>
 
-                                    <TextBlock Grid.Column="3" HorizontalAlignment="Right" VerticalAlignment="Center" FontWeight="Bold"
-                                               Text="{Binding TotalCentavos, Converter={StaticResource Centavos}}" />
+                                    <!-- Total da linha: editável também (ex.: "3 por R$ 100"). -->
+                                    <TextBox Grid.Column="3" Margin="6,0" TextAlignment="Right" FontSize="20" FontWeight="Bold"
+                                             Text="{Binding TotalTexto, UpdateSourceTrigger=LostFocus}">
+                                        <TextBox.Style>
+                                            <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding PrecoEditado}" Value="True">
+                                                        <Setter Property="Background" Value="{StaticResource CorAlerta}" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBox.Style>
+                                    </TextBox>
                                     <Button Grid.Column="4" Content="✕" Width="34" Padding="0,2" HorizontalAlignment="Right"
                                             ToolTip="Remover item (Del)" Style="{StaticResource BotaoSecundario}"
                                             Command="{Binding DataContext.RemoverCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
@@ -162,7 +193,8 @@
             </Border>
 
             <TextBlock Grid.Row="5" Margin="0,10,0,0" FontSize="13" Foreground="{StaticResource CorTextoSuave}"
-                       Text="F2 Buscar · F6 Dinheiro · F7 Pix · F8 Cartão · F10 Finalizar · Esc Cancelar · Del Remover item" />
+                       TextWrapping="Wrap"
+                       Text="F2 Buscar · F6 Dinheiro · F7 Pix · F8 Débito · F10 Finalizar · Esc Cancelar · Del Remover item · Preço e total editáveis na linha (Enter confirma) · A venda em andamento é guardada sozinha" />
         </Grid>
 
         <!-- ===== Pagamento ===== -->

@@ -14,4 +14,7 @@ public static class Servicos
     public static ProdutoService Produtos { get; } = new(Fabrica);
     public static EstoqueService Estoque { get; } = new(Fabrica);
     public static VendaService Vendas { get; } = new(Fabrica);
+    public static ClienteService Clientes { get; } = new(Fabrica);
+    public static ConfiguracaoService Configuracao { get; } = new(Fabrica);
+    public static RascunhoService Rascunho { get; } = new(new RascunhoStore(RascunhoStore.CaminhoPadrao()), Fabrica);
 }

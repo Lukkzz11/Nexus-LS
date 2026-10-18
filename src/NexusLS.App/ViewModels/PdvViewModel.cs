@@ -1,5 +1,5 @@
 using System.Collections.ObjectModel;
-using System.ComponentModel;
+using System.IO;
 using System.Text.RegularExpressions;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -9,18 +9,21 @@ using NexusLS.Core.Services;
 namespace NexusLS.App.ViewModels;
 
 /// <summary>
-/// Frente de caixa. Toda a regra de venda de verdade (preço, estoque, troco) mora no VendaService;
-/// aqui fica só o "montar o carrinho" e o que a tela precisa mostrar.
+/// Frente de caixa. O carrinho (quantidades, estoque por tamanho, preço editado) é a classe Carrinho do Core;
+/// a regra de venda de verdade (preço, estoque, troco) mora no VendaService. Aqui fica só o que a tela mostra.
 /// </summary>
-public partial class PdvViewModel : ViewModelBase
+public partial class PdvViewModel : ViewModelBase, IEditorCarrinho
 {
     private readonly ProdutoService _produtos;
     private readonly VendaService _vendas;
+    private readonly RascunhoService _rascunho;
+    private Carrinho _carrinho = new();
 
-    public PdvViewModel(ProdutoService produtos, VendaService vendas)
+    public PdvViewModel(ProdutoService produtos, VendaService vendas, RascunhoService rascunho)
     {
         _produtos = produtos;
         _vendas = vendas;
+        _rascunho = rascunho;
         Resultados.CollectionChanged += (_, _) => OnPropertyChanged(nameof(TemResultados));
     }
 
@@ -38,7 +41,7 @@ public partial class PdvViewModel : ViewModelBase
 
     public event Action? FocoNoValorRecebidoSolicitado;
 
-    public bool CarrinhoVazio => Itens.Count == 0;
+    public bool CarrinhoVazio => _carrinho.Vazio;
 
     // ----- Busca -----
     [ObservableProperty] private string _busca = "";
@@ -66,7 +69,7 @@ public partial class PdvViewModel : ViewModelBase
     public bool PagaCartao { get => Forma == FormaPagamento.CartaoDebito; set { if (value) Forma = FormaPagamento.CartaoDebito; } }
 
     // ----- Valores calculados (a tela só exibe) -----
-    public long SubtotalCentavos => Itens.Sum(i => i.TotalCentavos);
+    public long SubtotalCentavos => _carrinho.SubtotalCentavos;
 
     private long DescontoCentavos =>
         Dinheiro.TentarConverter(DescontoTexto, out var d) ? d : 0;
@@ -96,6 +99,39 @@ public partial class PdvViewModel : ViewModelBase
 
     partial void OnValorRecebidoTextoChanged(string value) => OnPropertyChanged(nameof(TextoTroco));
 
+    // ================= Rascunho =================
+
+    /// <summary>
+    /// Chamado ao abrir o programa: se a venda anterior ficou no meio (o app foi fechado com itens no
+    /// carrinho), ela volta, já conferida com o estoque e os produtos de agora.
+    /// </summary>
+    public Task RestaurarRascunhoAsync() => ExecutarAsync(async () =>
+    {
+        var restaurado = await _rascunho.RestaurarAsync();
+        if (restaurado is null) return;
+
+        _carrinho = restaurado.Carrinho;
+        Itens.Clear();
+        DescontoTexto = restaurado.DescontoTexto ?? "";
+        Sincronizar();
+
+        var texto = $"Venda em andamento restaurada ({_carrinho.QuantidadeTotal} unidade(s)).";
+        if (restaurado.Avisos.Count > 0) texto += " " + string.Join(" ", restaurado.Avisos);
+        if (restaurado.Avisos.Count > 0) MostrarErro(texto); else MostrarSucesso(texto);
+    });
+
+    private void SalvarRascunho()
+    {
+        try
+        {
+            _rascunho.Salvar(_carrinho, DescontoTexto, null);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // Falha ao gravar o rascunho (disco cheio, pasta bloqueada) não pode atrapalhar a venda.
+        }
+    }
+
     // ================= Comandos =================
 
     /// <summary>
@@ -120,14 +156,14 @@ public partial class PdvViewModel : ViewModelBase
         // Já existe uma lista aberta: Enter confirma o item destacado.
         if (TemResultados && ResultadoSelecionado is not null)
         {
-            AdicionarAoCarrinho(ResultadoSelecionado, quantidade);
+            await AdicionarAoCarrinhoAsync(ResultadoSelecionado, quantidade);
             return;
         }
 
         var porCodigo = await _produtos.ObterPorCodigoBarrasAsync(texto);
         if (porCodigo is not null)
         {
-            AdicionarAoCarrinho(porCodigo, quantidade);
+            await AdicionarAoCarrinhoAsync(porCodigo, quantidade);
             return;
         }
 
@@ -138,7 +174,7 @@ public partial class PdvViewModel : ViewModelBase
         }
         else if (achados.Count == 1)
         {
-            AdicionarAoCarrinho(achados[0], quantidade);
+            await AdicionarAoCarrinhoAsync(achados[0], quantidade);
         }
         else
         {
@@ -157,27 +193,39 @@ public partial class PdvViewModel : ViewModelBase
     [RelayCommand]
     private void Aumentar(ItemCarrinhoViewModel? item)
     {
-        if (item is not null) item.Quantidade++; // os limites são checados em AoMudarItem
+        if (item is null) return;
+        Editar(() => _carrinho.AlterarQuantidade(item.Linha, item.Linha.Quantidade + 1));
     }
 
     [RelayCommand]
     private void Diminuir(ItemCarrinhoViewModel? item)
     {
         if (item is null) return;
-        if (item.Quantidade <= 1) RemoverItem(item);
-        else item.Quantidade--;
+        if (item.Linha.Quantidade <= 1) Editar(() => _carrinho.Remover(item.Linha));
+        else Editar(() => _carrinho.AlterarQuantidade(item.Linha, item.Linha.Quantidade - 1));
     }
 
     [RelayCommand]
     private void Remover(ItemCarrinhoViewModel? item)
     {
-        if (item is not null) RemoverItem(item);
+        if (item is not null) Editar(() => _carrinho.Remover(item.Linha));
     }
 
     [RelayCommand]
     private void RemoverSelecionado()
     {
-        if (ItemSelecionado is not null) RemoverItem(ItemSelecionado);
+        if (ItemSelecionado is { } item) Editar(() => _carrinho.Remover(item.Linha));
+    }
+
+    /// <summary>Esvazia o carrinho depois de perguntar. Também zera desconto e pagamento.</summary>
+    [RelayCommand]
+    private void Esvaziar()
+    {
+        if (_carrinho.Vazio) return;
+        if (!Confirmar("Esvaziar o carrinho? Todos os itens serão removidos.")) return;
+
+        LimparTudo();
+        FocoNaBuscaSolicitado?.Invoke();
     }
 
     [RelayCommand]
@@ -194,7 +242,7 @@ public partial class PdvViewModel : ViewModelBase
     [RelayCommand]
     private Task FinalizarAsync() => ExecutarAsync(async () =>
     {
-        if (Itens.Count == 0)
+        if (_carrinho.Vazio)
             throw new RegraDeNegocioException("O carrinho está vazio.");
 
         long desconto = 0;
@@ -213,13 +261,10 @@ public partial class PdvViewModel : ViewModelBase
                 throw new RegraDeNegocioException("Valor recebido inválido. Exemplo: 50,00");
         }
 
-        var pedido = new PedidoVenda(
-            Itens.Select(i => new ItemCarrinho(i.ProdutoId, i.Quantidade)).ToList(),
-            desconto, Forma, recebido);
-
+        var pedido = new PedidoVenda(_carrinho.ParaPedido(), desconto, Forma, recebido, _carrinho.Tabela);
         var venda = await _vendas.FinalizarAsync(pedido);
 
-        LimparCarrinho();
+        LimparTudo(); // esvazia o carrinho e apaga o rascunho
         var resumo = $"Venda #{venda.Id} finalizada: {Dinheiro.Formatar(venda.TotalCentavos)}";
         if (venda.TrocoCentavos > 0) resumo += $" · Troco: {Dinheiro.Formatar(venda.TrocoCentavos)}";
         MostrarSucesso(resumo);
@@ -236,82 +281,97 @@ public partial class PdvViewModel : ViewModelBase
             return;
         }
 
-        if (Itens.Count > 0 && !Confirmar("Cancelar a venda atual e esvaziar o carrinho?")) return;
+        if (!_carrinho.Vazio && !Confirmar("Cancelar a venda atual e esvaziar o carrinho?")) return;
 
-        LimparCarrinho();
+        LimparTudo();
         Busca = "";
         Mensagem = "";
         FocoNaBuscaSolicitado?.Invoke();
     }
 
+    // ================= Edição pela linha do carrinho =================
+
+    void IEditorCarrinho.EditarQuantidade(ItemCarrinhoViewModel item, int quantidade) =>
+        Editar(() => _carrinho.AlterarQuantidade(item.Linha, quantidade));
+
+    /// <summary>Vazio devolve o preço de tabela; qualquer valor vira o preço de UMA unidade.</summary>
+    void IEditorCarrinho.EditarPrecoUnitario(ItemCarrinhoViewModel item, string texto) => Editar(() =>
+    {
+        if (string.IsNullOrWhiteSpace(texto)) _carrinho.RestaurarPreco(item.Linha);
+        else _carrinho.DefinirPrecoUnitario(item.Linha, LerPreco(texto));
+    });
+
+    /// <summary>Vazio devolve o preço de tabela; qualquer valor vira o TOTAL da linha.</summary>
+    void IEditorCarrinho.EditarTotal(ItemCarrinhoViewModel item, string texto) => Editar(() =>
+    {
+        if (string.IsNullOrWhiteSpace(texto)) _carrinho.RestaurarPreco(item.Linha);
+        else _carrinho.DefinirTotalLinha(item.Linha, LerPreco(texto));
+    });
+
+    private static long LerPreco(string texto) =>
+        Dinheiro.TentarConverter(texto, out var centavos)
+            ? centavos
+            : throw new RegraDeNegocioException("Valor inválido. Exemplo: 12,50");
+
     // ================= Apoio =================
 
-    private void AdicionarAoCarrinho(Produto produto, int quantidade)
+    private async Task AdicionarAoCarrinhoAsync(Produto produto, int quantidade)
     {
-        var existente = Itens.FirstOrDefault(i => i.ProdutoId == produto.Id);
-        var noCarrinho = existente?.Quantidade ?? 0;
+        // Por enquanto o PDV vende da linha "Sem tamanho"; a escolha do tamanho entra na próxima etapa.
+        var grade = await _produtos.ListarTamanhosAsync(produto.Id);
+        var linhaEstoque = grade.First(t => t.EhSemTamanho);
 
-        if (produto.EstoqueAtual <= 0)
-            throw new RegraDeNegocioException($"\"{produto.Nome}\" está sem estoque.");
-        if (noCarrinho + quantidade > produto.EstoqueAtual)
-            throw new RegraDeNegocioException(
-                $"Estoque insuficiente: \"{produto.Nome}\" tem {produto.EstoqueAtual} unidade(s) (no carrinho: {noCarrinho}).");
-
-        if (existente is not null)
-        {
-            existente.EstoqueDisponivel = produto.EstoqueAtual;
-            existente.Quantidade += quantidade;
-            ItemSelecionado = existente;
-        }
-        else
-        {
-            var item = new ItemCarrinhoViewModel(produto, quantidade);
-            item.PropertyChanged += AoMudarItem;
-            Itens.Add(item);
-            ItemSelecionado = item;
-        }
+        var linha = _carrinho.Adicionar(produto, linhaEstoque, quantidade);
 
         Resultados.Clear();
         Busca = "";
         Mensagem = "";
-        AtualizarTotais();
+        Sincronizar();
+        ItemSelecionado = Itens.FirstOrDefault(i => i.Linha == linha);
     }
 
-    /// <summary>Quando o operador edita a quantidade na tela: não deixa passar do estoque nem ficar abaixo de 1.</summary>
-    private void AoMudarItem(object? sender, PropertyChangedEventArgs e)
+    /// <summary>Roda uma edição no carrinho; se o Carrinho recusar (estoque, valor inválido), mostra o motivo.</summary>
+    private void Editar(Action acao)
     {
-        if (e.PropertyName != nameof(ItemCarrinhoViewModel.Quantidade) || sender is not ItemCarrinhoViewModel item) return;
-
-        if (item.Quantidade < 1)
+        try
         {
-            item.Quantidade = 1;
-            MostrarErro("A quantidade mínima é 1. Para tirar o item, use Remover (Del).");
+            acao();
+            Mensagem = "";
         }
-        else if (item.Quantidade > item.EstoqueDisponivel)
+        catch (RegraDeNegocioException ex)
         {
-            item.Quantidade = item.EstoqueDisponivel;
-            MostrarErro($"Estoque insuficiente: \"{item.Nome}\" tem apenas {item.EstoqueDisponivel} unidade(s).");
+            MostrarErro(ex.Message);
         }
 
+        // A tela só relê os campos depois que o binding terminou de escrever; por isso o adiamento.
+        var contexto = SynchronizationContext.Current;
+        if (contexto is null) Sincronizar();
+        else contexto.Post(_ => Sincronizar(), null);
+    }
+
+    /// <summary>Deixa a lista da tela igual ao Carrinho: tira o que saiu, põe o que entrou e relê os valores.</summary>
+    private void Sincronizar()
+    {
+        for (var i = Itens.Count - 1; i >= 0; i--)
+            if (!_carrinho.Linhas.Contains(Itens[i].Linha)) Itens.RemoveAt(i);
+
+        foreach (var linha in _carrinho.Linhas)
+            if (Itens.All(i => i.Linha != linha)) Itens.Add(new ItemCarrinhoViewModel(linha, this));
+
+        foreach (var item in Itens) item.Atualizar();
         AtualizarTotais();
     }
 
-    private void RemoverItem(ItemCarrinhoViewModel item)
+    private void LimparTudo()
     {
-        item.PropertyChanged -= AoMudarItem;
-        Itens.Remove(item);
-        AtualizarTotais();
-    }
-
-    private void LimparCarrinho()
-    {
-        foreach (var item in Itens) item.PropertyChanged -= AoMudarItem;
+        _carrinho = new Carrinho();
         Itens.Clear();
         ItemSelecionado = null;
         DescontoTexto = "";
         ValorRecebidoTexto = "";
         Forma = FormaPagamento.Dinheiro;
         AtualizarTotais();
+        _rascunho.Descartar();
     }
 
     private void MoverResultado(int passo)
@@ -330,5 +390,6 @@ public partial class PdvViewModel : ViewModelBase
         OnPropertyChanged(nameof(TotalCentavos));
         OnPropertyChanged(nameof(TotalTexto));
         OnPropertyChanged(nameof(TextoTroco));
+        SalvarRascunho();
     }
 }
