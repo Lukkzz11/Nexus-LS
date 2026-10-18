@@ -3,6 +3,9 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace NexusLS.App.ViewModels;
 
+/// <summary>Os itens do menu lateral que já têm tela. O menu destaca o item da tela aberta.</summary>
+public enum ItemMenu { Pdv, Caixa, EstoqueDaLoja, Configuracoes }
+
 /// <summary>
 /// ViewModel = a "lógica da tela". Ele guarda os dados que a tela mostra e os comandos dos botões,
 /// mas não sabe nada de botões ou janelas. O CommunityToolkit gera o código repetitivo:
@@ -18,6 +21,18 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private object? _telaAtual;
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PdvAtivo))]
+    [NotifyPropertyChangedFor(nameof(CaixaAtivo))]
+    [NotifyPropertyChangedFor(nameof(EstoqueAtivo))]
+    [NotifyPropertyChangedFor(nameof(ConfiguracoesAtivo))]
+    private ItemMenu _itemAtivo;
+
+    public bool PdvAtivo => ItemAtivo == ItemMenu.Pdv;
+    public bool CaixaAtivo => ItemAtivo == ItemMenu.Caixa;
+    public bool EstoqueAtivo => ItemAtivo == ItemMenu.EstoqueDaLoja;
+    public bool ConfiguracoesAtivo => ItemAtivo == ItemMenu.Configuracoes;
+
     public MainViewModel()
     {
         IrParaPdv();
@@ -25,17 +40,21 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void IrParaPdv() => TelaAtual = _pdv;
+    private void IrParaPdv() => Abrir(_pdv, ItemMenu.Pdv);
 
     [RelayCommand]
-    private void IrParaProdutos() => TelaAtual = new ProdutosViewModel(Servicos.Produtos);
+    private void IrParaCaixa() => Abrir(new VendasViewModel(Servicos.Vendas, Servicos.Cupons), ItemMenu.Caixa);
 
     [RelayCommand]
-    private void IrParaVendas() => TelaAtual = new VendasViewModel(Servicos.Vendas, Servicos.Cupons);
+    private void IrParaEstoque() => Abrir(new EstoqueLojaViewModel(Servicos.Produtos, Servicos.Estoque), ItemMenu.EstoqueDaLoja);
 
     [RelayCommand]
-    private void IrParaEstoque() => TelaAtual = new EstoqueViewModel(Servicos.Produtos, Servicos.Estoque);
+    private void IrParaConfiguracoes() =>
+        Abrir(new ConfiguracoesViewModel(Servicos.Configuracao, Servicos.Cupons), ItemMenu.Configuracoes);
 
-    [RelayCommand]
-    private void IrParaConfiguracoes() => TelaAtual = new ConfiguracoesViewModel(Servicos.Configuracao, Servicos.Cupons);
+    private void Abrir(object tela, ItemMenu item)
+    {
+        TelaAtual = tela;
+        ItemAtivo = item;
+    }
 }

@@ -125,6 +125,34 @@ public sealed class CapturaDeTelas : IDisposable
 
         Capturador.SalvarConfiguracoes(vm!, Path.Combine(saida, "11-configuracoes.png"));
     }
+
+    [Fact]
+    public async Task Gera_a_tela_de_estoque_da_loja()
+    {
+        var saida = Environment.GetEnvironmentVariable("NEXUSLS_PRINTS");
+        if (string.IsNullOrWhiteSpace(saida)) return;
+        Directory.CreateDirectory(saida);
+
+        var produtos = new ProdutoService(_banco.Fabrica);
+        var estoque = new EstoqueService(_banco.Fabrica);
+        var camiseta = await produtos.CadastrarAsync(new DadosProduto("Camiseta Basica Algodao", "789", 5990, 2000, 12, "REF-100", 3990), 2);
+        foreach (var t in new[] { "P", "M", "G" }) await produtos.AdicionarTamanhoAsync(camiseta.Id, t);
+        await estoque.AjustarAsync(camiseta.Id, TipoMovimentacao.Entrada, 6, "Compra", "P");
+        await estoque.AjustarAsync(camiseta.Id, TipoMovimentacao.Entrada, 3, "Compra", "M");
+        await estoque.AjustarAsync(camiseta.Id, TipoMovimentacao.Perda, 1, "Rasgou", "M");
+        await produtos.CadastrarAsync(new DadosProduto("Bone Aba Reta", "555", 2990, 800, 5), 10);
+        await produtos.CadastrarAsync(new DadosProduto("Cinto Couro", null, 8990, 3000, 5), 1);
+
+        EstoqueLojaViewModel? vm = null;
+        Capturador.Rodar(() => vm = new EstoqueLojaViewModel(produtos, estoque));
+        for (var i = 0; i < 300 && vm!.Produtos.Count < 3; i++) await Task.Delay(10);
+        Capturador.Rodar(() => vm!.Selecionado = vm.Produtos.First(p => p.Nome.StartsWith("Camiseta")));
+        for (var i = 0; i < 300 && vm!.Grade.Count < 4; i++) await Task.Delay(10);
+        await Task.Delay(100);
+
+        Capturador.SalvarEstoque(vm!, Path.Combine(saida, "12-estoque-produto.png"), 0);
+        Capturador.SalvarEstoque(vm!, Path.Combine(saida, "13-estoque-tamanhos.png"), 1);
+    }
 }
 
 /// <summary>Uma thread própria de interface (STA) com o Application do programa carregado, só para desenhar.</summary>
@@ -157,10 +185,25 @@ internal static class Capturador
     public static void Salvar(PdvViewModel vm, string caminho, int largura = 1400, int altura = 820) =>
         Desenhar(() => new PdvView { DataContext = vm }, caminho, largura, altura);
 
+    public static void SalvarEstoque(EstoqueLojaViewModel vm, string caminho, int aba, int largura = 1400, int altura = 820) =>
+        Desenhar(() => new EstoqueLojaView { DataContext = vm }, caminho, largura, altura, tela =>
+        {
+            // escolhe a aba do painel direito pelo codigo (nao ha teclado nem mouse aqui)
+            if (tela is EstoqueLojaView v && v.Content is System.Windows.Controls.Grid g)
+                foreach (var filho in g.Children.OfType<System.Windows.Controls.Grid>().SelectMany(x => x.Children.OfType<System.Windows.Controls.TabControl>()))
+                    filho.SelectedIndex = aba;
+        });
+
+    private static FrameworkElement Ajustada(FrameworkElement tela, Action<FrameworkElement>? ajustar)
+    {
+        ajustar?.Invoke(tela);
+        return tela;
+    }
+
     public static void SalvarConfiguracoes(ConfiguracoesViewModel vm, string caminho, int largura = 1400, int altura = 820) =>
         Desenhar(() => new ConfiguracoesView { DataContext = vm }, caminho, largura, altura);
 
-    private static void Desenhar(Func<FrameworkElement> criarTela, string caminho, int largura, int altura)
+    private static void Desenhar(Func<FrameworkElement> criarTela, string caminho, int largura, int altura, Action<FrameworkElement>? ajustar = null)
     {
         Interface.Invoke(() =>
         {
@@ -179,7 +222,7 @@ internal static class Capturador
                 Content = new Border
                 {
                     Padding = new Thickness(20),
-                    Child = criarTela()
+                    Child = Ajustada(criarTela(), ajustar)
                 }
             };
             janela.Show();

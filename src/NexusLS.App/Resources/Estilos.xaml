@@ -13,6 +13,15 @@
     <SolidColorBrush x:Key="CorSucesso" Color="#15803D" />
     <SolidColorBrush x:Key="CorAlerta" Color="#FEF3C7" />
     <SolidColorBrush x:Key="CorSelecao" Color="#DBEAFE" />
+    <SolidColorBrush x:Key="CorMenuAtivo" Color="#374151" />
+
+    <!-- Título de grupo do menu lateral (VENDAS, ESTOQUE, GESTÃO) -->
+    <Style x:Key="SecaoMenu" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="#9CA3AF" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Margin" Value="18,18,18,4" />
+    </Style>
 
     <!-- Estilo base dos botões: cantos arredondados, realce ao passar o mouse e ao focar pelo teclado. -->
     <Style x:Key="BotaoBase" TargetType="Button">

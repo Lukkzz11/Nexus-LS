@@ -5,26 +5,59 @@
         WindowStartupLocation="CenterScreen" WindowState="Maximized"
         Background="{StaticResource CorFundo}"
         FontFamily="Segoe UI" FontSize="15">
+
+    <Window.Resources>
+        <!-- Um estilo por item do menu: o da tela aberta fica destacado. -->
+        <Style x:Key="MenuPdv" TargetType="Button" BasedOn="{StaticResource BotaoMenu}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding PdvAtivo}" Value="True">
+                    <Setter Property="Background" Value="{StaticResource CorMenuAtivo}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="MenuCaixa" TargetType="Button" BasedOn="{StaticResource BotaoMenu}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding CaixaAtivo}" Value="True">
+                    <Setter Property="Background" Value="{StaticResource CorMenuAtivo}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="MenuEstoque" TargetType="Button" BasedOn="{StaticResource BotaoMenu}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding EstoqueAtivo}" Value="True">
+                    <Setter Property="Background" Value="{StaticResource CorMenuAtivo}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="MenuConfiguracoes" TargetType="Button" BasedOn="{StaticResource BotaoMenu}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding ConfiguracoesAtivo}" Value="True">
+                    <Setter Property="Background" Value="{StaticResource CorMenuAtivo}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="210" />
+            <ColumnDefinition Width="220" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
-        <!-- Menu lateral -->
+        <!-- Menu lateral, agrupado: Vendas, Estoque, Gestão -->
         <Border Background="{StaticResource CorMenu}">
             <StackPanel>
-                <TextBlock Text="Nexus LS" Foreground="White" FontSize="20" FontWeight="Bold" Margin="18,22,18,22" />
-                <Button Content="Caixa (PDV)" Style="{StaticResource BotaoMenu}"
-                        Command="{Binding IrParaPdvCommand}" />
-                <Button Content="Vendas" Style="{StaticResource BotaoMenu}"
-                        Command="{Binding IrParaVendasCommand}" />
-                <Button Content="Produtos" Style="{StaticResource BotaoMenu}"
-                        Command="{Binding IrParaProdutosCommand}" />
-                <Button Content="Estoque" Style="{StaticResource BotaoMenu}"
-                        Command="{Binding IrParaEstoqueCommand}" />
-                <Button Content="Configurações" Style="{StaticResource BotaoMenu}"
-                        Command="{Binding IrParaConfiguracoesCommand}" />
+                <TextBlock Text="Nexus LS" Foreground="White" FontSize="20" FontWeight="Bold" Margin="18,22,18,10" />
+
+                <TextBlock Text="VENDAS" Style="{StaticResource SecaoMenu}" />
+                <Button Content="PDV" Style="{StaticResource MenuPdv}" Command="{Binding IrParaPdvCommand}" />
+                <Button Content="Caixa" Style="{StaticResource MenuCaixa}" Command="{Binding IrParaCaixaCommand}" />
+
+                <TextBlock Text="ESTOQUE" Style="{StaticResource SecaoMenu}" />
+                <Button Content="Estoque da loja" Style="{StaticResource MenuEstoque}" Command="{Binding IrParaEstoqueCommand}" />
+
+                <TextBlock Text="GESTÃO" Style="{StaticResource SecaoMenu}" />
+                <Button Content="Configurações" Style="{StaticResource MenuConfiguracoes}" Command="{Binding IrParaConfiguracoesCommand}" />
             </StackPanel>
         </Border>
 

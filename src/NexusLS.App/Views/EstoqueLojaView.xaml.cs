@@ -2,9 +2,9 @@ using System.Windows.Controls;
 
 namespace NexusLS.App.Views;
 
-public partial class EstoqueView : UserControl
+public partial class EstoqueLojaView : UserControl
 {
-    public EstoqueView()
+    public EstoqueLojaView()
     {
         InitializeComponent();
     }
