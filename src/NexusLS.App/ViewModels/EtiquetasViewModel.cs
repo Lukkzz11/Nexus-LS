@@ -57,9 +57,15 @@ public partial class EtiquetasViewModel : ViewModelBase
     private Produto? _produtoAtual;
     private bool _carregando; // true enquanto a lista de tamanhos é refeita
 
-    public EtiquetasViewModel(ProdutoService produtos)
+    private readonly ModeloEtiquetaStore? _modelos;
+
+    public EtiquetasViewModel(ProdutoService produtos, ModeloEtiquetaStore? modelos = null)
     {
         _produtos = produtos;
+        _modelos = modelos;
+        foreach (var f in FormatoEtiqueta.Todos) Formatos.Add(f);
+        if (modelos is not null)
+            foreach (var f in modelos.Carregar()) Formatos.Add(f);
         _formatoSelecionado = FormatoEtiqueta.Bobina50x30;
         Fila.CollectionChanged += (_, _) => AtualizarResumo();
         AtualizarResumo();
@@ -71,7 +77,7 @@ public partial class EtiquetasViewModel : ViewModelBase
     /// <summary>Avisa a tela que a prévia precisa ser desenhada de novo.</summary>
     public event Action? PreviaMudou;
 
-    public IReadOnlyList<FormatoEtiqueta> Formatos { get; } = FormatoEtiqueta.Todos;
+    public ObservableCollection<FormatoEtiqueta> Formatos { get; } = new();
     public ObservableCollection<Produto> Resultados { get; } = new();
     public ObservableCollection<string> OpcoesDeTamanho { get; } = new();
     public ObservableCollection<LinhaEtiquetaViewModel> Fila { get; } = new();
@@ -91,7 +97,48 @@ public partial class EtiquetasViewModel : ViewModelBase
     // ----- Como imprimir -----
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(MostrarPosicao))]
+    [NotifyPropertyChangedFor(nameof(PodeRemoverModelo))]
     private FormatoEtiqueta _formatoSelecionado;
+
+    // ----- Modelos próprios (bobina de tamanho livre) -----
+    [ObservableProperty] private string _novoModeloNome = "";
+    [ObservableProperty] private string _novoModeloLargura = "";
+    [ObservableProperty] private string _novoModeloAltura = "";
+
+    /// <summary>Só os modelos criados pelo usuário podem ser removidos; os de fábrica ficam.</summary>
+    public bool PodeRemoverModelo => !FormatoEtiqueta.Todos.Contains(FormatoSelecionado);
+
+    /// <summary>Avisa quais etiquetas da fila têm código de barras que não ficaria legível neste papel (vazio = tudo certo).</summary>
+    [ObservableProperty] private string _avisoLegibilidade = "";
+
+    [RelayCommand]
+    private Task SalvarModeloAsync() => ExecutarAsync(() =>
+    {
+        if (_modelos is null) throw new RegraDeNegocioException("Não foi possível salvar modelos neste momento.");
+        if (!double.TryParse(NovoModeloLargura.Replace(',', '.'), NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var largura)
+            || !double.TryParse(NovoModeloAltura.Replace(',', '.'), NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var altura))
+            throw new RegraDeNegocioException("Digite a largura e a altura da etiqueta em milímetros, por exemplo 60 e 40.");
+
+        var modelo = _modelos.AdicionarBobina(NovoModeloNome, largura, altura);
+        Formatos.Add(modelo);
+        FormatoSelecionado = modelo;
+        NovoModeloNome = NovoModeloLargura = NovoModeloAltura = "";
+        MostrarSucesso("Modelo salvo.");
+        return Task.CompletedTask;
+    });
+
+    [RelayCommand]
+    private Task RemoverModeloAsync() => ExecutarAsync(() =>
+    {
+        if (!PodeRemoverModelo || _modelos is null) return Task.CompletedTask;
+
+        var modelo = FormatoSelecionado;
+        _modelos.Remover(modelo);
+        FormatoSelecionado = FormatoEtiqueta.Bobina50x30;
+        Formatos.Remove(modelo);
+        MostrarSucesso("Modelo removido.");
+        return Task.CompletedTask;
+    });
 
     [ObservableProperty] private string _primeiraPosicaoTexto = "1";
     [ObservableProperty] private bool _precoAtacado;
@@ -269,6 +316,10 @@ public partial class EtiquetasViewModel : ViewModelBase
                     $"A primeira etiqueta deve ficar entre 1 e {FormatoSelecionado.EtiquetasPorPagina}.");
         }
 
+        var ilegiveis = ItensIlegiveis();
+        if (ilegiveis.Count > 0)
+            throw new RegraDeNegocioException(MensagemIlegivel(ilegiveis));
+
         var total = DiagramadorEtiquetas.TotalDeEtiquetas(ItensParaImprimir());
         if (ImprimirEtiquetas(ItensParaImprimir(), FormatoSelecionado, posicao))
             MostrarSucesso($"{total} etiqueta(s) enviada(s) para a impressora.");
@@ -289,6 +340,19 @@ public partial class EtiquetasViewModel : ViewModelBase
                 ? $"{total} etiqueta(s)"
                 : $"{total} etiqueta(s) em {paginas} folha(s)";
         OnPropertyChanged(nameof(FilaVazia));
+
+        var ilegiveis = ItensIlegiveis();
+        AvisoLegibilidade = ilegiveis.Count == 0 ? "" : MensagemIlegivel(ilegiveis);
         PreviaMudou?.Invoke();
     }
+
+    /// <summary>Linhas da fila cujo código de barras ficaria com barras finas demais no papel escolhido.</summary>
+    private List<LinhaEtiquetaViewModel> ItensIlegiveis() => Fila
+        .Where(l => !LegibilidadeCodigo.Legivel(l.CodigoBarras, FormatoSelecionado.EtiquetaLarguraMm))
+        .ToList();
+
+    private string MensagemIlegivel(List<LinhaEtiquetaViewModel> linhas) =>
+        "Código de barras ilegível neste papel (as barras ficariam finas demais para o leitor): "
+        + string.Join("; ", linhas.Select(l => $"{l.Nome} (precisa de etiqueta com pelo menos {LegibilidadeCodigo.LarguraMinimaMm(l.CodigoBarras!):0} mm)"))
+        + ". Escolha um papel mais largo ou remova esses itens.";
 }

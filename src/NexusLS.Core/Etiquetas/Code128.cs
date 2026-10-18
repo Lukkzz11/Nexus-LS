@@ -2,8 +2,8 @@ namespace NexusLS.Core.Etiquetas;
 
 /// <summary>
 /// Código de barras Code 128 (o mais usado em etiquetas de produto: aceita letras, números e símbolos).
-/// Usa o conjunto C (dois dígitos por símbolo, mais curto) quando o texto é só de números com quantidade par,
-/// e o conjunto B nos demais casos. Devolve a sequência de módulos (true = barra preta, false = espaço branco),
+/// Usa o conjunto C (dois dígitos por símbolo, mais curto) quando o texto é só de números com quantidade par
+/// (e, com quantidade ímpar, depois do primeiro dígito), e o conjunto B nos demais casos. Devolve a sequência de módulos (true = barra preta, false = espaço branco),
 /// pronta para ser desenhada com qualquer largura de módulo. Não desenha nada: só calcula.
 /// </summary>
 public static class Code128
@@ -27,6 +27,7 @@ public static class Code128
 
     public const int InicioB = 104;
     public const int InicioC = 105;
+    public const int TrocaParaC = 99;
     public const int Fim = 106;
 
     /// <summary>Tamanho do padrão de um símbolo (normal 11 módulos; o símbolo de fim tem 13).</summary>
@@ -48,6 +49,16 @@ public static class Code128
             simbolos.Add(InicioC);
             for (var i = 0; i < texto.Length; i += 2)
                 simbolos.Add(int.Parse(texto.AsSpan(i, 2)));     // dois dígitos = um símbolo
+        }
+        else if (texto.All(char.IsAsciiDigit) && texto.Length >= 5)
+        {
+            // Quantidade ímpar de dígitos (ex.: EAN-13): o primeiro dígito vai no conjunto B, depois troca para o C
+            // (símbolo 99) e o resto sai em pares. Fica bem mais curto que tudo no B, o que ajuda a caber em etiqueta pequena.
+            simbolos.Add(InicioB);
+            simbolos.Add(texto[0] - ' ');
+            simbolos.Add(TrocaParaC);
+            for (var i = 1; i < texto.Length; i += 2)
+                simbolos.Add(int.Parse(texto.AsSpan(i, 2)));
         }
         else
         {

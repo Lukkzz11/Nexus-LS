@@ -142,6 +142,32 @@
                     <ComboBox ItemsSource="{Binding Formatos}" DisplayMemberPath="Nome"
                               SelectedItem="{Binding FormatoSelecionado}" Padding="8,7" />
 
+                    <TextBlock Text="{Binding AvisoLegibilidade}" TextWrapping="Wrap" Foreground="{StaticResource CorPerigo}"
+                               FontWeight="SemiBold" Margin="0,8,0,0" AutomationProperties.Name="Aviso de legibilidade" />
+
+                    <Expander Header="Meus modelos de bobina" Margin="0,10,0,0">
+                        <StackPanel Margin="0,6,0,0">
+                            <TextBlock Text="Nome do modelo" Style="{StaticResource Rotulo}" />
+                            <TextBox Text="{Binding NovoModeloNome, UpdateSourceTrigger=PropertyChanged}"
+                                     AutomationProperties.Name="Nome do modelo" />
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                <TextBox Width="80" Text="{Binding NovoModeloLargura, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="Largura em mm" AutomationProperties.Name="Largura do modelo" />
+                                <TextBlock Text="×" VerticalAlignment="Center" Margin="8,0" />
+                                <TextBox Width="80" Text="{Binding NovoModeloAltura, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="Altura em mm" AutomationProperties.Name="Altura do modelo" />
+                                <TextBlock Text="mm" VerticalAlignment="Center" Margin="8,0,0,0" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                <Button Content="Salvar modelo" Style="{StaticResource BotaoSecundario}" Padding="10,4"
+                                        Command="{Binding SalvarModeloCommand}" />
+                                <Button Content="Remover o modelo escolhido" Style="{StaticResource BotaoSecundario}" Padding="10,4"
+                                        Margin="8,0,0,0" Command="{Binding RemoverModeloCommand}"
+                                        Visibility="{Binding PodeRemoverModelo, Converter={StaticResource BoolVis}}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Expander>
+
                     <StackPanel Visibility="{Binding MostrarPosicao, Converter={StaticResource BoolVis}}">
                         <TextBlock Text="Começar na etiqueta nº (para aproveitar uma folha já usada)" Style="{StaticResource Rotulo}" />
                         <TextBox Text="{Binding PrimeiraPosicaoTexto, UpdateSourceTrigger=PropertyChanged}" Width="80"

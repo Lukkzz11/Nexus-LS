@@ -58,15 +58,16 @@ internal static class EtiquetaDesenho
         dc.DrawText(preco, new Point(margem, yPreco - 2));
 
         // Código de barras (só se o código tiver caracteres que o Code 128 aceita).
-        if (Code128.PodeCodificar(item.CodigoBarras))
+        // Código ilegível (comprido demais para a largura) não é desenhado: um código que o leitor não lê é pior que nenhum.
+        if (Code128.PodeCodificar(item.CodigoBarras) && LegibilidadeCodigo.Legivel(item.CodigoBarras, largura / DipPorMm))
             DesenharCodigo(dc, item.CodigoBarras!, margem, largura, altura);
     }
 
     private static void DesenharCodigo(DrawingContext dc, string codigo, double margem, double largura, double altura)
     {
         var modulos = Code128.Modulos(codigo);
-        var silencio = 10; // módulos brancos de cada lado, exigidos para o leitor achar o começo e o fim
-        var larguraModulo = Math.Max((largura - 2 * margem) / (modulos.Count + 2 * silencio), 0.5);
+        var silencio = LegibilidadeCodigo.ModulosDeSilencio; // módulos brancos de cada lado, exigidos para o leitor achar o começo e o fim
+        var larguraModulo = (largura - 2 * margem) / (modulos.Count + 2 * silencio);
         var x0 = (largura - modulos.Count * larguraModulo) / 2;
         var y0 = altura * 0.62;
         var alturaBarras = altura * 0.22;

@@ -14,7 +14,7 @@ O menu lateral tem três grupos:
 | | **Fechamento** | Abrir o caixa com troco inicial, registrar sangria, reforço, despesa e entrada avulsa, e fechar conferindo dinheiro, cartão e Pix contra o esperado. Diferença exige observação. Fechamentos nunca mudam: conferir de novo cria uma nova versão. |
 | | **Mais vendidos** | Ranking de produtos num período, com opção de separar por tamanho, e exportar CSV. |
 | **Estoque** | **Estoque da loja** | Lista de produtos, cadastro (preço de varejo e de atacado, custo, mínimo, referência, categoria, código de barras com botão **Gerar** para EAN-13 interno, código interno automático INT-000001 e calculadora de margem/preço), grade de tamanhos com estoque de cada um e ajuste de estoque com motivo (entrada, perda, correção). Itens abaixo do mínimo ficam em amarelo. Todo ajuste vira uma linha no histórico. |
-| | **Etiquetas** | Etiquetas com nome, preço, tamanho e código de barras (Code 128), em bobina ou folha A4, com prévia. |
+| | **Etiquetas** | Etiquetas com nome, preço, tamanho e código de barras (Code 128; número só de dígitos usa o conjunto C, mais curto), em bobina ou folha A4, com prévia. |
 | **Gestão** | **Clientes** | Cadastro e histórico de compras de cada cliente. |
 | | **Relatórios** | Vendas por período: total, número de vendas, ticket médio, descontos, canceladas, por dia, por forma de pagamento, por categoria, **lucro bruto** (total vendido menos o custo das mercadorias; o custo fica guardado em cada venda, e vendas antigas usam o custo atual e avisam que é estimativa) e exportar CSV (vendas e itens). |
 | | **Configurações** | Dados da loja e do cupom, impressora, largura do papel, impressão automática, com prévia do cupom. |
@@ -69,7 +69,7 @@ Enter repetido (tecla segurada) é ignorado; Enter já tratado por outro element
 ## Cupom e etiquetas
 
 - **Cupom não fiscal** impresso pela impressora do Windows (bobina térmica ou comum), sem abrir caixa de diálogo, na impressora escolhida em Configurações (ou na padrão do Windows). Ele sai sozinho ao finalizar a venda (dá para desligar em Configurações), e o botão **Reimprimir** existe no PDV e no Caixa. Se a impressora falhar, a venda continua gravada e o programa avisa.
-- **Etiquetas** usam o código de barras do produto em **Code 128** (letras, números e símbolos sem acento). Produto sem código, ou com acento no código, sai sem barras. Formatos: bobina 50 × 30 mm, bobina 40 × 25 mm e folha A4 3 × 7 (63,5 × 38,1 mm); na folha dá para começar numa etiqueta que não seja a primeira, para aproveitar uma folha já usada em parte. A impressora é escolhida na caixa de impressão do Windows.
+- **Etiquetas** usam o código de barras do produto em **Code 128** (letras, números e símbolos sem acento). Produto sem código, ou com acento no código, sai sem barras. Formatos: bobina 50 × 30 mm, bobina 40 × 25 mm e folha A4 3 × 7 (63,5 × 38,1 mm); na folha dá para começar numa etiqueta que não seja a primeira, para aproveitar uma folha já usada em parte. A impressora é escolhida na caixa de impressão do Windows. **Legibilidade:** se o código de barras ficaria com barras mais finas que 0,25 mm no papel escolhido (código comprido em etiqueta estreita), a tela avisa e a impressão é bloqueada até você trocar de papel ou remover o item. **Meus modelos de bobina:** salve bobinas de tamanho próprio (nome, largura e altura em mm); ficam em `%LOCALAPPDATA%\NexusLS\etiquetas.json`.
 - **Exportar** gera CSV para o Excel brasileiro (separador `;`, vírgula decimal, acentos corretos).
 
 ## Estrutura do projeto

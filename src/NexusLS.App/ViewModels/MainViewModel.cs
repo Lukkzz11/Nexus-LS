@@ -39,7 +39,7 @@ public partial class MainViewModel : ObservableObject
 
     // Estoque
     [RelayCommand] private void IrParaEstoque() => Abrir(new EstoqueLojaViewModel(Servicos.Produtos, Servicos.Estoque), ItemMenu.EstoqueDaLoja);
-    [RelayCommand] private void IrParaEtiquetas() => Abrir(new EtiquetasViewModel(Servicos.Produtos), ItemMenu.Etiquetas);
+    [RelayCommand] private void IrParaEtiquetas() => Abrir(new EtiquetasViewModel(Servicos.Produtos, Servicos.ModelosEtiqueta), ItemMenu.Etiquetas);
 
     // Gestão
     [RelayCommand] private void IrParaClientes() => Abrir(new ClientesViewModel(Servicos.Clientes), ItemMenu.Clientes);

@@ -64,15 +64,25 @@ public class Code128Tests
     [Fact]
     public void Os_modulos_comecam_por_barra_terminam_no_fim_e_tem_o_tamanho_certo()
     {
-        var texto = "7891234567895"; // 13 dígitos: conjunto B
+        var texto = "7891234567895"; // 13 dígitos: B para o 1º, troca para C e 6 pares
         var modulos = Code128.Modulos(texto);
 
-        // início(11) + 13 caracteres(11 cada) + verificador(11) + fim(13)
-        Assert.Equal(11 + 13 * 11 + 11 + 13, modulos.Count);
+        // início B(11) + 1º dígito(11) + troca para C(11) + 6 pares(66) + verificador(11) + fim(13)
+        Assert.Equal(11 + 11 + 11 + 6 * 11 + 11 + 13, modulos.Count);
         Assert.True(modulos[0]);          // começa com barra
         Assert.True(modulos[^1]);         // o símbolo de fim termina em barra
         Assert.True(modulos[^2]);         // ...com 2 módulos de barra
         Assert.False(modulos[^3]);
+    }
+
+    [Fact]
+    public void Numero_impar_de_digitos_usa_B_no_primeiro_depois_C_com_o_verificador_certo()
+    {
+        // 104 (início B), '7' = 23, 99 (troca para C), pares 78 91 23 45 67 89 5? -> o 13º dígito forma par com o anterior:
+        // "7" + "89 12 34 56 78 95"
+        var simbolos = Code128.Simbolos("7891234567895");
+
+        Assert.Equal(new[] { 104, 23, 99, 89, 12, 34, 56, 78, 95, 83, 106 }, simbolos);
     }
 
     [Fact]

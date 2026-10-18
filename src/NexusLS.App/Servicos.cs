@@ -15,6 +15,7 @@ public static class Servicos
     public static ProdutoService Produtos { get; } = new(Fabrica);
     public static EstoqueService Estoque { get; } = new(Fabrica);
     public static VendaService Vendas { get; } = new(Fabrica);
+    public static NexusLS.Core.Etiquetas.ModeloEtiquetaStore ModelosEtiqueta { get; } = new(NexusLS.Core.Etiquetas.ModeloEtiquetaStore.CaminhoPadrao());
     public static CaixaService Caixa { get; } = new(Fabrica);
     public static ClienteService Clientes { get; } = new(Fabrica);
     public static ConfiguracaoService Configuracao { get; } = new(Fabrica);
