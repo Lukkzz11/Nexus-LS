@@ -9,6 +9,11 @@
         WindowCornerPreference="Round"
         FontFamily="Segoe UI Variable Text, Segoe UI" FontSize="15">
 
+    <ui:FluentWindow.InputBindings>
+        <!-- F1 abre o PDV de qualquer tela. -->
+        <KeyBinding Key="F1" Command="{Binding IrParaPdvCommand}" />
+    </ui:FluentWindow.InputBindings>
+
     <ui:FluentWindow.Resources>
         <!-- Um estilo só para todos os itens do menu: o botão cujo Tag é igual ao item ativo vira um "cartão" branco. -->
         <Style x:Key="ItemDoMenu" TargetType="Button" BasedOn="{StaticResource BotaoMenu}">
@@ -54,11 +59,18 @@
             <!-- Menu lateral, agrupado: Vendas, Estoque, Gestão -->
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel Margin="0,4,0,16">
+                    <Button Tag="Inicio" AutomationProperties.Name="Início" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaInicioCommand}" Margin="0,0,0,8">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Home24" Style="{StaticResource IconeDoMenu}" />
+                            <TextBlock Text="Início" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
                     <TextBlock Text="VENDAS" Style="{StaticResource SecaoMenu}" />
                     <Button Tag="Pdv" AutomationProperties.Name="PDV" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaPdvCommand}">
                         <StackPanel Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="Cart24" Style="{StaticResource IconeDoMenu}" />
-                            <TextBlock Text="PDV" VerticalAlignment="Center" />
+                            <TextBlock Text="PDV  (F1)" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
                     <Button Tag="Caixa" AutomationProperties.Name="Caixa" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaCaixaCommand}">

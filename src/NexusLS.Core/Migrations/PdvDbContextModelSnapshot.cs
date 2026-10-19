@@ -61,6 +61,9 @@ namespace NexusLS.Core.Migrations
                     b.Property<int>("Id")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("AbrirNoPdv")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Documento")
                         .HasMaxLength(30)
                         .HasColumnType("TEXT");

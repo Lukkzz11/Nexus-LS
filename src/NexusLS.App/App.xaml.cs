@@ -51,7 +51,9 @@ public partial class App : Application
             {
                 try
                 {
-                    seguranca = Servicos.Backup.FazerAsync(MotivoBackup.PreAtualizacao).GetAwaiter().GetResult();
+                    // Versão síncrona de propósito: esperar uma tarefa async aqui, na thread da tela, travava o programa
+                    // (a continuação da tarefa precisava da própria thread que estava esperando).
+                    seguranca = Servicos.Backup.Servico.Fazer(Servicos.Backup.Configuracao.Pasta, MotivoBackup.PreAtualizacao);
                 }
                 catch (Exception ex)
                 {

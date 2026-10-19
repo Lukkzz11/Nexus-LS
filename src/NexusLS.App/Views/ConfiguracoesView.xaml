@@ -58,6 +58,9 @@
                         <CheckBox Content="Perguntar o tamanho no PDV (desligado: vai direto à quantidade quando só há uma opção)"
                                   Margin="0,10,0,0" IsChecked="{Binding PerguntarTamanho}" />
 
+                        <CheckBox Content="Abrir o programa direto no PDV (desligado: abre na tela Início; o PDV fica no F1)"
+                                  Margin="0,10,0,0" IsChecked="{Binding AbrirNoPdv}" />
+
                         <StackPanel Orientation="Horizontal" Margin="0,20,0,0">
                             <Button Content="Salvar (Ctrl+S)" Style="{StaticResource BotaoPrimario}"
                                     Command="{Binding SalvarCommand}" />

@@ -6,6 +6,9 @@ namespace NexusLS.Core.Backup;
 /// <summary>Por que o backup foi feito. Vira parte do nome do arquivo.</summary>
 public enum MotivoBackup { Manual, Automatico, PreAtualizacao, PreRestauracao }
 
+/// <summary>Como está a proteção dos dados, para o aviso da tela inicial.</summary>
+public enum SituacaoBackup { Nunca, EmDia, Atrasado, SoManual }
+
 /// <summary>Um arquivo de backup encontrado na pasta.</summary>
 public record InfoBackup(string Caminho, DateTime Data, MotivoBackup Motivo, long Bytes)
 {
@@ -58,6 +61,19 @@ public static class RegrasBackup
         if (intervaloHoras <= 0) return false;
         if (ultimoBackup is null) return true;
         return agora - ultimoBackup.Value >= TimeSpan.FromHours(intervaloHoras);
+    }
+
+    /// <summary>
+    /// Nunca = ainda não há backup. Com o automático desligado, só manual. Atrasado = passou o DOBRO do intervalo
+    /// escolhido sem backup (uma folga, para não alarmar à toa quando o computador ficou desligado).
+    /// </summary>
+    public static SituacaoBackup Situacao(DateTime? ultimoBackup, DateTime agora, int intervaloHoras)
+    {
+        if (ultimoBackup is null) return SituacaoBackup.Nunca;
+        if (intervaloHoras <= 0) return SituacaoBackup.SoManual;
+        return agora - ultimoBackup.Value > TimeSpan.FromHours(intervaloHoras * 2L)
+            ? SituacaoBackup.Atrasado
+            : SituacaoBackup.EmDia;
     }
 
     /// <summary>

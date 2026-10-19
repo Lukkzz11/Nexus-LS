@@ -302,6 +302,9 @@ internal static class Capturador
         return tela;
     }
 
+    public static void SalvarInicio(InicioViewModel vm, string caminho, int largura = 1400, int altura = 900) =>
+        Desenhar(() => new InicioView { DataContext = vm }, caminho, largura, altura);
+
     public static void SalvarConfiguracoes(ConfiguracoesViewModel vm, string caminho, int largura = 1400, int altura = 820) =>
         Desenhar(() => new ConfiguracoesView { DataContext = vm }, caminho, largura, altura);
 

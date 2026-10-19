@@ -19,6 +19,7 @@ public static class Servicos
     public static CaixaService Caixa { get; } = new(Fabrica);
     public static ClienteService Clientes { get; } = new(Fabrica);
     public static ConfiguracaoService Configuracao { get; } = new(Fabrica);
+    public static InicioService Inicio { get; } = new(Fabrica);
     public static RelatorioService Relatorios { get; } = new(Fabrica);
     public static CupomService Cupons { get; } = new(Fabrica, Configuracao, new ImpressoraWindows());
     public static NexusLS.Core.Backup.GestorBackup Backup { get; } = new(

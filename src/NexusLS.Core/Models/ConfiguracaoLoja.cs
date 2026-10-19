@@ -29,4 +29,10 @@ public class ConfiguracaoLoja
 
     /// <summary>Imprime o cupom sozinho quando a venda é finalizada.</summary>
     public bool ImprimirCupomAoFinalizar { get; set; } = true;
+
+    /// <summary>
+    /// Desligado (padrão): o programa abre na tela Início (indicadores e atalhos) e o PDV fica a um clique ou
+    /// ao apertar F1. Ligado: abre direto no PDV, como nas versões antigas.
+    /// </summary>
+    public bool AbrirNoPdv { get; set; }
 }

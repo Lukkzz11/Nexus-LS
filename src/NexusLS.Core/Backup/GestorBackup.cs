@@ -33,7 +33,7 @@ public class GestorBackup
     {
         var config = _store.Carregar();
         var momento = _agora();
-        var info = await _servico.FazerAsync(config.Pasta, motivo, config.Manter, momento);
+        var info = await _servico.FazerAsync(config.Pasta, motivo, config.Manter, momento).ConfigureAwait(false);
         if (motivo is MotivoBackup.Manual or MotivoBackup.Automatico)
         {
             config.UltimoBackup = momento;
@@ -48,5 +48,5 @@ public class GestorBackup
 
     /// <summary>Faz o backup automático se estiver na hora. Devolve o backup feito, ou null se não era a hora.</summary>
     public async Task<InfoBackup?> FazerSeEstiverNaHoraAsync() =>
-        EstaNaHora() ? await FazerAsync(MotivoBackup.Automatico) : null;
+        EstaNaHora() ? await FazerAsync(MotivoBackup.Automatico).ConfigureAwait(false) : null;
 }

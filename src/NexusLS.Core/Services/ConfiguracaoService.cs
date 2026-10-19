@@ -14,7 +14,8 @@ public record DadosLoja(
     int LarguraCupom = 42,
     bool ImprimirCupomAoFinalizar = true,
     string NomeOperador = "Caixa",
-    bool PerguntarTamanho = true);
+    bool PerguntarTamanho = true,
+    bool AbrirNoPdv = false);
 
 /// <summary>Dados da loja e do cupom. Só existe uma configuração; ela é criada na primeira leitura.</summary>
 public class ConfiguracaoService
@@ -58,6 +59,7 @@ public class ConfiguracaoService
         config.LarguraCupom = dados.LarguraCupom;
         config.ImprimirCupomAoFinalizar = dados.ImprimirCupomAoFinalizar;
         config.PerguntarTamanho = dados.PerguntarTamanho;
+        config.AbrirNoPdv = dados.AbrirNoPdv;
         config.NomeOperador = string.IsNullOrWhiteSpace(dados.NomeOperador) ? "Caixa" : dados.NomeOperador.Trim();
 
         await db.SaveChangesAsync();

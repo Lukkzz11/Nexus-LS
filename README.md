@@ -5,10 +5,11 @@ Funciona sem internet e sem login, com uma loja só. Todo o programa, o código 
 
 ## Telas
 
-O menu lateral tem três grupos:
+O programa abre na tela **Início** (indicadores e atalhos); o menu lateral tem Início e mais três grupos:
 
 | Grupo | Tela | Para que serve |
 |---|---|---|
+| **Início** | **Início** | Tela de abertura: vendas de hoje (com a comparação com ontem), ticket médio, situação do caixa, produtos abaixo do estoque mínimo (com os piores), quanto os clientes devem (e quanto já venceu), situação do backup e atalhos para todas as telas. Vendas canceladas nunca entram nos números. Em Configurações dá para escolher abrir direto no PDV. |
 | **Vendas** | **PDV** | Frente de caixa, todo pelo teclado (veja o fluxo abaixo). |
 | | **Caixa** | Vendas de um dia, resumo por forma de pagamento, detalhe, **cancelar** venda (pede o motivo, registra quem e quando cancelou, devolve o estoque se você quiser; a venda nunca é apagada), reimprimir cupom e exportar CSV. |
 | | **Fechamento** | Abrir o caixa com troco inicial, registrar sangria, reforço, despesa e entrada avulsa, e fechar conferindo dinheiro, cartão e Pix contra o esperado. Diferença exige observação. Fechamentos nunca mudam: conferir de novo cria uma nova versão. |
@@ -41,6 +42,7 @@ BUSCA vazia + carrinho cheio ─Enter→ DESCONTO ─Enter→ PAGAMENTO ─Enter
 
 | Tecla | Ação |
 |---|---|
+| `F1` | Abre o PDV, de qualquer tela |
 | `F2` | Foco na busca (e seleciona o texto) |
 | `Espaço` | Com a busca vazia, alterna a tabela de preço: varejo / atacado |
 | `F10` | Atalho extra: avança para o fechamento da venda (como Enter com a busca vazia) |

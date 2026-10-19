@@ -1,0 +1,142 @@
+<UserControl x:Class="NexusLS.App.Views.InicioView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
+
+    <UserControl.Resources>
+        <!-- Cartão de indicador: título pequeno, valor grande, detalhe. -->
+        <Style x:Key="TituloIndicador" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />
+        </Style>
+        <Style x:Key="ValorIndicador" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="26" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Margin" Value="0,4,0,2" />
+        </Style>
+        <Style x:Key="DetalheIndicador" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <!-- Valor que fica laranja quando o Tag (o alerta) é verdadeiro -->
+        <Style x:Key="ValorComAlerta" TargetType="TextBlock" BasedOn="{StaticResource ValorIndicador}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource Self}}" Value="True">
+                    <Setter Property="Foreground" Value="#B45309" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <!-- Botão de atalho para um módulo -->
+        <Style x:Key="Atalho" TargetType="Button" BasedOn="{StaticResource BotaoSecundario}">
+            <Setter Property="Margin" Value="0,0,10,10" />
+            <Setter Property="Padding" Value="18,12" />
+            <Setter Property="MinWidth" Value="140" />
+        </Style>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel>
+            <Grid Margin="0,0,0,14">
+                <StackPanel>
+                    <TextBlock Text="Início" Style="{StaticResource TituloTela}" />
+                    <TextBlock Text="{Binding DataTexto}" Foreground="{StaticResource CorTextoSuave}" Margin="0,2,0,0" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Button Content="Atualizar" Style="{StaticResource BotaoSecundario}" Command="{Binding AtualizarCommand}" />
+                    <Button Content="Abrir o PDV (F1)" Style="{StaticResource BotaoPrimario}" Margin="8,0,0,0"
+                            AutomationProperties.Name="Abrir o PDV" Command="{Binding AbrirPdvCommand}" />
+                </StackPanel>
+            </Grid>
+
+            <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" Margin="0,0,0,8" />
+
+            <!-- Indicadores do dia -->
+            <UniformGrid Columns="4">
+                <Border Style="{StaticResource Painel}" Margin="0,0,12,12">
+                    <StackPanel>
+                        <TextBlock Text="Vendas de hoje" Style="{StaticResource TituloIndicador}" />
+                        <TextBlock Text="{Binding VendasHojeTexto}" Style="{StaticResource ValorIndicador}" AutomationProperties.Name="Vendas de hoje" />
+                        <TextBlock Text="{Binding VendasHojeDetalhe}" Style="{StaticResource DetalheIndicador}" />
+                        <TextBlock Text="{Binding ComparacaoOntemTexto}" Style="{StaticResource DetalheIndicador}" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Painel}" Margin="0,0,12,12">
+                    <StackPanel>
+                        <TextBlock Text="Ticket médio de hoje" Style="{StaticResource TituloIndicador}" />
+                        <TextBlock Text="{Binding TicketMedioTexto}" Style="{StaticResource ValorIndicador}" />
+                        <TextBlock Text="Valor médio de cada venda" Style="{StaticResource DetalheIndicador}" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Painel}" Margin="0,0,12,12">
+                    <StackPanel>
+                        <TextBlock Text="Caixa" Style="{StaticResource TituloIndicador}" />
+                        <TextBlock Text="{Binding CaixaTexto}" Style="{StaticResource ValorIndicador}" FontSize="22" AutomationProperties.Name="Situação do caixa" />
+                        <Button Content="Abrir fechamento" Style="{StaticResource BotaoSecundario}" Margin="0,6,0,0" Padding="10,5"
+                                HorizontalAlignment="Left" Command="{Binding AbrirFechamentoCommand}" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Painel}" Margin="0,0,0,12">
+                    <StackPanel>
+                        <TextBlock Text="Estoque" Style="{StaticResource TituloIndicador}" />
+                        <TextBlock Text="{Binding EstoqueBaixoTexto}" FontSize="20" TextWrapping="Wrap"
+                                   Style="{StaticResource ValorComAlerta}" Tag="{Binding EstoqueBaixoAlerta}" />
+                        <Button Content="Ver estoque" Style="{StaticResource BotaoSecundario}" Margin="0,6,0,0" Padding="10,5"
+                                HorizontalAlignment="Left" Command="{Binding AbrirEstoqueCommand}" />
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
+
+            <UniformGrid Columns="2">
+                <Border Style="{StaticResource Painel}" Margin="0,0,12,12">
+                    <StackPanel>
+                        <TextBlock Text="Clientes devendo (a prazo)" Style="{StaticResource TituloIndicador}" />
+                        <TextBlock Text="{Binding DividaTexto}" FontSize="22" Style="{StaticResource ValorComAlerta}" Tag="{Binding DividaAlerta}" />
+                        <TextBlock Text="{Binding DividaDetalhe}" Style="{StaticResource DetalheIndicador}" />
+                        <Button Content="Ver clientes" Style="{StaticResource BotaoSecundario}" Margin="0,8,0,0" Padding="10,5"
+                                HorizontalAlignment="Left" Command="{Binding AbrirClientesCommand}" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Painel}" Margin="0,0,0,12"
+                        Visibility="{Binding TemBackup, Converter={StaticResource BoolVis}}">
+                    <StackPanel>
+                        <TextBlock Text="Proteção dos dados" Style="{StaticResource TituloIndicador}" />
+                        <TextBlock Text="{Binding BackupTexto}" FontSize="22" Style="{StaticResource ValorComAlerta}" Tag="{Binding BackupAlerta}"
+                                   AutomationProperties.Name="Situação do backup" />
+                        <TextBlock Text="{Binding BackupDetalhe}" Style="{StaticResource DetalheIndicador}" />
+                        <Button Content="Backup e restauração" Style="{StaticResource BotaoSecundario}" Margin="0,8,0,0" Padding="10,5"
+                                HorizontalAlignment="Left" Command="{Binding AbrirConfiguracoesCommand}" />
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
+
+            <!-- Produtos com estoque baixo -->
+            <Border Style="{StaticResource Painel}" Margin="0,0,0,12"
+                    Visibility="{Binding EstoqueBaixoAlerta, Converter={StaticResource BoolVis}}">
+                <StackPanel>
+                    <TextBlock Text="Repor em breve" FontSize="18" FontWeight="SemiBold" />
+                    <ItemsControl ItemsSource="{Binding EstoquesBaixos}" Margin="0,8,0,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" Margin="0,2" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <!-- Atalhos -->
+            <TextBlock Text="Atalhos" FontSize="18" FontWeight="SemiBold" Margin="0,8,0,10" />
+            <WrapPanel>
+                <Button Content="PDV (F1)" Style="{StaticResource Atalho}" Command="{Binding AbrirPdvCommand}" />
+                <Button Content="Caixa" Style="{StaticResource Atalho}" Command="{Binding AbrirCaixaCommand}" />
+                <Button Content="Mais vendidos" Style="{StaticResource Atalho}" Command="{Binding AbrirMaisVendidosCommand}" />
+                <Button Content="Estoque da loja" Style="{StaticResource Atalho}" Command="{Binding AbrirEstoqueCommand}" />
+                <Button Content="Etiquetas" Style="{StaticResource Atalho}" Command="{Binding AbrirEtiquetasCommand}" />
+                <Button Content="Clientes" Style="{StaticResource Atalho}" Command="{Binding AbrirClientesCommand}" />
+                <Button Content="Relatórios" Style="{StaticResource Atalho}" Command="{Binding AbrirRelatoriosCommand}" />
+                <Button Content="Configurações" Style="{StaticResource Atalho}" Command="{Binding AbrirConfiguracoesCommand}" />
+            </WrapPanel>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

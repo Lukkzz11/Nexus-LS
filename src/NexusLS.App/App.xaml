@@ -24,6 +24,9 @@
 
             <!-- Regra do MVVM no WPF: quando a janela mostra um ViewModel, o WPF procura aqui
                  qual View (tela) desenhar para ele. Assim o ViewModel nunca conhece a tela. -->
+            <DataTemplate DataType="{x:Type vm:InicioViewModel}">
+                <views:InicioView />
+            </DataTemplate>
             <DataTemplate DataType="{x:Type vm:PdvViewModel}">
                 <views:PdvView />
             </DataTemplate>

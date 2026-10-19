@@ -385,3 +385,41 @@ public sealed class GestorBackupTests : IDisposable
         Assert.Equal(3, _gestor.Servico.Listar(_gestor.Configuracao.Pasta).Count);
     }
 }
+
+public class SituacaoDoBackupTests
+{
+    private static readonly DateTime Agora = new(2026, 10, 19, 12, 0, 0);
+
+    [Fact]
+    public void Nunca_feito_e_sempre_alerta_mesmo_com_automatico_desligado() =>
+        Assert.Equal(SituacaoBackup.Nunca, RegrasBackup.Situacao(null, Agora, 0));
+
+    [Fact]
+    public void Automatico_desligado_com_backup_antigo_e_so_manual() =>
+        Assert.Equal(SituacaoBackup.SoManual, RegrasBackup.Situacao(Agora.AddDays(-40), Agora, 0));
+
+    [Fact]
+    public void Ate_o_dobro_do_intervalo_esta_em_dia_e_depois_disso_atrasado()
+    {
+        Assert.Equal(SituacaoBackup.EmDia, RegrasBackup.Situacao(Agora.AddHours(-48), Agora, 24));
+        Assert.Equal(SituacaoBackup.Atrasado, RegrasBackup.Situacao(Agora.AddHours(-48).AddMinutes(-1), Agora, 24));
+    }
+}
+
+public class AbrirNoPdvTests
+{
+    [Fact]
+    public async Task Por_padrao_abre_na_tela_inicial_e_a_escolha_e_gravada()
+    {
+        using var banco = new Infra.BancoDeTeste();
+        var servico = new ConfiguracaoService(banco.Fabrica);
+
+        Assert.False((await servico.ObterAsync()).AbrirNoPdv);
+
+        await servico.SalvarAsync(new DadosLoja("Loja", AbrirNoPdv: true));
+        Assert.True((await servico.ObterAsync()).AbrirNoPdv);
+
+        await servico.SalvarAsync(new DadosLoja("Loja"));
+        Assert.False((await servico.ObterAsync()).AbrirNoPdv);
+    }
+}
