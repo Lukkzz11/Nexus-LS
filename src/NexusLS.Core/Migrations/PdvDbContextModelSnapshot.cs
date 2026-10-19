@@ -310,6 +310,9 @@ namespace NexusLS.Core.Migrations
                     b.Property<bool>("Ativo")
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateTime>("AtualizadoEm")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Categoria")
                         .HasMaxLength(60)
                         .HasColumnType("TEXT");
@@ -327,6 +330,9 @@ namespace NexusLS.Core.Migrations
 
                     b.Property<int>("EstoqueMinimo")
                         .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("Guid")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Nome")
                         .IsRequired()
@@ -359,6 +365,9 @@ namespace NexusLS.Core.Migrations
                         .IsUnique()
                         .HasFilter("\"CodigoInterno\" IS NOT NULL");
 
+                    b.HasIndex("Guid")
+                        .IsUnique();
+
                     b.HasIndex("Referencia");
 
                     b.ToTable("Produtos");
@@ -387,6 +396,82 @@ namespace NexusLS.Core.Migrations
                         .IsUnique();
 
                     b.ToTable("TamanhosProduto");
+                });
+
+            modelBuilder.Entity("NexusLS.Core.Models.SincronizacaoLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Alterados")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("ConcluidaEm")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Criados")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Desativados")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Erros")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Ignorados")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Inalterados")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("IniciadaEm")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Mensagem")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Operador")
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Resultado")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IniciadaEm");
+
+                    b.ToTable("SincronizacaoLogs");
+                });
+
+            modelBuilder.Entity("NexusLS.Core.Models.SincronizacaoProduto", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("AtivoNoRemoto")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("EnviadoEm")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("HashEnviado")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ProdutoGuid")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProdutoGuid")
+                        .IsUnique();
+
+                    b.ToTable("SincronizacaoProdutos");
                 });
 
             modelBuilder.Entity("NexusLS.Core.Models.TurnoCaixa", b =>

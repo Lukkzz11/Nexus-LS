@@ -8,6 +8,19 @@ public class Produto
 {
     public int Id { get; set; }
 
+    /// <summary>
+    /// Identificador global e permanente do produto. O <see cref="Id"/> inteiro só vale neste banco; este é o que
+    /// identifica o produto fora dele (por exemplo, como id do documento no Firestore), e por ser único e fixo
+    /// reenviar o mesmo produto nunca cria um duplicado. Nunca muda depois de criado.
+    /// </summary>
+    public Guid Guid { get; set; } = Guid.NewGuid();
+
+    /// <summary>
+    /// Quando o produto (ou o estoque de algum tamanho dele) foi alterado pela última vez, em UTC. É só informativo:
+    /// quem decide o que mudou na sincronização é o hash do conteúdo, que não depende do relógio do computador.
+    /// </summary>
+    public DateTime AtualizadoEm { get; set; } = DateTime.UtcNow;
+
     /// <summary>Código de barras (opcional). O "?" significa que pode ser nulo.</summary>
     public string? CodigoBarras { get; set; }
 

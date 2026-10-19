@@ -86,6 +86,7 @@ src/
     Services/            Venda, Produto, Estoque, Cliente, Carrinho, Rascunho, Cupom, Relatório, CSV...
     Etiquetas/           Code 128, formatos e diagramação das etiquetas
     Backup/              Backup e restauração do banco, nomes, retenção e preferências
+    Sincronizacao/       Preparo para publicar o catálogo no Firestore: o que se publica, hash, validação e plano de mudanças
   NexusLS.App/           Interface WPF (MVVM com CommunityToolkit.Mvvm)
     Views/               Telas (XAML)
     ViewModels/          Lógica de cada tela
@@ -98,6 +99,18 @@ tests/
 ```
 
 A regra de negócio fica no `Core`, que **não conhece o WPF**, e por isso é testada sem abrir janela. O fluxo do PDV (e as outras telas) é testado nos ViewModels, simulando as teclas.
+
+## Preparo para a sincronização com o Firestore
+
+Ainda **não existe envio para a nuvem** (isso vem na próxima etapa); aqui está só a base segura que ele vai usar. O SQLite continua sendo a única fonte dos dados; o Firestore será uma cópia de publicação atualizada só quando o usuário clicar em "Atualizar Firestore".
+
+- **Id global:** todo produto tem um `Guid` (identificador único e permanente), além do `Id` inteiro que só vale neste banco. Será o id do documento remoto, então reenviar o mesmo produto nunca cria duplicado. Os produtos que já existiam ganharam o seu na atualização, sem perder nenhum dado.
+- **AtualizadoEm:** o produto guarda a data (UTC) da última alteração, atualizada sozinha em cadastro, edição, ajuste de estoque, venda e cancelamento. É só informativa.
+- **O que mudou é decidido por um hash** (SHA-256) do conteúdo publicado, e não pela data, porque o relógio do computador pode estar errado. Mudou o nome, o preço, o código de barras, o estoque de um tamanho ou o status: o hash muda. Mudou custo, preço de atacado ou estoque mínimo: não muda, porque esses dados **não são publicados**.
+- **O que se publica (por enquanto):** nome, categoria, referência, código de barras, preço de varejo, se o produto não controla estoque, se está ativo e o estoque de cada tamanho. Nada de custo, atacado, vendas, clientes ou dívidas. Aumentar essa lista é decisão sua.
+- **Plano antes de enviar:** o programa calcula e mostra quantos produtos são novos, alterados, desativados, inalterados ou inválidos (sem nome, preço negativo, estoque negativo, código de barras repetido...). Produto inválido fica na lista para corrigir e **nunca** é enviado, e não atrapalha os outros. Produto desativado vira "desativado" no remoto; nada é apagado.
+- **Controle no banco:** a tabela `SincronizacaoProdutos` guarda o hash do que o servidor já confirmou (um registro por produto, atualizado, nunca duplicado), e `SincronizacaoLogs` guarda cada tentativa (quando, quantos criados/alterados/desativados/ignorados, erros e resultado). Se um envio falhar no meio, só o que foi confirmado é anotado, e a próxima vez continua de onde parou.
+- Antes de aplicar essa mudança no banco, o programa faz um backup automático ("pre-atualizacao").
 
 ## Visual
 

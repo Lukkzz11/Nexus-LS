@@ -22,6 +22,8 @@ public class PdvDbContext : DbContext
     public DbSet<TurnoCaixa> TurnosCaixa => Set<TurnoCaixa>();
     public DbSet<MovimentoCaixa> MovimentosCaixa => Set<MovimentoCaixa>();
     public DbSet<FechamentoCaixa> FechamentosCaixa => Set<FechamentoCaixa>();
+    public DbSet<SincronizacaoProduto> SincronizacaoProdutos => Set<SincronizacaoProduto>();
+    public DbSet<SincronizacaoLog> SincronizacaoLogs => Set<SincronizacaoLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -36,8 +38,23 @@ public class PdvDbContext : DbContext
             // Código de barras não pode repetir, mas vários produtos podem ficar sem código (nulo).
             e.HasIndex(p => p.CodigoBarras).IsUnique().HasFilter("\"CodigoBarras\" IS NOT NULL");
             e.HasIndex(p => p.Referencia);
+            e.HasIndex(p => p.Guid).IsUnique();
+            e.Property(p => p.Guid).ValueGeneratedNever();
             e.HasMany(p => p.Tamanhos).WithOne().HasForeignKey(t => t.ProdutoId);
             e.Ignore(p => p.EstoqueBaixo); // propriedade calculada, não vira coluna
+        });
+
+        modelBuilder.Entity<SincronizacaoProduto>(e =>
+        {
+            e.Property(x => x.HashEnviado).IsRequired().HasMaxLength(100);
+            e.HasIndex(x => x.ProdutoGuid).IsUnique(); // um registro de estado por produto
+        });
+
+        modelBuilder.Entity<SincronizacaoLog>(e =>
+        {
+            e.Property(x => x.Operador).HasMaxLength(80);
+            e.Property(x => x.Mensagem).HasMaxLength(1000);
+            e.HasIndex(x => x.IniciadaEm);
         });
 
         modelBuilder.Entity<ProdutoTamanho>(e =>
@@ -124,5 +141,58 @@ public class PdvDbContext : DbContext
             e.Ignore(f => f.DiferencaPixCentavos);
             e.Ignore(f => f.DiferencaTotalCentavos);
         });
+    }
+
+    // ---- AtualizadoEm: mantido em UM lugar só, para nenhum serviço esquecer de atualizar ----
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        CarimbarProdutosAlterados();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        CarimbarProdutosAlterados();
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
+    /// <summary>
+    /// Antes de gravar: todo produto alterado, e todo produto cujo tamanho/estoque foi alterado, recebe o horário
+    /// de agora em <see cref="Produto.AtualizadoEm"/>. Cobre cadastro, edição, ajuste de estoque, venda e cancelamento.
+    /// </summary>
+    private void CarimbarProdutosAlterados()
+    {
+        var agora = DateTime.UtcNow;
+
+        foreach (var entrada in ChangeTracker.Entries<Produto>()
+                     .Where(e => e.State is EntityState.Added or EntityState.Modified).ToList())
+        {
+            // Só carimba se alguma coisa além do próprio carimbo mudou (ou se é novo).
+            if (entrada.State == EntityState.Added
+                || entrada.Properties.Any(p => p.IsModified && p.Metadata.Name != nameof(Produto.AtualizadoEm)))
+                entrada.Entity.AtualizadoEm = agora;
+        }
+
+        var idsComTamanhoAlterado = ChangeTracker.Entries<ProdutoTamanho>()
+            .Where(e => e.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
+            .Select(e => e.Entity.ProdutoId)
+            .Where(id => id > 0)
+            .Distinct()
+            .ToList();
+
+        foreach (var id in idsComTamanhoAlterado)
+        {
+            var rastreado = ChangeTracker.Entries<Produto>().FirstOrDefault(e => e.Entity.Id == id);
+            if (rastreado is not null)
+            {
+                rastreado.Entity.AtualizadoEm = agora;
+                continue;
+            }
+            // Produto que não está carregado neste contexto: atualiza só a coluna do carimbo, sem ler o produto.
+            var esboco = new Produto { Id = id, AtualizadoEm = agora };
+            Attach(esboco);
+            Entry(esboco).Property(p => p.AtualizadoEm).IsModified = true;
+        }
     }
 }
