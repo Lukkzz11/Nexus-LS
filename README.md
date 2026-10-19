@@ -17,7 +17,7 @@ O menu lateral tem três grupos:
 | | **Etiquetas** | Etiquetas com nome, preço, tamanho e código de barras (Code 128; número só de dígitos usa o conjunto C, mais curto), em bobina ou folha A4, com prévia. |
 | **Gestão** | **Clientes** | Cadastro e histórico de compras de cada cliente. |
 | | **Relatórios** | Vendas por período: total, número de vendas, ticket médio, descontos, canceladas, por dia, por forma de pagamento, por categoria, **lucro bruto** (total vendido menos o custo das mercadorias; o custo fica guardado em cada venda, e vendas antigas usam o custo atual e avisam que é estimativa) e exportar CSV (vendas e itens). |
-| | **Configurações** | Dados da loja e do cupom, impressora, largura do papel, impressão automática, com prévia do cupom. |
+| | **Configurações** | Dados da loja e do cupom, impressora, largura do papel, impressão automática, com prévia do cupom, e **backup** (automático e manual, escolha da pasta, restauração). |
 
 ## Fluxo do PDV (tudo pelo teclado)
 
@@ -83,6 +83,7 @@ src/
     Migrations/          Histórico de versões da estrutura do banco
     Services/            Venda, Produto, Estoque, Cliente, Carrinho, Rascunho, Cupom, Relatório, CSV...
     Etiquetas/           Code 128, formatos e diagramação das etiquetas
+    Backup/              Backup e restauração do banco, nomes, retenção e preferências
   NexusLS.App/           Interface WPF (MVVM com CommunityToolkit.Mvvm)
     Views/               Telas (XAML)
     ViewModels/          Lógica de cada tela
@@ -127,8 +128,16 @@ Tudo fica em **um único arquivo** SQLite:
 
 Normalmente `C:\Users\<seu usuário>\AppData\Local\NexusLS\nexus.db`. Para abrir a pasta, cole `%LOCALAPPDATA%\NexusLS` na barra de endereço do Explorer.
 
-- **Backup:** feche o programa e copie o `nexus.db` para um pendrive ou serviço de nuvem. Se houver arquivos `nexus.db-wal` e `nexus.db-shm` ao lado, copie junto.
-- **Restaurar:** com o programa fechado, substitua o `nexus.db` pela cópia.
+- **Backup (Configurações > Backup dos dados):** o programa faz cópias do banco sozinho e sob demanda, **com o programa aberto**.
+  - **Automático:** ao abrir e a cada 15 minutos ele confere se já passou o intervalo escolhido (desligado, 1, 6, 12 horas, todo dia ou toda semana; padrão: todo dia). Se falhar, aparece um aviso na tela.
+  - **Manual:** botão "Fazer backup agora".
+  - **Onde:** você escolhe a pasta (padrão `Documentos\Nexus LS\Backups`). Se a pasta ficar no mesmo disco do banco, a tela avisa: prefira pen drive, HD externo ou pasta sincronizada na nuvem.
+  - **Nome:** `nexus_AAAA-MM-DD_HHMMSS_motivo.db` (motivo: manual, auto, pre-atualizacao, pre-restauracao).
+  - **Segurança da cópia:** usa a API de backup do SQLite (copiar o `.db` à mão pode sair incompleto por causa do arquivo `-wal`), grava num arquivo temporário, confere a integridade (`PRAGMA integrity_check`) e só então dá o nome final. Cópia que não passa na conferência é descartada.
+  - **Quantos guardar:** você define (de 3 a 200). Os mais antigos, manuais e automáticos, são apagados; só arquivos com o nome padrão acima são tocados. Os de segurança (antes de atualizar ou de restaurar) nunca são apagados sozinhos.
+  - **Antes de atualizar o banco:** quando uma versão nova muda a estrutura das tabelas, o programa faz um backup antes. Se a mudança falhar, o banco volta a esse backup.
+  - As preferências ficam em `%LOCALAPPDATA%\NexusLS\backup.json`, fora do banco.
+- **Restaurar:** em Configurações, escolha o backup na lista (ou nenhum, para procurar um arquivo) e clique em "Restaurar". O programa confere o arquivo, **guarda uma cópia dos dados atuais** (`pre-restauracao`), troca o banco e reinicia. Se o banco estiver em uso ou algo falhar, nada é alterado. Restaurar à mão continua possível: com o programa fechado, substitua o `nexus.db` (apague os `-wal` e `-shm` ao lado).
 - **Começar do zero:** com o programa fechado, apague o `nexus.db`; um novo, vazio, é criado na próxima abertura.
 - **Vindo da versão antiga (PDV Simples):** na primeira abertura o programa copia `%LOCALAPPDATA%\PdvSimples\pdv.db` para `nexus.db`. O arquivo antigo não é apagado.
 - A venda em andamento fica em `%LOCALAPPDATA%\NexusLS\rascunho.json` (pode ser apagado sem problema; ele só guarda o carrinho aberto).

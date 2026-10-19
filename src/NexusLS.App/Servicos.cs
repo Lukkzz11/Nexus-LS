@@ -21,5 +21,8 @@ public static class Servicos
     public static ConfiguracaoService Configuracao { get; } = new(Fabrica);
     public static RelatorioService Relatorios { get; } = new(Fabrica);
     public static CupomService Cupons { get; } = new(Fabrica, Configuracao, new ImpressoraWindows());
+    public static NexusLS.Core.Backup.GestorBackup Backup { get; } = new(
+        new NexusLS.Core.Backup.BackupService(CaminhoBanco.Padrao()),
+        new NexusLS.Core.Backup.ConfiguracaoBackupStore(NexusLS.Core.Backup.ConfiguracaoBackupStore.CaminhoPadrao()));
     public static RascunhoService Rascunho { get; } = new(new RascunhoStore(RascunhoStore.CaminhoPadrao()), Fabrica);
 }

@@ -44,7 +44,7 @@ public partial class MainViewModel : ObservableObject
     // Gestão
     [RelayCommand] private void IrParaClientes() => Abrir(new ClientesViewModel(Servicos.Clientes), ItemMenu.Clientes);
     [RelayCommand] private void IrParaRelatorios() => Abrir(new RelatoriosViewModel(Servicos.Relatorios), ItemMenu.Relatorios);
-    [RelayCommand] private void IrParaConfiguracoes() => Abrir(new ConfiguracoesViewModel(Servicos.Configuracao, Servicos.Cupons), ItemMenu.Configuracoes);
+    [RelayCommand] private void IrParaConfiguracoes() => Abrir(new ConfiguracoesViewModel(Servicos.Configuracao, Servicos.Cupons, Servicos.Backup, new NexusLS.App.Backup.DialogosBackupWpf()), ItemMenu.Configuracoes);
 
     private void Abrir(object tela, ItemMenu item)
     {

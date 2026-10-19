@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NexusLS.App.Impressao;
+using NexusLS.Core.Backup;
 using NexusLS.Core.Models;
 using NexusLS.Core.Services;
 
@@ -15,15 +16,19 @@ public partial class ConfiguracoesViewModel : ViewModelBase
     private readonly ConfiguracaoService _configuracao;
     private readonly CupomService _cupons;
 
-    public ConfiguracoesViewModel(ConfiguracaoService configuracao, CupomService cupons)
+    public ConfiguracoesViewModel(ConfiguracaoService configuracao, CupomService cupons,
+        GestorBackup? backup = null, NexusLS.App.Backup.IDialogosBackup? dialogos = null)
     {
         _configuracao = configuracao;
         _cupons = cupons;
+        _backup = backup;
+        _dialogos = dialogos;
         _larguraSelecionada = Larguras[1];
         _impressoraSelecionada = ImpressoraWindows.ImpressoraPadrao;
         Impressoras.Add(ImpressoraWindows.ImpressoraPadrao);
         foreach (var nome in ImpressoraWindows.ListarImpressoras()) Impressoras.Add(nome);
         _ = CarregarAsync();
+        CarregarBackup();
     }
 
     public IReadOnlyList<OpcaoLargura> Larguras { get; } = new[]

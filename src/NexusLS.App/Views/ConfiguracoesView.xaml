@@ -68,6 +68,63 @@
                         <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" />
                     </StackPanel>
                 </Border>
+                            <!-- ===== Backup ===== -->
+                <Border Style="{StaticResource Painel}" Margin="0,16,0,24"
+                        Visibility="{Binding TemBackup, Converter={StaticResource BoolVis}}">
+                    <StackPanel>
+                        <TextBlock Text="Backup dos dados" FontSize="18" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding UltimoBackupTexto}" Foreground="{StaticResource CorTextoSuave}" Margin="0,4,0,0" />
+
+                        <TextBlock Text="Pasta dos backups" Style="{StaticResource Rotulo}" />
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox Text="{Binding PastaBackup, UpdateSourceTrigger=PropertyChanged}" />
+                            <Button Grid.Column="1" Content="Escolher..." Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0"
+                                    Command="{Binding EscolherPastaBackupCommand}" />
+                        </Grid>
+                        <TextBlock Text="{Binding AvisoBackup}" Foreground="#B45309" TextWrapping="Wrap" Margin="0,6,0,0" />
+
+                        <TextBlock Text="Backup automático" Style="{StaticResource Rotulo}" />
+                        <ComboBox ItemsSource="{Binding IntervalosBackup}" DisplayMemberPath="Texto"
+                                  SelectedItem="{Binding IntervaloSelecionado}" Padding="8,7" />
+
+                        <TextBlock Text="Quantos backups guardar (os mais antigos são apagados)" Style="{StaticResource Rotulo}" />
+                        <TextBox Text="{Binding ManterTexto, UpdateSourceTrigger=PropertyChanged}" Width="120" HorizontalAlignment="Left" />
+
+                        <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+                            <Button Content="Fazer backup agora" Style="{StaticResource BotaoPrimario}"
+                                    Command="{Binding FazerBackupAgoraCommand}" />
+                            <Button Content="Salvar preferências" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0"
+                                    Command="{Binding SalvarBackupCommand}" />
+                        </StackPanel>
+
+                        <TextBlock Text="Backups guardados" Style="{StaticResource Rotulo}" />
+                        <ListBox ItemsSource="{Binding Backups}" SelectedItem="{Binding BackupSelecionado}"
+                                 DisplayMemberPath="Texto" MaxHeight="180" />
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                            <Button Content="Restaurar o selecionado" Style="{StaticResource BotaoSecundario}"
+                                    Command="{Binding RestaurarCommand}" />
+                        </StackPanel>
+                        <TextBlock Text="Para restaurar um arquivo de outra pasta, deixe nenhum item selecionado e clique em Restaurar."
+                                   Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,6,0,0" />
+
+                        <TextBlock Text="{Binding MensagemBackup}" TextWrapping="Wrap" Margin="0,10,0,0">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="#15803D" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding MensagemBackupEhErro}" Value="True">
+                                            <Setter Property="Foreground" Value="#B91C1C" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
             </StackPanel>
         </ScrollViewer>
 

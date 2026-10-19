@@ -1,5 +1,6 @@
 using System.Windows;
 using Microsoft.EntityFrameworkCore;
+using NexusLS.Core.Backup;
 using NexusLS.Core.Data;
 
 namespace NexusLS.App;
@@ -19,8 +20,7 @@ public partial class App : Application
     /// </summary>
     protected override void OnStartup(StartupEventArgs e)
     {
-        using (var db = new PdvDbContext(OpcoesBanco))
-            db.Database.Migrate();
+        if (!PrepararBanco()) return; // falhou e o usuário escolheu sair: nada de abrir a janela
 
         // Cor de destaque da biblioteca WPF-UI (foco dos campos, seleção, abas...) igual ao azul do Nexus LS.
         Wpf.Ui.Appearance.ApplicationAccentColorManager.Apply(
@@ -33,5 +33,89 @@ public partial class App : Application
             new System.Windows.Input.KeyboardFocusChangedEventHandler((s, _) => ((System.Windows.Controls.TextBox)s).SelectAll()));
 
         base.OnStartup(e);
+        IniciarBackupAutomatico();
+    }
+
+    /// <summary>
+    /// Antes de mudar a estrutura do banco (versão nova do programa), guarda um backup. Se a mudança falhar,
+    /// volta o banco para esse backup e avisa. Devolve false se o programa não deve abrir.
+    /// </summary>
+    private static bool PrepararBanco()
+    {
+        InfoBackup? seguranca = null;
+        try
+        {
+            using var db = new PdvDbContext(OpcoesBanco);
+            var temDados = db.Database.GetAppliedMigrations().Any();
+            if (temDados && db.Database.GetPendingMigrations().Any())
+            {
+                try
+                {
+                    seguranca = Servicos.Backup.FazerAsync(MotivoBackup.PreAtualizacao).GetAwaiter().GetResult();
+                }
+                catch (Exception ex)
+                {
+                    var seguir = MessageBox.Show(
+                        "Não foi possível fazer o backup antes de atualizar o banco:" + Environment.NewLine + ex.Message +
+                        Environment.NewLine + Environment.NewLine + "Continuar mesmo assim? (Não é recomendado.)", "Nexus LS",
+                        MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                    if (seguir != MessageBoxResult.Yes)
+                    {
+                        Current.Shutdown();
+                        return false;
+                    }
+                }
+            }
+            db.Database.Migrate();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            var texto = "Não foi possível atualizar o banco de dados:" + Environment.NewLine + ex.Message;
+            if (seguranca is not null)
+            {
+                try
+                {
+                    Servicos.Backup.Servico.Restaurar(seguranca.Caminho, Servicos.Backup.Configuracao.Pasta);
+                    texto += Environment.NewLine + Environment.NewLine + "Seus dados foram devolvidos ao estado de antes da atualização.";
+                }
+                catch (Exception ex2)
+                {
+                    texto += Environment.NewLine + Environment.NewLine + "Não foi possível devolver o backup sozinho: " + ex2.Message +
+                             Environment.NewLine + "O backup está em: " + seguranca.Caminho;
+                }
+            }
+            MessageBox.Show(texto, "Nexus LS", MessageBoxButton.OK, MessageBoxImage.Error);
+            Current.Shutdown();
+            return false;
+        }
+    }
+
+    private static bool _avisouFalhaBackup;
+
+    /// <summary>Faz o backup automático ao abrir (se já passou o intervalo) e confere de novo a cada 15 minutos.</summary>
+    private void IniciarBackupAutomatico()
+    {
+        _ = VerificarBackupAutomaticoAsync();
+        var relogio = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMinutes(15) };
+        relogio.Tick += async (_, _) => await VerificarBackupAutomaticoAsync();
+        relogio.Start();
+    }
+
+    private static async Task VerificarBackupAutomaticoAsync()
+    {
+        try
+        {
+            await Servicos.Backup.FazerSeEstiverNaHoraAsync();
+        }
+        catch (Exception ex)
+        {
+            // Erro de backup nunca fica em silêncio; avisa uma vez por sessão para não atrapalhar a venda.
+            if (_avisouFalhaBackup) return;
+            _avisouFalhaBackup = true;
+            MessageBox.Show("O backup automático falhou:" + Environment.NewLine + ex.Message +
+                            Environment.NewLine + Environment.NewLine + "Verifique a pasta de backup em Configurações.", "Nexus LS",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
     }
 }
