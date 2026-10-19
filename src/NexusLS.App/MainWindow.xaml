@@ -119,6 +119,12 @@
                             <TextBlock Text="Relatórios" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
+                    <Button Tag="CatalogoOnline" AutomationProperties.Name="Catálogo online" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaCatalogoOnlineCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="CloudArrowUp24" Style="{StaticResource IconeDoMenu}" />
+                            <TextBlock Text="Catálogo online" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
                     <Button Tag="Configuracoes" AutomationProperties.Name="Configurações" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaConfiguracoesCommand}">
                         <StackPanel Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="Settings24" Style="{StaticResource IconeDoMenu}" />

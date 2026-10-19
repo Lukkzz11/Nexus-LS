@@ -135,6 +135,7 @@
                 <Button Content="Etiquetas" Style="{StaticResource Atalho}" Command="{Binding AbrirEtiquetasCommand}" />
                 <Button Content="Clientes" Style="{StaticResource Atalho}" Command="{Binding AbrirClientesCommand}" />
                 <Button Content="Relatórios" Style="{StaticResource Atalho}" Command="{Binding AbrirRelatoriosCommand}" />
+                <Button Content="Catálogo online" Style="{StaticResource Atalho}" Command="{Binding AbrirCatalogoOnlineCommand}" />
                 <Button Content="Configurações" Style="{StaticResource Atalho}" Command="{Binding AbrirConfiguracoesCommand}" />
             </WrapPanel>
         </StackPanel>

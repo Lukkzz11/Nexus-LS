@@ -25,5 +25,12 @@ public static class Servicos
     public static NexusLS.Core.Backup.GestorBackup Backup { get; } = new(
         new NexusLS.Core.Backup.BackupService(CaminhoBanco.Padrao()),
         new NexusLS.Core.Backup.ConfiguracaoBackupStore(NexusLS.Core.Backup.ConfiguracaoBackupStore.CaminhoPadrao()));
+    private static readonly System.Net.Http.HttpClient HttpFirebase = new() { Timeout = TimeSpan.FromSeconds(30) };
+    public static NexusLS.Core.Sincronizacao.Firebase.ConfiguracaoFirebaseStore Firebase { get; } =
+        new(NexusLS.Core.Sincronizacao.Firebase.ConfiguracaoFirebaseStore.CaminhoPadrao(), new NexusLS.App.Seguranca.ProtetorDpapi());
+    public static NexusLS.Core.Sincronizacao.SincronizacaoRepositorio SincronizacaoRepo { get; } = new(Fabrica);
+    public static NexusLS.Core.Sincronizacao.IDestinoCatalogo DestinoCatalogo { get; } =
+        new NexusLS.Core.Sincronizacao.Firebase.DestinoFirestoreConfiguravel(Firebase, HttpFirebase);
+    public static NexusLS.Core.Sincronizacao.SincronizadorCatalogo Sincronizador { get; } = new(SincronizacaoRepo, DestinoCatalogo);
     public static RascunhoService Rascunho { get; } = new(new RascunhoStore(RascunhoStore.CaminhoPadrao()), Fabrica);
 }

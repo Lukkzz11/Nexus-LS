@@ -1,0 +1,46 @@
+rules_version = '2';
+
+// Regras de segurança do Firestore para o catálogo online do Nexus LS.
+//
+// COMO USAR (uma vez por cliente, no projeto Firebase DELE):
+//   1. Authentication > Sign-in method > ative "E-mail/senha" e crie UM usuário (o login da licença).
+//   2. Firestore Database > crie o banco em modo de produção.
+//   3. Firestore Database > Regras: cole este arquivo, troque o e-mail abaixo pelo e-mail do usuário do passo 1 e publique.
+//
+// O que estas regras fazem:
+//   - Só o usuário da licença (e-mail verificado abaixo) pode GRAVAR em "produtos" e "meta".
+//   - A vitrine (visitante sem login) pode LER "produtos" e "meta": é o catálogo público.
+//   - Todo o resto fica fechado.
+//
+// IMPORTANTE: estas regras NÃO foram executadas num emulador do Firebase neste projeto (falta o JDK 21 no
+// computador de desenvolvimento). Teste no emulador ou no "Simulador de regras" do console antes de usar com clientes.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function ehDonoDaLicenca() {
+      return request.auth != null
+          && request.auth.token.email == 'TROQUE-PELO-EMAIL-DA-LICENCA@exemplo.com';
+    }
+
+    match /produtos/{produtoId} {
+      allow read: if true;
+      allow create, update: if ehDonoDaLicenca()
+        && request.resource.data.origem == 'nexus-ls'
+        && request.resource.data.nome is string
+        && request.resource.data.precoVendaCentavos is int
+        && request.resource.data.precoVendaCentavos >= 0;
+      allow delete: if false; // o Nexus LS nunca apaga: desativa
+    }
+
+    match /meta/{docId} {
+      allow read: if true;
+      allow create, update: if ehDonoDaLicenca();
+      allow delete: if false;
+    }
+
+    match /{outro=**} {
+      allow read, write: if false;
+    }
+  }
+}

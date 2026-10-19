@@ -136,5 +136,6 @@ public partial class InicioViewModel : ViewModelBase
     [RelayCommand] private void AbrirEtiquetas() => _abrir(ItemMenu.Etiquetas);
     [RelayCommand] private void AbrirClientes() => _abrir(ItemMenu.Clientes);
     [RelayCommand] private void AbrirRelatorios() => _abrir(ItemMenu.Relatorios);
+    [RelayCommand] private void AbrirCatalogoOnline() => _abrir(ItemMenu.CatalogoOnline);
     [RelayCommand] private void AbrirConfiguracoes() => _abrir(ItemMenu.Configuracoes);
 }

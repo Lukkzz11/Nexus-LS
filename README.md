@@ -16,7 +16,8 @@ O programa abre na tela **Início** (indicadores e atalhos); o menu lateral tem 
 | | **Mais vendidos** | Ranking de produtos num período, com opção de separar por tamanho, e exportar CSV. |
 | **Estoque** | **Estoque da loja** | Lista de produtos, cadastro (preço de varejo e de atacado, custo, mínimo, referência, categoria, código de barras com botão **Gerar** para EAN-13 interno, código interno automático INT-000001 e calculadora de margem/preço), grade de tamanhos com estoque de cada um e ajuste de estoque com motivo (entrada, perda, correção). Itens abaixo do mínimo ficam em amarelo. Todo ajuste vira uma linha no histórico. |
 | | **Etiquetas** | Etiquetas com nome, preço, tamanho e código de barras (Code 128; número só de dígitos usa o conjunto C, mais curto), em bobina ou folha A4, com prévia. |
-| **Gestão** | **Clientes** | Cadastro e histórico de compras de cada cliente. |
+| **Gestão** | **Catálogo online** | Configura o Firebase do cliente e tem o botão **Atualizar Firestore** (confere a conexão, mostra o que vai mudar, pede confirmação, envia e registra o histórico). |
+| | **Clientes** | Cadastro e histórico de compras de cada cliente. |
 | | **Relatórios** | Vendas por período: total, número de vendas, ticket médio, descontos, canceladas, por dia, por forma de pagamento, por categoria, **lucro bruto** (total vendido menos o custo das mercadorias; o custo fica guardado em cada venda, e vendas antigas usam o custo atual e avisam que é estimativa) e exportar CSV (vendas e itens). |
 | | **Configurações** | Dados da loja e do cupom, impressora, largura do papel, impressão automática, com prévia do cupom, e **backup** (automático e manual, escolha da pasta, restauração). |
 
@@ -86,7 +87,7 @@ src/
     Services/            Venda, Produto, Estoque, Cliente, Carrinho, Rascunho, Cupom, Relatório, CSV...
     Etiquetas/           Code 128, formatos e diagramação das etiquetas
     Backup/              Backup e restauração do banco, nomes, retenção e preferências
-    Sincronizacao/       Preparo para publicar o catálogo no Firestore: o que se publica, hash, validação e plano de mudanças
+    Sincronizacao/       Catálogo online: o que se publica, hash, validação, plano, sincronizador em lotes e cliente REST do Firebase
   NexusLS.App/           Interface WPF (MVVM com CommunityToolkit.Mvvm)
     Views/               Telas (XAML)
     ViewModels/          Lógica de cada tela
@@ -102,7 +103,7 @@ A regra de negócio fica no `Core`, que **não conhece o WPF**, e por isso é te
 
 ## Preparo para a sincronização com o Firestore
 
-Ainda **não existe envio para a nuvem** (isso vem na próxima etapa); aqui está só a base segura que ele vai usar. O SQLite continua sendo a única fonte dos dados; o Firestore será uma cópia de publicação atualizada só quando o usuário clicar em "Atualizar Firestore".
+Esta é a base segura que o envio usa. O SQLite continua sendo a única fonte dos dados; o Firestore é uma cópia de publicação atualizada só quando o usuário clica em "Atualizar Firestore" (veja a próxima seção).
 
 - **Id global:** todo produto tem um `Guid` (identificador único e permanente), além do `Id` inteiro que só vale neste banco. Será o id do documento remoto, então reenviar o mesmo produto nunca cria duplicado. Os produtos que já existiam ganharam o seu na atualização, sem perder nenhum dado.
 - **AtualizadoEm:** o produto guarda a data (UTC) da última alteração, atualizada sozinha em cadastro, edição, ajuste de estoque, venda e cancelamento. É só informativa.
@@ -111,6 +112,31 @@ Ainda **não existe envio para a nuvem** (isso vem na próxima etapa); aqui est�
 - **Plano antes de enviar:** o programa calcula e mostra quantos produtos são novos, alterados, desativados, inalterados ou inválidos (sem nome, preço negativo, estoque negativo, código de barras repetido...). Produto inválido fica na lista para corrigir e **nunca** é enviado, e não atrapalha os outros. Produto desativado vira "desativado" no remoto; nada é apagado.
 - **Controle no banco:** a tabela `SincronizacaoProdutos` guarda o hash do que o servidor já confirmou (um registro por produto, atualizado, nunca duplicado), e `SincronizacaoLogs` guarda cada tentativa (quando, quantos criados/alterados/desativados/ignorados, erros e resultado). Se um envio falhar no meio, só o que foi confirmado é anotado, e a próxima vez continua de onde parou.
 - Antes de aplicar essa mudança no banco, o programa faz um backup automático ("pre-atualizacao").
+
+## Catálogo online (envio para o Firestore)
+
+Na tela **Catálogo online** o botão **Atualizar Firestore** publica o catálogo no Firebase do seu cliente. O programa continua funcionando normalmente sem internet; o SQLite é sempre a fonte dos dados, e a nuvem é só uma cópia, atualizada **somente quando você clica**.
+
+**O que acontece ao clicar:**
+
+1. Confere a conexão, o login e a permissão **sem gravar nada** (se falhar, mostra o motivo em português e registra a tentativa no histórico).
+2. Calcula o que mudou (novos, alterados, desativados, sem mudança, inválidos) e **mostra o resumo para você confirmar**. Se não há nada a enviar, diz isso e registra "sem mudanças".
+3. Ao confirmar, envia em lotes (400 por vez; o limite do Firestore é 500), com barra de progresso e botão de cancelar.
+4. Só depois que o servidor **confirma** cada lote o programa anota no banco local o que foi enviado. Se a conexão cair no meio, o que já foi confirmado fica valendo e a próxima atualização continua de onde parou, sem repetir nada.
+5. Se o servidor recusar um lote por dado inválido, o lote é refeito produto a produto: só o culpado fica de fora, com o motivo na tela.
+6. Mostra o resultado (sucesso, parcial ou falha) e guarda uma linha no **histórico** (quando, quantos criados, alterados e desativados, ignorados, erros e a mensagem).
+
+**Garantias:**
+
+- **Nada é apagado na nuvem.** Produto desativado é publicado como inativo. O envio usa o `Guid` do produto como id do documento (`produtos/{guid}`), então enviar de novo atualiza o mesmo documento e nunca duplica.
+- **Só os campos do catálogo** são enviados e atualizados (nome, categoria, referência, código de barras, preço de varejo, se controla estoque, ativo, estoque por tamanho e o hash). Fotos, descrições e destaques que a vitrine online criar **não são tocados**. Custo, preço de atacado, vendas, clientes e dívidas **nunca saem deste computador**.
+- **Só uma atualização por vez.** Um segundo clique durante o envio é recusado.
+- **Sem chave de administrador.** O programa usa o login de e-mail e senha da licença (Firebase Authentication, pela API REST). O que esse login pode fazer é definido pelas regras de segurança do Firestore do cliente (`firebase/firestore.rules`).
+- **A senha** é guardada com o DPAPI do Windows (só o mesmo usuário, neste computador, consegue ler) e nunca aparece em arquivo, tela, log ou mensagem de erro. O token fica só na memória e é renovado sozinho.
+
+**Configurar um cliente (uma vez):** no projeto Firebase **dele** (um projeto por cliente), ative Authentication por e-mail/senha e crie um usuário; crie o Firestore em modo de produção; cole `firebase/firestore.rules` nas regras (trocando o e-mail) e publique. Na tela Catálogo online informe o id do projeto, a chave da API (Web API Key, que não é segredo), o e-mail e a senha, clique em **Salvar** e em **Testar conexão**.
+
+**Não verificado:** o envio foi testado com um servidor Firebase de mentira (formato das requisições, erros, lotes, repetição, cancelamento), mas **ainda não contra um projeto Firebase real**, e as regras do Firestore ainda não foram executadas num emulador. Faça o teste num projeto de teste antes de entregar a um cliente.
 
 ## Visual
 

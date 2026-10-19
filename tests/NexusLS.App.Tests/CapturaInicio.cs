@@ -44,3 +44,66 @@ public sealed class CapturaInicio : IDisposable
         Capturador.SalvarInicio(vm, Path.Combine(saida, "inicio.png"));
     }
 }
+
+/// <summary>Desenha a tela Catálogo online (com a confirmação do plano aberta) num PNG. Só roda com NEXUSLS_PRINTS.</summary>
+public sealed class CapturaCatalogoOnline : IDisposable
+{
+    private readonly BancoDeTeste _banco = new();
+    private readonly string _pasta = Path.Combine(Path.GetTempPath(), "nexusls-capco-" + Guid.NewGuid().ToString("N"));
+
+    public void Dispose()
+    {
+        _banco.Dispose();
+        try { Directory.Delete(_pasta, true); } catch (IOException) { }
+    }
+
+    private sealed class DestinoMudo : NexusLS.Core.Sincronizacao.IDestinoCatalogo
+    {
+        public Task VerificarAsync(CancellationToken ct = default) => Task.CompletedTask;
+        public Task EnviarLoteAsync(IReadOnlyList<NexusLS.Core.Sincronizacao.OperacaoCatalogo> lote, CancellationToken ct = default) => Task.CompletedTask;
+        public Task RegistrarAtualizacaoAsync(DateTime agora, int total, CancellationToken ct = default) => Task.CompletedTask;
+    }
+
+    [Fact]
+    public async Task Gera_a_tela_catalogo_online()
+    {
+        var saida = Environment.GetEnvironmentVariable("NEXUSLS_PRINTS");
+        if (string.IsNullOrWhiteSpace(saida)) return;
+        Directory.CreateDirectory(saida);
+        Directory.CreateDirectory(_pasta);
+
+        var produtos = new ProdutoService(_banco.Fabrica);
+        await produtos.CadastrarAsync(new DadosProduto("Camiseta Básica", "789", 5990, 2000, 5), 8);
+        await produtos.CadastrarAsync(new DadosProduto("Boné Aba Reta", "555", 2990, 800, 3), 8);
+        await produtos.CadastrarAsync(new DadosProduto("Camisa Polo", null, 8990, 3000, 4), 1);
+        using (var db = _banco.CriarContexto())
+        {
+            db.Produtos.Add(new Produto { Nome = "Meia sem preço certo", PrecoVendaCentavos = -5 });
+            db.SaveChanges();
+        }
+
+        var repo = new NexusLS.Core.Sincronizacao.SincronizacaoRepositorio(_banco.Fabrica);
+        var destino = new DestinoMudo();
+        var sincronizador = new NexusLS.Core.Sincronizacao.SincronizadorCatalogo(repo, destino);
+        await repo.GravarLogAsync(new SincronizacaoLog
+        {
+            IniciadaEm = new DateTime(2026, 10, 18, 17, 40, 0), ConcluidaEm = new DateTime(2026, 10, 18, 17, 40, 4),
+            Resultado = ResultadoSincronizacao.Sucesso, Criados = 12, Mensagem = "12 produto(s) enviado(s): 12 novo(s), 0 alterado(s), 0 desativado(s)."
+        });
+        await repo.GravarLogAsync(new SincronizacaoLog
+        {
+            IniciadaEm = new DateTime(2026, 10, 17, 9, 5, 0), Resultado = ResultadoSincronizacao.Falhou, Erros = 1, Mensagem = "Sem conexão com a internet."
+        });
+
+        var store = new NexusLS.Core.Sincronizacao.Firebase.ConfiguracaoFirebaseStore(
+            Path.Combine(_pasta, "firebase.json"), new NexusLS.App.Seguranca.ProtetorDpapi());
+        store.Salvar(new NexusLS.Core.Sincronizacao.Firebase.ConfiguracaoFirebase
+            { ProjectId = "minha-loja-1a2b3", ApiKey = "AIzaSyExemplo", Email = "loja@exemplo.com" }, "senha");
+
+        var vm = new CatalogoOnlineViewModel(store, sincronizador, repo, destino, new ConfiguracaoService(_banco.Fabrica));
+        await vm.Carregamento;
+        await vm.AtualizarFirestoreCommand.ExecuteAsync(null);
+
+        Capturador.SalvarCatalogoOnline(vm, Path.Combine(saida, "catalogo-online.png"));
+    }
+}

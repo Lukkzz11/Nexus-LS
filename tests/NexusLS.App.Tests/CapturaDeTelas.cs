@@ -302,6 +302,9 @@ internal static class Capturador
         return tela;
     }
 
+    public static void SalvarCatalogoOnline(CatalogoOnlineViewModel vm, string caminho, int largura = 1400, int altura = 1500) =>
+        Desenhar(() => new CatalogoOnlineView { DataContext = vm }, caminho, largura, altura);
+
     public static void SalvarInicio(InicioViewModel vm, string caminho, int largura = 1400, int altura = 900) =>
         Desenhar(() => new InicioView { DataContext = vm }, caminho, largura, altura);
 
