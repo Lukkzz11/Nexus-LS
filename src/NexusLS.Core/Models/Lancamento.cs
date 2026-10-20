@@ -35,6 +35,9 @@ public class Lancamento
     public int Parcela { get; set; } = 1;
     public int TotalParcelas { get; set; } = 1;
 
+    /// <summary>Compra de mercadoria que gerou esta conta a pagar (nulo se foi lançada à mão).</summary>
+    public int? CompraId { get; set; }
+
     public string? Observacao { get; set; }
     public DateTime CriadoEm { get; set; }
     public string? Operador { get; set; }

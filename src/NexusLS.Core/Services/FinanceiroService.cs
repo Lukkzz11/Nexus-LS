@@ -82,6 +82,19 @@ public class FinanceiroService
 
     public async Task<IReadOnlyList<Lancamento>> CriarAsync(DadosLancamento dados, string? operador = null)
     {
+        var criados = Montar(dados, _agora(), operador);
+        await using var db = await _fabrica.CreateDbContextAsync();
+        db.Lancamentos.AddRange(criados);
+        await db.SaveChangesAsync();
+        return criados;
+    }
+
+    /// <summary>
+    /// Valida e monta os lançamentos (um por parcela) SEM gravar. Outros serviços (ex.: Compras) usam isto para
+    /// gravar as contas a pagar na mesma transação do que estão fazendo.
+    /// </summary>
+    public static List<Lancamento> Montar(DadosLancamento dados, DateTime agora, string? operador = null, int? compraId = null)
+    {
         Validar(dados.Descricao, dados.ValorCentavos);
         if (dados.Parcelas is < 1 or > 60) throw new RegraDeNegocioException("O número de parcelas deve ficar entre 1 e 60.");
         if (dados.JaPago && dados.Parcelas > 1)
@@ -91,7 +104,6 @@ public class FinanceiroService
         if (dados.Forma == FormaPagamento.APrazo)
             throw new RegraDeNegocioException("Escolha como foi pago (dinheiro, Pix, cartão...).");
 
-        var agora = _agora();
         var valores = RegrasFinanceiras.DividirEmParcelas(dados.ValorCentavos, dados.Parcelas);
         var grupo = dados.Parcelas > 1 ? Guid.NewGuid() : (Guid?)null;
         var criados = new List<Lancamento>();
@@ -109,16 +121,13 @@ public class FinanceiroService
                 PagoEm = dados.JaPago ? agora : null,
                 FormaPagamento = dados.JaPago ? dados.Forma ?? Models.FormaPagamento.Dinheiro : null,
                 GrupoId = grupo,
+                CompraId = compraId,
                 Parcela = i + 1,
                 TotalParcelas = dados.Parcelas,
                 CriadoEm = agora,
                 Operador = Limpar(operador)
             });
         }
-
-        await using var db = await _fabrica.CreateDbContextAsync();
-        db.Lancamentos.AddRange(criados);
-        await db.SaveChangesAsync();
         return criados;
     }
 

@@ -25,6 +25,9 @@ public class PdvDbContext : DbContext
     public DbSet<SincronizacaoProduto> SincronizacaoProdutos => Set<SincronizacaoProduto>();
     public DbSet<SincronizacaoLog> SincronizacaoLogs => Set<SincronizacaoLog>();
     public DbSet<Lancamento> Lancamentos => Set<Lancamento>();
+    public DbSet<Fornecedor> Fornecedores => Set<Fornecedor>();
+    public DbSet<Compra> Compras => Set<Compra>();
+    public DbSet<ItemCompra> ItensCompra => Set<ItemCompra>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -118,6 +121,35 @@ public class PdvDbContext : DbContext
             e.HasIndex(p => p.ClienteId);
         });
 
+        modelBuilder.Entity<Fornecedor>(e =>
+        {
+            e.Property(f => f.Nome).IsRequired().HasMaxLength(150);
+            e.Property(f => f.Documento).HasMaxLength(30);
+            e.Property(f => f.Telefone).HasMaxLength(30);
+            e.Property(f => f.Email).HasMaxLength(120);
+            e.Property(f => f.Observacao).HasMaxLength(300);
+            e.HasIndex(f => f.Nome);
+        });
+
+        modelBuilder.Entity<Compra>(e =>
+        {
+            e.Property(c => c.NumeroNota).HasMaxLength(40);
+            e.Property(c => c.Observacao).HasMaxLength(300);
+            e.Property(c => c.Operador).HasMaxLength(80);
+            e.Property(c => c.MotivoCancelamento).HasMaxLength(200);
+            e.HasOne(c => c.Fornecedor).WithMany().HasForeignKey(c => c.FornecedorId).OnDelete(DeleteBehavior.Restrict);
+            e.HasMany(c => c.Itens).WithOne().HasForeignKey(i => i.CompraId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(c => c.DataHora);
+        });
+
+        modelBuilder.Entity<ItemCompra>(e =>
+        {
+            e.Property(i => i.NomeProduto).IsRequired().HasMaxLength(200);
+            e.Property(i => i.Tamanho).IsRequired().HasMaxLength(30);
+            e.Ignore(i => i.TotalCentavos);
+            e.HasOne<Produto>().WithMany().HasForeignKey(i => i.ProdutoId).OnDelete(DeleteBehavior.Restrict);
+        });
+
         modelBuilder.Entity<Lancamento>(e =>
         {
             e.Property(l => l.Descricao).IsRequired().HasMaxLength(200);
@@ -129,6 +161,7 @@ public class PdvDbContext : DbContext
             e.HasIndex(l => l.Vencimento);
             e.HasIndex(l => l.PagoEm);
             e.HasIndex(l => l.GrupoId);
+            e.HasIndex(l => l.CompraId);
         });
 
         modelBuilder.Entity<TurnoCaixa>(e =>
