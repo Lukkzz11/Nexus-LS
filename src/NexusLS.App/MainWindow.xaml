@@ -144,6 +144,12 @@
                             <TextBlock Text="Funcionários" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
+                    <Button Tag="Atividades" Visibility="{Binding VerConfiguracoes, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Atividades" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaAtividadesCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="History24" Style="{StaticResource IconeDoMenu}" />
+                            <TextBlock Text="Atividades" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
                     <Button Tag="Configuracoes" Visibility="{Binding VerConfiguracoes, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Configurações" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaConfiguracoesCommand}">
                         <StackPanel Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="Settings24" Style="{StaticResource IconeDoMenu}" />

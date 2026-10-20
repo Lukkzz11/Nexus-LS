@@ -26,6 +26,7 @@ public static class Servicos
     public static CompraService Compras { get; } = new(Fabrica);
     public static PedidoService Pedidos { get; } = new(Fabrica);
     public static FuncionarioService Funcionarios { get; } = new(Fabrica);
+    public static AtividadeService Atividades { get; } = new(Fabrica);
     public static CupomService Cupons { get; } = new(Fabrica, Configuracao, new ImpressoraWindows());
     public static NexusLS.Core.Backup.GestorBackup Backup { get; } = new(
         new NexusLS.Core.Backup.BackupService(CaminhoBanco.Padrao()),

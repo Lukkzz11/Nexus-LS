@@ -81,6 +81,8 @@ public class FuncionarioService
         var f = new Funcionario { Ativo = true, DataCadastro = _agora(), PinHash = Hash(pin) };
         Preencher(f, dados);
         db.Funcionarios.Add(f);
+        AtividadeService.Registrar(db, TipoAtividade.FuncionarioCadastrado,
+            $"Cadastrou o funcionário {f.Nome} ({f.PerfilTexto})", $"Funcionário {f.Nome}", agora: f.DataCadastro);
         await db.SaveChangesAsync();
         return f;
     }
@@ -96,6 +98,8 @@ public class FuncionarioService
         if (deixaDeSerAdmin) await GarantirOutroAdministradorAsync(db, id);
 
         Preencher(f, dados);
+        AtividadeService.Registrar(db, TipoAtividade.FuncionarioEditado,
+            $"Editou o funcionário {f.Nome} (perfil {f.PerfilTexto})", $"Funcionário {f.Nome}", agora: _agora());
         await db.SaveChangesAsync();
     }
 
@@ -105,6 +109,8 @@ public class FuncionarioService
         await using var db = await _fabrica.CreateDbContextAsync();
         var f = await ObterAsync(db, id);
         f.PinHash = Hash(novoPin);
+        AtividadeService.Registrar(db, TipoAtividade.PinRedefinido,
+            $"Redefiniu o PIN de {f.Nome}", $"Funcionário {f.Nome}", agora: _agora());
         await db.SaveChangesAsync();
         lock (_trava) _tentativas.Remove(id);
     }
@@ -115,6 +121,8 @@ public class FuncionarioService
         var f = await ObterAsync(db, id);
         if (f.Ativo && f.Perfil == PerfilFuncionario.Administrador) await GarantirOutroAdministradorAsync(db, id);
         f.Ativo = false;
+        AtividadeService.Registrar(db, TipoAtividade.FuncionarioDesativado,
+            $"Desativou o funcionário {f.Nome}", $"Funcionário {f.Nome}", agora: _agora());
         await db.SaveChangesAsync();
     }
 
@@ -123,6 +131,8 @@ public class FuncionarioService
         await using var db = await _fabrica.CreateDbContextAsync();
         var f = await ObterAsync(db, id);
         f.Ativo = true;
+        AtividadeService.Registrar(db, TipoAtividade.FuncionarioReativado,
+            $"Reativou o funcionário {f.Nome}", $"Funcionário {f.Nome}", agora: _agora());
         await db.SaveChangesAsync();
     }
 

@@ -1,0 +1,54 @@
+<UserControl x:Class="NexusLS.App.Views.AtividadesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Atividades" Style="{StaticResource TituloTela}" Margin="0,0,0,14" />
+
+        <WrapPanel Grid.Row="1" Margin="0,0,0,6">
+            <TextBlock Text="De:" VerticalAlignment="Center" Margin="0,0,8,0" />
+            <DatePicker SelectedDateFormat="Short" SelectedDate="{Binding De}" Width="150" VerticalContentAlignment="Center" />
+            <TextBlock Text="até:" VerticalAlignment="Center" Margin="16,0,8,0" />
+            <DatePicker SelectedDateFormat="Short" SelectedDate="{Binding Ate}" Width="150" VerticalContentAlignment="Center" />
+
+            <Button Content="Hoje" Style="{StaticResource BotaoSecundario}" Margin="16,0,0,0" Padding="12,6"
+                    Command="{Binding HojeCommand}" />
+            <Button Content="7 dias" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0" Padding="12,6"
+                    Command="{Binding UltimosSeteDiasCommand}" />
+            <Button Content="Este mês" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0" Padding="12,6"
+                    Command="{Binding MesAtualCommand}" />
+
+            <ComboBox ItemsSource="{Binding Tipos}" SelectedItem="{Binding TipoEscolhido}" Width="220" Margin="20,0,0,0"
+                      AutomationProperties.Name="Tipo de atividade" />
+            <TextBox Text="{Binding Busca, UpdateSourceTrigger=PropertyChanged}" Width="240" Margin="12,0,0,0"
+                     ToolTip="Buscar por pessoa, venda, produto ou motivo" AutomationProperties.Name="Buscar atividade" />
+        </WrapPanel>
+
+        <TextBlock Grid.Row="2" Text="{Binding Resumo}" FontWeight="SemiBold" Margin="0,8,0,10" />
+
+        <Border Grid.Row="3" Style="{StaticResource Painel}" Padding="0">
+            <DataGrid ItemsSource="{Binding Linhas}" AutoGenerateColumns="False" IsReadOnly="True"
+                      SelectionMode="Single" SelectionUnit="FullRow" CanUserAddRows="False" CanUserDeleteRows="False"
+                      HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                      HorizontalGridLinesBrush="#E5E7EB" BorderThickness="0" Background="White"
+                      RowHeight="38" FontSize="15" AutomationProperties.Name="Lista de atividades">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Quando" Binding="{Binding Quando, Mode=OneWay}" Width="150" />
+                    <DataGridTextColumn Header="Quem" Binding="{Binding Operador, Mode=OneWay}" Width="140" />
+                    <DataGridTextColumn Header="Ação" Binding="{Binding Tipo, Mode=OneWay}" Width="190" />
+                    <DataGridTextColumn Header="O que foi feito" Binding="{Binding Descricao, Mode=OneWay}" Width="*" />
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+
+        <TextBlock Grid.Row="4" Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" />
+    </Grid>
+</UserControl>

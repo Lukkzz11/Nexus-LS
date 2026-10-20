@@ -256,6 +256,8 @@ public class CompraService
         compra.Cancelada = true;
         compra.MotivoCancelamento = motivo.Trim();
         compra.CanceladaEm = agora;
+        AtividadeService.Registrar(db, TipoAtividade.CompraCancelada,
+            $"Cancelou a compra nº {compra.Id}: {motivo.Trim()}", $"Compra nº {compra.Id}", null, agora);
         await db.SaveChangesAsync();
         await tx.CommitAsync();
     }

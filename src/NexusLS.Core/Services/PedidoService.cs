@@ -192,6 +192,9 @@ public class PedidoService
         p.MotivoCancelamento = motivo.Trim();
         p.AtualizadoEm = agora;
         p.Historico.Add(new EventoPedido { Status = StatusPedido.Cancelado, DataHora = agora, Operador = Operador(operador), Observacao = motivo.Trim() });
+        AtividadeService.Registrar(db, TipoAtividade.PedidoCancelado,
+            $"Cancelou o pedido {RegrasPedido.NumeroDoPedido(p.CriadoEm, p.Id)}: {motivo.Trim()}",
+            $"Pedido {RegrasPedido.NumeroDoPedido(p.CriadoEm, p.Id)}", Operador(operador), agora);
         await db.SaveChangesAsync();
         return p;
     }

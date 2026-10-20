@@ -32,9 +32,18 @@ public class PdvDbContext : DbContext
     public DbSet<EventoPedido> EventosPedido => Set<EventoPedido>();
     public DbSet<Compra> Compras => Set<Compra>();
     public DbSet<ItemCompra> ItensCompra => Set<ItemCompra>();
+    public DbSet<Atividade> Atividades => Set<Atividade>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Atividade>(e =>
+        {
+            e.Property(a => a.Operador).HasMaxLength(80);
+            e.Property(a => a.Descricao).IsRequired().HasMaxLength(500);
+            e.Property(a => a.Referencia).HasMaxLength(120);
+            e.HasIndex(a => a.DataHora);
+        });
+
         modelBuilder.Entity<Produto>(e =>
         {
             e.Property(p => p.Nome).IsRequired().HasMaxLength(200);

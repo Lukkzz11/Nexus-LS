@@ -6,7 +6,7 @@ using NexusLS.Core.Models;
 namespace NexusLS.App.ViewModels;
 
 /// <summary>Os itens do menu lateral. O nome do item é também o "Tag" do botão: assim o menu destaca o da tela aberta.</summary>
-public enum ItemMenu { Inicio, Pdv, Caixa, Fechamento, Pedidos, MaisVendidos, EstoqueDaLoja, Compras, Fornecedores, Etiquetas, Clientes, Financeiro, Relatorios, CatalogoOnline, Funcionarios, Configuracoes }
+public enum ItemMenu { Inicio, Pdv, Caixa, Fechamento, Pedidos, MaisVendidos, EstoqueDaLoja, Compras, Fornecedores, Etiquetas, Clientes, Financeiro, Relatorios, CatalogoOnline, Funcionarios, Atividades, Configuracoes }
 
 /// <summary>
 /// ViewModel = a "lógica da tela". Ele guarda os dados que a tela mostra e os comandos dos botões,
@@ -58,6 +58,7 @@ public partial class MainViewModel : ObservableObject
             case ItemMenu.Relatorios: IrParaRelatorios(); break;
             case ItemMenu.CatalogoOnline: IrParaCatalogoOnline(); break;
             case ItemMenu.Funcionarios: IrParaFuncionarios(); break;
+            case ItemMenu.Atividades: IrParaAtividades(); break;
             case ItemMenu.Configuracoes: IrParaConfiguracoes(); break;
         }
     }
@@ -83,6 +84,7 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand] private void IrParaRelatorios() => Abrir(new RelatoriosViewModel(Servicos.Relatorios), ItemMenu.Relatorios);
     [RelayCommand] private void IrParaCatalogoOnline() => Abrir(new CatalogoOnlineViewModel(Servicos.Firebase, Servicos.Sincronizador, Servicos.SincronizacaoRepo, Servicos.DestinoCatalogo, Servicos.Configuracao), ItemMenu.CatalogoOnline);
     [RelayCommand] private void IrParaFuncionarios() => Abrir(new FuncionariosViewModel(Servicos.Funcionarios), ItemMenu.Funcionarios);
+    [RelayCommand] private void IrParaAtividades() => Abrir(new AtividadesViewModel(Servicos.Atividades), ItemMenu.Atividades);
     [RelayCommand] private void IrParaConfiguracoes() => Abrir(new ConfiguracoesViewModel(Servicos.Configuracao, Servicos.Cupons, Servicos.Backup, new NexusLS.App.Backup.DialogosBackupWpf()), ItemMenu.Configuracoes);
 
     private void Abrir(object tela, ItemMenu item)
@@ -107,7 +109,7 @@ public partial class MainViewModel : ObservableObject
         ItemMenu.Clientes => Sessao.Pode(Permissao.Clientes),
         ItemMenu.Financeiro => Sessao.Pode(Permissao.Financeiro),
         ItemMenu.Funcionarios => Sessao.Pode(Permissao.Funcionarios),
-        ItemMenu.Configuracoes or ItemMenu.CatalogoOnline => Sessao.Pode(Permissao.Configuracoes),
+        ItemMenu.Configuracoes or ItemMenu.CatalogoOnline or ItemMenu.Atividades => Sessao.Pode(Permissao.Configuracoes),
         _ => false
     };
 

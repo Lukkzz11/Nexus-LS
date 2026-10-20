@@ -171,6 +171,8 @@ public class FinanceiroService
         if (l.PagoEm is null) throw new RegraDeNegocioException("Esse lançamento não está pago.");
         l.PagoEm = null;
         l.FormaPagamento = null;
+        AtividadeService.Registrar(db, TipoAtividade.PagamentoEstornado,
+            $"Estornou o pagamento de \"{l.Descricao}\" ({Dinheiro.Formatar(l.ValorCentavos)})", $"Lançamento #{l.Id}");
         await db.SaveChangesAsync();
     }
 
@@ -184,6 +186,8 @@ public class FinanceiroService
         l.Cancelado = true;
         l.MotivoCancelamento = motivo.Trim();
         l.CanceladoEm = _agora();
+        AtividadeService.Registrar(db, TipoAtividade.LancamentoCancelado,
+            $"Cancelou \"{l.Descricao}\" ({Dinheiro.Formatar(l.ValorCentavos)}): {motivo.Trim()}", $"Lançamento #{l.Id}", null, l.CanceladoEm);
         await db.SaveChangesAsync();
     }
 

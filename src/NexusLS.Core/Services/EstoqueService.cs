@@ -68,6 +68,13 @@ public class EstoqueService
             Motivo = string.IsNullOrWhiteSpace(motivo) ? null : motivo.Trim()
         });
 
+        if (tipo != TipoMovimentacao.Entrada) // entrada é rotina; perda e correção entram na trilha
+        {
+            var onde = linha.EhSemTamanho ? "" : $" ({linha.Tamanho})";
+            AtividadeService.Registrar(db, TipoAtividade.EstoqueAjustado,
+                $"{(tipo == TipoMovimentacao.Perda ? "Perda" : "Correção")} de {Math.Abs(variacao)} unidade(s) de \"{produto.Nome}\"{onde}: {motivo!.Trim()}",
+                $"Produto {produto.Nome}");
+        }
         await db.SaveChangesAsync(); // uma única transação para as três mudanças
         return produto;
     }

@@ -231,6 +231,11 @@ public class VendaService
             p.Historico.Add(new EventoPedido { Status = StatusPedido.Cancelado, DataHora = agora, Operador = venda.CanceladoPor, Observacao = p.MotivoCancelamento });
         }
 
+        AtividadeService.Registrar(db, TipoAtividade.VendaCancelada,
+            $"Cancelou a venda #{venda.Id} ({Dinheiro.Formatar(venda.TotalCentavos)}): {motivo}"
+            + (devolverEstoque ? "" : " (estoque não devolvido)"),
+            $"Venda #{venda.Id}", venda.CanceladoPor, agora);
+
         await db.SaveChangesAsync();
         await transacao.CommitAsync();
         return venda;
