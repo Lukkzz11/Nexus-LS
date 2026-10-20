@@ -190,13 +190,13 @@ Normalmente `C:\Users\<seu usuário>\AppData\Local\NexusLS\nexus.db`. Para abrir
   - **Automático:** ao abrir e a cada 15 minutos ele confere se já passou o intervalo escolhido (desligado, 1, 6, 12 horas, todo dia ou toda semana; padrão: todo dia). Se falhar, aparece um aviso na tela.
   - **Manual:** botão "Fazer backup agora".
   - **Onde:** você escolhe a pasta (padrão `Documentos\Nexus LS\Backups`). Se a pasta ficar no mesmo disco do banco, a tela avisa: prefira pen drive, HD externo ou pasta sincronizada na nuvem.
-  - **Nome:** `nexus_AAAA-MM-DD_HHMMSS_motivo.db` (motivo: manual, auto, pre-atualizacao, pre-restauracao).
+  - **Nome:** `nexus_AAAA-MM-DD_HHMMSS_motivo.db` (motivo: manual, auto, pre-atualizacao, pre-restauracao, pre-limpeza).
   - **Segurança da cópia:** usa a API de backup do SQLite (copiar o `.db` à mão pode sair incompleto por causa do arquivo `-wal`), grava num arquivo temporário, confere a integridade (`PRAGMA integrity_check`) e só então dá o nome final. Cópia que não passa na conferência é descartada.
   - **Quantos guardar:** você define (de 3 a 200). Os mais antigos, manuais e automáticos, são apagados; só arquivos com o nome padrão acima são tocados. Os de segurança (antes de atualizar ou de restaurar) nunca são apagados sozinhos.
   - **Antes de atualizar o banco:** quando uma versão nova muda a estrutura das tabelas, o programa faz um backup antes. Se a mudança falhar, o banco volta a esse backup.
   - As preferências ficam em `%LOCALAPPDATA%\NexusLS\backup.json`, fora do banco.
 - **Restaurar:** em Configurações, escolha o backup na lista (ou nenhum, para procurar um arquivo) e clique em "Restaurar". O programa confere o arquivo, **guarda uma cópia dos dados atuais** (`pre-restauracao`), troca o banco e reinicia. Se o banco estiver em uso ou algo falhar, nada é alterado. Restaurar à mão continua possível: com o programa fechado, substitua o `nexus.db` (apague os `-wal` e `-shm` ao lado).
-- **Começar do zero:** com o programa fechado, apague o `nexus.db`; um novo, vazio, é criado na próxima abertura.
+- **Começar do zero:** em Configurações → **Apagar dados** (só administrador). Escolha **só o movimento** (vendas, caixa, pedidos, compras, financeiro e histórico de estoque; mantém produtos, clientes, fornecedores, funcionários e configurações) ou **tudo da loja** (também produtos, clientes e fornecedores), digite `APAGAR` e confirme. O programa faz antes um backup `pre-limpeza` (se o backup falhar, nada é apagado; esse backup nunca é apagado sozinho), apaga numa só transação, registra em Atividades e reinicia. Funcionários, configurações e a trilha de atividades nunca são apagados. Também dá para, com o programa fechado, apagar o `nexus.db`; um novo, vazio, é criado na próxima abertura.
 - **Vindo da versão antiga (PDV Simples):** na primeira abertura o programa copia `%LOCALAPPDATA%\PdvSimples\pdv.db` para `nexus.db`. O arquivo antigo não é apagado.
 - A venda em andamento fica em `%LOCALAPPDATA%\NexusLS\rascunho.json` (pode ser apagado sem problema; ele só guarda o carrinho aberto).
 
