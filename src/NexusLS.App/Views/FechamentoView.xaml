@@ -99,6 +99,18 @@
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
             <TextBlock Text="Histórico" FontSize="18" FontWeight="SemiBold" Margin="0,48,0,10" />
+            <TextBlock Grid.Row="1" Text="Nenhum fechamento feito ainda." Foreground="{StaticResource CorTextoSuave}">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Historico.Count}" Value="0">
+                                <Setter Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
             <ListBox x:Name="ListaHistorico" Grid.Row="1" ItemsSource="{Binding Historico}" BorderThickness="0"
                      Background="Transparent" AutomationProperties.Name="Histórico de fechamentos">
                 <ListBox.ItemTemplate>
