@@ -12,6 +12,8 @@ public partial class MainWindow : FluentWindow
     {
         InitializeComponent();
         // DataContext = "de onde a tela tira os dados do binding". Aqui, o MainViewModel.
-        DataContext = new MainViewModel();
+        var vm = new MainViewModel();
+        vm.PedirLogin = () => Views.LoginWindow.Pedir(Servicos.Funcionarios, this);
+        DataContext = vm;
     }
 }

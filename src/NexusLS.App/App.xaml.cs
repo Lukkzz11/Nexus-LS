@@ -32,8 +32,37 @@ public partial class App : Application
             UIElement.GotKeyboardFocusEvent,
             new System.Windows.Input.KeyboardFocusChangedEventHandler((s, _) => ((System.Windows.Controls.TextBox)s).SelectAll()));
 
+        if (!EntrarNoSistema()) { Shutdown(); return; }
+
         base.OnStartup(e);
         IniciarBackupAutomatico();
+    }
+
+    /// <summary>
+    /// Se há funcionários cadastrados, pede o PIN antes de abrir a janela principal. Sem funcionários, abre direto.
+    /// Devolve false se a pessoa desistiu (o programa fecha).
+    /// </summary>
+    private bool EntrarNoSistema()
+    {
+        try
+        {
+            var exige = Task.Run(() => Servicos.Funcionarios.ExigeLoginAsync()).GetAwaiter().GetResult();
+            Seguranca.Sessao.DefinirLoginAtivo(exige);
+            if (!exige) return true;
+
+            // Enquanto só a janela de entrada existe, fechá-la não pode encerrar o programa por conta própria.
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            var funcionario = Views.LoginWindow.Pedir(Servicos.Funcionarios, null);
+            ShutdownMode = ShutdownMode.OnLastWindowClose;
+            if (funcionario is null) return false;
+            Seguranca.Sessao.Entrar(funcionario);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("Não foi possível abrir a tela de entrada: " + ex.Message, "Nexus LS", MessageBoxButton.OK, MessageBoxImage.Error);
+            return false;
+        }
     }
 
     /// <summary>

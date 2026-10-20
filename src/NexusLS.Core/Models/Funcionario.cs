@@ -96,5 +96,7 @@ public class Funcionario
 
     public Permissao PermissoesEfetivas => Perfil == PerfilFuncionario.Personalizado ? PermissoesPersonalizadas : Permissoes.DoPerfil(Perfil);
 
+    public string PerfilTexto => Permissoes.Nome(Perfil);
+
     public bool Pode(Permissao p) => (PermissoesEfetivas & p) == p;
 }

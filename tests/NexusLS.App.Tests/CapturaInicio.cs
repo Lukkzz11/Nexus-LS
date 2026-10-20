@@ -180,3 +180,59 @@ public sealed class CapturaCompras : IDisposable
         Capturador.Desenhar(() => new NexusLS.App.Views.ComprasView { DataContext = vm }, Path.Combine(saida, "compras.png"), 1500, 820);
     }
 }
+
+/// <summary>Desenha a tela Funcionários (login ligado, com um funcionário personalizado escolhido). Só roda com NEXUSLS_PRINTS.</summary>
+[Collection("Sessao")]
+public sealed class CapturaFuncionarios : IDisposable
+{
+    private readonly BancoDeTeste _banco = new();
+
+    public void Dispose()
+    {
+        NexusLS.App.Seguranca.Sessao.Sair();
+        NexusLS.App.Seguranca.Sessao.DefinirLoginAtivo(false);
+        _banco.Dispose();
+    }
+
+    [Fact]
+    public async Task Gera_a_tela_funcionarios()
+    {
+        var saida = Environment.GetEnvironmentVariable("NEXUSLS_PRINTS");
+        if (string.IsNullOrWhiteSpace(saida)) return;
+        Directory.CreateDirectory(saida);
+
+        var servico = new FuncionarioService(_banco.Fabrica);
+        var (admin, _) = await servico.CriarPrimeiroAdministradorAsync("Dona Maria", "1234");
+        NexusLS.App.Seguranca.Sessao.Entrar(admin);
+        await servico.CadastrarAsync(new DadosFuncionario("Ana Paula", PerfilFuncionario.OperadorDeCaixa, Cargo: "Caixa"), "4321");
+        await servico.CadastrarAsync(new DadosFuncionario("Rui Costa", PerfilFuncionario.Personalizado, Permissao.Estoque | Permissao.Compras, "Estoquista"), "5555");
+
+        var vm = new FuncionariosViewModel(servico);
+        await vm.Carregamento;
+        vm.Selecionado = vm.Funcionarios.First(f => f.Nome == "Rui Costa");
+
+        Capturador.Desenhar(() => new NexusLS.App.Views.FuncionariosView { DataContext = vm }, Path.Combine(saida, "funcionarios.png"), 1500, 820);
+    }
+}
+
+/// <summary>Desenha a janela de login. Só roda com NEXUSLS_PRINTS.</summary>
+public sealed class CapturaLogin : IDisposable
+{
+    private readonly BancoDeTeste _banco = new();
+
+    public void Dispose() => _banco.Dispose();
+
+    [Fact]
+    public async Task Gera_a_janela_de_login()
+    {
+        var saida = Environment.GetEnvironmentVariable("NEXUSLS_PRINTS");
+        if (string.IsNullOrWhiteSpace(saida)) return;
+        Directory.CreateDirectory(saida);
+
+        var servico = new FuncionarioService(_banco.Fabrica);
+        await servico.CriarPrimeiroAdministradorAsync("Dona Maria", "1234");
+        await servico.CadastrarAsync(new DadosFuncionario("Ana Paula", PerfilFuncionario.OperadorDeCaixa), "4321");
+
+        Capturador.SalvarJanela(() => new NexusLS.App.Views.LoginWindow(servico, podeCancelar: false), Path.Combine(saida, "login.png"));
+    }
+}

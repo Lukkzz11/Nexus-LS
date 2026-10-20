@@ -314,6 +314,31 @@ internal static class Capturador
     public static void SalvarConfiguracoes(ConfiguracoesViewModel vm, string caminho, int largura = 1400, int altura = 820) =>
         Desenhar(() => new ConfiguracoesView { DataContext = vm }, caminho, largura, altura);
 
+    /// <summary>Desenha uma janela pronta (como a de login) num PNG, sem tirá-la do lugar nem roubar o foco.</summary>
+    internal static void SalvarJanela(Func<Window> criar, string caminho)
+    {
+        Interface.Invoke(() =>
+        {
+            var janela = criar();
+            janela.WindowStartupLocation = WindowStartupLocation.Manual;
+            janela.ShowInTaskbar = false;
+            janela.ShowActivated = false;
+            janela.Left = -20000;
+            janela.Top = 0;
+            janela.Show();
+            janela.UpdateLayout();
+            Interface.Invoke(DispatcherPriority.ApplicationIdle, () => { });
+            var largura = (int)Math.Ceiling(janela.ActualWidth);
+            var altura = (int)Math.Ceiling(janela.ActualHeight);
+            var imagem = new RenderTargetBitmap(largura, altura, 96, 96, PixelFormats.Pbgra32);
+            imagem.Render((Visual)janela.Content);
+            var png = new PngBitmapEncoder();
+            png.Frames.Add(BitmapFrame.Create(imagem));
+            using (var arquivo = System.IO.File.Create(caminho)) png.Save(arquivo);
+            janela.Close();
+        });
+    }
+
     internal static void Desenhar(Func<FrameworkElement> criarTela, string caminho, int largura, int altura, Action<FrameworkElement>? ajustar = null)
     {
         Interface.Invoke(() =>

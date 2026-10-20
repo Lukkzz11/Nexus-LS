@@ -67,7 +67,7 @@ public partial class VendasViewModel : ViewModelBase
           + (string.IsNullOrWhiteSpace(v.MotivoCancelamento) ? "" : $"{Environment.NewLine}Motivo: {v.MotivoCancelamento}")
           + (v.EstoqueDevolvido ? $"{Environment.NewLine}Estoque devolvido." : $"{Environment.NewLine}Estoque NÃO foi devolvido.")
         : "";
-    public bool PodeCancelar => Selecionada is { Cancelada: false };
+    public bool PodeCancelar => Selecionada is { Cancelada: false } && NexusLS.App.Seguranca.Sessao.Pode(NexusLS.Core.Models.Permissao.CancelarVendas);
 
     partial void OnDataChanged(DateTime? value) => _ = CarregarAsync();
 
@@ -130,6 +130,8 @@ public partial class VendasViewModel : ViewModelBase
     private Task CancelarVendaAsync() => ExecutarAsync(async () =>
     {
         if (Selecionada is not { Cancelada: false } venda) return;
+        if (!NexusLS.App.Seguranca.Sessao.Pode(NexusLS.Core.Models.Permissao.CancelarVendas))
+            throw new RegraDeNegocioException("Seu perfil não pode cancelar vendas. Peça a um gerente ou administrador.");
 
         var pergunta = $"Cancelar a venda #{venda.Id} de {Dinheiro.Formatar(venda.TotalCentavos)}?";
         if (_caixa is not null && await _caixa.TurnoFechadoDoHorarioAsync(venda.DataHora) is { } fechado)

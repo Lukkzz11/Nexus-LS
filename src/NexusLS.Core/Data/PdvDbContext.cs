@@ -130,6 +130,7 @@ public class PdvDbContext : DbContext
             e.Property(f => f.PinHash).IsRequired().HasMaxLength(120);
             e.Property(f => f.RecuperacaoHash).HasMaxLength(120);
             e.Ignore(f => f.PermissoesEfetivas);
+            e.Ignore(f => f.PerfilTexto);
             e.HasIndex(f => f.Nome);
         });
 

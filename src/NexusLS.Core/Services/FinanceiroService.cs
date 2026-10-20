@@ -125,7 +125,7 @@ public class FinanceiroService
                 Parcela = i + 1,
                 TotalParcelas = dados.Parcelas,
                 CriadoEm = agora,
-                Operador = Limpar(operador)
+                Operador = Limpar(operador) ?? Limpar(OperadorAtual.Nome)
             });
         }
         return criados;

@@ -143,7 +143,7 @@ public class CompraService
             DataHora = agora,
             NumeroNota = Limpar(dados.NumeroNota),
             Observacao = Limpar(dados.Observacao),
-            Operador = Limpar(operador)
+            Operador = Limpar(operador) ?? Limpar(OperadorAtual.Nome)
         };
 
         await using var tx = await db.Database.BeginTransactionAsync();
