@@ -27,6 +27,9 @@ public class PdvDbContext : DbContext
     public DbSet<Lancamento> Lancamentos => Set<Lancamento>();
     public DbSet<Fornecedor> Fornecedores => Set<Fornecedor>();
     public DbSet<Funcionario> Funcionarios => Set<Funcionario>();
+    public DbSet<Pedido> Pedidos => Set<Pedido>();
+    public DbSet<ItemPedido> ItensPedido => Set<ItemPedido>();
+    public DbSet<EventoPedido> EventosPedido => Set<EventoPedido>();
     public DbSet<Compra> Compras => Set<Compra>();
     public DbSet<ItemCompra> ItensCompra => Set<ItemCompra>();
 
@@ -120,6 +123,33 @@ public class PdvDbContext : DbContext
             e.Property(p => p.Operador).HasMaxLength(80);
             e.HasOne<Cliente>().WithMany().HasForeignKey(p => p.ClienteId).OnDelete(DeleteBehavior.Restrict);
             e.HasIndex(p => p.ClienteId);
+        });
+
+        modelBuilder.Entity<Pedido>(e =>
+        {
+            e.Property(p => p.Numero).IsRequired().HasMaxLength(20);
+            e.Property(p => p.ClienteNome).IsRequired().HasMaxLength(150);
+            e.Property(p => p.ClienteTelefone).HasMaxLength(30);
+            e.Property(p => p.Observacao).HasMaxLength(300);
+            e.Property(p => p.MotivoCancelamento).HasMaxLength(200);
+            e.HasMany(p => p.Itens).WithOne().HasForeignKey(i => i.PedidoId).OnDelete(DeleteBehavior.Cascade);
+            e.HasMany(p => p.Historico).WithOne().HasForeignKey(h => h.PedidoId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(p => p.Status);
+            e.HasIndex(p => p.VendaId);
+            e.HasIndex(p => p.CriadoEm);
+        });
+
+        modelBuilder.Entity<ItemPedido>(e =>
+        {
+            e.Property(i => i.Nome).IsRequired().HasMaxLength(200);
+            e.Property(i => i.Tamanho).IsRequired().HasMaxLength(30);
+            e.Ignore(i => i.TotalCentavos);
+        });
+
+        modelBuilder.Entity<EventoPedido>(e =>
+        {
+            e.Property(h => h.Operador).HasMaxLength(80);
+            e.Property(h => h.Observacao).HasMaxLength(300);
         });
 
         modelBuilder.Entity<Funcionario>(e =>

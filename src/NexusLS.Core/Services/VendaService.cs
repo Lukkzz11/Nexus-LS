@@ -140,6 +140,17 @@ public class VendaService
         }
         await db.SaveChangesAsync();
 
+        // 7) Venda a prazo também vira pedido (acompanhamento de separação e entrega), na mesma transação.
+        if (venda.FormaPagamento == FormaPagamento.APrazo)
+        {
+            var cliente = venda.ClienteId is int cid ? await db.Clientes.AsNoTracking().FirstOrDefaultAsync(c => c.Id == cid) : null;
+            var pedidoDaVenda = PedidoService.DaVenda(venda, cliente?.Nome, cliente?.Telefone, venda.DataHora, operador);
+            db.Pedidos.Add(pedidoDaVenda);
+            await db.SaveChangesAsync();
+            PedidoService.FinalizarNumero(pedidoDaVenda);
+            await db.SaveChangesAsync();
+        }
+
         await transacao.CommitAsync(); // só aqui as mudanças viram definitivas
         return venda;
     }
@@ -208,6 +219,17 @@ public class VendaService
         venda.MotivoCancelamento = motivo;
         venda.CanceladoPor = string.IsNullOrWhiteSpace(canceladoPor) ? await NomeDoOperadorAsync(db) : canceladoPor.Trim();
         venda.EstoqueDevolvido = devolverEstoque;
+
+        // O pedido que nasceu desta venda (a prazo) é cancelado junto.
+        var pedidos = await db.Pedidos.Include(p => p.Historico)
+            .Where(p => p.VendaId == venda.Id && p.Status != StatusPedido.Cancelado).ToListAsync();
+        foreach (var p in pedidos)
+        {
+            p.Status = StatusPedido.Cancelado;
+            p.MotivoCancelamento = $"Venda #{venda.Id} cancelada: {motivo}";
+            p.AtualizadoEm = agora;
+            p.Historico.Add(new EventoPedido { Status = StatusPedido.Cancelado, DataHora = agora, Operador = venda.CanceladoPor, Observacao = p.MotivoCancelamento });
+        }
 
         await db.SaveChangesAsync();
         await transacao.CommitAsync();
