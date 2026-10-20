@@ -40,8 +40,9 @@ public class GradeTamanhos
         {
             DirecaoGrade.Esquerda => Indice - 1,
             DirecaoGrade.Direita => Indice + 1,
-            DirecaoGrade.Cima => Indice - Colunas,
-            _ => Indice + Colunas
+            // Com uma linha só (3 tamanhos ou menos) não há "linha de cima/baixo": ↑ ↓ andam como ← →.
+            DirecaoGrade.Cima => _opcoes.Count <= Colunas ? Indice - 1 : Indice - Colunas,
+            _ => _opcoes.Count <= Colunas ? Indice + 1 : Indice + Colunas
         };
         if (novo < 0 || novo >= _opcoes.Count) return false;
         Indice = novo;
@@ -185,6 +186,14 @@ public class SelecaoPagamento
         var indice = Array.IndexOf(Formas, Forma);
         Forma = Formas[(indice + passo + Formas.Length) % Formas.Length];
         Parcelas = 1; // parcelas só existem no crédito: ao sair e voltar, recomeça em 1x
+    }
+
+    /// <summary>As formas aparecem em 2 linhas de 3: ↑ ou ↓ (fora do crédito e do a prazo, que usam as setas para outra coisa) pulam para a outra linha.</summary>
+    public bool TrocarDeLinha()
+    {
+        if (Forma is FormaPagamento.CartaoCredito or FormaPagamento.APrazo) return false;
+        Trocar(Formas.Length / 2);
+        return true;
     }
 
     /// <summary>↑ no crédito: mais uma parcela (até 4). Nas outras formas não faz nada.</summary>

@@ -330,7 +330,7 @@
                                Foreground="{StaticResource CorPrimaria}" />
                     <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" />
                     <TextBlock Style="{StaticResource DicaModal}"
-                               Text="← escolhe R$ · → escolhe % · Enter segue para o pagamento · Esc volta à busca" />
+                               Text="← → ↑ ↓ trocam entre R$ e % · Enter segue para o pagamento · Esc volta à busca" />
                 </StackPanel>
             </Border>
 
@@ -385,7 +385,7 @@
 
                     <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" />
                     <TextBlock Style="{StaticResource DicaModal}"
-                               Text="← → trocam a forma · Enter finaliza a venda · Esc volta à busca" />
+                               Text="← → ↑ ↓ trocam a forma (no crédito, ↑ ↓ mudam as parcelas) · Enter finaliza a venda · Esc volta à busca" />
                 </StackPanel>
             </Border>
 
@@ -406,7 +406,7 @@
                     </ItemsControl>
                     <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" HorizontalAlignment="Center" />
                     <TextBlock Style="{StaticResource DicaModal}" TextAlignment="Center"
-                               Text="← → alternam · Enter confirma · Esc = nova venda" />
+                               Text="← → ↑ ↓ alternam · Enter confirma · Esc = nova venda" />
                 </StackPanel>
             </Border>
         </Grid>

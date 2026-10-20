@@ -297,10 +297,12 @@ public partial class PdvViewModel : ViewModelBase, IEditorCarrinho
         switch (tecla)
         {
             case ComandoTecla.Esquerda:
+            case ComandoTecla.Cima: // as opções são só duas: ↑ e ↓ também trocam entre elas
                 _descontoSel.Esquerda();
                 AtualizarOpcoesDesconto();
                 return true;
             case ComandoTecla.Direita:
+            case ComandoTecla.Baixo:
                 _descontoSel.Direita();
                 AtualizarOpcoesDesconto();
                 return true;
@@ -322,10 +324,12 @@ public partial class PdvViewModel : ViewModelBase, IEditorCarrinho
             case ComandoTecla.Cima:
                 if (EmAPrazo) MoverCliente(-1);
                 else if (_pagamento!.MaisParcelas()) AtualizarPagamento();
+                else if (_pagamento!.TrocarDeLinha()) FormaMudou();
                 return true;
             case ComandoTecla.Baixo:
                 if (EmAPrazo) MoverCliente(+1);
                 else if (_pagamento!.MenosParcelas()) AtualizarPagamento();
+                else if (_pagamento!.TrocarDeLinha()) FormaMudou();
                 return true;
             case ComandoTecla.Enter:
             case ComandoTecla.F10:
@@ -340,8 +344,12 @@ public partial class PdvViewModel : ViewModelBase, IEditorCarrinho
     {
         switch (tecla)
         {
-            case ComandoTecla.Esquerda: _sucessoSel.Esquerda(); AtualizarOpcoesSucesso(); return true;
-            case ComandoTecla.Direita: _sucessoSel.Direita(); AtualizarOpcoesSucesso(); return true;
+            case ComandoTecla.Esquerda:
+            case ComandoTecla.Cima:
+                _sucessoSel.Esquerda(); AtualizarOpcoesSucesso(); return true;
+            case ComandoTecla.Direita:
+            case ComandoTecla.Baixo:
+                _sucessoSel.Direita(); AtualizarOpcoesSucesso(); return true;
             case ComandoTecla.Enter:
                 if (DateTime.UtcNow - _sucessoDesde < _tempoMinimoSucesso) return true; // Enter apressado: engole
                 if (_sucessoSel.Opcao == OpcaoSucesso.NovaVenda) NovaVenda();

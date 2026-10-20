@@ -6,13 +6,13 @@
         WPF-UI, que desenha tudo no estilo do Windows 11. Aqui ficam as cores do Nexus LS e os estilos próprios
         (botões, cartões, menu). Para mudar o visual, basta mexer nas cores abaixo.
     -->
-    <SolidColorBrush x:Key="CorFundo" Color="#F3F3F3" />
+    <SolidColorBrush x:Key="CorFundo" Color="#F4F5F7" />
     <SolidColorBrush x:Key="CorPainel" Color="White" />
-    <SolidColorBrush x:Key="CorMenu" Color="#F3F3F3" />
+    <SolidColorBrush x:Key="CorMenu" Color="#F4F5F7" />
     <SolidColorBrush x:Key="CorPrimaria" Color="#2563EB" />
     <SolidColorBrush x:Key="CorTexto" Color="#1B1B1B" />
     <SolidColorBrush x:Key="CorTextoSuave" Color="#6B6B6B" />
-    <SolidColorBrush x:Key="CorBorda" Color="#E3E3E3" />
+    <SolidColorBrush x:Key="CorBorda" Color="#DDE1E6" />
     <SolidColorBrush x:Key="CorPerigo" Color="#C42B1C" />
     <SolidColorBrush x:Key="CorSucesso" Color="#0F7B0F" />
     <SolidColorBrush x:Key="CorAlerta" Color="#FFF4CE" />

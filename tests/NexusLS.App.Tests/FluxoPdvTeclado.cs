@@ -309,6 +309,52 @@ public sealed class FluxoPdvTeclado : IDisposable
         Assert.Equal("VAREJO", _vm.TabelaTexto);
     }
 
+    // ---------- setas para cima e para baixo nos modais ----------
+
+    [Fact]
+    public async Task Cima_e_baixo_tambem_trocam_entre_real_e_percentual_no_desconto()
+    {
+        await PrepararAsync();
+        await AdicionarAsync("Boné", 0, 1);
+        Tecla(ComandoTecla.Enter);                           // desconto
+        Assert.True(_vm.OpcoesDesconto[0].Selecionada);      // R$
+
+        Tecla(ComandoTecla.Baixo);
+        Assert.True(_vm.OpcoesDesconto[1].Selecionada);      // %
+        Tecla(ComandoTecla.Cima);
+        Assert.True(_vm.OpcoesDesconto[0].Selecionada);
+    }
+
+    [Fact]
+    public async Task Cima_e_baixo_pulam_de_linha_nas_formas_de_pagamento_e_mantem_as_parcelas_no_credito()
+    {
+        await PrepararAsync();
+        await AdicionarAsync("Boné", 0, 1);
+        Tecla(ComandoTecla.Enter, ComandoTecla.Enter);       // desconto → pagamento (Dinheiro)
+        Assert.Equal(EtapaPdv.Pagamento, _vm.Etapa);
+
+        Tecla(ComandoTecla.Baixo);
+        Assert.True(_vm.OpcoesPagamento[3].Selecionada);     // Cartão crédito (linha de baixo)
+        Tecla(ComandoTecla.Cima);                            // no crédito, ↑ é parcela: continua no crédito
+        Assert.True(_vm.OpcoesPagamento[3].Selecionada);
+        Assert.Equal("2x", _vm.OpcoesParcela.Single(o => o.Selecionada).Texto);
+    }
+
+    [Fact]
+    public async Task Cima_e_baixo_alternam_as_opcoes_da_tela_de_sucesso()
+    {
+        await PrepararAsync();
+        await AdicionarAsync("Boné", 0, 1);
+        Tecla(ComandoTecla.Enter, ComandoTecla.Enter, ComandoTecla.Enter);
+        await AteAsync(() => _vm.Etapa == EtapaPdv.Sucesso, "sucesso");
+        var antes = _vm.OpcoesSucesso.ToList().FindIndex(o => o.Selecionada);
+
+        Tecla(ComandoTecla.Cima);
+        var depois = _vm.OpcoesSucesso.ToList().FindIndex(o => o.Selecionada);
+
+        Assert.NotEqual(antes, depois);
+    }
+
     // ---------- desconto ----------
 
     [Fact]
