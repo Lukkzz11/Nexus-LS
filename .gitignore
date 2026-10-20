@@ -485,4 +485,5 @@ $RECYCLE.BIN/
 
 # Saida do dotnet publish
 publicar/
+publicar_novo/
 telas-teste/
