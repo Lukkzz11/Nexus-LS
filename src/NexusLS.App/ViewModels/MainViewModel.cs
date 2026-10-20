@@ -22,6 +22,9 @@ public partial class MainViewModel : ObservableObject
         new(Servicos.Produtos, Servicos.Vendas, Servicos.Rascunho, Servicos.Clientes, Servicos.Cupons,
             configuracao: Servicos.Configuracao);
 
+    /// <summary>Aviso de versão nova (faixa no alto da janela).</summary>
+    public AtualizacaoViewModel Atualizacao => Servicos.Atualizacao;
+
     [ObservableProperty]
     private object? _telaAtual;
 
@@ -98,7 +101,7 @@ public partial class MainViewModel : ObservableObject
             try { File.Delete(NexusLS.Core.Services.RascunhoStore.CaminhoPadrao()); } catch (IOException) { }
             dialogos.Reiniciar();
         });
-        Abrir(new ConfiguracoesViewModel(Servicos.Configuracao, Servicos.Cupons, Servicos.Backup, dialogos, limpar), ItemMenu.Configuracoes);
+        Abrir(new ConfiguracoesViewModel(Servicos.Configuracao, Servicos.Cupons, Servicos.Backup, dialogos, limpar, Servicos.Atualizacao), ItemMenu.Configuracoes);
     }
 
     /// <summary>Apagar dados é só do administrador. Com o login desligado (ninguém cadastrado) vale como administrador.</summary>

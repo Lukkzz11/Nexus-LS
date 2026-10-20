@@ -18,9 +18,10 @@ public partial class ConfiguracoesViewModel : ViewModelBase
 
     public ConfiguracoesViewModel(ConfiguracaoService configuracao, CupomService cupons,
         GestorBackup? backup = null, NexusLS.App.Backup.IDialogosBackup? dialogos = null,
-        LimparDadosViewModel? limparDados = null)
+        LimparDadosViewModel? limparDados = null, AtualizacaoViewModel? atualizacao = null)
     {
         LimparDados = limparDados;
+        Atualizacao = atualizacao;
         _configuracao = configuracao;
         _cupons = cupons;
         _backup = backup;

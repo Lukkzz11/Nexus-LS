@@ -129,6 +129,31 @@
                     </StackPanel>
                 </Border>
 
+                <!-- ===== Atualizações ===== -->
+                <Border Style="{StaticResource Painel}" Margin="0,0,0,16"
+                        Visibility="{Binding TemAtualizacao, Converter={StaticResource BoolVis}}">
+                    <StackPanel DataContext="{Binding Atualizacao}">
+                        <TextBlock Text="Atualizações" FontSize="18" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding VersaoAtualTexto}" Margin="0,4,0,0" AutomationProperties.Name="Versão do programa" />
+                        <TextBlock Foreground="{StaticResource CorTextoSuave}" TextWrapping="Wrap" FontSize="13" Margin="0,4,0,0"
+                                   Text="Ao abrir, o programa procura sozinho uma versão nova e só avisa; nada é instalado sem você clicar em Atualizar agora." />
+                        <Button Content="Verificar atualizações" Style="{StaticResource BotaoSecundario}" Margin="0,12,0,0" HorizontalAlignment="Left"
+                                Command="{Binding VerificarAgoraCommand}" />
+                        <TextBlock Text="{Binding Mensagem}" TextWrapping="Wrap" Margin="0,10,0,0">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="#15803D" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding MensagemEhErro}" Value="True">
+                                            <Setter Property="Foreground" Value="#B91C1C" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
                 <!-- ===== Apagar dados (só administrador) ===== -->
                 <Border Style="{StaticResource Painel}" Margin="0,0,0,24"
                         Visibility="{Binding TemLimparDados, Converter={StaticResource BoolVis}}">

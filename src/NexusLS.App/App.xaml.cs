@@ -34,6 +34,14 @@ public partial class App : Application
 
         if (!EntrarNoSistema()) { Shutdown(); return; }
 
+        // Depois de uma atualização, o programa antigo e o arquivo baixado ficaram ao lado: apaga os restos.
+        try
+        {
+            if (Environment.ProcessPath is { } exe)
+                NexusLS.Core.Atualizacao.AtualizadorService.LimparRestos(exe, NexusLS.Core.Atualizacao.AtualizadorService.PastaPadrao());
+        }
+        catch (Exception) { /* limpeza é só higiene: nunca impede de abrir */ }
+
         base.OnStartup(e);
         IniciarBackupAutomatico();
     }

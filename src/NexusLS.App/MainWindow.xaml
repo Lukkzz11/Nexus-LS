@@ -173,7 +173,36 @@
             </ScrollViewer>
 
             <!-- Área da tela atual. O ContentControl mostra o ViewModel e o WPF escolhe a View (veja App.xaml). -->
-            <ContentControl Grid.Column="1" Content="{Binding TelaAtual}" Margin="8,4,24,20" />
+            <Grid Grid.Column="1" Margin="8,4,24,20">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!-- Aviso de atualização: só aparece quando há versão nova. Nada é instalado sem o usuário clicar. -->
+                <Border DataContext="{Binding Atualizacao}" Visibility="{Binding TemNovaVersao, Converter={StaticResource BoolVis}}"
+                        Background="{StaticResource CorSelecao}" BorderBrush="{StaticResource CorPrimaria}" BorderThickness="1"
+                        CornerRadius="8" Padding="16,10" Margin="0,0,0,12">
+                    <StackPanel>
+                        <WrapPanel>
+                            <TextBlock Text="{Binding AvisoTexto}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,16,0"
+                                       AutomationProperties.Name="Aviso de atualização" />
+                            <Button Content="Atualizar agora" Style="{StaticResource BotaoPrimario}" Padding="14,6" Command="{Binding AtualizarAgoraCommand}" />
+                            <Button Content="O que mudou" Style="{StaticResource BotaoSecundario}" Padding="14,6" Margin="8,0,0,0" Command="{Binding VerNovidadesCommand}" />
+                            <Button Content="Depois" Style="{StaticResource BotaoSecundario}" Padding="14,6" Margin="8,0,0,0" Command="{Binding DepoisCommand}" />
+                        </WrapPanel>
+                        <StackPanel Visibility="{Binding Baixando, Converter={StaticResource BoolVis}}" Margin="0,10,0,0">
+                            <TextBlock Text="{Binding ProgressoTexto}" />
+                            <ProgressBar Minimum="0" Maximum="100" Value="{Binding ProgressoPercentual}" Height="8" Margin="0,4,0,0" />
+                            <Button Content="Cancelar" Style="{StaticResource BotaoSecundario}" Padding="12,4" Margin="0,8,0,0"
+                                    HorizontalAlignment="Left" Command="{Binding CancelarDownloadCommand}" />
+                        </StackPanel>
+                        <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" />
+                    </StackPanel>
+                </Border>
+
+                <ContentControl Grid.Row="1" Content="{Binding TelaAtual}" />
+            </Grid>
         </Grid>
     </Grid>
 </ui:FluentWindow>

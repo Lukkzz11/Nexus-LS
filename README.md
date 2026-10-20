@@ -226,6 +226,25 @@ O resultado é `publicar\NexusLS.exe` (cerca de 140 MB, porque leva o .NET dentr
 
 Um instalador com assistente (`.msi`) não faz parte desta versão. Para um arquivo menor, troque `--self-contained true` por `false`; aí o computador de destino precisa ter o [.NET Desktop Runtime](https://dotnet.microsoft.com/download) 10.
 
+## Atualizações do programa
+
+**Para o usuário:** ao abrir, o Nexus LS procura sozinho uma versão nova (sem internet, ou se não houver novidade, não aparece nada). Havendo, surge uma faixa no alto da janela com **Atualizar agora**, **O que mudou** e **Depois**. Nada é instalado sem o clique. Ao atualizar, o programa baixa o arquivo, confere, fecha e abre de novo; uma venda em andamento fica salva e volta, e o banco é preservado (se a versão nova mudar o banco, o backup `pre-atualizacao` é feito antes, como sempre). Em Configurações → Atualizações aparece a versão e o botão **Verificar atualizações**.
+
+**Segurança:** só baixa por HTTPS e só de endereços do GitHub; confere o tamanho, se é mesmo um executável e o **SHA-256** (publicado junto com a versão). Arquivo incompleto, alterado ou sem assinatura é descartado e nada é instalado. O programa instalado não carrega nenhuma senha nem token.
+
+**Para publicar uma versão nova** (quem desenvolve):
+
+1. Uma vez só: crie no GitHub um repositório **público** só para os instaladores (padrão: `Lukkzz11/Nexus-LS-Atualizacoes`; nunca coloque o código-fonte nele), instale o GitHub CLI (`winget install GitHub.cli`) e entre com `gh auth login`.
+2. Faça o commit do código e rode, na pasta do projeto:
+
+```bash
+.\publicar-versao.ps1 -Versao 1.2.0 -Notas "- O que mudou 1`n- O que mudou 2"
+```
+
+O script confere que tudo está commitado e que a versão é maior que a última, **roda todos os testes (se um falhar, nada é enviado)**, gera o `NexusLS.exe` com a versão gravada, calcula o SHA-256 e cria o release `v1.2.0` com o `.exe` e o `.sha256`. Para ensaiar sem enviar, use `-SoGerar`. As notas (`-Notas` ou `-NotasArquivo`) são o texto que o usuário lê em **O que mudou**.
+
+Para usar outro repositório sem recompilar, crie `%LOCALAPPDATA%\NexusLS\atualizacao.json` com `{ "repositorio": "dono/nome" }`. O programa instalado em `Program Files` não consegue trocar a si mesmo sem permissão de administrador: instale numa pasta do usuário (por exemplo `Documentos\Nexus LS`).
+
 ## Mexendo nos models (migrations)
 
 Uma *migration* é um "passo de versão" da estrutura do banco. Depois de alterar uma classe em `Models/` (ou o `PdvDbContext`), gere uma nova:

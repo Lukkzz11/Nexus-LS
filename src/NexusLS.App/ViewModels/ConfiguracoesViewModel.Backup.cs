@@ -51,6 +51,10 @@ public partial class ConfiguracoesViewModel
 
     /// <summary>Bloco "Apagar dados". Nulo nos testes antigos; a tela só mostra quando existe e o usuário é administrador.</summary>
     public LimparDadosViewModel? LimparDados { get; }
+
+    /// <summary>Versão do programa e botão "Verificar atualizações". Nulo nos testes antigos.</summary>
+    public AtualizacaoViewModel? Atualizacao { get; }
+    public bool TemAtualizacao => Atualizacao is not null;
     public bool TemLimparDados => LimparDados?.Visivel ?? false;
 
     [ObservableProperty] private string _pastaBackup = "";

@@ -36,6 +36,13 @@ public static class Servicos
         new NexusLS.Core.Backup.BackupService(CaminhoBanco.Padrao()),
         new NexusLS.Core.Backup.ConfiguracaoBackupStore(NexusLS.Core.Backup.ConfiguracaoBackupStore.CaminhoPadrao()));
     private static readonly System.Net.Http.HttpClient HttpFirebase = new() { Timeout = TimeSpan.FromSeconds(30) };
+    private static readonly System.Net.Http.HttpClient HttpAtualizacao = new() { Timeout = TimeSpan.FromSeconds(20) };
+    public static NexusLS.Core.Atualizacao.AtualizadorService Atualizador { get; } = new(
+        new NexusLS.Core.Atualizacao.FonteGitHub(HttpAtualizacao, NexusLS.Core.Atualizacao.ConfiguracaoAtualizacao.Repositorio()),
+        NexusLS.Core.Atualizacao.AtualizadorService.PastaPadrao(),
+        NexusLS.Core.Atualizacao.VersaoPrograma.Atual());
+    public static NexusLS.App.ViewModels.AtualizacaoViewModel Atualizacao { get; } =
+        new(Atualizador, NexusLS.App.AplicadorDeAtualizacao.AplicarEReiniciarAsync);
     public static LimpezaService Limpeza { get; } = new(Fabrica,
         async () => (await Backup.FazerAsync(NexusLS.Core.Backup.MotivoBackup.PreLimpeza)).Caminho);
     public static NexusLS.Core.Sincronizacao.Firebase.ConfiguracaoFirebaseStore Firebase { get; } =
