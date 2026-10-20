@@ -50,6 +50,16 @@ public class CupomService
         return true;
     }
 
+    /// <summary>Imprime a lista de separação de um pedido (sem preços), na mesma impressora do cupom.</summary>
+    public async Task ImprimirListaSeparacaoAsync(int pedidoId)
+    {
+        var loja = await _configuracao.ObterAsync();
+        await using var db = await _fabrica.CreateDbContextAsync();
+        var pedido = await db.Pedidos.AsNoTracking().Include(p => p.Itens).FirstOrDefaultAsync(p => p.Id == pedidoId)
+            ?? throw new RegraDeNegocioException("Pedido não encontrado.");
+        await _impressora.ImprimirAsync(MontadorCupom.MontarListaSeparacao(pedido, loja), loja);
+    }
+
     /// <summary>Cupom de teste com uma venda de exemplo, usando os dados do formulário (mesmo antes de salvar).</summary>
     public Task ImprimirTesteAsync(ConfiguracaoLoja loja) =>
         _impressora.ImprimirAsync(MontadorCupom.Montar(MontadorCupom.VendaDeExemplo(), loja), loja);

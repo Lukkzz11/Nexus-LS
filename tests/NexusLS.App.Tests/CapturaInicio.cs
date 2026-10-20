@@ -236,3 +236,40 @@ public sealed class CapturaLogin : IDisposable
         Capturador.SalvarJanela(() => new NexusLS.App.Views.LoginWindow(servico, podeCancelar: false), Path.Combine(saida, "login.png"));
     }
 }
+
+/// <summary>Desenha o quadro de Pedidos com dados de exemplo. Só roda com NEXUSLS_PRINTS.</summary>
+public sealed class CapturaPedidos : IDisposable
+{
+    private readonly BancoDeTeste _banco = new();
+
+    public void Dispose() => _banco.Dispose();
+
+    [Fact]
+    public async Task Gera_a_tela_pedidos()
+    {
+        var saida = Environment.GetEnvironmentVariable("NEXUSLS_PRINTS");
+        if (string.IsNullOrWhiteSpace(saida)) return;
+        Directory.CreateDirectory(saida);
+
+        var produtos = new ProdutoService(_banco.Fabrica);
+        var pedidos = new PedidoService(_banco.Fabrica);
+        var camiseta = (await produtos.CadastrarAsync(new DadosProduto("Camiseta Básica", "789", 5990, 2200, 5), 0)).Id;
+        Pedido Novo(string cliente, OrigemPedido o, params ItemPedidoDados[] itens) => pedidos.CriarAsync(new DadosPedido(o, itens, ClienteNome: cliente)).GetAwaiter().GetResult();
+
+        var a = Novo("Maria Souza", OrigemPedido.WhatsApp, new ItemPedidoDados(camiseta, 3));
+        var b = Novo("João Lima", OrigemPedido.Catalogo, new ItemPedidoDados(camiseta, 1), new ItemPedidoDados(null, 2, "Boné", 3000));
+        var c = Novo("Ana Paula", OrigemPedido.Encomenda, new ItemPedidoDados(camiseta, 10));
+        var d = Novo("Rui Costa", OrigemPedido.Balcao, new ItemPedidoDados(camiseta, 2));
+        Novo("Dona Zefa", OrigemPedido.WhatsApp, new ItemPedidoDados(camiseta, 1));
+        await pedidos.AvancarAsync(b.Id);
+        await pedidos.AvancarAsync(c.Id); await pedidos.AvancarAsync(c.Id);
+        for (var i = 0; i < 3; i++) await pedidos.AvancarAsync(d.Id);
+
+        var vm = new PedidosViewModel(pedidos, produtos, new ClienteService(_banco.Fabrica));
+        await vm.Carregamento;
+        vm.Selecionado = vm.Colunas[1].Cartoes.First();
+        await Task.Delay(300);
+
+        Capturador.Desenhar(() => new NexusLS.App.Views.PedidosView { DataContext = vm }, Path.Combine(saida, "pedidos.png"), 1500, 820);
+    }
+}

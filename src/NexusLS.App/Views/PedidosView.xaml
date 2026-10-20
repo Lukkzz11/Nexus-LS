@@ -1,0 +1,284 @@
+<UserControl x:Class="NexusLS.App.Views.PedidosView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <UserControl.Resources>
+        <!-- Um cartão do quadro: número, cliente, total e resumo. O escolhido ganha borda azul. -->
+        <Style x:Key="BotaoCartao" TargetType="Button">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="{StaticResource CorBorda}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="10,8" />
+            <Setter Property="Margin" Value="0,0,0,8" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="borda" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="8" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="borda" Property="BorderBrush" Value="#9CA3AF" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="borda" Property="BorderBrush" Value="{StaticResource CorPrimaria}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <DataTrigger Value="True">
+                    <DataTrigger.Binding>
+                        <MultiBinding Converter="{StaticResource IgualTag}">
+                            <Binding Path="DataContext.Selecionado.Id" RelativeSource="{RelativeSource AncestorType=UserControl}" />
+                            <Binding Path="Tag" RelativeSource="{RelativeSource Self}" />
+                        </MultiBinding>
+                    </DataTrigger.Binding>
+                    <Setter Property="BorderBrush" Value="{StaticResource CorPrimaria}" />
+                    <Setter Property="BorderThickness" Value="2" />
+                    <Setter Property="Background" Value="#EFF6FF" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <DataTemplate x:Key="ModeloCartao">
+            <Button Style="{StaticResource BotaoCartao}" Tag="{Binding Id}" AutomationProperties.Name="{Binding Numero}"
+                    Command="{Binding DataContext.SelecionarCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                    CommandParameter="{Binding}">
+                <StackPanel>
+                    <Grid>
+                        <TextBlock Text="{Binding Numero}" FontWeight="SemiBold" FontSize="13" />
+                        <TextBlock Text="{Binding Quando}" HorizontalAlignment="Right" FontSize="12" Foreground="{StaticResource CorTextoSuave}" />
+                    </Grid>
+                    <TextBlock Text="{Binding Cliente}" Margin="0,3,0,0" TextTrimming="CharacterEllipsis" />
+                    <Grid Margin="0,3,0,0">
+                        <TextBlock Text="{Binding Resumo}" FontSize="12" Foreground="{StaticResource CorTextoSuave}" />
+                        <TextBlock Text="{Binding Total}" HorizontalAlignment="Right" FontWeight="SemiBold" FontSize="13" />
+                    </Grid>
+                </StackPanel>
+            </Button>
+        </DataTemplate>
+
+        <Style x:Key="ColunaQuadro" TargetType="Border">
+            <Setter Property="Background" Value="#ECEEF1" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="10" />
+            <Setter Property="Margin" Value="0,0,10,0" />
+        </Style>
+
+        <Style x:Key="ColunaNumero" TargetType="TextBlock">
+            <Setter Property="HorizontalAlignment" Value="Right" />
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="12" />
+            <ColumnDefinition Width="400" />
+        </Grid.ColumnDefinitions>
+
+        <!-- ===== Quadro ===== -->
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Text="Pedidos" Style="{StaticResource TituloTela}" Margin="0,0,0,14" />
+
+            <Grid Grid.Row="1" Margin="0,0,0,10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBox Text="{Binding Busca, UpdateSourceTrigger=PropertyChanged}"
+                         ToolTip="Buscar por número, cliente, telefone ou produto" AutomationProperties.Name="Buscar pedido" />
+                <CheckBox Grid.Column="1" Content="Mostrar cancelados" Margin="16,0,0,0" VerticalAlignment="Center" IsChecked="{Binding MostrarCancelados}" />
+                <Button Grid.Column="2" Content="Novo pedido" Style="{StaticResource BotaoPrimario}" Margin="16,0,0,0"
+                        AutomationProperties.Name="Novo pedido" Command="{Binding NovoPedidoCommand}" />
+            </Grid>
+
+            <TextBlock Grid.Row="2" Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" Margin="0,0,0,8" />
+
+            <ScrollViewer Grid.Row="3" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                <StackPanel Orientation="Horizontal">
+                    <ItemsControl ItemsSource="{Binding Colunas}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource ColunaQuadro}" Width="212">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="*" />
+                                        </Grid.RowDefinitions>
+                                        <TextBlock Text="{Binding TituloComContagem}" FontWeight="SemiBold" Margin="2,0,0,8" />
+                                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                            <ItemsControl ItemsSource="{Binding Cartoes}" ItemTemplate="{StaticResource ModeloCartao}" />
+                                        </ScrollViewer>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <Border Style="{StaticResource ColunaQuadro}" Width="212" Visibility="{Binding MostrarCancelados, Converter={StaticResource BoolVis}}">
+                        <Grid DataContext="{Binding Cancelados}">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <TextBlock Text="{Binding TituloComContagem}" FontWeight="SemiBold" Margin="2,0,0,8" Foreground="{StaticResource CorPerigo}" />
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                <ItemsControl ItemsSource="{Binding Cartoes}" ItemTemplate="{StaticResource ModeloCartao}" />
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+
+        <!-- ===== Detalhe do pedido escolhido ===== -->
+        <Border Grid.Column="2" Style="{StaticResource Painel}" VerticalAlignment="Top"
+                Visibility="{Binding FormAberto, Converter={StaticResource BoolInverso}}">
+            <Grid>
+                <TextBlock Text="Escolha um pedido no quadro para ver os detalhes." Foreground="{StaticResource CorTextoSuave}" TextWrapping="Wrap"
+                           Visibility="{Binding TemSelecao, Converter={StaticResource BoolInverso}}" />
+                <StackPanel Visibility="{Binding TemSelecao, Converter={StaticResource BoolVis}}">
+                    <TextBlock Text="{Binding DetalheTitulo}" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap" AutomationProperties.Name="Pedido escolhido" />
+                    <TextBlock Text="{Binding DetalheCliente}" Margin="0,4,0,0" />
+                    <TextBlock Text="{Binding DetalheObservacao}" Foreground="{StaticResource CorTextoSuave}" TextWrapping="Wrap" Margin="0,2,0,0" />
+
+                    <TextBlock Text="Itens" Style="{StaticResource Rotulo}" Margin="0,14,0,4" />
+                    <ItemsControl ItemsSource="{Binding DetalheItens}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate><TextBlock Text="{Binding}" TextWrapping="Wrap" Margin="0,2" /></DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Margin="0,6,0,0" FontWeight="SemiBold"><Run Text="Total: " /><Run Text="{Binding DetalheTotal, Mode=OneWay}" /></TextBlock>
+
+                    <TextBlock Text="Histórico" Style="{StaticResource Rotulo}" Margin="0,14,0,4" />
+                    <ItemsControl ItemsSource="{Binding DetalheHistorico}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate><TextBlock Text="{Binding}" FontSize="13" Foreground="{StaticResource CorTextoSuave}" Margin="0,1" /></DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <Button Content="{Binding TextoAvancar}" Style="{StaticResource BotaoPrimario}" Margin="0,16,0,0" HorizontalAlignment="Stretch"
+                            IsEnabled="{Binding PodeAvancar}" Command="{Binding AvancarCommand}" AutomationProperties.Name="Avançar pedido" />
+                    <Button Content="{Binding TextoVoltar}" Style="{StaticResource BotaoSecundario}" Margin="0,8,0,0" HorizontalAlignment="Stretch"
+                            IsEnabled="{Binding PodeVoltar}" Command="{Binding VoltarCommand}" />
+                    <Grid Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="8" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Button Content="Lista de separação" Style="{StaticResource BotaoSecundario}" HorizontalAlignment="Stretch" Command="{Binding ImprimirListaCommand}" />
+                        <Button Grid.Column="2" Content="Cancelar pedido" Style="{StaticResource BotaoSecundario}" HorizontalAlignment="Stretch"
+                                IsEnabled="{Binding PodeCancelar}" Command="{Binding CancelarPedidoCommand}" />
+                    </Grid>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ===== Novo pedido ===== -->
+        <Border Grid.Column="2" Style="{StaticResource Painel}" VerticalAlignment="Top"
+                Visibility="{Binding FormAberto, Converter={StaticResource BoolVis}}">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="760">
+                <StackPanel>
+                    <TextBlock Text="Novo pedido" FontSize="18" FontWeight="SemiBold" />
+
+                    <TextBlock Text="Origem" Style="{StaticResource Rotulo}" />
+                    <ComboBox ItemsSource="{Binding Origens}" DisplayMemberPath="Nome" SelectedItem="{Binding OrigemSelecionada}" AutomationProperties.Name="Origem do pedido" />
+
+                    <TextBlock Text="Cliente cadastrado (opcional)" Style="{StaticResource Rotulo}" />
+                    <ComboBox ItemsSource="{Binding Clientes}" DisplayMemberPath="Nome" SelectedItem="{Binding ClienteCadastrado}" AutomationProperties.Name="Cliente cadastrado" />
+                    <StackPanel Visibility="{Binding SemClienteCadastrado, Converter={StaticResource BoolVis}}">
+                        <TextBlock Text="Ou o nome de quem pediu" Style="{StaticResource Rotulo}" />
+                        <TextBox Text="{Binding ClienteNome, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Nome do cliente" />
+                        <TextBlock Text="Telefone / WhatsApp" Style="{StaticResource Rotulo}" />
+                        <TextBox Text="{Binding ClienteTelefone, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
+
+                    <TextBlock Text="Adicionar produto (digite e tecle Enter)" Style="{StaticResource Rotulo}" Margin="0,12,0,0" />
+                    <TextBox x:Name="CaixaProduto" Text="{Binding BuscaProduto, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Buscar produto do pedido">
+                        <TextBox.InputBindings>
+                            <KeyBinding Key="Return" Command="{Binding AdicionarProdutoCommand}" />
+                        </TextBox.InputBindings>
+                    </TextBox>
+                    <ListBox ItemsSource="{Binding Resultados}" SelectedItem="{Binding ResultadoSelecionado}" MaxHeight="130" MouseDoubleClick="AoDarDoisCliques">
+                        <ListBox.Style>
+                            <Style TargetType="ListBox" BasedOn="{StaticResource {x:Type ListBox}}">
+                                <Setter Property="Visibility" Value="Visible" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Resultados.Count}" Value="0">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ListBox.Style>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate><TextBlock Text="{Binding Nome}" /></DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <Button Content="Item sem cadastro (serviço, encomenda)" Style="{StaticResource BotaoSecundario}" Margin="0,8,0,0" Padding="10,5" FontSize="13"
+                            HorizontalAlignment="Left" Command="{Binding AdicionarItemLivreCommand}" />
+
+                    <ItemsControl ItemsSource="{Binding ItensForm}" Margin="0,10,0,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="{StaticResource CorBorda}" BorderThickness="0,0,0,1" Padding="0,8">
+                                    <StackPanel>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox Text="{Binding Nome, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding NomeEditavel}" FontWeight="SemiBold" AutomationProperties.Name="Nome do item" />
+                                            <Button Grid.Column="1" Content="Remover" Style="{StaticResource BotaoSecundario}" Padding="8,3" FontSize="12" Margin="8,0,0,0"
+                                                    Command="{Binding DataContext.RemoverItemCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}" />
+                                        </Grid>
+                                        <Grid Margin="0,6,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="8" />
+                                                <ColumnDefinition Width="70" />
+                                                <ColumnDefinition Width="8" />
+                                                <ColumnDefinition Width="100" />
+                                            </Grid.ColumnDefinitions>
+                                            <ComboBox ItemsSource="{Binding Tamanhos}" SelectedItem="{Binding Tamanho}" Visibility="{Binding TemVariosTamanhos, Converter={StaticResource BoolVis}}" />
+                                            <TextBox Grid.Column="2" Text="{Binding QuantidadeTexto, UpdateSourceTrigger=PropertyChanged}" ToolTip="Quantidade" AutomationProperties.Name="Quantidade" />
+                                            <TextBox Grid.Column="4" Text="{Binding PrecoTexto, UpdateSourceTrigger=PropertyChanged}" ToolTip="Preço unitário (R$)" AutomationProperties.Name="Preço" />
+                                        </Grid>
+                                        <TextBlock Text="{Binding TotalTexto}" HorizontalAlignment="Right" Margin="0,4,0,0" FontSize="13" />
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <TextBlock Text="Observação (opcional)" Style="{StaticResource Rotulo}" />
+                    <TextBox Text="{Binding Observacao, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="50" />
+
+                    <TextBlock Margin="0,12,0,0" FontSize="18" FontWeight="Bold"><Run Text="Total: " /><Run Text="{Binding TotalForm, Mode=OneWay}" /></TextBlock>
+                    <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                        <Button Content="Salvar pedido" Style="{StaticResource BotaoPrimario}" AutomationProperties.Name="Salvar pedido" Command="{Binding SalvarPedidoCommand}" />
+                        <Button Content="Voltar" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0" Command="{Binding FecharFormCommand}" />
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+    </Grid>
+</UserControl>

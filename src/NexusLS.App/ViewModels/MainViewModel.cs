@@ -6,7 +6,7 @@ using NexusLS.Core.Models;
 namespace NexusLS.App.ViewModels;
 
 /// <summary>Os itens do menu lateral. O nome do item é também o "Tag" do botão: assim o menu destaca o da tela aberta.</summary>
-public enum ItemMenu { Inicio, Pdv, Caixa, Fechamento, MaisVendidos, EstoqueDaLoja, Compras, Fornecedores, Etiquetas, Clientes, Financeiro, Relatorios, CatalogoOnline, Funcionarios, Configuracoes }
+public enum ItemMenu { Inicio, Pdv, Caixa, Fechamento, Pedidos, MaisVendidos, EstoqueDaLoja, Compras, Fornecedores, Etiquetas, Clientes, Financeiro, Relatorios, CatalogoOnline, Funcionarios, Configuracoes }
 
 /// <summary>
 /// ViewModel = a "lógica da tela". Ele guarda os dados que a tela mostra e os comandos dos botões,
@@ -47,6 +47,7 @@ public partial class MainViewModel : ObservableObject
             case ItemMenu.Pdv: IrParaPdv(); break;
             case ItemMenu.Caixa: IrParaCaixa(); break;
             case ItemMenu.Fechamento: IrParaFechamento(); break;
+            case ItemMenu.Pedidos: IrParaPedidos(); break;
             case ItemMenu.MaisVendidos: IrParaMaisVendidos(); break;
             case ItemMenu.EstoqueDaLoja: IrParaEstoque(); break;
             case ItemMenu.Compras: IrParaCompras(); break;
@@ -67,6 +68,7 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand] private void IrParaPdv() => Abrir(_pdv, ItemMenu.Pdv);
     [RelayCommand] private void IrParaCaixa() => Abrir(new VendasViewModel(Servicos.Vendas, Servicos.Cupons, Servicos.Caixa), ItemMenu.Caixa);
     [RelayCommand] private void IrParaFechamento() => Abrir(new FechamentoViewModel(Servicos.Caixa), ItemMenu.Fechamento);
+    [RelayCommand] private void IrParaPedidos() => Abrir(new PedidosViewModel(Servicos.Pedidos, Servicos.Produtos, Servicos.Clientes, Servicos.Cupons), ItemMenu.Pedidos);
     [RelayCommand] private void IrParaMaisVendidos() => Abrir(new MaisVendidosViewModel(Servicos.Relatorios), ItemMenu.MaisVendidos);
 
     // Estoque
@@ -98,6 +100,7 @@ public partial class MainViewModel : ObservableObject
         ItemMenu.Inicio => true,
         ItemMenu.Pdv => Sessao.Pode(Permissao.Vender),
         ItemMenu.Caixa or ItemMenu.Fechamento => Sessao.Pode(Permissao.Caixa),
+        ItemMenu.Pedidos => Sessao.Pode(Permissao.Vender),
         ItemMenu.MaisVendidos or ItemMenu.Relatorios => Sessao.Pode(Permissao.Relatorios),
         ItemMenu.EstoqueDaLoja or ItemMenu.Etiquetas => Sessao.Pode(Permissao.Estoque),
         ItemMenu.Compras or ItemMenu.Fornecedores => Sessao.Pode(Permissao.Compras),

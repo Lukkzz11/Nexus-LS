@@ -70,6 +70,42 @@ public static class MontadorCupom
         return string.Join("\n", linhas);
     }
 
+    /// <summary>
+    /// Lista de separação do pedido para a expedição: sem preços, com uma caixinha [ ] para marcar cada item conferido.
+    /// </summary>
+    public static string MontarListaSeparacao(Pedido pedido, ConfiguracaoLoja loja)
+    {
+        var largura = Math.Clamp(loja.LarguraCupom, ConfiguracaoService.LarguraMinima, ConfiguracaoService.LarguraMaxima);
+        var linhas = new List<string>();
+        var traco = new string('-', largura);
+
+        linhas.AddRange(Centralizar(loja.NomeLoja, largura));
+        linhas.Add(traco);
+        linhas.AddRange(Centralizar("LISTA DE SEPARAÇÃO", largura));
+        linhas.Add(DuasPontas($"Pedido {pedido.Numero}", pedido.CriadoEm.ToString("dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture), largura));
+        linhas.Add($"Etapa: {RegrasPedido.Nome(pedido.Status)}  ({RegrasPedido.Nome(pedido.Origem)})");
+        linhas.AddRange(Quebrar($"Cliente: {pedido.ClienteNome}", largura));
+        if (!string.IsNullOrWhiteSpace(pedido.ClienteTelefone)) linhas.Add($"Tel: {pedido.ClienteTelefone}");
+        linhas.Add(traco);
+
+        foreach (var item in pedido.Itens)
+        {
+            var nome = item.Tamanho == Tamanhos.SemTamanho ? item.Nome : $"{item.Nome} ({item.Tamanho})";
+            linhas.AddRange(Quebrar($"[ ] {item.Quantidade} x {nome}", largura));
+        }
+        linhas.Add(traco);
+        linhas.Add($"Total de peças: {pedido.Itens.Sum(i => i.Quantidade)}");
+        if (!string.IsNullOrWhiteSpace(pedido.Observacao))
+        {
+            linhas.Add(traco);
+            linhas.AddRange(Quebrar($"Obs: {pedido.Observacao}", largura));
+        }
+        linhas.Add("");
+        linhas.Add("Separado por: ____________________");
+        linhas.Add("");
+        return string.Join("\n", linhas);
+    }
+
     /// <summary>Venda inventada para a prévia da tela de Configurações e para o cupom de teste.</summary>
     public static Venda VendaDeExemplo() => new()
     {

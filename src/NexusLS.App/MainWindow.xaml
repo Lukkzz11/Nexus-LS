@@ -85,6 +85,12 @@
                             <TextBlock Text="Fechamento" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
+                    <Button Tag="Pedidos" Visibility="{Binding VerPdv, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Pedidos" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaPedidosCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="TaskListSquareLtr24" Style="{StaticResource IconeDoMenu}" />
+                            <TextBlock Text="Pedidos" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
                     <Button Tag="MaisVendidos" Visibility="{Binding VerRelatorios, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Mais vendidos" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaMaisVendidosCommand}">
                         <StackPanel Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="ArrowTrending24" Style="{StaticResource IconeDoMenu}" />

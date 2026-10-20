@@ -181,3 +181,32 @@ public sealed class PedidosTests : IDisposable
         Assert.Empty(await _pedidos.ListarAsync());
     }
 }
+
+public class ListaSeparacaoTests
+{
+    [Fact]
+    public void Lista_tem_itens_com_caixinha_e_nao_mostra_precos()
+    {
+        var pedido = new Pedido
+        {
+            Numero = "PED-2610-0007", CriadoEm = new DateTime(2026, 10, 20, 9, 30, 0), Status = StatusPedido.EmSeparacao,
+            Origem = OrigemPedido.WhatsApp, ClienteNome = "Maria Souza", ClienteTelefone = "8199999-0000", Observacao = "Entregar à tarde",
+            Itens =
+            {
+                new ItemPedido { Nome = "Camiseta Básica", Tamanho = "M", Quantidade = 3, PrecoUnitarioCentavos = 5990 },
+                new ItemPedido { Nome = "Boné", Tamanho = Tamanhos.SemTamanho, Quantidade = 1, PrecoUnitarioCentavos = 2000 }
+            }
+        };
+
+        var texto = MontadorCupom.MontarListaSeparacao(pedido, new ConfiguracaoLoja { NomeLoja = "Minha Loja", LarguraCupom = 40 });
+
+        Assert.Contains("LISTA DE SEPARAÇÃO", texto);
+        Assert.Contains("PED-2610-0007", texto);
+        Assert.Contains("[ ] 3 x Camiseta Básica (M)", texto);
+        Assert.Contains("[ ] 1 x Boné", texto);
+        Assert.Contains("Total de peças: 4", texto);
+        Assert.Contains("Entregar à tarde", texto);
+        Assert.DoesNotContain("R$", texto);
+        Assert.All(texto.Split('\n'), l => Assert.True(l.Length <= 40, $"linha longa: {l}"));
+    }
+}
