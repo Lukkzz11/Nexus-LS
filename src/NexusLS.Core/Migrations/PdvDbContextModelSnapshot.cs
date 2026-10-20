@@ -49,6 +49,69 @@ namespace NexusLS.Core.Migrations
                     b.ToTable("Atividades");
                 });
 
+            modelBuilder.Entity("NexusLS.Core.Models.ChequeRecebido", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Banco")
+                        .HasMaxLength(60)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("BomPara")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("CompensadoEm")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("ContaId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CriadoEm")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Emitente")
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("MotivoDevolucao")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Numero")
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Observacao")
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Operador")
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("PagamentoClienteId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Situacao")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("ValorCentavos")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("VendaId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BomPara");
+
+                    b.HasIndex("VendaId");
+
+                    b.ToTable("ChequesRecebidos");
+                });
+
             modelBuilder.Entity("NexusLS.Core.Models.Cliente", b =>
                 {
                     b.Property<int>("Id")
@@ -184,6 +247,40 @@ namespace NexusLS.Core.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("ConfiguracoesLoja");
+                });
+
+            modelBuilder.Entity("NexusLS.Core.Models.ContaFinanceira", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("Ativa")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CriadaEm")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DataSaldoInicial")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("Padrao")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("SaldoInicialCentavos")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Tipo")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ContasFinanceiras");
                 });
 
             modelBuilder.Entity("NexusLS.Core.Models.EventoPedido", b =>
@@ -489,6 +586,9 @@ namespace NexusLS.Core.Migrations
                     b.Property<int?>("CompraId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("ContaId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Contraparte")
                         .HasMaxLength(120)
                         .HasColumnType("TEXT");
@@ -548,6 +648,47 @@ namespace NexusLS.Core.Migrations
                     b.HasIndex("Vencimento");
 
                     b.ToTable("Lancamentos");
+                });
+
+            modelBuilder.Entity("NexusLS.Core.Models.LiquidacaoCartao", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("Cancelada")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ContaId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CriadaEm")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("Data")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("MotivoCancelamento")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Operador")
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("TaxaCentavos")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("VendaId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ContaId");
+
+                    b.HasIndex("VendaId");
+
+                    b.ToTable("LiquidacoesCartao");
                 });
 
             modelBuilder.Entity("NexusLS.Core.Models.MovimentacaoEstoque", b =>
@@ -881,6 +1022,56 @@ namespace NexusLS.Core.Migrations
                     b.ToTable("SincronizacaoProdutos");
                 });
 
+            modelBuilder.Entity("NexusLS.Core.Models.TransferenciaConta", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("Cancelada")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("CanceladaEm")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ContaDestinoId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ContaOrigemId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CriadaEm")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("Data")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Descricao")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("MotivoCancelamento")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Operador")
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("ValorCentavos")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ContaDestinoId");
+
+                    b.HasIndex("ContaOrigemId");
+
+                    b.HasIndex("Data");
+
+                    b.ToTable("Transferencias");
+                });
+
             modelBuilder.Entity("NexusLS.Core.Models.TurnoCaixa", b =>
                 {
                     b.Property<int>("Id")
@@ -1034,6 +1225,21 @@ namespace NexusLS.Core.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("NexusLS.Core.Models.LiquidacaoCartao", b =>
+                {
+                    b.HasOne("NexusLS.Core.Models.ContaFinanceira", null)
+                        .WithMany()
+                        .HasForeignKey("ContaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("NexusLS.Core.Models.Venda", null)
+                        .WithMany()
+                        .HasForeignKey("VendaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("NexusLS.Core.Models.MovimentacaoEstoque", b =>
                 {
                     b.HasOne("NexusLS.Core.Models.Produto", "Produto")
@@ -1069,6 +1275,21 @@ namespace NexusLS.Core.Migrations
                         .WithMany("Tamanhos")
                         .HasForeignKey("ProdutoId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("NexusLS.Core.Models.TransferenciaConta", b =>
+                {
+                    b.HasOne("NexusLS.Core.Models.ContaFinanceira", null)
+                        .WithMany()
+                        .HasForeignKey("ContaDestinoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("NexusLS.Core.Models.ContaFinanceira", null)
+                        .WithMany()
+                        .HasForeignKey("ContaOrigemId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 

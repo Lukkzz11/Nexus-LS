@@ -140,6 +140,16 @@ public class VendaService
         }
         await db.SaveChangesAsync();
 
+        // Venda no cheque: o cheque fica pendente ("em compensação") até ser compensado; os dados dele se completam depois.
+        if (venda.FormaPagamento == FormaPagamento.Cheque)
+        {
+            var emitente = venda.ClienteId is int cheId
+                ? await db.Clientes.AsNoTracking().Where(c => c.Id == cheId).Select(c => c.Nome).FirstOrDefaultAsync()
+                : null;
+            db.ChequesRecebidos.Add(ChequeService.NovoPendente(venda.TotalCentavos, venda.DataHora, emitente, venda.Id, null));
+            await db.SaveChangesAsync();
+        }
+
         // 7) Venda a prazo também vira pedido (acompanhamento de separação e entrega), na mesma transação.
         if (venda.FormaPagamento == FormaPagamento.APrazo)
         {
@@ -183,7 +193,16 @@ public class VendaService
                     $"Esta venda a prazo já recebeu {Dinheiro.Formatar(titulo.PagoCentavos)} em pagamentos e não pode ser cancelada.");
         }
 
+        // O dinheiro desta venda já entrou numa conta? Então o estorno vem antes (senão o saldo ficaria com dinheiro de venda cancelada).
+        if (await db.LiquidacoesCartao.AnyAsync(l => l.VendaId == venda.Id && !l.Cancelada))
+            throw new RegraDeNegocioException("O cartão desta venda já foi liquidado (o dinheiro entrou na conta). Estorne a liquidação antes de cancelar a venda.");
+        var cheques = await db.ChequesRecebidos.Where(c => c.VendaId == venda.Id).ToListAsync();
+        if (cheques.Any(c => c.Situacao == SituacaoCheque.Compensado))
+            throw new RegraDeNegocioException("O cheque desta venda já foi compensado (o dinheiro entrou na conta). Não dá para cancelar a venda por aqui.");
+
         var agora = _agora();
+        foreach (var cheque in cheques.Where(c => c.Situacao != SituacaoCheque.Cancelado))
+            cheque.Situacao = SituacaoCheque.Cancelado;
         var ids = venda.Itens.Select(i => i.ProdutoId).ToList();
         var produtos = await db.Produtos.Where(p => ids.Contains(p.Id)).ToDictionaryAsync(p => p.Id);
         var grades = await db.TamanhosProduto.Where(t => ids.Contains(t.ProdutoId)).ToListAsync();

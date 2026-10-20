@@ -14,7 +14,12 @@ public enum TipoAtividade
     FuncionarioDesativado = 9,
     FuncionarioReativado = 10,
     PinRedefinido = 11,
-    DadosApagados = 12
+    DadosApagados = 12,
+    TransferenciaCancelada = 13,
+    LiquidacaoEstornada = 14,
+    ChequeDevolvido = 15,
+    ChequeCancelado = 16,
+    ContaAlterada = 17
 }
 
 /// <summary>

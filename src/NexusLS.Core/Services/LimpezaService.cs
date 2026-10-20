@@ -9,11 +9,11 @@ public enum NivelLimpeza
 {
     /// <summary>
     /// Vendas, caixa, pedidos, compras, financeiro, pagamentos de clientes e histórico de estoque.
-    /// Fica: produtos (com o estoque de agora), clientes (sem dívidas), fornecedores, funcionários e configurações.
+    /// Fica: produtos (com o estoque de agora), clientes (sem dívidas), fornecedores, contas financeiras, funcionários e configurações.
     /// </summary>
     Movimento = 1,
 
-    /// <summary>Tudo do nível anterior mais produtos, clientes e fornecedores. Ficam só funcionários, configurações e atividades.</summary>
+    /// <summary>Tudo do nível anterior mais produtos, clientes e fornecedores. Ficam só contas, funcionários, configurações e atividades.</summary>
     Tudo = 2
 }
 
@@ -47,11 +47,11 @@ public class LimpezaService
     public static string Descricao(NivelLimpeza nivel) => nivel switch
     {
         NivelLimpeza.Movimento =>
-            "Apaga vendas, caixa, pedidos, compras, financeiro, pagamentos de clientes e o histórico de estoque. " +
-            "Mantém produtos (com o estoque de agora), clientes, fornecedores, funcionários e configurações.",
+            "Apaga vendas, caixa, pedidos, compras, financeiro, cheques, transferências, pagamentos de clientes e o histórico de estoque. " +
+            "Mantém produtos (com o estoque de agora), clientes, fornecedores, contas, funcionários e configurações.",
         _ =>
             "Apaga TUDO que é da loja: além do movimento, os produtos, clientes e fornecedores. " +
-            "Mantém só funcionários, configurações e a trilha de atividades."
+            "Mantém só contas, funcionários, configurações e a trilha de atividades."
     };
 
     public async Task<ResultadoLimpeza> LimparAsync(NivelLimpeza nivel, string confirmacao)
@@ -78,6 +78,9 @@ public class LimpezaService
         apagados["Itens de pedido"] = await db.ItensPedido.ExecuteDeleteAsync();
         apagados["Pedidos"] = await db.Pedidos.ExecuteDeleteAsync();
         apagados["Movimentações de estoque"] = await db.Movimentacoes.ExecuteDeleteAsync();
+        apagados["Liquidações de cartão"] = await db.LiquidacoesCartao.ExecuteDeleteAsync(); // aponta para a venda
+        apagados["Cheques recebidos"] = await db.ChequesRecebidos.ExecuteDeleteAsync();
+        apagados["Transferências entre contas"] = await db.Transferencias.ExecuteDeleteAsync();
         apagados["Itens de venda"] = await db.ItensVenda.ExecuteDeleteAsync();
         apagados["Vendas"] = await db.Vendas.ExecuteDeleteAsync();
         apagados["Pagamentos de clientes"] = await db.PagamentosCliente.ExecuteDeleteAsync();

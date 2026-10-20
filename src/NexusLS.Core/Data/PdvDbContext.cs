@@ -33,9 +33,49 @@ public class PdvDbContext : DbContext
     public DbSet<Compra> Compras => Set<Compra>();
     public DbSet<ItemCompra> ItensCompra => Set<ItemCompra>();
     public DbSet<Atividade> Atividades => Set<Atividade>();
+    public DbSet<ContaFinanceira> ContasFinanceiras => Set<ContaFinanceira>();
+    public DbSet<TransferenciaConta> Transferencias => Set<TransferenciaConta>();
+    public DbSet<LiquidacaoCartao> LiquidacoesCartao => Set<LiquidacaoCartao>();
+    public DbSet<ChequeRecebido> ChequesRecebidos => Set<ChequeRecebido>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<ContaFinanceira>(e =>
+        {
+            e.Property(c => c.Nome).IsRequired().HasMaxLength(80);
+        });
+
+        modelBuilder.Entity<TransferenciaConta>(e =>
+        {
+            e.Property(t => t.Descricao).HasMaxLength(200);
+            e.Property(t => t.Operador).HasMaxLength(80);
+            e.Property(t => t.MotivoCancelamento).HasMaxLength(200);
+            e.HasOne<ContaFinanceira>().WithMany().HasForeignKey(t => t.ContaOrigemId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<ContaFinanceira>().WithMany().HasForeignKey(t => t.ContaDestinoId).OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(t => t.Data);
+        });
+
+        modelBuilder.Entity<LiquidacaoCartao>(e =>
+        {
+            e.Property(l => l.Operador).HasMaxLength(80);
+            e.Property(l => l.MotivoCancelamento).HasMaxLength(200);
+            e.HasOne<Venda>().WithMany().HasForeignKey(l => l.VendaId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<ContaFinanceira>().WithMany().HasForeignKey(l => l.ContaId).OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(l => l.VendaId);
+        });
+
+        modelBuilder.Entity<ChequeRecebido>(e =>
+        {
+            e.Property(c => c.Numero).HasMaxLength(30);
+            e.Property(c => c.Banco).HasMaxLength(60);
+            e.Property(c => c.Emitente).HasMaxLength(120);
+            e.Property(c => c.Observacao).HasMaxLength(300);
+            e.Property(c => c.MotivoDevolucao).HasMaxLength(200);
+            e.Property(c => c.Operador).HasMaxLength(80);
+            e.HasIndex(c => c.BomPara);
+            e.HasIndex(c => c.VendaId);
+        });
+
         modelBuilder.Entity<Atividade>(e =>
         {
             e.Property(a => a.Operador).HasMaxLength(80);

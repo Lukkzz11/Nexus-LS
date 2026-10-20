@@ -30,6 +30,9 @@ public class Lancamento
     public DateTime? PagoEm { get; set; }
     public FormaPagamento? FormaPagamento { get; set; }
 
+    /// <summary>Conta de onde saiu ou onde entrou o dinheiro. Nulo = o motor deduz pela forma (dinheiro: caixa; o resto: conta padrão).</summary>
+    public int? ContaId { get; set; }
+
     /// <summary>Parcelamento: lançamentos do mesmo parcelamento compartilham o GrupoId.</summary>
     public Guid? GrupoId { get; set; }
     public int Parcela { get; set; } = 1;

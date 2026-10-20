@@ -43,6 +43,11 @@ public class AtividadeService
         TipoAtividade.FuncionarioReativado => "Funcionário reativado",
         TipoAtividade.PinRedefinido => "PIN redefinido",
         TipoAtividade.DadosApagados => "Dados apagados",
+        TipoAtividade.TransferenciaCancelada => "Transferência cancelada",
+        TipoAtividade.LiquidacaoEstornada => "Liquidação de cartão estornada",
+        TipoAtividade.ChequeDevolvido => "Cheque devolvido",
+        TipoAtividade.ChequeCancelado => "Cheque cancelado",
+        TipoAtividade.ContaAlterada => "Conta alterada",
         _ => tipo.ToString()
     };
 

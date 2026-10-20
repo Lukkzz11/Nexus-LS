@@ -141,6 +141,14 @@ public class ClienteService
         };
         db.PagamentosCliente.Add(pagamento);
         await db.SaveChangesAsync();
+
+        // Pagou com cheque: o dinheiro só entra na conta quando o cheque for compensado.
+        if (forma == FormaPagamento.Cheque)
+        {
+            var nome = await db.Clientes.AsNoTracking().Where(c => c.Id == clienteId).Select(c => c.Nome).FirstOrDefaultAsync();
+            db.ChequesRecebidos.Add(ChequeService.NovoPendente(valorCentavos, pagamento.DataHora, nome, null, pagamento.Id));
+            await db.SaveChangesAsync();
+        }
         return pagamento;
     }
 
