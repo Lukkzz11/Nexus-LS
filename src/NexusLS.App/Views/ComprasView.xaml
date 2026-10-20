@@ -1,0 +1,189 @@
+<UserControl x:Class="NexusLS.App.Views.ComprasView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <UserControl.Resources>
+        <Style x:Key="ColunaNumero" TargetType="TextBlock">
+            <Setter Property="HorizontalAlignment" Value="Right" />
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="16" />
+            <ColumnDefinition Width="470" />
+        </Grid.ColumnDefinitions>
+
+        <!-- ===== Nova compra ===== -->
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Text="Compras" Style="{StaticResource TituloTela}" Margin="0,0,0,14" />
+
+            <Grid Grid.Row="1" Margin="0,0,0,10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*" />
+                    <ColumnDefinition Width="12" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="Fornecedor (opcional)" Style="{StaticResource Rotulo}" Margin="0,0,0,4" />
+                    <ComboBox ItemsSource="{Binding Fornecedores}" DisplayMemberPath="Nome" SelectedItem="{Binding Fornecedor}"
+                              AutomationProperties.Name="Fornecedor" />
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="Nota ou pedido (opcional)" Style="{StaticResource Rotulo}" Margin="0,0,0,4" />
+                    <TextBox Text="{Binding NumeroNota, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
+            </Grid>
+
+            <!-- Buscar e adicionar produto -->
+            <StackPanel Grid.Row="2" Margin="0,0,0,10">
+                <TextBlock Text="Adicionar produto (digite e tecle Enter)" Style="{StaticResource Rotulo}" Margin="0,0,0,4" />
+                <TextBox x:Name="CaixaProduto" Text="{Binding BuscaProduto, UpdateSourceTrigger=PropertyChanged}"
+                         AutomationProperties.Name="Buscar produto da compra">
+                    <TextBox.InputBindings>
+                        <KeyBinding Key="Return" Command="{Binding AdicionarProdutoCommand}" />
+                    </TextBox.InputBindings>
+                </TextBox>
+                <ListBox ItemsSource="{Binding Resultados}" SelectedItem="{Binding ResultadoSelecionado}" MaxHeight="150"
+                         AutomationProperties.Name="Resultados da busca" MouseDoubleClick="AoDarDoisCliques">
+                    <ListBox.Style>
+                        <Style TargetType="ListBox" BasedOn="{StaticResource {x:Type ListBox}}">
+                            <Setter Property="Visibility" Value="Visible" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Resultados.Count}" Value="0">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ListBox.Style>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock>
+                                <Run Text="{Binding Nome, Mode=OneWay}" FontWeight="SemiBold" />
+                                <Run Text="{Binding CodigoBarras, Mode=OneWay}" Foreground="{StaticResource CorTextoSuave}" />
+                            </TextBlock>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </StackPanel>
+
+            <!-- Itens -->
+            <Border Grid.Row="3" Style="{StaticResource Painel}" Padding="0">
+                <Grid>
+                    <DataGrid ItemsSource="{Binding Itens}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
+                              HeadersVisibility="Column" BorderThickness="0" Background="Transparent" AutomationProperties.Name="Itens da compra">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Produto" Binding="{Binding Nome, Mode=OneWay}" IsReadOnly="True" Width="3*" MinWidth="140" />
+                            <DataGridTemplateColumn Header="Tamanho" Width="1*" MinWidth="90">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ComboBox ItemsSource="{Binding Tamanhos}" SelectedItem="{Binding Tamanho, Mode=TwoWay}"
+                                                  Visibility="{Binding TemVariosTamanhos, Converter={StaticResource BoolVis}}" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="Qtd." Binding="{Binding QuantidadeTexto, UpdateSourceTrigger=PropertyChanged}" Width="0.8*" MinWidth="60" />
+                            <DataGridTextColumn Header="Custo unit. (R$)" Binding="{Binding CustoTexto, UpdateSourceTrigger=PropertyChanged}" Width="1.2*" MinWidth="100" />
+                            <DataGridTextColumn Header="Total" Binding="{Binding TotalTexto, Mode=OneWay}" IsReadOnly="True" Width="1.2*" MinWidth="90"
+                                                ElementStyle="{StaticResource ColunaNumero}" />
+                            <DataGridTemplateColumn Width="Auto">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="Remover" Style="{StaticResource BotaoSecundario}" Padding="8,3" FontSize="12"
+                                                Command="{Binding DataContext.RemoverItemCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <TextBlock Text="Nenhum produto na compra ainda. Busque acima e tecle Enter." HorizontalAlignment="Center" VerticalAlignment="Center"
+                               Foreground="{StaticResource CorTextoSuave}"
+                               Visibility="{Binding TemItens, Converter={StaticResource BoolInverso}}" />
+                </Grid>
+            </Border>
+
+            <!-- Pagamento e registrar -->
+            <Border Grid.Row="4" Style="{StaticResource Painel}" Margin="0,10,0,0" Padding="16,12">
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="{Binding ResumoItens}" Foreground="{StaticResource CorTextoSuave}" />
+                            <TextBlock Text="{Binding TotalTexto}" FontSize="24" FontWeight="Bold" AutomationProperties.Name="Total da compra" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button Content="Limpar" Style="{StaticResource BotaoSecundario}" Command="{Binding LimparCommand}" />
+                            <Button Content="Registrar compra" Style="{StaticResource BotaoPrimario}" Margin="8,0,0,0"
+                                    AutomationProperties.Name="Registrar compra" Command="{Binding RegistrarCommand}" />
+                        </StackPanel>
+                    </Grid>
+
+                    <CheckBox Content="Atualizar o custo dos produtos com os valores desta compra" IsChecked="{Binding AtualizarCusto}" Margin="0,10,0,0" />
+                    <CheckBox Content="Gerar contas a pagar no Financeiro" IsChecked="{Binding GerarContas}" Margin="0,6,0,0" />
+                    <WrapPanel Margin="0,8,0,0" IsEnabled="{Binding GerarContas}">
+                        <TextBlock Text="Parcelas:" VerticalAlignment="Center" Margin="0,0,6,0" />
+                        <TextBox Text="{Binding ParcelasTexto, UpdateSourceTrigger=PropertyChanged}" Width="60" AutomationProperties.Name="Parcelas" />
+                        <TextBlock Text="1º vencimento:" VerticalAlignment="Center" Margin="16,0,6,0" />
+                        <DatePicker SelectedDateFormat="Short" SelectedDate="{Binding PrimeiroVencimento}" Width="140" VerticalContentAlignment="Center" />
+                        <CheckBox Content="Já paga" IsChecked="{Binding JaPago}" VerticalAlignment="Center" Margin="16,0,0,0" />
+                        <ComboBox ItemsSource="{Binding Formas}" DisplayMemberPath="Texto" SelectedItem="{Binding FormaEscolhida}" Margin="8,0,0,0"
+                                  IsEnabled="{Binding JaPago}" MinWidth="130" AutomationProperties.Name="Forma do pagamento" />
+                    </WrapPanel>
+                    <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" />
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- ===== Histórico ===== -->
+        <Grid Grid.Column="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <TextBlock Text="Histórico de compras" FontSize="18" FontWeight="SemiBold" Margin="0,48,0,8" />
+            <WrapPanel Grid.Row="1" Margin="0,0,0,8">
+                <DatePicker SelectedDateFormat="Short" SelectedDate="{Binding De}" Width="120" VerticalContentAlignment="Center" />
+                <TextBlock Text="até" VerticalAlignment="Center" Margin="8,0" />
+                <DatePicker SelectedDateFormat="Short" SelectedDate="{Binding Ate}" Width="120" VerticalContentAlignment="Center" />
+            </WrapPanel>
+            <Border Grid.Row="2" Style="{StaticResource Painel}" Padding="0">
+                <DataGrid ItemsSource="{Binding Historico}" SelectedItem="{Binding Selecionada, Mode=TwoWay}"
+                          AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" HeadersVisibility="Column"
+                          BorderThickness="0" Background="Transparent" AutomationProperties.Name="Histórico de compras">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Nº" Binding="{Binding Numero, Mode=OneWay}" Width="0.6*" MinWidth="40" />
+                        <DataGridTextColumn Header="Data" Binding="{Binding Data, Mode=OneWay}" Width="1.6*" MinWidth="110" />
+                        <DataGridTextColumn Header="Fornecedor" Binding="{Binding Fornecedor, Mode=OneWay}" Width="1.6*" MinWidth="90" />
+                        <DataGridTextColumn Header="Total" Binding="{Binding Total, Mode=OneWay}" Width="1.2*" MinWidth="80" ElementStyle="{StaticResource ColunaNumero}" />
+                        <DataGridTextColumn Header="Situação" Binding="{Binding Situacao, Mode=OneWay}" Width="1.2*" MinWidth="80" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+            <ItemsControl Grid.Row="3" ItemsSource="{Binding Detalhe}" Margin="0,8,0,0">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding}" TextWrapping="Wrap" FontSize="13" Margin="0,1" />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <Button Grid.Row="4" Content="Cancelar compra" Style="{StaticResource BotaoSecundario}" Margin="0,10,0,0" HorizontalAlignment="Left"
+                    IsEnabled="{Binding PodeCancelar}" Command="{Binding CancelarCompraCommand}" />
+        </Grid>
+    </Grid>
+</UserControl>

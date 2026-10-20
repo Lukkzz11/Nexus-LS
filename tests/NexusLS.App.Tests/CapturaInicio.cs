@@ -141,3 +141,42 @@ public sealed class CapturaFinanceiro : IDisposable
         Capturador.SalvarFinanceiro(vm, Path.Combine(saida, "financeiro.png"));
     }
 }
+
+/// <summary>Desenha a tela Compras com uma compra em montagem e histórico. Só roda com NEXUSLS_PRINTS.</summary>
+public sealed class CapturaCompras : IDisposable
+{
+    private readonly BancoDeTeste _banco = new();
+
+    public void Dispose() => _banco.Dispose();
+
+    [Fact]
+    public async Task Gera_a_tela_compras()
+    {
+        var saida = Environment.GetEnvironmentVariable("NEXUSLS_PRINTS");
+        if (string.IsNullOrWhiteSpace(saida)) return;
+        Directory.CreateDirectory(saida);
+
+        var produtos = new ProdutoService(_banco.Fabrica);
+        var fornecedores = new FornecedorService(_banco.Fabrica);
+        var compras = new CompraService(_banco.Fabrica);
+        var camiseta = (await produtos.CadastrarAsync(new DadosProduto("Camiseta Básica", "789", 5990, 2200, 5), 0)).Id;
+        foreach (var t in new[] { "P", "M", "G" }) await produtos.AdicionarTamanhoAsync(camiseta, t);
+        var bone = (await produtos.CadastrarAsync(new DadosProduto("Boné Aba Reta", "555", 2990, 800, 3), 0)).Id;
+        var sol = await fornecedores.CadastrarAsync(new DadosFornecedor("Malharia Sol"));
+        await compras.RegistrarAsync(new DadosCompra(new[] { new ItemCompraDados(camiseta, 10, 2200, "M"), new ItemCompraDados(bone, 6, 800) }, sol.Id, "NF 1234",
+            Pagamento: new PagamentoCompra(2, DateTime.Today.AddDays(30))));
+
+        var vm = new ComprasViewModel(compras, produtos, fornecedores);
+        await vm.Carregamento;
+        vm.Fornecedor = vm.Fornecedores.First();
+        vm.BuscaProduto = "camiseta";
+        await vm.AdicionarProdutoCommand.ExecuteAsync(null);
+        vm.Itens[0].QuantidadeTexto = "20";
+        vm.BuscaProduto = "boné";
+        await vm.AdicionarProdutoCommand.ExecuteAsync(null);
+        vm.Itens[1].QuantidadeTexto = "12";
+        vm.Selecionada = vm.Historico.FirstOrDefault();
+
+        Capturador.Desenhar(() => new NexusLS.App.Views.ComprasView { DataContext = vm }, Path.Combine(saida, "compras.png"), 1500, 820);
+    }
+}

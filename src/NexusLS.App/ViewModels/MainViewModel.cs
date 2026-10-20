@@ -4,7 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 namespace NexusLS.App.ViewModels;
 
 /// <summary>Os itens do menu lateral. O nome do item é também o "Tag" do botão: assim o menu destaca o da tela aberta.</summary>
-public enum ItemMenu { Inicio, Pdv, Caixa, Fechamento, MaisVendidos, EstoqueDaLoja, Etiquetas, Clientes, Financeiro, Relatorios, CatalogoOnline, Configuracoes }
+public enum ItemMenu { Inicio, Pdv, Caixa, Fechamento, MaisVendidos, EstoqueDaLoja, Compras, Fornecedores, Etiquetas, Clientes, Financeiro, Relatorios, CatalogoOnline, Configuracoes }
 
 /// <summary>
 /// ViewModel = a "lógica da tela". Ele guarda os dados que a tela mostra e os comandos dos botões,
@@ -45,6 +45,8 @@ public partial class MainViewModel : ObservableObject
             case ItemMenu.Fechamento: IrParaFechamento(); break;
             case ItemMenu.MaisVendidos: IrParaMaisVendidos(); break;
             case ItemMenu.EstoqueDaLoja: IrParaEstoque(); break;
+            case ItemMenu.Compras: IrParaCompras(); break;
+            case ItemMenu.Fornecedores: IrParaFornecedores(); break;
             case ItemMenu.Etiquetas: IrParaEtiquetas(); break;
             case ItemMenu.Clientes: IrParaClientes(); break;
             case ItemMenu.Financeiro: IrParaFinanceiro(); break;
@@ -64,6 +66,8 @@ public partial class MainViewModel : ObservableObject
 
     // Estoque
     [RelayCommand] private void IrParaEstoque() => Abrir(new EstoqueLojaViewModel(Servicos.Produtos, Servicos.Estoque), ItemMenu.EstoqueDaLoja);
+    [RelayCommand] private void IrParaCompras() => Abrir(new ComprasViewModel(Servicos.Compras, Servicos.Produtos, Servicos.Fornecedores), ItemMenu.Compras);
+    [RelayCommand] private void IrParaFornecedores() => Abrir(new FornecedoresViewModel(Servicos.Fornecedores), ItemMenu.Fornecedores);
     [RelayCommand] private void IrParaEtiquetas() => Abrir(new EtiquetasViewModel(Servicos.Produtos, Servicos.ModelosEtiqueta), ItemMenu.Etiquetas);
 
     // Gestão

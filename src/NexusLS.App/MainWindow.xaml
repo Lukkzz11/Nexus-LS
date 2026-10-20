@@ -100,6 +100,19 @@
                         </StackPanel>
                     </Button>
 
+                    <Button Tag="Compras" AutomationProperties.Name="Compras" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaComprasCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="BoxArrowLeft24" Style="{StaticResource IconeDoMenu}" />
+                            <TextBlock Text="Compras" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Tag="Fornecedores" AutomationProperties.Name="Fornecedores" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaFornecedoresCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Building24" Style="{StaticResource IconeDoMenu}" />
+                            <TextBlock Text="Fornecedores" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
                     <TextBlock Text="GESTÃO" Style="{StaticResource SecaoMenu}" />
                     <Button Tag="Clientes" AutomationProperties.Name="Clientes" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaClientesCommand}">
                         <StackPanel Orientation="Horizontal">
