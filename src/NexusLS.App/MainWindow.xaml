@@ -99,12 +99,6 @@
                             <TextBlock Text="Estoque da loja" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
-                    <Button Tag="Etiquetas" AutomationProperties.Name="Etiquetas" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaEtiquetasCommand}">
-                        <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="Tag24" Style="{StaticResource IconeDoMenu}" />
-                            <TextBlock Text="Etiquetas" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
 
                     <TextBlock Text="GESTÃO" Style="{StaticResource SecaoMenu}" />
                     <Button Tag="Clientes" AutomationProperties.Name="Clientes" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaClientesCommand}">
@@ -117,12 +111,6 @@
                         <StackPanel Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="DataBarVertical24" Style="{StaticResource IconeDoMenu}" />
                             <TextBlock Text="Relatórios" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-                    <Button Tag="CatalogoOnline" AutomationProperties.Name="Catálogo online" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaCatalogoOnlineCommand}">
-                        <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="CloudArrowUp24" Style="{StaticResource IconeDoMenu}" />
-                            <TextBlock Text="Catálogo online" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
                     <Button Tag="Configuracoes" AutomationProperties.Name="Configurações" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaConfiguracoesCommand}">
