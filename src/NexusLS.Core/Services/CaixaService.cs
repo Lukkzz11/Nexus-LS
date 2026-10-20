@@ -219,6 +219,7 @@ public class CaixaService
 
     private static async Task<string> NomeDoOperadorAsync(PdvDbContext db)
     {
+        if (!string.IsNullOrWhiteSpace(OperadorAtual.Nome)) return OperadorAtual.Nome!; // funcionário que fez o login
         var nome = await db.ConfiguracoesLoja.AsNoTracking().Where(c => c.Id == 1).Select(c => c.NomeOperador).FirstOrDefaultAsync();
         return string.IsNullOrWhiteSpace(nome) ? "Caixa" : nome;
     }

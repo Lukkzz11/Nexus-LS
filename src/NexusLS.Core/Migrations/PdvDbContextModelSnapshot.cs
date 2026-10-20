@@ -243,6 +243,53 @@ namespace NexusLS.Core.Migrations
                     b.ToTable("Fornecedores");
                 });
 
+            modelBuilder.Entity("NexusLS.Core.Models.Funcionario", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("Ativo")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Cargo")
+                        .HasMaxLength(60)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("DataCadastro")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Perfil")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("PermissoesPersonalizadas")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("PinHash")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RecuperacaoHash")
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Telefone")
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Nome");
+
+                    b.ToTable("Funcionarios");
+                });
+
             modelBuilder.Entity("NexusLS.Core.Models.ItemCompra", b =>
                 {
                     b.Property<int>("Id")

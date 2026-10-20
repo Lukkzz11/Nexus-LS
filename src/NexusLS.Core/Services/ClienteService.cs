@@ -137,7 +137,7 @@ public class ClienteService
             ValorCentavos = valorCentavos,
             Forma = forma,
             Observacao = Limpar(observacao),
-            Operador = string.IsNullOrWhiteSpace(operador) ? "Caixa" : operador
+            Operador = !string.IsNullOrWhiteSpace(OperadorAtual.Nome) ? OperadorAtual.Nome : string.IsNullOrWhiteSpace(operador) ? "Caixa" : operador
         };
         db.PagamentosCliente.Add(pagamento);
         await db.SaveChangesAsync();

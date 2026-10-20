@@ -26,6 +26,7 @@ public class PdvDbContext : DbContext
     public DbSet<SincronizacaoLog> SincronizacaoLogs => Set<SincronizacaoLog>();
     public DbSet<Lancamento> Lancamentos => Set<Lancamento>();
     public DbSet<Fornecedor> Fornecedores => Set<Fornecedor>();
+    public DbSet<Funcionario> Funcionarios => Set<Funcionario>();
     public DbSet<Compra> Compras => Set<Compra>();
     public DbSet<ItemCompra> ItensCompra => Set<ItemCompra>();
 
@@ -119,6 +120,17 @@ public class PdvDbContext : DbContext
             e.Property(p => p.Operador).HasMaxLength(80);
             e.HasOne<Cliente>().WithMany().HasForeignKey(p => p.ClienteId).OnDelete(DeleteBehavior.Restrict);
             e.HasIndex(p => p.ClienteId);
+        });
+
+        modelBuilder.Entity<Funcionario>(e =>
+        {
+            e.Property(f => f.Nome).IsRequired().HasMaxLength(80);
+            e.Property(f => f.Cargo).HasMaxLength(60);
+            e.Property(f => f.Telefone).HasMaxLength(30);
+            e.Property(f => f.PinHash).IsRequired().HasMaxLength(120);
+            e.Property(f => f.RecuperacaoHash).HasMaxLength(120);
+            e.Ignore(f => f.PermissoesEfetivas);
+            e.HasIndex(f => f.Nome);
         });
 
         modelBuilder.Entity<Fornecedor>(e =>
