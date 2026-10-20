@@ -84,6 +84,7 @@ public class RegrasBackupTests
 }
 
 /// <summary>Backup e restauração com um banco de verdade em arquivo (numa pasta temporária).</summary>
+[Collection("Backup")] // ClearAllPools no Dispose solta as conexões de TODOS os testes com arquivo: estas duas classes não podem rodar juntas
 public sealed class BackupServiceTests : IDisposable
 {
     private readonly string _pasta = Path.Combine(Path.GetTempPath(), "nexusls-bkp-" + Guid.NewGuid().ToString("N"));
@@ -305,6 +306,7 @@ public sealed class BackupServiceTests : IDisposable
     }
 }
 
+[Collection("Backup")]
 public sealed class GestorBackupTests : IDisposable
 {
     private readonly string _pasta = Path.Combine(Path.GetTempPath(), "nexusls-gb-" + Guid.NewGuid().ToString("N"));
