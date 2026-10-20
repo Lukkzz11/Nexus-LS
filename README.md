@@ -75,6 +75,16 @@ Enter repetido (tecla segurada) é ignorado; Enter já tratado por outro element
 - **Etiquetas** usam o código de barras do produto em **Code 128** (letras, números e símbolos sem acento). Produto sem código, ou com acento no código, sai sem barras. Formatos: bobina 50 × 30 mm, bobina 40 × 25 mm e folha A4 3 × 7 (63,5 × 38,1 mm); na folha dá para começar numa etiqueta que não seja a primeira, para aproveitar uma folha já usada em parte. A impressora é escolhida na caixa de impressão do Windows. **Legibilidade:** se o código de barras ficaria com barras mais finas que 0,25 mm no papel escolhido (código comprido em etiqueta estreita), a tela avisa e a impressão é bloqueada até você trocar de papel ou remover o item. **Meus modelos de bobina:** salve bobinas de tamanho próprio (nome, largura e altura em mm); ficam em `%LOCALAPPDATA%\NexusLS\etiquetas.json`.
 - **Exportar** gera CSV para o Excel brasileiro (separador `;`, vírgula decimal, acentos corretos).
 
+## Importar produtos de uma planilha (CSV)
+
+Em **Estoque da loja → Importar CSV** você escolhe um arquivo `.csv` (no Excel: *Salvar como → CSV*) e o programa mostra o resumo antes de cadastrar. Um arquivo de exemplo está em `modelos/modelo_produtos.csv`.
+
+- A **primeira linha** tem os títulos das colunas, em qualquer ordem. Aceita `;` `,` tabulação ou `|` como separador, UTF-8 ou Windows-1252, e preço com vírgula (`59,90`).
+- Colunas: **Nome** e **Preço de venda** são obrigatórias; opcionais: Código de barras, Referência, Categoria, Preço de atacado, Preço de custo, Estoque, Estoque mínimo, Tamanho. Títulos parecidos também funcionam (Produto, Descrição, EAN, Preço, Qtd, Grupo...).
+- Várias linhas do mesmo produto (mesmo código de barras, ou mesmo nome e referência) com **Tamanho** diferente viram um produto com a grade de tamanhos; cada linha traz o estoque do seu tamanho.
+- O estoque entra como movimentação de entrada com o motivo "Importação de CSV".
+- **Nunca altera nem apaga** produto que já existe: a linha é ignorada e o motivo aparece no relatório. Importar o mesmo arquivo duas vezes não duplica nada. Linhas com problema (sem nome, preço inválido...) ficam de fora com o número da linha, e as outras entram normalmente.
+
 ## Estrutura do projeto
 
 ```

@@ -1,0 +1,5 @@
+﻿Nome;Código de barras;Referência;Categoria;Preço de venda;Preço de atacado;Preço de custo;Estoque;Estoque mínimo;Tamanho
+Boné Aba Reta;7891000100103;BN01;Bonés;40,00;32,00;15,00;10;3;
+Camiseta Básica;7891000100201;CB01;Camisetas;59,90;45,00;22,00;3;2;P
+Camiseta Básica;7891000100201;CB01;Camisetas;59,90;45,00;22,00;5;2;M
+Camiseta Básica;7891000100201;CB01;Camisetas;59,90;45,00;22,00;4;2;G

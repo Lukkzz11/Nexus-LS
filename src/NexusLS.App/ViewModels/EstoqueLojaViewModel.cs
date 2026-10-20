@@ -1,3 +1,4 @@
+using System.IO;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -28,6 +29,65 @@ public partial class EstoqueLojaViewModel : ViewModelBase
         _tipoSelecionado = Opcoes[0];
         Novo();
         _ = BuscarAsync();
+    }
+
+    // ----- Importar produtos de um arquivo CSV -----
+    /// <summary>Abre a caixa "Abrir arquivo" do Windows (a View preenche). Devolve o caminho ou nulo se cancelou.</summary>
+    public Func<string?> EscolherArquivoParaAbrir { get; set; } = () => null;
+    /// <summary>Mostra o resumo e pergunta se pode importar (a View preenche com uma caixa de mensagem).</summary>
+    public Func<string, bool> ConfirmarImportacao { get; set; } = _ => true;
+    /// <summary>Mostra o relatório final (a View preenche).</summary>
+    public Action<string> InformarImportacao { get; set; } = _ => { };
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PodeImportar))]
+    private bool _importando;
+
+    public bool PodeImportar => !Importando;
+
+    [RelayCommand]
+    private Task ImportarCsvAsync() => ExecutarAsync(async () =>
+    {
+        var caminho = EscolherArquivoParaAbrir();
+        if (caminho is null) return;
+
+        Importando = true;
+        try
+        {
+            var texto = ImportadorProdutos.Decodificar(await File.ReadAllBytesAsync(caminho));
+            var analise = ImportadorProdutos.Analisar(texto);
+            if (analise.ErroDoArquivo is not null) { MostrarErro(analise.ErroDoArquivo); return; }
+            if (!analise.PodeImportar)
+            {
+                MostrarErro("O arquivo não tem nenhum produto válido." + Detalhes(analise.Problemas));
+                return;
+            }
+
+            var resumo = $"{analise.Produtos.Count} produto(s) serão cadastrados." +
+                         $"{Environment.NewLine}Colunas reconhecidas: {string.Join(", ", analise.ColunasReconhecidas)}." +
+                         (analise.Problemas.Count > 0 ? $"{Environment.NewLine}{Environment.NewLine}{analise.Problemas.Count} linha(s) com problema NÃO serão importadas:{Detalhes(analise.Problemas)}" : "") +
+                         $"{Environment.NewLine}{Environment.NewLine}Produtos que já existem não são alterados. Importar agora?";
+            if (!ConfirmarImportacao(resumo)) { MostrarSucesso("Importação cancelada. Nada foi cadastrado."); return; }
+
+            var resultado = await new ImportadorProdutos(_produtos, _estoque).ImportarAsync(analise);
+            await BuscarAsync();
+
+            var linhas = analise.Problemas.Concat(resultado.Ignorados).ToList();
+            MostrarSucesso($"{resultado.Importados} produto(s) importado(s)" + (linhas.Count > 0 ? $"; {linhas.Count} linha(s) não entraram." : "."));
+            if (linhas.Count > 0)
+                InformarImportacao($"{resultado.Importados} produto(s) importado(s).{Environment.NewLine}Não entraram:{Detalhes(linhas)}");
+        }
+        finally
+        {
+            Importando = false;
+        }
+    });
+
+    private static string Detalhes(IReadOnlyList<ProblemaImportacao> problemas)
+    {
+        var mostrar = problemas.Take(12).Select(p => Environment.NewLine + "• " + p);
+        var resto = problemas.Count > 12 ? $"{Environment.NewLine}• ... e mais {problemas.Count - 12}." : "";
+        return string.Concat(mostrar) + resto;
     }
 
     public IReadOnlyList<OpcaoAjuste> Opcoes { get; } = new[]

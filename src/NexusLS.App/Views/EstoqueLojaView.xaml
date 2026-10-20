@@ -31,7 +31,12 @@
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <TextBlock Text="Estoque da loja" Style="{StaticResource TituloTela}" Margin="0,0,0,14" />
+            <Grid Margin="0,0,0,14">
+                <TextBlock Text="Estoque da loja" Style="{StaticResource TituloTela}" />
+                <Button Content="Importar CSV" Style="{StaticResource BotaoSecundario}" HorizontalAlignment="Right" VerticalAlignment="Center"
+                        AutomationProperties.Name="Importar CSV" ToolTip="Cadastra vários produtos de uma planilha (CSV). Produtos que já existem não são alterados."
+                        IsEnabled="{Binding PodeImportar}" Command="{Binding ImportarCsvCommand}" />
+            </Grid>
 
             <Grid Grid.Row="1" Margin="0,0,0,10">
                 <Grid.ColumnDefinitions>
