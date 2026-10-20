@@ -1,3 +1,4 @@
+using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NexusLS.App.Seguranca;
@@ -85,7 +86,22 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand] private void IrParaCatalogoOnline() => Abrir(new CatalogoOnlineViewModel(Servicos.Firebase, Servicos.Sincronizador, Servicos.SincronizacaoRepo, Servicos.DestinoCatalogo, Servicos.Configuracao), ItemMenu.CatalogoOnline);
     [RelayCommand] private void IrParaFuncionarios() => Abrir(new FuncionariosViewModel(Servicos.Funcionarios), ItemMenu.Funcionarios);
     [RelayCommand] private void IrParaAtividades() => Abrir(new AtividadesViewModel(Servicos.Atividades), ItemMenu.Atividades);
-    [RelayCommand] private void IrParaConfiguracoes() => Abrir(new ConfiguracoesViewModel(Servicos.Configuracao, Servicos.Cupons, Servicos.Backup, new NexusLS.App.Backup.DialogosBackupWpf()), ItemMenu.Configuracoes);
+    [RelayCommand]
+    private void IrParaConfiguracoes()
+    {
+        var dialogos = new NexusLS.App.Backup.DialogosBackupWpf();
+        var limpar = new LimparDadosViewModel(Servicos.Limpeza, SouAdministrador, dialogos.Confirmar, () =>
+        {
+            // O carrinho guardado aponta para produtos que acabaram de ser apagados: sai junto.
+            try { File.Delete(NexusLS.Core.Services.RascunhoStore.CaminhoPadrao()); } catch (IOException) { }
+            dialogos.Reiniciar();
+        });
+        Abrir(new ConfiguracoesViewModel(Servicos.Configuracao, Servicos.Cupons, Servicos.Backup, dialogos, limpar), ItemMenu.Configuracoes);
+    }
+
+    /// <summary>Apagar dados é só do administrador. Com o login desligado (ninguém cadastrado) vale como administrador.</summary>
+    private static bool SouAdministrador() =>
+        !Sessao.LoginAtivo || Sessao.Atual?.Perfil == PerfilFuncionario.Administrador;
 
     private void Abrir(object tela, ItemMenu item)
     {

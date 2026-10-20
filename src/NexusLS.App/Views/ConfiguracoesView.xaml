@@ -128,6 +128,45 @@
                         </TextBlock>
                     </StackPanel>
                 </Border>
+
+                <!-- ===== Apagar dados (só administrador) ===== -->
+                <Border Style="{StaticResource Painel}" Margin="0,0,0,24"
+                        Visibility="{Binding TemLimparDados, Converter={StaticResource BoolVis}}">
+                    <StackPanel DataContext="{Binding LimparDados}">
+                        <TextBlock Text="Apagar dados" FontSize="18" FontWeight="SemiBold" />
+                        <TextBlock Foreground="{StaticResource CorTextoSuave}" TextWrapping="Wrap" Margin="0,4,0,0"
+                                   Text="Para começar do zero ou tirar os dados de teste. Antes de apagar, o programa faz um backup de segurança (que nunca é apagado sozinho). Funcionários, configurações e a trilha de atividades nunca são apagados." />
+
+                        <RadioButton GroupName="NivelLimpeza" Margin="0,12,0,0" IsChecked="True"
+                                     Content="Só o movimento (recomendado)" AutomationProperties.Name="Apagar só o movimento" />
+                        <TextBlock Text="{Binding DescricaoMovimento}" Foreground="{StaticResource CorTextoSuave}" FontSize="13"
+                                   TextWrapping="Wrap" Margin="26,0,0,6" />
+                        <RadioButton GroupName="NivelLimpeza" IsChecked="{Binding ApagarTudo}"
+                                     Content="Tudo da loja" AutomationProperties.Name="Apagar tudo da loja" />
+                        <TextBlock Text="{Binding DescricaoTudo}" Foreground="{StaticResource CorTextoSuave}" FontSize="13"
+                                   TextWrapping="Wrap" Margin="26,0,0,6" />
+
+                        <TextBlock Text="Para confirmar, digite APAGAR" Style="{StaticResource Rotulo}" />
+                        <TextBox Text="{Binding Confirmacao, UpdateSourceTrigger=PropertyChanged}" Width="200" HorizontalAlignment="Left"
+                                 AutomationProperties.Name="Confirmação para apagar" />
+
+                        <Button Content="Apagar dados" Style="{StaticResource BotaoSecundario}" Margin="0,14,0,0"
+                                HorizontalAlignment="Left" Command="{Binding ApagarCommand}" />
+
+                        <TextBlock Text="{Binding Mensagem}" TextWrapping="Wrap" Margin="0,10,0,0">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="#15803D" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding MensagemEhErro}" Value="True">
+                                            <Setter Property="Foreground" Value="#B91C1C" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
             </StackPanel>
         </ScrollViewer>
 

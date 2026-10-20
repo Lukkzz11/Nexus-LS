@@ -20,6 +20,7 @@ public record ItemBackup(InfoBackup Info)
         MotivoBackup.Manual => "manual",
         MotivoBackup.Automatico => "automático",
         MotivoBackup.PreAtualizacao => "antes de atualizar",
+        MotivoBackup.PreLimpeza => "antes de apagar dados",
         _ => "antes de restaurar"
     };
 
@@ -47,6 +48,10 @@ public partial class ConfiguracoesViewModel
 
     /// <summary>Só mostra a seção de backup quando o gestor foi entregue (nos testes antigos ele não existe).</summary>
     public bool TemBackup => _backup is not null;
+
+    /// <summary>Bloco "Apagar dados". Nulo nos testes antigos; a tela só mostra quando existe e o usuário é administrador.</summary>
+    public LimparDadosViewModel? LimparDados { get; }
+    public bool TemLimparDados => LimparDados?.Visivel ?? false;
 
     [ObservableProperty] private string _pastaBackup = "";
     [ObservableProperty] private OpcaoIntervaloBackup _intervaloSelecionado = null!;

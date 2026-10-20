@@ -32,6 +32,8 @@ public static class Servicos
         new NexusLS.Core.Backup.BackupService(CaminhoBanco.Padrao()),
         new NexusLS.Core.Backup.ConfiguracaoBackupStore(NexusLS.Core.Backup.ConfiguracaoBackupStore.CaminhoPadrao()));
     private static readonly System.Net.Http.HttpClient HttpFirebase = new() { Timeout = TimeSpan.FromSeconds(30) };
+    public static LimpezaService Limpeza { get; } = new(Fabrica,
+        async () => (await Backup.FazerAsync(NexusLS.Core.Backup.MotivoBackup.PreLimpeza)).Caminho);
     public static NexusLS.Core.Sincronizacao.Firebase.ConfiguracaoFirebaseStore Firebase { get; } =
         new(NexusLS.Core.Sincronizacao.Firebase.ConfiguracaoFirebaseStore.CaminhoPadrao(), new NexusLS.App.Seguranca.ProtetorDpapi());
     public static NexusLS.Core.Sincronizacao.SincronizacaoRepositorio SincronizacaoRepo { get; } = new(Fabrica);

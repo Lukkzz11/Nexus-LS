@@ -21,6 +21,7 @@ public class RegrasBackupTests
     [InlineData(MotivoBackup.Automatico)]
     [InlineData(MotivoBackup.PreAtualizacao)]
     [InlineData(MotivoBackup.PreRestauracao)]
+    [InlineData(MotivoBackup.PreLimpeza)]
     public void Nome_gerado_e_lido_de_volta(MotivoBackup motivo)
     {
         var quando = new DateTime(2026, 1, 2, 3, 4, 5);
@@ -60,6 +61,7 @@ public class RegrasBackupTests
         for (var i = 0; i < 5; i++) lista.Add(new($"a{i}.db", baseData.AddDays(i), MotivoBackup.Automatico, 1));
         lista.Add(new("seg.db", baseData.AddDays(-30), MotivoBackup.PreRestauracao, 1));
         lista.Add(new("atu.db", baseData.AddDays(-20), MotivoBackup.PreAtualizacao, 1));
+        lista.Add(new("lim.db", baseData.AddDays(-10), MotivoBackup.PreLimpeza, 1));
 
         var apagar = RegrasBackup.SelecionarParaApagar(lista, 3);
 
