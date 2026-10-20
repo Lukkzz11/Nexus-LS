@@ -24,6 +24,7 @@ public class PdvDbContext : DbContext
     public DbSet<FechamentoCaixa> FechamentosCaixa => Set<FechamentoCaixa>();
     public DbSet<SincronizacaoProduto> SincronizacaoProdutos => Set<SincronizacaoProduto>();
     public DbSet<SincronizacaoLog> SincronizacaoLogs => Set<SincronizacaoLog>();
+    public DbSet<Lancamento> Lancamentos => Set<Lancamento>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -115,6 +116,19 @@ public class PdvDbContext : DbContext
             e.Property(p => p.Operador).HasMaxLength(80);
             e.HasOne<Cliente>().WithMany().HasForeignKey(p => p.ClienteId).OnDelete(DeleteBehavior.Restrict);
             e.HasIndex(p => p.ClienteId);
+        });
+
+        modelBuilder.Entity<Lancamento>(e =>
+        {
+            e.Property(l => l.Descricao).IsRequired().HasMaxLength(200);
+            e.Property(l => l.Categoria).HasMaxLength(60);
+            e.Property(l => l.Contraparte).HasMaxLength(120);
+            e.Property(l => l.Observacao).HasMaxLength(300);
+            e.Property(l => l.Operador).HasMaxLength(80);
+            e.Property(l => l.MotivoCancelamento).HasMaxLength(200);
+            e.HasIndex(l => l.Vencimento);
+            e.HasIndex(l => l.PagoEm);
+            e.HasIndex(l => l.GrupoId);
         });
 
         modelBuilder.Entity<TurnoCaixa>(e =>

@@ -48,6 +48,9 @@
             <DataTemplate DataType="{x:Type vm:RelatoriosViewModel}">
                 <views:RelatoriosView />
             </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:FinanceiroViewModel}">
+                <views:FinanceiroView />
+            </DataTemplate>
             <DataTemplate DataType="{x:Type vm:CatalogoOnlineViewModel}">
                 <views:CatalogoOnlineView />
             </DataTemplate>

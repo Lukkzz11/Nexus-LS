@@ -60,6 +60,33 @@ public static class ExportadorCsv
         return csv.ToString();
     }
 
+    /// <summary>Uma linha por conta a pagar/receber da lista mostrada (inclusive as canceladas, marcadas na coluna "Situação").</summary>
+    public static string Lancamentos(IEnumerable<Lancamento> lancamentos, DateTime hoje)
+    {
+        var csv = new StringBuilder();
+        Linha(csv, "Tipo", "Descrição", "Categoria", "Fornecedor/Cliente", "Valor", "Vencimento", "Situação", "Pago em", "Forma", "Observação");
+        foreach (var l in lancamentos.OrderBy(l => l.Vencimento).ThenBy(l => l.Id))
+        {
+            var situacao = RegrasFinanceiras.Situacao(l, hoje);
+            Linha(csv,
+                l.Tipo == TipoLancamento.Despesa ? "A pagar" : "A receber",
+                l.Descricao, l.Categoria ?? "", l.Contraparte ?? "",
+                Valor(l.ValorCentavos),
+                l.Vencimento.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
+                situacao switch
+                {
+                    SituacaoLancamento.Pago => l.Tipo == TipoLancamento.Despesa ? "Pago" : "Recebido",
+                    SituacaoLancamento.Atrasado => "Atrasado",
+                    SituacaoLancamento.Cancelado => "Cancelado",
+                    _ => "Em aberto"
+                },
+                l.PagoEm is DateTime p ? Data(p) : "",
+                l.FormaPagamento is FormaPagamento f ? SelecaoPagamento.Nome(f) : "",
+                l.Observacao ?? "");
+        }
+        return csv.ToString();
+    }
+
     public static string MaisVendidos(IEnumerable<ProdutoMaisVendido> ranking, bool porTamanho)
     {
         var csv = new StringBuilder();

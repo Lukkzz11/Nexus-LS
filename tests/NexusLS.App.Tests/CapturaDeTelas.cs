@@ -305,6 +305,9 @@ internal static class Capturador
     public static void SalvarCatalogoOnline(CatalogoOnlineViewModel vm, string caminho, int largura = 1400, int altura = 1500) =>
         Desenhar(() => new CatalogoOnlineView { DataContext = vm }, caminho, largura, altura);
 
+    public static void SalvarFinanceiro(FinanceiroViewModel vm, string caminho, int largura = 1500, int altura = 820) =>
+        Desenhar(() => new FinanceiroView { DataContext = vm }, caminho, largura, altura);
+
     public static void SalvarInicio(InicioViewModel vm, string caminho, int largura = 1400, int altura = 900) =>
         Desenhar(() => new InicioView { DataContext = vm }, caminho, largura, altura);
 

@@ -107,3 +107,37 @@ public sealed class CapturaCatalogoOnline : IDisposable
         Capturador.SalvarCatalogoOnline(vm, Path.Combine(saida, "catalogo-online.png"));
     }
 }
+
+/// <summary>Desenha a tela Financeiro com dados de exemplo num PNG. Só roda com NEXUSLS_PRINTS.</summary>
+public sealed class CapturaFinanceiro : IDisposable
+{
+    private readonly BancoDeTeste _banco = new();
+
+    public void Dispose() => _banco.Dispose();
+
+    [Fact]
+    public async Task Gera_a_tela_financeiro()
+    {
+        var saida = Environment.GetEnvironmentVariable("NEXUSLS_PRINTS");
+        if (string.IsNullOrWhiteSpace(saida)) return;
+        Directory.CreateDirectory(saida);
+
+        var agora = DateTime.Now;
+        var produtos = new ProdutoService(_banco.Fabrica);
+        var bone = (await produtos.CadastrarAsync(new DadosProduto("Boné Aba Reta", "555", 2990, 800, 3), 20)).Id;
+        await new VendaService(_banco.Fabrica).FinalizarAsync(new PedidoVenda(new[] { new ItemCarrinho(bone, 5) }, 0, FormaPagamento.Pix));
+
+        var fin = new FinanceiroService(_banco.Fabrica, () => agora);
+        var hoje = agora.Date;
+        await fin.CriarAsync(new DadosLancamento(TipoLancamento.Despesa, "Aluguel da loja", 150000, new DateTime(hoje.Year, hoje.Month, 5), "Aluguel", "Imobiliária Central", JaPago: true, Forma: FormaPagamento.Pix));
+        await fin.CriarAsync(new DadosLancamento(TipoLancamento.Despesa, "Conta de luz", 38000, hoje.AddDays(-2), "Energia", "Neoenergia"));
+        await fin.CriarAsync(new DadosLancamento(TipoLancamento.Despesa, "Compra de camisetas", 120000, hoje.AddDays(6), "Fornecedores", "Malharia Sol", Parcelas: 3));
+        await fin.CriarAsync(new DadosLancamento(TipoLancamento.Receita, "Conserto de máquina", 25000, hoje.AddDays(3), "Serviços"));
+
+        var vm = new FinanceiroViewModel(fin, () => agora);
+        await vm.Carregamento;
+        vm.Selecionada = vm.Linhas.First(l => l.Atrasado);
+
+        Capturador.SalvarFinanceiro(vm, Path.Combine(saida, "financeiro.png"));
+    }
+}

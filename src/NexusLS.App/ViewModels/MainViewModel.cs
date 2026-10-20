@@ -4,7 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 namespace NexusLS.App.ViewModels;
 
 /// <summary>Os itens do menu lateral. O nome do item é também o "Tag" do botão: assim o menu destaca o da tela aberta.</summary>
-public enum ItemMenu { Inicio, Pdv, Caixa, Fechamento, MaisVendidos, EstoqueDaLoja, Etiquetas, Clientes, Relatorios, CatalogoOnline, Configuracoes }
+public enum ItemMenu { Inicio, Pdv, Caixa, Fechamento, MaisVendidos, EstoqueDaLoja, Etiquetas, Clientes, Financeiro, Relatorios, CatalogoOnline, Configuracoes }
 
 /// <summary>
 /// ViewModel = a "lógica da tela". Ele guarda os dados que a tela mostra e os comandos dos botões,
@@ -47,6 +47,7 @@ public partial class MainViewModel : ObservableObject
             case ItemMenu.EstoqueDaLoja: IrParaEstoque(); break;
             case ItemMenu.Etiquetas: IrParaEtiquetas(); break;
             case ItemMenu.Clientes: IrParaClientes(); break;
+            case ItemMenu.Financeiro: IrParaFinanceiro(); break;
             case ItemMenu.Relatorios: IrParaRelatorios(); break;
             case ItemMenu.CatalogoOnline: IrParaCatalogoOnline(); break;
             case ItemMenu.Configuracoes: IrParaConfiguracoes(); break;
@@ -67,6 +68,7 @@ public partial class MainViewModel : ObservableObject
 
     // Gestão
     [RelayCommand] private void IrParaClientes() => Abrir(new ClientesViewModel(Servicos.Clientes), ItemMenu.Clientes);
+    [RelayCommand] private void IrParaFinanceiro() => Abrir(new FinanceiroViewModel(Servicos.Financeiro), ItemMenu.Financeiro);
     [RelayCommand] private void IrParaRelatorios() => Abrir(new RelatoriosViewModel(Servicos.Relatorios), ItemMenu.Relatorios);
     [RelayCommand] private void IrParaCatalogoOnline() => Abrir(new CatalogoOnlineViewModel(Servicos.Firebase, Servicos.Sincronizador, Servicos.SincronizacaoRepo, Servicos.DestinoCatalogo, Servicos.Configuracao), ItemMenu.CatalogoOnline);
     [RelayCommand] private void IrParaConfiguracoes() => Abrir(new ConfiguracoesViewModel(Servicos.Configuracao, Servicos.Cupons, Servicos.Backup, new NexusLS.App.Backup.DialogosBackupWpf()), ItemMenu.Configuracoes);

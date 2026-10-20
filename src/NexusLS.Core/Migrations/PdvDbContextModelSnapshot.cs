@@ -203,6 +203,81 @@ namespace NexusLS.Core.Migrations
                     b.ToTable("ItensVenda");
                 });
 
+            modelBuilder.Entity("NexusLS.Core.Models.Lancamento", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("Cancelado")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("CanceladoEm")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Categoria")
+                        .HasMaxLength(60)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Contraparte")
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CriadoEm")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Descricao")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("FormaPagamento")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("GrupoId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("MotivoCancelamento")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Observacao")
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Operador")
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("PagoEm")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Parcela")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Tipo")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TotalParcelas")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("ValorCentavos")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("Vencimento")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GrupoId");
+
+                    b.HasIndex("PagoEm");
+
+                    b.HasIndex("Vencimento");
+
+                    b.ToTable("Lancamentos");
+                });
+
             modelBuilder.Entity("NexusLS.Core.Models.MovimentacaoEstoque", b =>
                 {
                     b.Property<int>("Id")
