@@ -209,4 +209,19 @@ public sealed class FinanceiroTests : IDisposable
         Assert.Equal(800, r.AtrasadosCentavos);
         Assert.Equal(1000, r.APagarCentavos); // a atrasada de agosto continua a pagar
     }
+
+    [Fact]
+    public async Task Compra_de_mercadoria_paga_nao_e_despesa_do_resumo_porque_o_custo_ja_esta_no_lucro_bruto()
+    {
+        var produto = await new ProdutoService(_banco.Fabrica).CadastrarAsync(new DadosProduto("Camisa", "111", 5000, 2000, 1), 0);
+        await new CompraService(_banco.Fabrica, () => _agora).RegistrarAsync(new DadosCompra(
+            new[] { new ItemCompraDados(produto.Id, 10, 2000) },
+            Pagamento: new PagamentoCompra(1, _agora, JaPago: true, Forma: FormaPagamento.Pix)));            // R$ 200,00 pagos
+        await _fin.CriarAsync(new DadosLancamento(TipoLancamento.Despesa, "Aluguel", 30000, Dia(5), "Aluguel", JaPago: true, Forma: FormaPagamento.Pix));
+
+        var r = await _fin.ResumoAsync(Dia(1), Dia(31));
+
+        Assert.Equal(30000, r.DespesasPagasCentavos); // só o aluguel; a compra de R$ 200,00 não conta
+        Assert.DoesNotContain(r.DespesasPorCategoria, c => c.Categoria == "Fornecedores");
+    }
 }

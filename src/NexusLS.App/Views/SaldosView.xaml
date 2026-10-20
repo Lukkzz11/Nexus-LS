@@ -1,0 +1,169 @@
+<UserControl x:Class="NexusLS.App.Views.SaldosView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <UserControl.Resources>
+        <Style x:Key="NumeroGrande" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="26" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Margin" Value="0,4,0,2" />
+        </Style>
+        <Style x:Key="Cartao" TargetType="Border" BasedOn="{StaticResource Painel}">
+            <Setter Property="Margin" Value="0,0,12,12" />
+            <Setter Property="MinWidth" Value="250" />
+            <Setter Property="Padding" Value="18,14" />
+        </Style>
+        <Style x:Key="ColunaNumero" TargetType="TextBlock">
+            <Setter Property="HorizontalAlignment" Value="Right" />
+        </Style>
+        <Style x:Key="Detalhe" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />
+        </Style>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="0,0,12,16">
+
+            <!-- Aviso: coisas que não entraram nos saldos -->
+            <Border Visibility="{Binding TemAvisos, Converter={StaticResource BoolVis}}" Background="{StaticResource CorAlerta}"
+                    CornerRadius="6" Padding="14,10" Margin="0,0,0,12">
+                <ItemsControl ItemsSource="{Binding Avisos}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding}" TextWrapping="Wrap" Margin="0,2" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Border>
+
+            <!-- Quanto tenho agora, o que vem e o que vai -->
+            <WrapPanel>
+                <Border Style="{StaticResource Cartao}">
+                    <StackPanel>
+                        <TextBlock Text="Saldo disponível" Style="{StaticResource Rotulo}" Margin="0" />
+                        <TextBlock Text="{Binding SaldoDisponivelTexto}" Style="{StaticResource NumeroGrande}" AutomationProperties.Name="Saldo disponível" />
+                        <TextBlock Style="{StaticResource Detalhe}">
+                            <Run Text="Dinheiro " /><Run Text="{Binding DinheiroFisicoTexto, Mode=OneWay}" />
+                            <Run Text=" · Bancos " /><Run Text="{Binding BancosTexto, Mode=OneWay}" />
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Cartao}">
+                    <StackPanel>
+                        <TextBlock Text="A receber" Style="{StaticResource Rotulo}" Margin="0" />
+                        <TextBlock Text="{Binding AReceberTexto}" Style="{StaticResource NumeroGrande}" AutomationProperties.Name="A receber" />
+                        <TextBlock Text="{Binding AReceberDetalhe}" Style="{StaticResource Detalhe}" MaxWidth="280" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Cartao}">
+                    <StackPanel>
+                        <TextBlock Text="A pagar" Style="{StaticResource Rotulo}" Margin="0" />
+                        <TextBlock Text="{Binding APagarTexto}" Style="{StaticResource NumeroGrande}" AutomationProperties.Name="A pagar" />
+                        <TextBlock Text="{Binding APagarDetalhe}" Style="{StaticResource Detalhe}" MaxWidth="280" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Cartao}">
+                    <StackPanel>
+                        <TextBlock Text="Em compensação" Style="{StaticResource Rotulo}" Margin="0" />
+                        <TextBlock Text="{Binding EmCompensacaoTexto}" Style="{StaticResource NumeroGrande}" AutomationProperties.Name="Em compensação" />
+                        <TextBlock Text="{Binding EmCompensacaoDetalhe}" Style="{StaticResource Detalhe}" MaxWidth="280" />
+                        <TextBlock Text="Já está no a receber; ainda não é saldo." Style="{StaticResource Detalhe}" />
+                    </StackPanel>
+                </Border>
+            </WrapPanel>
+
+            <!-- Projeção -->
+            <Border Style="{StaticResource Painel}" Margin="0,0,12,16" Padding="18,14">
+                <StackPanel>
+                    <TextBlock Text="Projeção do saldo" FontSize="16" FontWeight="SemiBold" />
+                    <TextBlock Style="{StaticResource Detalhe}" Margin="0,2,0,8"
+                               Text="Saldo disponível + o que deve entrar − o que deve sair até cada data. É uma previsão, não dinheiro garantido." />
+                    <UniformGrid Columns="4">
+                        <StackPanel><TextBlock Text="Em 7 dias" Style="{StaticResource Detalhe}" /><TextBlock Text="{Binding Projecao7Texto}" FontSize="18" FontWeight="SemiBold" /></StackPanel>
+                        <StackPanel><TextBlock Text="Em 30 dias" Style="{StaticResource Detalhe}" /><TextBlock Text="{Binding Projecao30Texto}" FontSize="18" FontWeight="SemiBold" /></StackPanel>
+                        <StackPanel><TextBlock Text="Em 60 dias" Style="{StaticResource Detalhe}" /><TextBlock Text="{Binding Projecao60Texto}" FontSize="18" FontWeight="SemiBold" /></StackPanel>
+                        <StackPanel><TextBlock Text="Em 90 dias" Style="{StaticResource Detalhe}" /><TextBlock Text="{Binding Projecao90Texto}" FontSize="18" FontWeight="SemiBold" /></StackPanel>
+                    </UniformGrid>
+                </StackPanel>
+            </Border>
+
+            <!-- Contas -->
+            <Border Style="{StaticResource Painel}" Margin="0,0,12,16" Padding="0">
+                <StackPanel>
+                    <TextBlock Text="Por conta" FontSize="16" FontWeight="SemiBold" Margin="18,14,18,8" />
+                    <DataGrid ItemsSource="{Binding Contas}" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single"
+                              CanUserAddRows="False" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                              HorizontalGridLinesBrush="#E5E7EB" BorderThickness="0" Background="Transparent" RowHeight="36"
+                              AutomationProperties.Name="Saldos por conta">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Conta" Binding="{Binding Nome, Mode=OneWay}" Width="2*" MinWidth="140" />
+                            <DataGridTextColumn Header="Tipo" Binding="{Binding Tipo, Mode=OneWay}" Width="90" />
+                            <DataGridTextColumn Header="Saldo inicial" Binding="{Binding SaldoInicial, Mode=OneWay}" Width="1*" MinWidth="100" ElementStyle="{StaticResource ColunaNumero}" />
+                            <DataGridTextColumn Header="Entradas" Binding="{Binding Entradas, Mode=OneWay}" Width="1*" MinWidth="100" ElementStyle="{StaticResource ColunaNumero}" />
+                            <DataGridTextColumn Header="Saídas" Binding="{Binding Saidas, Mode=OneWay}" Width="1*" MinWidth="100" ElementStyle="{StaticResource ColunaNumero}" />
+                            <DataGridTextColumn Header="Saldo" Binding="{Binding Saldo, Mode=OneWay}" Width="1*" MinWidth="110" ElementStyle="{StaticResource ColunaNumero}" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
+            </Border>
+
+            <!-- Resultado do período -->
+            <Border Style="{StaticResource Painel}" Margin="0,0,12,0" Padding="18,14">
+                <StackPanel>
+                    <WrapPanel>
+                        <TextBlock Text="Resultado do período" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,20,0" />
+                        <TextBlock Text="De:" VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <DatePicker SelectedDateFormat="Short" SelectedDate="{Binding De}" Width="140" VerticalContentAlignment="Center" />
+                        <TextBlock Text="até:" VerticalAlignment="Center" Margin="12,0,8,0" />
+                        <DatePicker SelectedDateFormat="Short" SelectedDate="{Binding Ate}" Width="140" VerticalContentAlignment="Center" />
+                        <Button Content="Hoje" Style="{StaticResource BotaoSecundario}" Margin="12,0,0,0" Padding="12,6" Command="{Binding HojeCommand}" />
+                        <Button Content="7 dias" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0" Padding="12,6" Command="{Binding UltimosSeteDiasCommand}" />
+                        <Button Content="Este mês" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0" Padding="12,6" Command="{Binding MesAtualCommand}" />
+                    </WrapPanel>
+
+                    <Grid Margin="0,12,0,0">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition />
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Text="Vendas (receita bruta)" Margin="0,3" />
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding ReceitaBrutaTexto}" HorizontalAlignment="Right" Margin="0,3" />
+                        <TextBlock Grid.Row="1" Text="− Custo das mercadorias vendidas" Margin="0,3" />
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding CustoTexto}" HorizontalAlignment="Right" Margin="0,3" />
+                        <TextBlock Grid.Row="2" Text="= Lucro bruto" FontWeight="SemiBold" Margin="0,3" />
+                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding LucroBrutoTexto}" FontWeight="SemiBold" HorizontalAlignment="Right" Margin="0,3" />
+                        <TextBlock Grid.Row="3" Text="+ Outras receitas recebidas" Margin="0,3" />
+                        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding OutrasReceitasTexto}" HorizontalAlignment="Right" Margin="0,3" />
+                        <TextBlock Grid.Row="4" Text="− Despesas pagas (sem compra de mercadoria)" Margin="0,3" />
+                        <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding DespesasTexto}" HorizontalAlignment="Right" Margin="0,3" />
+                        <TextBlock Grid.Row="5" Text="= Resultado" FontSize="18" FontWeight="SemiBold" Margin="0,8,0,0" />
+                        <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding ResultadoTexto}" FontSize="18" FontWeight="SemiBold"
+                                   HorizontalAlignment="Right" Margin="0,8,0,0" AutomationProperties.Name="Resultado do período">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="#15803D" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ResultadoNegativo}" Value="True">
+                                            <Setter Property="Foreground" Value="#B91C1C" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Grid>
+
+                    <ItemsControl ItemsSource="{Binding DespesasPorCategoria}" Margin="0,10,0,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate><TextBlock Text="{Binding}" Style="{StaticResource Detalhe}" /></DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Text="A compra de mercadoria sai do dinheiro, mas não é despesa: o custo entra no resultado quando a peça é vendida."
+                               Style="{StaticResource Detalhe}" Margin="0,8,0,0" />
+                    <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

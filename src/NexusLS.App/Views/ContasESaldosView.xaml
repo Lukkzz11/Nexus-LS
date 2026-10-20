@@ -1,0 +1,28 @@
+<UserControl x:Class="NexusLS.App.Views.ContasESaldosView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Contas e saldos" Style="{StaticResource TituloTela}" Margin="0,0,0,10" />
+
+        <TabControl Grid.Row="1" SelectedIndex="{Binding AbaAtual, Mode=TwoWay}" Background="Transparent" BorderThickness="0" Padding="0,10,0,0">
+            <TabItem Header="Visão geral">
+                <ContentPresenter Content="{Binding Saldos}" />
+            </TabItem>
+            <TabItem Header="Contas e transferências">
+                <ContentPresenter Content="{Binding Contas}" />
+            </TabItem>
+            <TabItem Header="Cartão a liquidar">
+                <ContentPresenter Content="{Binding Cartoes}" />
+            </TabItem>
+            <TabItem Header="Cheques">
+                <ContentPresenter Content="{Binding Cheques}" />
+            </TabItem>
+        </TabControl>
+    </Grid>
+</UserControl>

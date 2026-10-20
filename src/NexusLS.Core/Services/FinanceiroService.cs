@@ -225,7 +225,9 @@ public class FinanceiroService
         await using var db = await _fabrica.CreateDbContextAsync();
         var todos = await db.Lancamentos.AsNoTracking().Where(l => !l.Cancelado).ToListAsync();
 
-        var pagosNoPeriodo = todos.Where(l => l.PagoEm >= inicio && l.PagoEm < fim).ToList();
+        // Conta paga de uma COMPRA de mercadoria não é despesa do período: o custo dela já entra no lucro bruto quando a peça
+        // é vendida. Contar as duas coisas descontaria o custo duas vezes no resultado.
+        var pagosNoPeriodo = todos.Where(l => l.PagoEm >= inicio && l.PagoEm < fim && l.CompraId is null).ToList();
         var abertos = todos.Where(l => l.PagoEm is null).ToList();
         var atrasados = abertos.Where(l => l.Vencimento.Date < hoje.Date).ToList();
 

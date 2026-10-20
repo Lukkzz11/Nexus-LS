@@ -57,7 +57,22 @@
             <DataTemplate DataType="{x:Type vm:FuncionariosViewModel}">
                 <views:FuncionariosView />
             </DataTemplate>
-            <DataTemplate DataType="{x:Type vm:AtividadesViewModel}">
+            <DataTemplate DataType="{x:Type vm:ContasESaldosViewModel}">
+        <views:ContasESaldosView />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:SaldosViewModel}">
+        <views:SaldosView />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:ContasFinanceirasViewModel}">
+        <views:ContasFinanceirasView />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:CartoesViewModel}">
+        <views:CartoesView />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:ChequesViewModel}">
+        <views:ChequesView />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:AtividadesViewModel}">
         <views:AtividadesView />
     </DataTemplate>
     <DataTemplate DataType="{x:Type vm:PedidosViewModel}">

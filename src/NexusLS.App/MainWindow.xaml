@@ -132,6 +132,12 @@
                             <TextBlock Text="Financeiro" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
+                    <Button Tag="ContasESaldos" Visibility="{Binding VerFinanceiro, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Contas e saldos" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaContasESaldosCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Money24" Style="{StaticResource IconeDoMenu}" />
+                            <TextBlock Text="Contas e saldos" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
                     <Button Tag="Relatorios" Visibility="{Binding VerRelatorios, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Relatórios" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaRelatoriosCommand}">
                         <StackPanel Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="DataBarVertical24" Style="{StaticResource IconeDoMenu}" />

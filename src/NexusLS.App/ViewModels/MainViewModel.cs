@@ -7,7 +7,7 @@ using NexusLS.Core.Models;
 namespace NexusLS.App.ViewModels;
 
 /// <summary>Os itens do menu lateral. O nome do item é também o "Tag" do botão: assim o menu destaca o da tela aberta.</summary>
-public enum ItemMenu { Inicio, Pdv, Caixa, Fechamento, Pedidos, MaisVendidos, EstoqueDaLoja, Compras, Fornecedores, Etiquetas, Clientes, Financeiro, Relatorios, CatalogoOnline, Funcionarios, Atividades, Configuracoes }
+public enum ItemMenu { Inicio, Pdv, Caixa, Fechamento, Pedidos, MaisVendidos, EstoqueDaLoja, Compras, Fornecedores, Etiquetas, Clientes, Financeiro, ContasESaldos, Relatorios, CatalogoOnline, Funcionarios, Atividades, Configuracoes }
 
 /// <summary>
 /// ViewModel = a "lógica da tela". Ele guarda os dados que a tela mostra e os comandos dos botões,
@@ -56,6 +56,7 @@ public partial class MainViewModel : ObservableObject
             case ItemMenu.Etiquetas: IrParaEtiquetas(); break;
             case ItemMenu.Clientes: IrParaClientes(); break;
             case ItemMenu.Financeiro: IrParaFinanceiro(); break;
+            case ItemMenu.ContasESaldos: IrParaContasESaldos(); break;
             case ItemMenu.Relatorios: IrParaRelatorios(); break;
             case ItemMenu.CatalogoOnline: IrParaCatalogoOnline(); break;
             case ItemMenu.Funcionarios: IrParaFuncionarios(); break;
@@ -82,6 +83,7 @@ public partial class MainViewModel : ObservableObject
     // Gestão
     [RelayCommand] private void IrParaClientes() => Abrir(new ClientesViewModel(Servicos.Clientes), ItemMenu.Clientes);
     [RelayCommand] private void IrParaFinanceiro() => Abrir(new FinanceiroViewModel(Servicos.Financeiro), ItemMenu.Financeiro);
+    [RelayCommand] private void IrParaContasESaldos() => Abrir(new ContasESaldosViewModel(Servicos.Posicao, Servicos.ContasFinanceiras, Servicos.Cartoes, Servicos.Cheques), ItemMenu.ContasESaldos);
     [RelayCommand] private void IrParaRelatorios() => Abrir(new RelatoriosViewModel(Servicos.Relatorios), ItemMenu.Relatorios);
     [RelayCommand] private void IrParaCatalogoOnline() => Abrir(new CatalogoOnlineViewModel(Servicos.Firebase, Servicos.Sincronizador, Servicos.SincronizacaoRepo, Servicos.DestinoCatalogo, Servicos.Configuracao), ItemMenu.CatalogoOnline);
     [RelayCommand] private void IrParaFuncionarios() => Abrir(new FuncionariosViewModel(Servicos.Funcionarios), ItemMenu.Funcionarios);
@@ -123,7 +125,7 @@ public partial class MainViewModel : ObservableObject
         ItemMenu.EstoqueDaLoja or ItemMenu.Etiquetas => Sessao.Pode(Permissao.Estoque),
         ItemMenu.Compras or ItemMenu.Fornecedores => Sessao.Pode(Permissao.Compras),
         ItemMenu.Clientes => Sessao.Pode(Permissao.Clientes),
-        ItemMenu.Financeiro => Sessao.Pode(Permissao.Financeiro),
+        ItemMenu.Financeiro or ItemMenu.ContasESaldos => Sessao.Pode(Permissao.Financeiro),
         ItemMenu.Funcionarios => Sessao.Pode(Permissao.Funcionarios),
         ItemMenu.Configuracoes or ItemMenu.CatalogoOnline or ItemMenu.Atividades => Sessao.Pode(Permissao.Configuracoes),
         _ => false

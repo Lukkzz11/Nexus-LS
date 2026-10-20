@@ -8,6 +8,9 @@ namespace NexusLS.Core.Services;
 /// <summary>Venda no cartão que ainda não caiu na conta.</summary>
 public record CartaoAliquidar(int VendaId, DateTime DataVenda, FormaPagamento Forma, int Parcelas, long TotalCentavos, DateTime PrevisaoDeCaida);
 
+/// <summary>Venda no cartão cujo dinheiro já caiu.</summary>
+public record CartaoLiquidado(int VendaId, DateTime DataVenda, long TotalCentavos, DateTime DataLiquidacao, string Conta, long TaxaCentavos);
+
 public static class PrazosFinanceiros
 {
     public const int DiasDebito = 1;
@@ -45,6 +48,20 @@ public class LiquidacaoCartaoService
         return vendas.OrderBy(v => v.DataHora)
             .Select(v => new CartaoAliquidar(v.Id, v.DataHora, v.FormaPagamento, v.Parcelas, v.TotalCentavos,
                 PrazosFinanceiros.PrevisaoDoCartao(v.DataHora, v.FormaPagamento))).ToList();
+    }
+
+    /// <summary>Vendas no cartão já liquidadas no período (para conferir ou estornar).</summary>
+    public async Task<List<CartaoLiquidado>> ListarLiquidadosAsync(DateTime de, DateTime ate)
+    {
+        await using var db = await _fabrica.CreateDbContextAsync();
+        var liquidacoes = await db.LiquidacoesCartao.AsNoTracking()
+            .Where(l => !l.Cancelada && l.Data >= de.Date && l.Data <= ate.Date).ToListAsync();
+        var ids = liquidacoes.Select(l => l.VendaId).ToList();
+        var vendas = await db.Vendas.AsNoTracking().Where(v => ids.Contains(v.Id)).ToDictionaryAsync(v => v.Id);
+        var contas = await db.ContasFinanceiras.AsNoTracking().ToDictionaryAsync(c => c.Id, c => c.Nome);
+        return liquidacoes.OrderByDescending(l => l.Data).ThenByDescending(l => l.Id)
+            .Select(l => new CartaoLiquidado(l.VendaId, vendas[l.VendaId].DataHora, vendas[l.VendaId].TotalCentavos, l.Data,
+                contas.GetValueOrDefault(l.ContaId, "?"), l.TaxaCentavos)).ToList();
     }
 
     public async Task<LiquidacaoCartao> LiquidarAsync(int vendaId, DateTime data, int contaId, long taxaCentavos = 0)
