@@ -41,6 +41,10 @@
         <Setter Property="TextWrapping" Value="Wrap" />
         <Setter Property="Margin" Value="0,14,0,0" />
         <Style.Triggers>
+            <!-- Sem mensagem, não ocupa espaço (antes deixava uma faixa vazia embaixo dos avisos e formulários). -->
+            <Trigger Property="Text" Value="">
+                <Setter Property="Visibility" Value="Collapsed" />
+            </Trigger>
             <DataTrigger Binding="{Binding MensagemEhErro}" Value="True">
                 <Setter Property="Foreground" Value="{StaticResource CorPerigo}" />
             </DataTrigger>

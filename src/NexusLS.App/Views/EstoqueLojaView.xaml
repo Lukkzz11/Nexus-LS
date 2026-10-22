@@ -85,19 +85,19 @@
                         </Style>
                     </DataGrid.RowStyle>
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="Código" Binding="{Binding CodigoBarras, Mode=OneWay}" Width="1.2*" MinWidth="66" />
-                        <DataGridTextColumn Header="Ref." Binding="{Binding Referencia, Mode=OneWay}" Width="0.8*" MinWidth="50" />
-                        <DataGridTextColumn Header="Categoria" Binding="{Binding Categoria, Mode=OneWay}" Width="1*" MinWidth="82" />
-                        <DataGridTextColumn Header="Produto" Binding="{Binding Nome, Mode=OneWay}" Width="2*" MinWidth="90" />
+                        <DataGridTextColumn Header="Código" Binding="{Binding CodigoBarras, Mode=OneWay}" Width="1*" MinWidth="62" />
+                        <DataGridTextColumn Header="Ref." Binding="{Binding Referencia, Mode=OneWay}" Width="0.6*" MinWidth="46" />
+                        <DataGridTextColumn Header="Categoria" Binding="{Binding Categoria, Mode=OneWay}" Width="0.9*" MinWidth="72" />
+                        <DataGridTextColumn Header="Produto" Binding="{Binding Nome, Mode=OneWay}" Width="4*" MinWidth="170" />
                         <DataGridTextColumn Header="Varejo" Width="1*" MinWidth="68" ElementStyle="{StaticResource ColunaNumero}"
                                             Binding="{Binding PrecoVendaCentavos, Mode=OneWay, Converter={StaticResource Centavos}}" />
-                        <DataGridTextColumn Header="Atacado" Width="1*" MinWidth="78" ElementStyle="{StaticResource ColunaNumero}"
+                        <DataGridTextColumn Header="Atacado" Width="1*" MinWidth="72" ElementStyle="{StaticResource ColunaNumero}"
                                             Binding="{Binding PrecoAtacadoCentavos, Mode=OneWay, Converter={StaticResource Centavos}}" />
-                        <DataGridTextColumn Header="Estoque" Binding="{Binding EstoqueAtual, Mode=OneWay}" Width="0.8*" MinWidth="76"
+                        <DataGridTextColumn Header="Estoque" Binding="{Binding EstoqueAtual, Mode=OneWay}" Width="0.7*" MinWidth="60"
                                             ElementStyle="{StaticResource ColunaNumero}" />
                         <DataGridTextColumn Header="Mín." Binding="{Binding EstoqueMinimo, Mode=OneWay}" Width="0.6*" MinWidth="44"
                                             ElementStyle="{StaticResource ColunaNumero}" />
-                        <DataGridTextColumn Header="Situação" Width="0.9*" MinWidth="78"
+                        <DataGridTextColumn Header="Situação" Width="0.8*" MinWidth="64"
                                             Binding="{Binding Ativo, Mode=OneWay, Converter={StaticResource BoolTexto}, ConverterParameter='Ativo|Inativo'}" />
                     </DataGrid.Columns>
                 </DataGrid>
@@ -113,14 +113,14 @@
                           HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0"
                           Background="{StaticResource CorPainel}" RowHeight="32">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="Data" Width="130"
+                        <DataGridTextColumn Header="Data" Width="132"
                                             Binding="{Binding DataHora, Mode=OneWay, StringFormat='dd/MM/yyyy HH:mm'}" />
-                        <DataGridTextColumn Header="Tipo" Width="150"
+                        <DataGridTextColumn Header="Tipo" Width="96"
                                             Binding="{Binding Tipo, Mode=OneWay, Converter={StaticResource TipoMov}}" />
-                        <DataGridTextColumn Header="Tam." Width="110" Binding="{Binding Tamanho, Mode=OneWay}" />
-                        <DataGridTextColumn Header="Qtd." Width="60" ElementStyle="{StaticResource ColunaNumero}"
+                        <DataGridTextColumn Header="Tam." Width="100" Binding="{Binding Tamanho, Mode=OneWay}" />
+                        <DataGridTextColumn Header="Qtd." Width="52" ElementStyle="{StaticResource ColunaNumero}"
                                             Binding="{Binding Quantidade, Mode=OneWay, StringFormat='{}{0:+#;-#;0}'}" />
-                        <DataGridTextColumn Header="Motivo" Binding="{Binding Motivo, Mode=OneWay}" Width="*" />
+                        <DataGridTextColumn Header="Motivo" Binding="{Binding Motivo, Mode=OneWay}" Width="*" MinWidth="80" />
                     </DataGrid.Columns>
                 </DataGrid>
             </Border>
