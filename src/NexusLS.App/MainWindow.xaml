@@ -7,7 +7,7 @@
         ExtendsContentIntoTitleBar="True"
         WindowBackdropType="None" Background="{StaticResource CorFundo}"
         WindowCornerPreference="Round"
-        FontFamily="Segoe UI Variable Text, Segoe UI" FontSize="15">
+        FontFamily="{StaticResource FonteTexto}" FontSize="{StaticResource TamCorpo}">
 
     <ui:FluentWindow.InputBindings>
         <!-- F1 abre o PDV de qualquer tela. -->
@@ -15,7 +15,7 @@
     </ui:FluentWindow.InputBindings>
 
     <ui:FluentWindow.Resources>
-        <!-- Um estilo só para todos os itens do menu: o botão cujo Tag é igual ao item ativo vira um "cartão" branco. -->
+        <!-- Um estilo só para todos os itens do menu: o botão cujo Tag é igual ao item ativo fica azul claro. -->
         <Style x:Key="ItemDoMenu" TargetType="Button" BasedOn="{StaticResource BotaoMenu}">
             <Style.Triggers>
                 <DataTrigger Value="True">
@@ -26,7 +26,7 @@
                         </MultiBinding>
                     </DataTrigger.Binding>
                     <Setter Property="Background" Value="{StaticResource CorMenuAtivo}" />
-                    <Setter Property="BorderBrush" Value="{StaticResource CorBorda}" />
+                    <Setter Property="BorderBrush" Value="{StaticResource CorSelecao}" />
                     <Setter Property="FontWeight" Value="SemiBold" />
                     <Setter Property="Foreground" Value="{StaticResource CorPrimaria}" />
                 </DataTrigger>
@@ -35,7 +35,7 @@
 
         <!-- Ícone + texto de um item do menu -->
         <Style x:Key="IconeDoMenu" TargetType="ui:SymbolIcon">
-            <Setter Property="FontSize" Value="18" />
+            <Setter Property="FontSize" Value="{StaticResource TamIcone}" />
             <Setter Property="Margin" Value="0,0,12,0" />
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
@@ -57,8 +57,9 @@
             </Grid.ColumnDefinitions>
 
             <!-- Menu lateral, agrupado: Vendas, Estoque, Gestão -->
+            <Border Style="{StaticResource PainelLateral}">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel Margin="0,4,0,16">
+                <StackPanel Margin="0,12,0,16">
                     <Button Tag="Inicio" AutomationProperties.Name="Início" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaInicioCommand}" Margin="0,0,0,8">
                         <StackPanel Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="Home24" Style="{StaticResource IconeDoMenu}" />
@@ -146,7 +147,7 @@
                     </Button>
                     <Button Tag="Funcionarios" Visibility="{Binding VerFuncionarios, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Funcionários" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaFuncionariosCommand}">
                         <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="PersonKey24" Style="{StaticResource IconeDoMenu}" />
+                            <ui:SymbolIcon Symbol="Person24" Style="{StaticResource IconeDoMenu}" />
                             <TextBlock Text="Funcionários" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
@@ -163,6 +164,22 @@
                         </StackPanel>
                     </Button>
 
+                    <!-- Catálogo online: situação da fila de envio e conta do Firebase -->
+                    <StackPanel Margin="18,18,14,0" DataContext="{Binding Sincronizacao}">
+                        <TextBlock Text="Catálogo online" Style="{StaticResource SecaoMenu}" Margin="0,0,0,2" />
+                        <TextBlock Text="{Binding Texto}" TextWrapping="Wrap" FontSize="13" AutomationProperties.Name="Situação da sincronização" ToolTip="{Binding Detalhe}" />
+                        <TextBlock Text="{Binding UsuarioTexto}" TextWrapping="Wrap" FontSize="12" Margin="0,2,0,0" Opacity="0.7"
+                                   Visibility="{Binding TemSessao, Converter={StaticResource BoolVis}}" />
+                        <WrapPanel Margin="0,8,0,0">
+                            <Button Content="Sincronizar agora" Style="{StaticResource BotaoSecundario}" Padding="12,6" FontSize="13" Margin="0,0,6,6"
+                                    Command="{Binding SincronizarAgoraCommand}" />
+                            <Button Content="Entrar" Style="{StaticResource BotaoSecundario}" Padding="12,6" FontSize="13" Margin="0,0,6,6"
+                                    Command="{Binding EntrarCommand}" Visibility="{Binding PodeEntrar, Converter={StaticResource BoolVis}}" />
+                            <Button Content="Sair da conta" Style="{StaticResource BotaoSecundario}" Padding="12,6" FontSize="13" Margin="0,0,6,6"
+                                    Command="{Binding SairCommand}" Visibility="{Binding TemSessao, Converter={StaticResource BoolVis}}" />
+                        </WrapPanel>
+                    </StackPanel>
+
                     <StackPanel Margin="18,18,14,0" Visibility="{Binding TemUsuario, Converter={StaticResource BoolVis}}">
                         <TextBlock Text="Usuário" Style="{StaticResource SecaoMenu}" Margin="0,0,0,2" />
                         <TextBlock Text="{Binding UsuarioTexto}" TextWrapping="Wrap" FontSize="13" AutomationProperties.Name="Usuário atual" />
@@ -171,9 +188,10 @@
                     </StackPanel>
                 </StackPanel>
             </ScrollViewer>
+            </Border>
 
             <!-- Área da tela atual. O ContentControl mostra o ViewModel e o WPF escolhe a View (veja App.xaml). -->
-            <Grid Grid.Column="1" Margin="8,4,24,20">
+            <Grid Grid.Column="1" Margin="20,16,24,20">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
@@ -181,8 +199,8 @@
 
                 <!-- Aviso de atualização: só aparece quando há versão nova. Nada é instalado sem o usuário clicar. -->
                 <Border DataContext="{Binding Atualizacao}" Visibility="{Binding TemNovaVersao, Converter={StaticResource BoolVis}}"
-                        Background="{StaticResource CorSelecao}" BorderBrush="{StaticResource CorPrimaria}" BorderThickness="1"
-                        CornerRadius="8" Padding="16,10" Margin="0,0,0,12">
+                        Background="{StaticResource CorSelecaoSuave}" BorderBrush="{StaticResource CorSelecao}" BorderThickness="1"
+                        CornerRadius="{StaticResource RaioMedio}" Padding="16,10" Margin="0,0,0,12">
                     <StackPanel>
                         <WrapPanel>
                             <TextBlock Text="{Binding AvisoTexto}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,16,0"

@@ -5,7 +5,7 @@
     <UserControl.Resources>
         <!-- Um cartão do quadro: número, cliente, total e resumo. O escolhido ganha borda azul. -->
         <Style x:Key="BotaoCartao" TargetType="Button">
-            <Setter Property="Background" Value="White" />
+            <Setter Property="Background" Value="{StaticResource CorPainel}" />
             <Setter Property="BorderBrush" Value="{StaticResource CorBorda}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Padding" Value="10,8" />
@@ -21,7 +21,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="borda" Property="BorderBrush" Value="#9CA3AF" />
+                                <Setter TargetName="borda" Property="BorderBrush" Value="{StaticResource CorBordaForte}" />
                             </Trigger>
                             <Trigger Property="IsKeyboardFocused" Value="True">
                                 <Setter TargetName="borda" Property="BorderBrush" Value="{StaticResource CorPrimaria}" />
@@ -40,7 +40,7 @@
                     </DataTrigger.Binding>
                     <Setter Property="BorderBrush" Value="{StaticResource CorPrimaria}" />
                     <Setter Property="BorderThickness" Value="2" />
-                    <Setter Property="Background" Value="#EFF6FF" />
+                    <Setter Property="Background" Value="{StaticResource CorSelecaoSuave}" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>
@@ -64,7 +64,7 @@
         </DataTemplate>
 
         <Style x:Key="ColunaQuadro" TargetType="Border">
-            <Setter Property="Background" Value="#ECEEF1" />
+            <Setter Property="Background" Value="{StaticResource CorColunaFundo}" />
             <Setter Property="CornerRadius" Value="10" />
             <Setter Property="Padding" Value="10" />
             <Setter Property="Margin" Value="0,0,10,0" />

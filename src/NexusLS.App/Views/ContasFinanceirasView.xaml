@@ -25,7 +25,7 @@
                 <Border Style="{StaticResource Painel}" Padding="0" Margin="0,0,0,18">
                     <DataGrid ItemsSource="{Binding Contas}" SelectedItem="{Binding Selecionada, Mode=TwoWay}" AutoGenerateColumns="False"
                               IsReadOnly="True" SelectionMode="Single" CanUserAddRows="False" HeadersVisibility="Column" MaxHeight="220"
-                              GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#E5E7EB" BorderThickness="0" Background="Transparent"
+                              GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0" Background="Transparent"
                               RowHeight="36" AutomationProperties.Name="Lista de contas">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Conta" Binding="{Binding Nome, Mode=OneWay}" Width="2*" MinWidth="150" />
@@ -40,7 +40,7 @@
                 <Border Style="{StaticResource Painel}" Padding="0">
                     <DataGrid ItemsSource="{Binding Transferencias}" SelectedItem="{Binding TransferenciaSelecionada, Mode=TwoWay}"
                               AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" CanUserAddRows="False" HeadersVisibility="Column"
-                              GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#E5E7EB" BorderThickness="0" Background="Transparent"
+                              GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0" Background="Transparent"
                               RowHeight="36" MaxHeight="260" AutomationProperties.Name="Lista de transferências">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Data" Binding="{Binding Data, Mode=OneWay}" Width="100" />

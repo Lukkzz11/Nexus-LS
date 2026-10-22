@@ -1,0 +1,43 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="Tokens.xaml" />
+    </ResourceDictionary.MergedDictionaries>
+
+    <!--
+        Cartões e campos. Os controles em si vêm da biblioteca WPF-UI (estilo Windows 11); aqui só se ajusta o que
+        é do Nexus LS: contorno, cor do texto e o cartão que agrupa uma parte da tela.
+    -->
+
+    <!-- Cartão: caixa branca de cantos arredondados que agrupa uma parte da tela. -->
+    <Style x:Key="Painel" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource CorPainel}" />
+        <Setter Property="BorderBrush" Value="{StaticResource CorBorda}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{StaticResource RaioGrande}" />
+        <Setter Property="Padding" Value="18" />
+    </Style>
+
+    <!-- Aviso em faixa (ex.: "2 produtos abaixo do mínimo"). -->
+    <Style x:Key="FaixaAviso" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource CorAlerta}" />
+        <Setter Property="CornerRadius" Value="{StaticResource RaioMedio}" />
+        <Setter Property="Padding" Value="14,10" />
+    </Style>
+
+    <!-- Campos de texto e listas suspensas: mesmo contorno e mesma cor de texto em todo o programa. -->
+    <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+        <Setter Property="Foreground" Value="{StaticResource CorTexto}" />
+        <Setter Property="BorderBrush" Value="{StaticResource CorBordaCampo}" />
+    </Style>
+
+    <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
+        <Setter Property="Foreground" Value="{StaticResource CorTexto}" />
+        <Setter Property="BorderBrush" Value="{StaticResource CorBordaCampo}" />
+    </Style>
+
+    <Style TargetType="CheckBox" BasedOn="{StaticResource {x:Type CheckBox}}">
+        <Setter Property="Foreground" Value="{StaticResource CorTexto}" />
+    </Style>
+</ResourceDictionary>

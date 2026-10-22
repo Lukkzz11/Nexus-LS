@@ -23,6 +23,8 @@ public record ItemCarrinho(
 /// <param name="DescontoPercentual">Desconto em % (0 a 100). Use este OU o desconto em R$.</param>
 /// <param name="Parcelas">1 a 4, só no cartão de crédito.</param>
 /// <param name="ClienteId">Obrigatório na venda a prazo; opcional nas demais.</param>
+/// <param name="ChaveUnica">Código desta tentativa de venda. Se a mesma chave chegar de novo, o serviço devolve a venda
+/// já gravada em vez de criar outra (protege contra Enter repetido, travamento e reenvio).</param>
 public record PedidoVenda(
     IReadOnlyList<ItemCarrinho> Itens,
     long DescontoCentavos,
@@ -31,4 +33,5 @@ public record PedidoVenda(
     TabelaPreco TabelaPreco = TabelaPreco.Varejo,
     decimal? DescontoPercentual = null,
     int Parcelas = 1,
-    int? ClienteId = null);
+    int? ClienteId = null,
+    Guid? ChaveUnica = null);

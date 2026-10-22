@@ -12,8 +12,8 @@ public partial class MainWindow : FluentWindow
     {
         InitializeComponent();
         // DataContext = "de onde a tela tira os dados do binding". Aqui, o MainViewModel.
-        var vm = new MainViewModel();
-        vm.PedirLogin = () => Views.LoginWindow.Pedir(Servicos.Funcionarios, this);
+        var vm = new MainViewModel(App.Servicos);
+        vm.PedirLogin = () => Views.LoginWindow.Pedir(App.Servicos.Funcionarios, this);
         DataContext = vm;
 
         // Atualização: as perguntas ficam aqui (janela); a consulta ao abrir é silenciosa e nunca atrapalha o uso.
@@ -22,5 +22,9 @@ public partial class MainWindow : FluentWindow
         vm.Atualizacao.MostrarNotas = (titulo, texto) =>
             System.Windows.MessageBox.Show(this, texto, titulo, System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
         Loaded += async (_, _) => await vm.Atualizacao.VerificarAoAbrirAsync();
+
+        // Sincronização: o login do Firebase é opcional ("Continuar sem entrar"); a fila espera até alguém entrar.
+        vm.Sincronizacao.PedirLogin = () => Views.LoginFirebaseWindow.Pedir(App.Servicos.Login, this);
+        Loaded += async (_, _) => await vm.Sincronizacao.IniciarAsync();
     }
 }

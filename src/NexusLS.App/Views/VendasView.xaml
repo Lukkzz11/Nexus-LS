@@ -48,11 +48,11 @@
                           SelectionMode="Single" SelectionUnit="FullRow"
                           CanUserAddRows="False" CanUserDeleteRows="False"
                           HeadersVisibility="Column" GridLinesVisibility="Horizontal"
-                          HorizontalGridLinesBrush="#E5E7EB" BorderThickness="0"
-                          Background="White" RowHeight="36">
+                          HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0"
+                          Background="{StaticResource CorPainel}" RowHeight="36">
                     <DataGrid.RowStyle>
                         <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
-                            <Setter Property="Background" Value="White" />
+                            <Setter Property="Background" Value="{StaticResource CorPainel}" />
                             <Style.Triggers>
                                 <!-- venda cancelada: cinza e riscada, mas continua na lista -->
                                 <DataTrigger Binding="{Binding Cancelada}" Value="True">

@@ -10,8 +10,39 @@ public partial class App : Application
     /// <summary>Opções do banco compartilhadas pelo app (aponta para %LOCALAPPDATA%\NexusLS\pdv.db).</summary>
     public static DbContextOptions<PdvDbContext> OpcoesBanco { get; } =
         new DbContextOptionsBuilder<PdvDbContext>()
-            .UseSqlite($"Data Source={CaminhoBanco.Padrao()}")
+            // "Default Timeout": se o banco estiver ocupado, espera até 30 s em vez de falhar na hora com "banco bloqueado".
+            .UseSqlite($"Data Source={CaminhoBanco.Padrao()};Default Timeout=30")
+            // Todo produto salvo entra na fila de sincronização na mesma transação (o envio é feito à parte).
+            .AddInterceptors(new FilaSincronizacaoInterceptor(() => UsuarioUidAtual))
             .Options;
+
+    /// <summary>Uid do Firebase do usuário logado (nulo enquanto não houver tela de login).</summary>
+    public static string? UsuarioUidAtual { get; set; }
+
+    private static ContainerDeServicos? _servicos;
+
+    /// <summary>Os serviços do programa, criados uma vez só (raiz de composição). Quem precisa deles os recebe pelo construtor.</summary>
+    public static ContainerDeServicos Servicos => _servicos ??= new ContainerDeServicos(OpcoesBanco);
+
+    // Trava de instância única: dois Nexus LS abertos gravariam no mesmo banco ao mesmo tempo.
+    private static Mutex? _instanciaUnica;
+
+    /// <summary>
+    /// Só um Nexus LS por usuário do Windows. Espera até 15 s porque, numa atualização, o programa novo abre
+    /// enquanto o antigo ainda está terminando de fechar.
+    /// </summary>
+    private static bool ObterInstanciaUnica()
+    {
+        _instanciaUnica = new Mutex(false, @"Local\NexusLS.InstanciaUnica");
+        try
+        {
+            return _instanciaUnica.WaitOne(TimeSpan.FromSeconds(15));
+        }
+        catch (AbandonedMutexException)
+        {
+            return true; // a instância anterior caiu sem soltar a trava: seguimos normalmente
+        }
+    }
 
     /// <summary>
     /// OnStartup roda uma vez quando o programa abre. Migrate() cria o arquivo do banco
@@ -20,6 +51,14 @@ public partial class App : Application
     /// </summary>
     protected override void OnStartup(StartupEventArgs e)
     {
+        if (!ObterInstanciaUnica())
+        {
+            MessageBox.Show("O Nexus LS já está aberto neste computador. Use a janela que já existe.", "Nexus LS",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            Shutdown();
+            return;
+        }
+
         if (!PrepararBanco()) return; // falhou e o usuário escolheu sair: nada de abrir a janela
 
         // Cor de destaque da biblioteca WPF-UI (foco dos campos, seleção, abas...) igual ao azul do Nexus LS.

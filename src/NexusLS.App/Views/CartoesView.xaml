@@ -22,7 +22,7 @@
                 <Border Style="{StaticResource Painel}" Padding="0" Margin="0,0,0,18">
                     <DataGrid ItemsSource="{Binding Aliquidar}" SelectedItem="{Binding Selecionado, Mode=TwoWay}" AutoGenerateColumns="False"
                               IsReadOnly="True" SelectionMode="Single" CanUserAddRows="False" HeadersVisibility="Column" MaxHeight="300"
-                              GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#E5E7EB" BorderThickness="0" Background="Transparent"
+                              GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0" Background="Transparent"
                               RowHeight="36" AutomationProperties.Name="Vendas no cartão a liquidar">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Venda" Binding="{Binding Venda, Mode=OneWay}" Width="80" />
@@ -38,7 +38,7 @@
                 <Border Style="{StaticResource Painel}" Padding="0">
                     <DataGrid ItemsSource="{Binding Liquidados}" SelectedItem="{Binding LiquidadoSelecionado, Mode=TwoWay}" AutoGenerateColumns="False"
                               IsReadOnly="True" SelectionMode="Single" CanUserAddRows="False" HeadersVisibility="Column" MaxHeight="260"
-                              GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#E5E7EB" BorderThickness="0" Background="Transparent"
+                              GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0" Background="Transparent"
                               RowHeight="36" AutomationProperties.Name="Vendas no cartão já liquidadas">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Venda" Binding="{Binding Venda, Mode=OneWay}" Width="80" />

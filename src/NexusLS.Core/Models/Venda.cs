@@ -39,5 +39,8 @@ public class Venda
     /// <summary>Ao cancelar, os itens voltaram ao estoque? (Pode-se cancelar sem devolver, ex.: peça danificada.)</summary>
     public bool EstoqueDevolvido { get; set; }
 
+    /// <summary>Código da tentativa que gerou esta venda (nulo nas vendas antigas). Único: impede gravar a mesma venda duas vezes.</summary>
+    public Guid? ChaveUnica { get; set; }
+
     public List<ItemVenda> Itens { get; set; } = new();
 }

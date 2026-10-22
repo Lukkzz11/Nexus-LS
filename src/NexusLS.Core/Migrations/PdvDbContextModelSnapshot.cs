@@ -486,6 +486,54 @@ namespace NexusLS.Core.Migrations
                     b.ToTable("ItensCompra");
                 });
 
+            modelBuilder.Entity("NexusLS.Core.Models.ItemFilaSincronizacao", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("AtualizadoEm")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CriadoEm")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("EnviadoEm")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Estado")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("ProdutoGuid")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ProximaTentativa")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Tentativas")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("UltimoErro")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UsuarioUid")
+                        .HasMaxLength(128)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Versao")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProdutoGuid")
+                        .IsUnique();
+
+                    b.HasIndex("Estado", "ProximaTentativa");
+
+                    b.ToTable("FilaSincronizacao");
+                });
+
             modelBuilder.Entity("NexusLS.Core.Models.ItemPedido", b =>
                 {
                     b.Property<int>("Id")
@@ -1111,6 +1159,9 @@ namespace NexusLS.Core.Migrations
                         .HasMaxLength(80)
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("ChaveUnica")
+                        .HasColumnType("TEXT");
+
                     b.Property<int?>("ClienteId")
                         .HasColumnType("INTEGER");
 
@@ -1156,6 +1207,10 @@ namespace NexusLS.Core.Migrations
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ChaveUnica")
+                        .IsUnique()
+                        .HasFilter("\"ChaveUnica\" IS NOT NULL");
 
                     b.HasIndex("ClienteId");
 

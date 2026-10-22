@@ -50,11 +50,11 @@
                           SelectionMode="Single" SelectionUnit="FullRow"
                           CanUserAddRows="False" CanUserDeleteRows="False"
                           HeadersVisibility="Column" GridLinesVisibility="Horizontal"
-                          HorizontalGridLinesBrush="#E5E7EB" BorderThickness="0"
-                          Background="White" RowHeight="36">
+                          HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0"
+                          Background="{StaticResource CorPainel}" RowHeight="36">
                     <DataGrid.RowStyle>
                         <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
-                            <Setter Property="Background" Value="White" />
+                            <Setter Property="Background" Value="{StaticResource CorPainel}" />
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding Ativo}" Value="False">
                                     <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />
@@ -87,8 +87,8 @@
                           AutoGenerateColumns="False" IsReadOnly="True"
                           SelectionMode="Single" CanUserAddRows="False"
                           HeadersVisibility="Column" GridLinesVisibility="Horizontal"
-                          HorizontalGridLinesBrush="#E5E7EB" BorderThickness="0"
-                          Background="White" RowHeight="32">
+                          HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0"
+                          Background="{StaticResource CorPainel}" RowHeight="32">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Nº" Binding="{Binding Id, Mode=OneWay}" Width="70" />
                         <DataGridTextColumn Header="Data" Width="150"

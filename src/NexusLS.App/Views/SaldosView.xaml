@@ -95,7 +95,7 @@
                     <TextBlock Text="Por conta" FontSize="16" FontWeight="SemiBold" Margin="18,14,18,8" />
                     <DataGrid ItemsSource="{Binding Contas}" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single"
                               CanUserAddRows="False" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
-                              HorizontalGridLinesBrush="#E5E7EB" BorderThickness="0" Background="Transparent" RowHeight="36"
+                              HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0" Background="Transparent" RowHeight="36"
                               AutomationProperties.Name="Saldos por conta">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Conta" Binding="{Binding Nome, Mode=OneWay}" Width="2*" MinWidth="140" />
@@ -143,10 +143,10 @@
                                    HorizontalAlignment="Right" Margin="0,8,0,0" AutomationProperties.Name="Resultado do período">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock">
-                                    <Setter Property="Foreground" Value="#15803D" />
+                                    <Setter Property="Foreground" Value="{StaticResource CorPositivo}" />
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding ResultadoNegativo}" Value="True">
-                                            <Setter Property="Foreground" Value="#B91C1C" />
+                                            <Setter Property="Foreground" Value="{StaticResource CorNegativo}" />
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>

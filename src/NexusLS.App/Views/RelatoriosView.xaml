@@ -124,7 +124,7 @@
                                             <TextBlock Text="{Binding Dia}" VerticalAlignment="Center" />
                                             <ProgressBar Grid.Column="1" Value="{Binding Percentual, Mode=OneWay}" Maximum="100"
                                                          Height="14" Margin="0,0,10,0" BorderThickness="0"
-                                                         Foreground="{StaticResource CorPrimaria}" Background="#E5E7EB" />
+                                                         Foreground="{StaticResource CorPrimaria}" Background="{StaticResource CorLinhaGrade}" />
                                             <TextBlock Grid.Column="2" Text="{Binding Total}" HorizontalAlignment="Right" VerticalAlignment="Center" />
                                             <TextBlock Grid.Column="3" Text="{Binding Vendas, StringFormat='{}{0}x'}" HorizontalAlignment="Right"
                                                        VerticalAlignment="Center" Foreground="{StaticResource CorTextoSuave}" />
@@ -196,11 +196,11 @@
                           SelectionMode="Single" SelectionUnit="FullRow"
                           CanUserAddRows="False" CanUserDeleteRows="False"
                           HeadersVisibility="Column" GridLinesVisibility="Horizontal"
-                          HorizontalGridLinesBrush="#E5E7EB" BorderThickness="0"
-                          Background="White" RowHeight="32">
+                          HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0"
+                          Background="{StaticResource CorPainel}" RowHeight="32">
                     <DataGrid.RowStyle>
                         <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
-                            <Setter Property="Background" Value="White" />
+                            <Setter Property="Background" Value="{StaticResource CorPainel}" />
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding Cancelada}" Value="True">
                                     <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />

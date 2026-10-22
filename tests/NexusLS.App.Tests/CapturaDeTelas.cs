@@ -269,6 +269,7 @@ internal static class Capturador
         var thread = new Thread(() =>
         {
             var app = new NexusLS.App.App();
+            app.ShutdownMode = ShutdownMode.OnExplicitShutdown; // fechar a janela de uma captura não pode encerrar o Application
             app.InitializeComponent(); // carrega estilos, conversores e modelos de tela do App.xaml
             dispatcher = Dispatcher.CurrentDispatcher;
             pronto.Set();

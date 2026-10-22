@@ -12,8 +12,10 @@ public sealed class BancoDeTeste : IDisposable
     private readonly SqliteConnection _conexao;
 
     /// <param name="aplicarMigracoes">false = banco vazio, para testar a migração de dados antigos passo a passo.</param>
-    public BancoDeTeste(bool aplicarMigracoes = true)
+    public BancoDeTeste(bool aplicarMigracoes = true, bool comFilaSincronizacao = false, Func<string?>? usuarioUid = null)
     {
+        _comFila = comFilaSincronizacao;
+        _usuarioUid = usuarioUid;
         _conexao = new SqliteConnection("DataSource=:memory:");
         _conexao.Open();
         if (!aplicarMigracoes) return;
@@ -21,8 +23,18 @@ public sealed class BancoDeTeste : IDisposable
         db.Database.Migrate();
     }
 
-    private DbContextOptions<PdvDbContext> Opcoes =>
-        new DbContextOptionsBuilder<PdvDbContext>().UseSqlite(_conexao).Options;
+    private readonly bool _comFila;
+    private readonly Func<string?>? _usuarioUid;
+
+    private DbContextOptions<PdvDbContext> Opcoes
+    {
+        get
+        {
+            var b = new DbContextOptionsBuilder<PdvDbContext>().UseSqlite(_conexao);
+            if (_comFila) b.AddInterceptors(new FilaSincronizacaoInterceptor(_usuarioUid));
+            return b.Options;
+        }
+    }
 
     /// <summary>Fábrica que entrega contextos novos sobre a mesma conexão (usada pelos serviços).</summary>
     public FabricaContexto Fabrica => new(Opcoes);

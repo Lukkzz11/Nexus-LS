@@ -89,7 +89,7 @@
                     <DataGrid ItemsSource="{Binding Fila}"
                               AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
                               SelectionMode="Single" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
-                              HorizontalGridLinesBrush="#E5E7EB" BorderThickness="0" Background="White" RowHeight="40">
+                              HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0" Background="{StaticResource CorPainel}" RowHeight="40">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Produto" Binding="{Binding Nome, Mode=OneWay}" Width="*" IsReadOnly="True" ElementStyle="{StaticResource CelaCentralizada}" />
                             <DataGridTextColumn Header="Tamanho" Binding="{Binding Tamanho, Mode=OneWay}" Width="120" IsReadOnly="True" ElementStyle="{StaticResource CelaCentralizada}" />
@@ -189,7 +189,7 @@
             </Border>
 
             <TextBlock Text="Prévia (página 1)" FontWeight="SemiBold" Margin="2,16,0,6" />
-            <Border Background="#E5E7EB" CornerRadius="6" Padding="12" HorizontalAlignment="Left">
+            <Border Background="{StaticResource CorLinhaGrade}" CornerRadius="6" Padding="12" HorizontalAlignment="Left">
                 <Image x:Name="PreviaImagem" Stretch="Uniform" MaxWidth="420" MaxHeight="520"
                        RenderOptions.BitmapScalingMode="HighQuality" />
             </Border>

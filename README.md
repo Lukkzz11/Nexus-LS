@@ -144,6 +144,15 @@ Esta é a base segura que o envio usa. O SQLite continua sendo a única fonte do
 - **Controle no banco:** a tabela `SincronizacaoProdutos` guarda o hash do que o servidor já confirmou (um registro por produto, atualizado, nunca duplicado), e `SincronizacaoLogs` guarda cada tentativa (quando, quantos criados/alterados/desativados/ignorados, erros e resultado). Se um envio falhar no meio, só o que foi confirmado é anotado, e a próxima vez continua de onde parou.
 - Antes de aplicar essa mudança no banco, o programa faz um backup automático ("pre-atualizacao").
 
+## Fila de sincronização e login do usuário (núcleo, ainda sem tela)
+
+- **Fila de saída (`FilaSincronizacao`)**: todo produto salvo (cadastro, edição, ajuste de estoque, venda, compra) entra na fila **na mesma transação** (`FilaSincronizacaoInterceptor`). Uma linha por produto (índice único); várias mudanças viram um envio só.
+- **`ProcessadorFila`**: lê o produto atual, envia pelo mesmo destino do catálogo e só marca "Enviado" depois da confirmação. Sem internet: reagenda com espera crescente (30 s até 30 min). Dado recusado: "Falhou" com o motivo (volta à fila quando o produto mudar). Ao abrir o programa, `RecuperarInterrompidosAsync` devolve à fila o que ficou "Enviando" por uma queda. Sem duplicar: id do documento = Guid do produto, hash do que já foi enviado, um envio por vez, e produto alterado durante o envio continua pendente.
+- **`ServicoLogin`** (Firebase Authentication, REST, só chave pública): login por e-mail e senha; a senha nunca é gravada, o refresh token fica protegido em `sessao.json`; restaura ao abrir (renova com internet; offline vale por 14 dias desde a última validação); serve de `IProvedorToken` para o envio.
+- **Na interface (menu lateral, "Catálogo online")**: indicador da fila ("Catálogo em dia", "3 aguardando envio", "Sem conexão — 3 aguardando", "2 com erro", "Sem login"), botões **Sincronizar agora**, **Entrar** e **Sair da conta**. Ao abrir o programa: restaura a sessão, devolve à fila o que uma queda deixou pela metade e processa; depois repete a cada 3 minutos. Se o Firebase está configurado e ninguém entrou, abre a janela de login, com **Continuar sem entrar** (a fila só acumula; vendas e estoque seguem normais).
+- **Quem grava no Firestore**: com usuário logado, o envio usa o token DELE (`DestinoFilaFirestore`); sem usuário, cai no login da licença configurado em Catálogo online. As regras (`firebase/firestore.rules`) agora aceitam uma **lista de e-mails**: coloque lá cada usuário que vai entrar.
+- O botão "Atualizar Firestore" continua funcionando como antes.
+
 ## Catálogo online (envio para o Firestore)
 
 Na tela **Catálogo online** o botão **Atualizar Firestore** publica o catálogo no Firebase do seu cliente. O programa continua funcionando normalmente sem internet; o SQLite é sempre a fonte dos dados, e a nuvem é só uma cópia, atualizada **somente quando você clica**.

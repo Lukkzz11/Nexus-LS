@@ -28,7 +28,7 @@
 
                     <!-- Confirmação antes de enviar -->
                     <Border Margin="0,14,0,0" Padding="14" CornerRadius="6" BorderThickness="1"
-                            BorderBrush="{StaticResource CorBorda}" Background="#FFF7E6"
+                            BorderBrush="{StaticResource CorBorda}" Background="{StaticResource CorAvisoFundo}"
                             Visibility="{Binding AguardandoConfirmacao, Converter={StaticResource BoolVis}}">
                         <StackPanel>
                             <TextBlock Text="{Binding TextoConfirmacao}" TextWrapping="Wrap" FontWeight="SemiBold"
@@ -46,10 +46,10 @@
                                AutomationProperties.Name="Resultado da sincronização">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
-                                <Setter Property="Foreground" Value="#15803D" />
+                                <Setter Property="Foreground" Value="{StaticResource CorPositivo}" />
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding ResultadoEhErro}" Value="True">
-                                        <Setter Property="Foreground" Value="#B91C1C" />
+                                        <Setter Property="Foreground" Value="{StaticResource CorNegativo}" />
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
@@ -59,7 +59,7 @@
                     <ItemsControl ItemsSource="{Binding Problemas}" Margin="0,8,0,0">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <TextBlock Text="{Binding}" TextWrapping="Wrap" Foreground="#B45309" Margin="0,2" />
+                                <TextBlock Text="{Binding}" TextWrapping="Wrap" Foreground="{StaticResource CorAviso}" Margin="0,2" />
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>

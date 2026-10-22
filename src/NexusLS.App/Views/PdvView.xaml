@@ -7,7 +7,7 @@
         <!-- "Azulejo" usado nos modais (tamanho, pagamento, parcelas...): o selecionado fica azul. -->
         <DataTemplate x:Key="Azulejo" DataType="{x:Type vm:OpcaoViewModel}">
             <Border x:Name="borda" Margin="5" Padding="12,14" CornerRadius="8" BorderThickness="2"
-                    BorderBrush="{StaticResource CorBorda}" Background="White">
+                    BorderBrush="{StaticResource CorBorda}" Background="{StaticResource CorPainel}">
                 <StackPanel HorizontalAlignment="Center">
                     <TextBlock x:Name="texto" Text="{Binding Texto}" FontSize="22" FontWeight="Bold"
                                TextAlignment="Center" Foreground="{StaticResource CorTexto}" />
@@ -22,8 +22,8 @@
                 <DataTrigger Binding="{Binding Selecionada}" Value="True">
                     <Setter TargetName="borda" Property="Background" Value="{StaticResource CorPrimaria}" />
                     <Setter TargetName="borda" Property="BorderBrush" Value="{StaticResource CorPrimaria}" />
-                    <Setter TargetName="texto" Property="Foreground" Value="White" />
-                    <Setter TargetName="detalhe" Property="Foreground" Value="#DBEAFE" />
+                    <Setter TargetName="texto" Property="Foreground" Value="{StaticResource CorSobrePrimaria}" />
+                    <Setter TargetName="detalhe" Property="Foreground" Value="{StaticResource CorSobrePrimariaSuave}" />
                 </DataTrigger>
             </DataTemplate.Triggers>
         </DataTemplate>
@@ -142,7 +142,7 @@
                                         <Setter.Value>
                                             <ControlTemplate TargetType="ListBoxItem">
                                                 <Border x:Name="borda" Background="Transparent" Padding="14,6"
-                                                        BorderBrush="#E5E7EB" BorderThickness="0,0,0,1">
+                                                        BorderBrush="{StaticResource CorLinhaGrade}" BorderThickness="0,0,0,1">
                                                     <ContentPresenter />
                                                 </Border>
                                                 <ControlTemplate.Triggers>
@@ -238,9 +238,9 @@
                             <Style TargetType="Button" BasedOn="{StaticResource BotaoSecundario}">
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding EhAtacado}" Value="True">
-                                        <Setter Property="Background" Value="#FFEDD5" />
-                                        <Setter Property="BorderBrush" Value="#EA580C" />
-                                        <Setter Property="Foreground" Value="#9A3412" />
+                                        <Setter Property="Background" Value="{StaticResource CorAtencaoFundo}" />
+                                        <Setter Property="BorderBrush" Value="{StaticResource CorAtencaoBorda}" />
+                                        <Setter Property="Foreground" Value="{StaticResource CorAtencaoTexto}" />
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
@@ -261,7 +261,7 @@
         </Grid>
 
         <!-- ================= Modais encadeados ================= -->
-        <Grid x:Name="Sobreposicao" Background="#B3111827" Focusable="True" FocusVisualStyle="{x:Null}"
+        <Grid x:Name="Sobreposicao" Background="{StaticResource CorSobreposicao}" Focusable="True" FocusVisualStyle="{x:Null}"
               Visibility="{Binding ModalAberto, Converter={StaticResource BoolVis}}">
 
             <!-- TAMANHO -->

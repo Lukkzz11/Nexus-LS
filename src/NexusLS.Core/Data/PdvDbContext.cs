@@ -24,6 +24,7 @@ public class PdvDbContext : DbContext
     public DbSet<FechamentoCaixa> FechamentosCaixa => Set<FechamentoCaixa>();
     public DbSet<SincronizacaoProduto> SincronizacaoProdutos => Set<SincronizacaoProduto>();
     public DbSet<SincronizacaoLog> SincronizacaoLogs => Set<SincronizacaoLog>();
+    public DbSet<ItemFilaSincronizacao> FilaSincronizacao => Set<ItemFilaSincronizacao>();
     public DbSet<Lancamento> Lancamentos => Set<Lancamento>();
     public DbSet<Fornecedor> Fornecedores => Set<Fornecedor>();
     public DbSet<Funcionario> Funcionarios => Set<Funcionario>();
@@ -114,6 +115,14 @@ public class PdvDbContext : DbContext
             e.HasIndex(x => x.IniciadaEm);
         });
 
+        modelBuilder.Entity<ItemFilaSincronizacao>(e =>
+        {
+            e.HasIndex(x => x.ProdutoGuid).IsUnique(); // uma linha por produto: a fila nunca duplica
+            e.HasIndex(x => new { x.Estado, x.ProximaTentativa });
+            e.Property(x => x.UltimoErro).HasMaxLength(500);
+            e.Property(x => x.UsuarioUid).HasMaxLength(128);
+        });
+
         modelBuilder.Entity<ProdutoTamanho>(e =>
         {
             e.Property(t => t.Tamanho).IsRequired().HasMaxLength(30);
@@ -133,6 +142,7 @@ public class PdvDbContext : DbContext
             e.HasMany(v => v.Itens).WithOne().HasForeignKey(i => i.VendaId);
             e.HasOne(v => v.Cliente).WithMany().HasForeignKey(v => v.ClienteId).OnDelete(DeleteBehavior.Restrict);
             e.HasIndex(v => v.DataHora);
+            e.HasIndex(v => v.ChaveUnica).IsUnique().HasFilter("\"ChaveUnica\" IS NOT NULL");
             e.Property(v => v.Operador).HasMaxLength(80);
             e.Property(v => v.MotivoCancelamento).HasMaxLength(300);
             e.Property(v => v.CanceladoPor).HasMaxLength(80);

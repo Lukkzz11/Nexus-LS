@@ -18,12 +18,14 @@ public enum ItemMenu { Inicio, Pdv, Caixa, Fechamento, Pedidos, MaisVendidos, Es
 public partial class MainViewModel : ObservableObject
 {
     // O PDV é criado uma vez só: se o operador for olhar o estoque no meio de uma venda, o carrinho continua lá.
-    private readonly PdvViewModel _pdv =
-        new(Servicos.Produtos, Servicos.Vendas, Servicos.Rascunho, Servicos.Clientes, Servicos.Cupons,
-            configuracao: Servicos.Configuracao);
+    private readonly ContainerDeServicos _servicos;
+    private readonly PdvViewModel _pdv;
 
     /// <summary>Aviso de versão nova (faixa no alto da janela).</summary>
-    public AtualizacaoViewModel Atualizacao => Servicos.Atualizacao;
+    public AtualizacaoViewModel Atualizacao => _servicos.Atualizacao;
+
+    /// <summary>Indicador da fila de envio ao catálogo e conta do Firebase (menu lateral).</summary>
+    public SincronizacaoViewModel Sincronizacao => _servicos.Sincronizacao;
 
     [ObservableProperty]
     private object? _telaAtual;
@@ -31,11 +33,14 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private ItemMenu _itemAtivo;
 
-    public MainViewModel()
+    public MainViewModel(ContainerDeServicos servicos)
     {
+        _servicos = servicos;
+        _pdv = new(_servicos.Produtos, _servicos.Vendas, _servicos.Rascunho, _servicos.Clientes, _servicos.Cupons,
+            configuracao: _servicos.Configuracao);
         // Abre na tela Início (indicadores e atalhos). Quem preferir o PDV direto liga isso em Configurações.
         // Task.Run: lê a configuração fora da thread da tela, sem risco de travar a abertura.
-        var abrirNoPdv = Task.Run(() => Servicos.Configuracao.ObterAsync()).GetAwaiter().GetResult().AbrirNoPdv;
+        var abrirNoPdv = Task.Run(() => _servicos.Configuracao.ObterAsync()).GetAwaiter().GetResult().AbrirNoPdv;
         if (abrirNoPdv && Sessao.Pode(Permissao.Vender)) IrParaPdv(); else IrParaInicio();
         Sessao.Mudou += AtualizarPermissoes;
         _ = _pdv.RestaurarRascunhoAsync(); // se a venda anterior ficou no meio, ela volta
@@ -68,40 +73,40 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    [RelayCommand] private void IrParaInicio() => Abrir(new InicioViewModel(Servicos.Inicio, Servicos.Backup, Ir), ItemMenu.Inicio);
+    [RelayCommand] private void IrParaInicio() => Abrir(new InicioViewModel(_servicos.Inicio, _servicos.Backup, Ir), ItemMenu.Inicio);
 
     // Vendas
     [RelayCommand] private void IrParaPdv() => Abrir(_pdv, ItemMenu.Pdv);
-    [RelayCommand] private void IrParaCaixa() => Abrir(new VendasViewModel(Servicos.Vendas, Servicos.Cupons, Servicos.Caixa), ItemMenu.Caixa);
-    [RelayCommand] private void IrParaFechamento() => Abrir(new FechamentoViewModel(Servicos.Caixa), ItemMenu.Fechamento);
-    [RelayCommand] private void IrParaPedidos() => Abrir(new PedidosViewModel(Servicos.Pedidos, Servicos.Produtos, Servicos.Clientes, Servicos.Cupons), ItemMenu.Pedidos);
-    [RelayCommand] private void IrParaMaisVendidos() => Abrir(new MaisVendidosViewModel(Servicos.Relatorios), ItemMenu.MaisVendidos);
+    [RelayCommand] private void IrParaCaixa() => Abrir(new VendasViewModel(_servicos.Vendas, _servicos.Cupons, _servicos.Caixa), ItemMenu.Caixa);
+    [RelayCommand] private void IrParaFechamento() => Abrir(new FechamentoViewModel(_servicos.Caixa), ItemMenu.Fechamento);
+    [RelayCommand] private void IrParaPedidos() => Abrir(new PedidosViewModel(_servicos.Pedidos, _servicos.Produtos, _servicos.Clientes, _servicos.Cupons), ItemMenu.Pedidos);
+    [RelayCommand] private void IrParaMaisVendidos() => Abrir(new MaisVendidosViewModel(_servicos.Relatorios), ItemMenu.MaisVendidos);
 
     // Estoque
-    [RelayCommand] private void IrParaEstoque() => Abrir(new EstoqueLojaViewModel(Servicos.Produtos, Servicos.Estoque), ItemMenu.EstoqueDaLoja);
-    [RelayCommand] private void IrParaCompras() => Abrir(new ComprasViewModel(Servicos.Compras, Servicos.Produtos, Servicos.Fornecedores), ItemMenu.Compras);
-    [RelayCommand] private void IrParaFornecedores() => Abrir(new FornecedoresViewModel(Servicos.Fornecedores), ItemMenu.Fornecedores);
-    [RelayCommand] private void IrParaEtiquetas() => Abrir(new EtiquetasViewModel(Servicos.Produtos, Servicos.ModelosEtiqueta), ItemMenu.Etiquetas);
+    [RelayCommand] private void IrParaEstoque() => Abrir(new EstoqueLojaViewModel(_servicos.Produtos, _servicos.Estoque), ItemMenu.EstoqueDaLoja);
+    [RelayCommand] private void IrParaCompras() => Abrir(new ComprasViewModel(_servicos.Compras, _servicos.Produtos, _servicos.Fornecedores), ItemMenu.Compras);
+    [RelayCommand] private void IrParaFornecedores() => Abrir(new FornecedoresViewModel(_servicos.Fornecedores), ItemMenu.Fornecedores);
+    [RelayCommand] private void IrParaEtiquetas() => Abrir(new EtiquetasViewModel(_servicos.Produtos, _servicos.ModelosEtiqueta), ItemMenu.Etiquetas);
 
     // Gestão
-    [RelayCommand] private void IrParaClientes() => Abrir(new ClientesViewModel(Servicos.Clientes), ItemMenu.Clientes);
-    [RelayCommand] private void IrParaFinanceiro() => Abrir(new FinanceiroViewModel(Servicos.Financeiro), ItemMenu.Financeiro);
-    [RelayCommand] private void IrParaContasESaldos() => Abrir(new ContasESaldosViewModel(Servicos.Posicao, Servicos.ContasFinanceiras, Servicos.Cartoes, Servicos.Cheques), ItemMenu.ContasESaldos);
-    [RelayCommand] private void IrParaRelatorios() => Abrir(new RelatoriosViewModel(Servicos.Relatorios), ItemMenu.Relatorios);
-    [RelayCommand] private void IrParaCatalogoOnline() => Abrir(new CatalogoOnlineViewModel(Servicos.Firebase, Servicos.Sincronizador, Servicos.SincronizacaoRepo, Servicos.DestinoCatalogo, Servicos.Configuracao), ItemMenu.CatalogoOnline);
-    [RelayCommand] private void IrParaFuncionarios() => Abrir(new FuncionariosViewModel(Servicos.Funcionarios), ItemMenu.Funcionarios);
-    [RelayCommand] private void IrParaAtividades() => Abrir(new AtividadesViewModel(Servicos.Atividades), ItemMenu.Atividades);
+    [RelayCommand] private void IrParaClientes() => Abrir(new ClientesViewModel(_servicos.Clientes), ItemMenu.Clientes);
+    [RelayCommand] private void IrParaFinanceiro() => Abrir(new FinanceiroViewModel(_servicos.Financeiro), ItemMenu.Financeiro);
+    [RelayCommand] private void IrParaContasESaldos() => Abrir(new ContasESaldosViewModel(_servicos.Posicao, _servicos.ContasFinanceiras, _servicos.Cartoes, _servicos.Cheques), ItemMenu.ContasESaldos);
+    [RelayCommand] private void IrParaRelatorios() => Abrir(new RelatoriosViewModel(_servicos.Relatorios), ItemMenu.Relatorios);
+    [RelayCommand] private void IrParaCatalogoOnline() => Abrir(new CatalogoOnlineViewModel(_servicos.Firebase, _servicos.Sincronizador, _servicos.SincronizacaoRepo, _servicos.DestinoCatalogo, _servicos.Configuracao), ItemMenu.CatalogoOnline);
+    [RelayCommand] private void IrParaFuncionarios() => Abrir(new FuncionariosViewModel(_servicos.Funcionarios), ItemMenu.Funcionarios);
+    [RelayCommand] private void IrParaAtividades() => Abrir(new AtividadesViewModel(_servicos.Atividades), ItemMenu.Atividades);
     [RelayCommand]
     private void IrParaConfiguracoes()
     {
         var dialogos = new NexusLS.App.Backup.DialogosBackupWpf();
-        var limpar = new LimparDadosViewModel(Servicos.Limpeza, SouAdministrador, dialogos.Confirmar, () =>
+        var limpar = new LimparDadosViewModel(_servicos.Limpeza, SouAdministrador, dialogos.Confirmar, () =>
         {
             // O carrinho guardado aponta para produtos que acabaram de ser apagados: sai junto.
             try { File.Delete(NexusLS.Core.Services.RascunhoStore.CaminhoPadrao()); } catch (IOException) { }
             dialogos.Reiniciar();
         });
-        Abrir(new ConfiguracoesViewModel(Servicos.Configuracao, Servicos.Cupons, Servicos.Backup, dialogos, limpar, Servicos.Atualizacao), ItemMenu.Configuracoes);
+        Abrir(new ConfiguracoesViewModel(_servicos.Configuracao, _servicos.Cupons, _servicos.Backup, dialogos, limpar, _servicos.Atualizacao), ItemMenu.Configuracoes);
     }
 
     /// <summary>Apagar dados é só do administrador. Com o login desligado (ninguém cadastrado) vale como administrador.</summary>

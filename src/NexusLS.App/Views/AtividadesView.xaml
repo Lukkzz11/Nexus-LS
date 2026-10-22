@@ -38,7 +38,7 @@
             <DataGrid ItemsSource="{Binding Linhas}" AutoGenerateColumns="False" IsReadOnly="True"
                       SelectionMode="Single" SelectionUnit="FullRow" CanUserAddRows="False" CanUserDeleteRows="False"
                       HeadersVisibility="Column" GridLinesVisibility="Horizontal"
-                      HorizontalGridLinesBrush="#E5E7EB" BorderThickness="0" Background="White"
+                      HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0" Background="{StaticResource CorPainel}"
                       RowHeight="38" FontSize="15" AutomationProperties.Name="Lista de atividades">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Quando" Binding="{Binding Quando, Mode=OneWay}" Width="150" />

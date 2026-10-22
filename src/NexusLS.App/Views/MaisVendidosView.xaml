@@ -48,8 +48,8 @@
                       SelectionMode="Single" SelectionUnit="FullRow"
                       CanUserAddRows="False" CanUserDeleteRows="False"
                       HeadersVisibility="Column" GridLinesVisibility="Horizontal"
-                      HorizontalGridLinesBrush="#E5E7EB" BorderThickness="0"
-                      Background="White" RowHeight="38" FontSize="16">
+                      HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0"
+                      Background="{StaticResource CorPainel}" RowHeight="38" FontSize="16">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="#" Binding="{Binding Posicao, Mode=OneWay}" Width="60" />
                     <DataGridTextColumn Header="Produto" Binding="{Binding Nome, Mode=OneWay}" Width="*" />

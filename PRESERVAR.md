@@ -6,7 +6,9 @@ Registro feito em 21/10/2026, na versão 1.1.0 (893 testes verdes), **antes** de
 
 - Mude só `src/NexusLS.App/Views/*.xaml`, `Resources/Estilos.xaml` e `MainWindow.xaml`. Os ViewModels guardam a lógica da tela e são testados tecla por tecla; ao mover um botão, mantenha o nome do comando (`SalvarCommand`, `FinalizarCommand`...).
 - Depois de cada ajuste: `dotnet build` e `dotnet test`. Tudo verde antes de seguir.
-- Cores e tamanhos: usar os estilos de `Estilos.xaml` (`Painel`, `BotaoPrimario`, `Rotulo`...) em vez de escrever cor na tela (hoje ainda há 51 cores soltas nas telas: é a primeira dívida visual a pagar).
+- **Design system** (`src/NexusLS.App/Resources/`, reunido por `Estilos.xaml`): `Tokens.xaml` (cores, fontes `Tam*`, espaços `Esp*`, cantos `Raio*`), `Tipografia.xaml`, `Botoes.xaml` (`BotaoPrimario`, `BotaoSecundario`, `BotaoPerigo`, `BotaoFantasma`, `BotaoIcone`), `Campos.xaml` (`Painel`, `FaixaAviso`, campos), `Tabelas.xaml` (DataGrid implícito: toda tabela herda cabeçalho, hover e seleção; linhas coloridas por regra usam `BasedOn="{StaticResource {x:Type DataGridRow}}"`), `Menu.xaml`. Cada dicionário inclui o `Tokens.xaml` (sem isso, templates não acham as cores). Um símbolo de ícone inexistente só falha ao abrir a tela, não ao compilar: gere as capturas (`NEXUSLS_PRINTS`) depois de mexer em XAML, **um teste por vez** (`--filter`), porque rodar todos juntos falha.
+- Cores e tamanhos: usar os estilos de `Estilos.xaml` (`Painel`, `BotaoPrimario`, `CorPositivo`, `CorLinhaGrade`...) em vez de escrever cor na tela (as cores soltas das telas já foram trocadas por pincéis nomeados em 21/10/2026).
+- Serviços: o `MainViewModel` recebe o `ContainerDeServicos` (`App.Servicos`) pelo construtor; novos ViewModels devem receber o serviço pelo construtor, não buscar em lugar global.
 
 ## Regras de negócio que não podem mudar
 
@@ -45,4 +47,4 @@ Registro feito em 21/10/2026, na versão 1.1.0 (893 testes verdes), **antes** de
 
 ## Dívidas conhecidas (para não esquecer)
 
-Fiscal (NFC-e) a confirmar com o contador · banco sem criptografia e sem backup na nuvem · um só computador · `.exe` sem assinatura digital e sem volta de versão · `Servicos` estático e `OperadorAtual` global · 26 usos de `DateTime.Now` no `Core` · cálculo financeiro lê tudo a cada atualização · 51 cores soltas nas telas · telas novas ainda não vistas rodando · Firestore e atualizador nunca testados contra o serviço real.
+Fiscal (NFC-e) a confirmar com o contador · banco sem criptografia e sem backup na nuvem · um só computador · `.exe` sem assinatura digital e sem volta de versão · `OperadorAtual` global · 25 usos de `DateTime.Now` no `Core` · cálculo financeiro lê tudo a cada atualização · telas novas ainda não vistas rodando · gerador de capturas (`CapturaDeTelas`) instável (já falhava antes) · instância única e espera do banco ainda não testadas com o programa aberto · Firestore e atualizador nunca testados contra o serviço real.

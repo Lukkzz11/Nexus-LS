@@ -8,7 +8,14 @@ public class EstoqueService
 {
     private readonly IDbContextFactory<PdvDbContext> _fabrica;
 
-    public EstoqueService(IDbContextFactory<PdvDbContext> fabrica) => _fabrica = fabrica;
+    private readonly Func<DateTime> _agora;
+
+    /// <param name="agora">Relógio. Nos testes passamos uma data fixa; no app, o padrão é DateTime.Now.</param>
+    public EstoqueService(IDbContextFactory<PdvDbContext> fabrica, Func<DateTime>? agora = null)
+    {
+        _fabrica = fabrica;
+        _agora = agora ?? (() => DateTime.Now);
+    }
 
     /// <summary>
     /// Ajuste manual de estoque de UM tamanho (padrão: "Sem tamanho"). Regras para a quantidade:
@@ -61,7 +68,7 @@ public class EstoqueService
         db.Movimentacoes.Add(new MovimentacaoEstoque
         {
             ProdutoId = produto.Id,
-            DataHora = DateTime.Now,
+            DataHora = _agora(),
             Tipo = tipo,
             Quantidade = variacao,
             Tamanho = linha.Tamanho,

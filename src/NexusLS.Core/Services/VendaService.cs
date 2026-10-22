@@ -39,6 +39,14 @@ public class VendaService
             .ToList();
 
         await using var db = await _fabrica.CreateDbContextAsync();
+
+        // Mesma tentativa chegando de novo (Enter repetido, reenvio): devolve a venda que já existe, sem gravar outra.
+        if (pedido.ChaveUnica is Guid chaveDaTentativa)
+        {
+            var existente = await db.Vendas.Include(v => v.Itens).AsNoTracking().FirstOrDefaultAsync(v => v.ChaveUnica == chaveDaTentativa);
+            if (existente is not null) return existente;
+        }
+
         await using var transacao = await db.Database.BeginTransactionAsync();
 
         var ids = grupos.Select(g => g.Chave.ProdutoId).Distinct().ToList();
@@ -80,7 +88,8 @@ public class VendaService
             DataHora = _agora(),
             FormaPagamento = pedido.FormaPagamento,
             TabelaPreco = pedido.TabelaPreco,
-            Parcelas = pedido.Parcelas
+            Parcelas = pedido.Parcelas,
+            ChaveUnica = pedido.ChaveUnica
         };
 
         foreach (var (chave, quantidade) in grupos)
