@@ -151,6 +151,8 @@ Esta é a base segura que o envio usa. O SQLite continua sendo a única fonte do
 - **`ServicoLogin`** (Firebase Authentication, REST, só chave pública): login por e-mail e senha; a senha nunca é gravada, o refresh token fica protegido em `sessao.json`; restaura ao abrir (renova com internet; offline vale por 14 dias desde a última validação); serve de `IProvedorToken` para o envio.
 - **Na interface (menu lateral, "Catálogo online")**: indicador da fila ("Catálogo em dia", "3 aguardando envio", "Sem conexão — 3 aguardando", "2 com erro", "Sem login"), botões **Sincronizar agora**, **Entrar** e **Sair da conta**. Ao abrir o programa: restaura a sessão, devolve à fila o que uma queda deixou pela metade e processa; depois repete a cada 3 minutos. Se o Firebase está configurado e ninguém entrou, abre a janela de login, com **Continuar sem entrar** (a fila só acumula; vendas e estoque seguem normais).
 - **Quem grava no Firestore**: com usuário logado, o envio usa o token DELE (`DestinoFilaFirestore`); sem usuário, cai no login da licença configurado em Catálogo online. As regras (`firebase/firestore.rules`) agora aceitam uma **lista de e-mails**: coloque lá cada usuário que vai entrar.
+- **Produtos antigos**: ao abrir, os produtos que ainda não estão na fila entram nela (o hash evita reenviar o que o catálogo já tem), então o catálogo se completa sozinho.
+- **Itens com erro**: aparece o botão **Reenviar com erro**, que devolve à fila o que o servidor recusou.
 - O botão "Atualizar Firestore" continua funcionando como antes.
 
 ## Catálogo online (envio para o Firestore)

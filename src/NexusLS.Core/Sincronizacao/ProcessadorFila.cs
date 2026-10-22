@@ -74,6 +74,23 @@ public class ProcessadorFila
         return new ResumoFila(Qtd(EstadoFila.Pendente), Qtd(EstadoFila.Enviando), Qtd(EstadoFila.Enviado), Qtd(EstadoFila.Falhou));
     }
 
+    /// <summary>
+    /// Põe na fila os produtos que ainda não têm linha nela (os cadastrados antes da fila existir). O hash de
+    /// <see cref="SincronizacaoRepositorio"/> evita reenviar o que o catálogo já tem. Seguro repetir.
+    /// </summary>
+    public async Task<int> EnfileirarExistentesAsync()
+    {
+        await using var db = await _fabrica.CreateDbContextAsync();
+        var faltam = await db.Produtos.AsNoTracking()
+            .Where(p => !db.FilaSincronizacao.Any(f => f.ProdutoGuid == p.Guid))
+            .Select(p => p.Guid).ToListAsync();
+        var agora = _agora();
+        foreach (var g in faltam)
+            db.FilaSincronizacao.Add(new ItemFilaSincronizacao { ProdutoGuid = g, CriadoEm = agora, AtualizadoEm = agora });
+        await db.SaveChangesAsync();
+        return faltam.Count;
+    }
+
     /// <summary>Devolve à fila os itens recusados (ex.: depois de o operador corrigir o cadastro ou o servidor).</summary>
     public async Task<int> ReenfileirarFalhasAsync()
     {

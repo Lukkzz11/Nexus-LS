@@ -43,6 +43,12 @@ public class MonitorSincronizacao
 
     public Task<int> RecuperarAoAbrirAsync() => _processador.RecuperarInterrompidosAsync();
 
+    /// <summary>Inclui na fila os produtos antigos, para o catálogo ficar completo sem apertar nada.</summary>
+    public Task<int> EnfileirarExistentesAsync() => _processador.EnfileirarExistentesAsync();
+
+    /// <summary>Devolve à fila o que o servidor recusou, para tentar de novo.</summary>
+    public Task<int> ReenviarComErroAsync() => _processador.ReenfileirarFalhasAsync();
+
     /// <summary>Processa a fila (se der) e devolve o estado resultante.</summary>
     public async Task<EstadoSincronizacao> CicloAsync(string? operador = null, CancellationToken ct = default)
     {

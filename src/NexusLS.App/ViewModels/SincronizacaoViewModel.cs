@@ -37,6 +37,7 @@ public partial class SincronizacaoViewModel : ViewModelBase
     [ObservableProperty] private bool _ocupado;
     [ObservableProperty] private bool _podeEntrar;
     [ObservableProperty] private bool _temSessao;
+    [ObservableProperty] private bool _temErros;
 
     /// <summary>Chamado ao abrir a janela principal. Restaura a sessão, recupera a fila e liga o relógio.</summary>
     public async Task IniciarAsync()
@@ -57,6 +58,7 @@ public partial class SincronizacaoViewModel : ViewModelBase
             if (_login.Configurado && _login.Atual is null && !_recusouLogin) EntrarCore();
 
             await _monitor.RecuperarAoAbrirAsync();
+            await _monitor.EnfileirarExistentesAsync();
             await CicloAsync();
         }
         catch (Exception ex)
@@ -71,6 +73,13 @@ public partial class SincronizacaoViewModel : ViewModelBase
 
     [RelayCommand]
     private Task SincronizarAgoraAsync() => CicloAsync();
+
+    [RelayCommand]
+    private async Task ReenviarErrosAsync()
+    {
+        await _monitor.ReenviarComErroAsync();
+        await CicloAsync();
+    }
 
     [RelayCommand]
     private void Entrar() => EntrarCore();
@@ -114,6 +123,7 @@ public partial class SincronizacaoViewModel : ViewModelBase
     private void Aplicar(EstadoSincronizacao e)
     {
         Nivel = e.Nivel;
+        TemErros = e.Fila.Falhos > 0;
         Texto = e.Texto;
         Detalhe = e.Detalhe;
     }

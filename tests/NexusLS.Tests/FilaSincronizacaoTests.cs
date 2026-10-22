@@ -250,6 +250,44 @@ public sealed class FilaSincronizacaoTests : IDisposable
     }
 
     [Fact]
+    public async Task Produtos_antigos_sem_linha_na_fila_sao_enfileirados_uma_vez_so_e_enviados()
+    {
+        await Cadastrar("Antigo 1", "A1");
+        await Cadastrar("Antigo 2", "A2");
+        await using (var db = _banco.CriarContexto()) // simula um banco de antes da fila existir
+        {
+            db.FilaSincronizacao.RemoveRange(db.FilaSincronizacao);
+            await db.SaveChangesAsync();
+        }
+        var proc = Processador();
+
+        Assert.Equal(2, await proc.EnfileirarExistentesAsync());
+        Assert.Equal(0, await proc.EnfileirarExistentesAsync()); // repetir não duplica
+        Assert.Equal(2, Fila().Count);
+
+        Assert.Equal(2, (await proc.ProcessarAsync()).Enviados);
+    }
+
+    [Fact]
+    public async Task Produto_que_o_catalogo_ja_tem_nao_e_reenviado_depois_de_enfileirar()
+    {
+        var p = await Cadastrar("Camiseta", "C1");
+        var proc = Processador();
+        await proc.ProcessarAsync();
+        await using (var db = _banco.CriarContexto())
+        {
+            db.FilaSincronizacao.RemoveRange(db.FilaSincronizacao);
+            await db.SaveChangesAsync();
+        }
+
+        await proc.EnfileirarExistentesAsync();
+        var r = await proc.ProcessarAsync();
+
+        Assert.Equal(1, r.SemMudanca);
+        Assert.Single(_destino.TodasAsOperacoes);
+    }
+
+    [Fact]
     public void Espera_cresce_e_tem_teto()
     {
         Assert.Equal(TimeSpan.FromSeconds(30), ProcessadorFila.Espera(1));

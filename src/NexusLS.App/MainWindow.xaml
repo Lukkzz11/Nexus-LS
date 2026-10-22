@@ -173,6 +173,8 @@
                         <WrapPanel Margin="0,8,0,0">
                             <Button Content="Sincronizar agora" Style="{StaticResource BotaoSecundario}" Padding="12,6" FontSize="13" Margin="0,0,6,6"
                                     Command="{Binding SincronizarAgoraCommand}" />
+                            <Button Content="Reenviar com erro" Style="{StaticResource BotaoSecundario}" Padding="12,6" FontSize="13" Margin="0,0,6,6"
+                                    Command="{Binding ReenviarErrosCommand}" Visibility="{Binding TemErros, Converter={StaticResource BoolVis}}" />
                             <Button Content="Entrar" Style="{StaticResource BotaoSecundario}" Padding="12,6" FontSize="13" Margin="0,0,6,6"
                                     Command="{Binding EntrarCommand}" Visibility="{Binding PodeEntrar, Converter={StaticResource BoolVis}}" />
                             <Button Content="Sair da conta" Style="{StaticResource BotaoSecundario}" Padding="12,6" FontSize="13" Margin="0,0,6,6"

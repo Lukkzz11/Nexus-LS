@@ -90,6 +90,22 @@ public sealed class MonitorSincronizacaoTests : IDisposable
     }
 
     [Fact]
+    public async Task Reenviar_com_erro_devolve_os_recusados_a_fila_e_envia_quando_o_servidor_aceita()
+    {
+        await Cadastrar("A", "1");
+        _destino.Falha = (_, _) => new FalhaDestinoException("recusado", GravidadeFalha.DadosRecusados);
+        var monitor = Monitor();
+        Assert.Equal(NivelSincronizacao.Atencao, (await monitor.CicloAsync()).Nivel);
+
+        _destino.Falha = null;
+        Assert.Equal(1, await monitor.ReenviarComErroAsync());
+        var e = await monitor.CicloAsync();
+
+        Assert.Equal(NivelSincronizacao.EmDia, e.Nivel);
+        Assert.Equal(0, e.Fila.Falhos);
+    }
+
+    [Fact]
     public async Task Recuperar_ao_abrir_devolve_itens_presos_a_fila()
     {
         await Cadastrar("A", "1");
