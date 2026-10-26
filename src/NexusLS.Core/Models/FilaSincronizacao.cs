@@ -11,23 +11,26 @@ public enum EstadoFila
     /// <summary>O servidor confirmou a versão registrada.</summary>
     Enviado = 3,
 
-    /// <summary>O servidor recusou os dados (ou o produto é inválido). Só volta à fila quando o produto mudar.</summary>
+    /// <summary>O servidor recusou os dados (ou a entidade é inválida). Só volta à fila quando ela mudar.</summary>
     Falhou = 4
 }
 
 /// <summary>
-/// Fila de saída (outbox): uma linha por produto que precisa ser enviado ao catálogo. É gravada na MESMA transação
-/// que altera o produto, então não existe produto salvo sem aviso na fila. Não guarda cópia dos dados: na hora de
-/// enviar, lê o produto atual (por isso várias mudanças seguidas viram um envio só e nunca vai dado velho).
+/// Fila de saída (outbox): uma linha por entidade (produto, venda, cliente...) que precisa ser enviada. É gravada na MESMA
+/// transação que altera a entidade, então não existe alteração salva sem aviso na fila. Não guarda cópia dos dados: na hora
+/// de enviar, lê o registro atual (por isso várias mudanças seguidas viram um envio só e nunca vai dado velho).
 /// </summary>
 public class ItemFilaSincronizacao
 {
     public int Id { get; set; }
 
-    /// <summary>Id global do produto; é também o id do documento remoto (reenviar apenas sobrescreve, nunca duplica).</summary>
-    public Guid ProdutoGuid { get; set; }
+    /// <summary>Qual tipo de entidade é (<see cref="NomesEntidade"/>). Linhas antigas, de antes da fila geral, são produtos.</summary>
+    public string Entidade { get; set; } = NomesEntidade.Produto;
 
-    /// <summary>Sobe a cada mudança do produto. Se mudou durante um envio, a confirmação não encerra o item.</summary>
+    /// <summary>Id global da entidade (<c>Guid</c> dela); é também o id do documento remoto (reenviar apenas sobrescreve, nunca duplica).</summary>
+    public Guid EntidadeGuid { get; set; }
+
+    /// <summary>Sobe a cada mudança da entidade. Se mudou durante um envio, a confirmação não encerra o item.</summary>
     public int Versao { get; set; } = 1;
 
     public EstadoFila Estado { get; set; } = EstadoFila.Pendente;

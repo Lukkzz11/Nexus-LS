@@ -4,7 +4,7 @@ namespace NexusLS.Core.Models;
 /// Registro de toda mudança no estoque (ajuste manual, venda ou cancelamento).
 /// Serve de "extrato" do produto: nunca é alterado nem apagado.
 /// </summary>
-public class MovimentacaoEstoque
+public class MovimentacaoEstoque : EntidadeSincronizavel
 {
     public int Id { get; set; }
     public int ProdutoId { get; set; }

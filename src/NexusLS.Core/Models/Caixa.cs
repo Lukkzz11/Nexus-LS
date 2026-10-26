@@ -10,7 +10,7 @@ public enum TipoMovimentoCaixa
 }
 
 /// <summary>Um turno de caixa: da abertura (com o troco inicial) até o fechamento. Só existe um aberto por vez.</summary>
-public class TurnoCaixa
+public class TurnoCaixa : EntidadeSincronizavel
 {
     public int Id { get; set; }
     public DateTime DataAbertura { get; set; }
@@ -23,7 +23,7 @@ public class TurnoCaixa
     public bool Aberto => DataFechamento is null;
 }
 
-public class MovimentoCaixa
+public class MovimentoCaixa : EntidadeSincronizavel
 {
     public int Id { get; set; }
     public int TurnoId { get; set; }
@@ -37,7 +37,7 @@ public class MovimentoCaixa
 /// Foto da conferência do caixa. Nunca é alterada: para refazer a conferência cria-se uma nova versão,
 /// e a anterior continua no histórico.
 /// </summary>
-public class FechamentoCaixa
+public class FechamentoCaixa : EntidadeSincronizavel
 {
     public int Id { get; set; }
     public int TurnoId { get; set; }
@@ -62,7 +62,7 @@ public class FechamentoCaixa
 }
 
 /// <summary>Dinheiro que um cliente pagou da dívida a prazo. Nunca é apagado.</summary>
-public class PagamentoCliente
+public class PagamentoCliente : EntidadeSincronizavel
 {
     public int Id { get; set; }
     public int ClienteId { get; set; }

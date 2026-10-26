@@ -1,6 +1,6 @@
 namespace NexusLS.Core.Models;
 
-public class Fornecedor
+public class Fornecedor : EntidadeSincronizavel
 {
     public int Id { get; set; }
     public string Nome { get; set; } = string.Empty;
@@ -20,7 +20,7 @@ public class Fornecedor
 /// Uma compra de mercadoria. Ao registrar, o estoque de cada item aumenta (com movimentação de entrada), o custo do
 /// produto pode ser atualizado e as contas a pagar podem ser geradas. Nunca é apagada: cancela-se com motivo.
 /// </summary>
-public class Compra
+public class Compra : EntidadeSincronizavel
 {
     public int Id { get; set; }
     public int? FornecedorId { get; set; }

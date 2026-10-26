@@ -89,7 +89,9 @@ public class VendaService
             FormaPagamento = pedido.FormaPagamento,
             TabelaPreco = pedido.TabelaPreco,
             Parcelas = pedido.Parcelas,
-            ChaveUnica = pedido.ChaveUnica
+            ChaveUnica = pedido.ChaveUnica,
+            // O id global da venda é a chave de idempotência quando existe (a mesma venda repetida cai no mesmo documento remoto)
+            Guid = pedido.ChaveUnica ?? Guid.NewGuid()
         };
 
         foreach (var (chave, quantidade) in grupos)

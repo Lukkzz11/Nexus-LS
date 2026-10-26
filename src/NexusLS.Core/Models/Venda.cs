@@ -1,6 +1,6 @@
 namespace NexusLS.Core.Models;
 
-public class Venda
+public class Venda : EntidadeSincronizavel
 {
     public int Id { get; set; }
     public DateTime DataHora { get; set; }

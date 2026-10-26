@@ -43,6 +43,15 @@ public class ProcessadorFila
         _tamanhoLote = tamanhoLote;
     }
 
+    /// <summary>
+    /// Este processador envia ao CATÁLOGO, que só recebe produtos. As demais entidades (vendas, clientes...) também entram
+    /// na fila, mas ficam esperando o destino delas (Firebase operacional): não são enviadas, contadas nem tocadas aqui.
+    /// </summary>
+    private static readonly string[] EntidadesDoCatalogo = { NomesEntidade.Produto };
+
+    private static IQueryable<ItemFilaSincronizacao> Fila(PdvDbContext db) =>
+        db.FilaSincronizacao.Where(f => EntidadesDoCatalogo.Contains(f.Entidade));
+
     public static TimeSpan Espera(int tentativas)
     {
         var potencia = Math.Min(Math.Max(tentativas, 1) - 1, 10);
@@ -54,7 +63,7 @@ public class ProcessadorFila
     public async Task<int> RecuperarInterrompidosAsync()
     {
         await using var db = await _fabrica.CreateDbContextAsync();
-        var presos = await db.FilaSincronizacao.Where(f => f.Estado == EstadoFila.Enviando).ToListAsync();
+        var presos = await Fila(db).Where(f => f.Estado == EstadoFila.Enviando).ToListAsync();
         foreach (var f in presos)
         {
             f.Estado = EstadoFila.Pendente;
@@ -68,7 +77,7 @@ public class ProcessadorFila
     public async Task<ResumoFila> ResumoAsync()
     {
         await using var db = await _fabrica.CreateDbContextAsync();
-        var contagem = await db.FilaSincronizacao.AsNoTracking().GroupBy(f => f.Estado)
+        var contagem = await Fila(db).AsNoTracking().GroupBy(f => f.Estado)
             .Select(g => new { Estado = g.Key, N = g.Count() }).ToListAsync();
         int Qtd(EstadoFila e) => contagem.FirstOrDefault(c => c.Estado == e)?.N ?? 0;
         return new ResumoFila(Qtd(EstadoFila.Pendente), Qtd(EstadoFila.Enviando), Qtd(EstadoFila.Enviado), Qtd(EstadoFila.Falhou));
@@ -82,11 +91,11 @@ public class ProcessadorFila
     {
         await using var db = await _fabrica.CreateDbContextAsync();
         var faltam = await db.Produtos.AsNoTracking()
-            .Where(p => !db.FilaSincronizacao.Any(f => f.ProdutoGuid == p.Guid))
+            .Where(p => !db.FilaSincronizacao.Any(f => f.Entidade == NomesEntidade.Produto && f.EntidadeGuid == p.Guid))
             .Select(p => p.Guid).ToListAsync();
         var agora = _agora();
         foreach (var g in faltam)
-            db.FilaSincronizacao.Add(new ItemFilaSincronizacao { ProdutoGuid = g, CriadoEm = agora, AtualizadoEm = agora });
+            db.FilaSincronizacao.Add(new ItemFilaSincronizacao { Entidade = NomesEntidade.Produto, EntidadeGuid = g, CriadoEm = agora, AtualizadoEm = agora });
         await db.SaveChangesAsync();
         return faltam.Count;
     }
@@ -95,7 +104,7 @@ public class ProcessadorFila
     public async Task<int> ReenfileirarFalhasAsync()
     {
         await using var db = await _fabrica.CreateDbContextAsync();
-        var falhos = await db.FilaSincronizacao.Where(f => f.Estado == EstadoFila.Falhou).ToListAsync();
+        var falhos = await Fila(db).Where(f => f.Estado == EstadoFila.Falhou).ToListAsync();
         foreach (var f in falhos)
         {
             f.Versao++;
@@ -208,7 +217,7 @@ public class ProcessadorFila
     {
         await using var db = await _fabrica.CreateDbContextAsync();
         var agora = _agora();
-        var itens = await db.FilaSincronizacao
+        var itens = await Fila(db)
             .Where(f => f.Estado == EstadoFila.Pendente && (f.ProximaTentativa == null || f.ProximaTentativa <= agora))
             .OrderBy(f => f.Id).ToListAsync();
         foreach (var f in itens)
@@ -217,7 +226,7 @@ public class ProcessadorFila
             f.AtualizadoEm = agora;
         }
         await db.SaveChangesAsync();
-        return itens.ToDictionary(f => f.ProdutoGuid, f => f.Versao);
+        return itens.ToDictionary(f => f.EntidadeGuid, f => f.Versao);
     }
 
     private record Planejado(List<Guid> SemMudanca, List<(Guid, string)> Recusados, List<OperacaoCatalogo> Operacoes);
@@ -248,11 +257,11 @@ public class ProcessadorFila
         await _repo.RegistrarEnviadosAsync(itens);
 
         await using var db = await _fabrica.CreateDbContextAsync();
-        var linhas = await db.FilaSincronizacao.Where(f => lista.Contains(f.ProdutoGuid)).ToListAsync();
+        var linhas = await Fila(db).Where(f => lista.Contains(f.EntidadeGuid)).ToListAsync();
         var agora = _agora();
         foreach (var f in linhas)
         {
-            if (f.Versao != versoes[f.ProdutoGuid]) { f.Estado = EstadoFila.Pendente; continue; } // mudou durante o envio
+            if (f.Versao != versoes[f.EntidadeGuid]) { f.Estado = EstadoFila.Pendente; continue; } // mudou durante o envio
             f.Estado = EstadoFila.Enviado;
             f.EnviadoEm = agora;
             f.Tentativas = 0;
@@ -266,7 +275,7 @@ public class ProcessadorFila
     private async Task MarcarFalhaAsync(Guid guid, int versaoVista, string motivo)
     {
         await using var db = await _fabrica.CreateDbContextAsync();
-        var f = await db.FilaSincronizacao.FirstAsync(x => x.ProdutoGuid == guid);
+        var f = await Fila(db).FirstAsync(x => x.EntidadeGuid == guid);
         if (f.Versao != versaoVista) { f.Estado = EstadoFila.Pendente; }
         else { f.Estado = EstadoFila.Falhou; f.UltimoErro = Cortar(motivo); }
         f.AtualizadoEm = _agora();
@@ -279,7 +288,7 @@ public class ProcessadorFila
         var lista = guids.ToList();
         if (lista.Count == 0) return 0;
         await using var db = await _fabrica.CreateDbContextAsync();
-        var linhas = await db.FilaSincronizacao.Where(f => lista.Contains(f.ProdutoGuid) && f.Estado == EstadoFila.Enviando).ToListAsync();
+        var linhas = await Fila(db).Where(f => lista.Contains(f.EntidadeGuid) && f.Estado == EstadoFila.Enviando).ToListAsync();
         var agora = _agora();
         foreach (var f in linhas)
         {

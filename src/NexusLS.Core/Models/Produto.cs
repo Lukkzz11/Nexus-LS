@@ -4,7 +4,7 @@ namespace NexusLS.Core.Models;
 /// Um produto vendido na loja. Todos os valores em dinheiro ficam em CENTAVOS (long),
 /// porque double/decimal-de-ponto-flutuante acumulam erros de arredondamento (R$ 0,10 + R$ 0,20 != R$ 0,30).
 /// </summary>
-public class Produto
+public class Produto : IEntidadeSincronizavel
 {
     public int Id { get; set; }
 

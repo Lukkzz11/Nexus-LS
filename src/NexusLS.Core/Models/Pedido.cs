@@ -25,7 +25,7 @@ public enum StatusPedido
 /// acompanhamento. Venda a prazo feita no PDV cria o pedido sozinha (ligado à venda); pedidos de WhatsApp, catálogo e
 /// encomenda são lançados na tela Pedidos. Nunca é apagado: cancela-se com motivo.
 /// </summary>
-public class Pedido
+public class Pedido : IEntidadeSincronizavel
 {
     public int Id { get; set; }
 
@@ -48,7 +48,12 @@ public class Pedido
     public int? VendaId { get; set; }
 
     public DateTime CriadoEm { get; set; }
+
+    /// <summary>Mantido pelo PedidoService (hora local, como sempre foi); por isso o Pedido não herda de EntidadeSincronizavel.</summary>
     public DateTime AtualizadoEm { get; set; }
+
+    /// <summary>Identificador global (id do documento remoto).</summary>
+    public Guid Guid { get; set; } = Guid.NewGuid();
     public string? MotivoCancelamento { get; set; }
 
     public List<ItemPedido> Itens { get; set; } = new();

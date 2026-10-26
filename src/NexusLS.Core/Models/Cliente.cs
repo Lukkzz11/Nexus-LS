@@ -1,6 +1,6 @@
 namespace NexusLS.Core.Models;
 
-public class Cliente
+public class Cliente : EntidadeSincronizavel
 {
     public int Id { get; set; }
     public string Nome { get; set; } = string.Empty;

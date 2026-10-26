@@ -117,7 +117,8 @@ public class PdvDbContext : DbContext
 
         modelBuilder.Entity<ItemFilaSincronizacao>(e =>
         {
-            e.HasIndex(x => x.ProdutoGuid).IsUnique(); // uma linha por produto: a fila nunca duplica
+            e.HasIndex(x => new { x.Entidade, x.EntidadeGuid }).IsUnique(); // uma linha por entidade: a fila nunca duplica
+            e.Property(x => x.Entidade).HasMaxLength(40);
             e.HasIndex(x => new { x.Estado, x.ProximaTentativa });
             e.Property(x => x.UltimoErro).HasMaxLength(500);
             e.Property(x => x.UsuarioUid).HasMaxLength(128);
@@ -290,6 +291,11 @@ public class PdvDbContext : DbContext
             e.Ignore(f => f.DiferencaPixCentavos);
             e.Ignore(f => f.DiferencaTotalCentavos);
         });
+
+        // Toda entidade sincronizável tem um Guid único (o id do documento remoto). Produto já tinha o índice acima.
+        foreach (var tipo in modelBuilder.Model.GetEntityTypes().Select(t => t.ClrType)
+                     .Where(t => typeof(IEntidadeSincronizavel).IsAssignableFrom(t) && t != typeof(Produto)).ToList())
+            modelBuilder.Entity(tipo).HasIndex(nameof(IEntidadeSincronizavel.Guid)).IsUnique();
     }
 
     // ---- AtualizadoEm: mantido em UM lugar só, para nenhum serviço esquecer de atualizar ----
@@ -313,6 +319,16 @@ public class PdvDbContext : DbContext
     private void CarimbarProdutosAlterados()
     {
         var agora = DateTime.UtcNow;
+
+        // Demais entidades sincronizáveis (herdam EntidadeSincronizavel): carimba quando algo além do carimbo mudou.
+        // O Pedido fica de fora: o PedidoService já mantém o AtualizadoEm dele.
+        foreach (var entrada in ChangeTracker.Entries<EntidadeSincronizavel>()
+                     .Where(e => e.State is EntityState.Added or EntityState.Modified).ToList())
+        {
+            if (entrada.State == EntityState.Added
+                || entrada.Properties.Any(p => p.IsModified && p.Metadata.Name != nameof(EntidadeSincronizavel.AtualizadoEm)))
+                entrada.Entity.AtualizadoEm = agora;
+        }
 
         foreach (var entrada in ChangeTracker.Entries<Produto>()
                      .Where(e => e.State is EntityState.Added or EntityState.Modified).ToList())

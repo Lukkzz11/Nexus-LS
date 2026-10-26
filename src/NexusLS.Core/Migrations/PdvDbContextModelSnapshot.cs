@@ -55,6 +55,9 @@ namespace NexusLS.Core.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateTime>("AtualizadoEm")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Banco")
                         .HasMaxLength(60)
                         .HasColumnType("TEXT");
@@ -73,6 +76,9 @@ namespace NexusLS.Core.Migrations
 
                     b.Property<string>("Emitente")
                         .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("Guid")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("MotivoDevolucao")
@@ -107,6 +113,9 @@ namespace NexusLS.Core.Migrations
 
                     b.HasIndex("BomPara");
 
+                    b.HasIndex("Guid")
+                        .IsUnique();
+
                     b.HasIndex("VendaId");
 
                     b.ToTable("ChequesRecebidos");
@@ -121,11 +130,17 @@ namespace NexusLS.Core.Migrations
                     b.Property<bool>("Ativo")
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateTime>("AtualizadoEm")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("DataCadastro")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Documento")
                         .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("Guid")
                         .HasColumnType("TEXT");
 
                     b.Property<long>("LimiteCreditoCentavos")
@@ -146,6 +161,9 @@ namespace NexusLS.Core.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Guid")
+                        .IsUnique();
+
                     b.HasIndex("Nome");
 
                     b.ToTable("Clientes");
@@ -156,6 +174,9 @@ namespace NexusLS.Core.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("AtualizadoEm")
+                        .HasColumnType("TEXT");
 
                     b.Property<bool>("Cancelada")
                         .HasColumnType("INTEGER");
@@ -168,6 +189,9 @@ namespace NexusLS.Core.Migrations
 
                     b.Property<int?>("FornecedorId")
                         .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("Guid")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("MotivoCancelamento")
                         .HasMaxLength(200)
@@ -193,6 +217,9 @@ namespace NexusLS.Core.Migrations
                     b.HasIndex("DataHora");
 
                     b.HasIndex("FornecedorId");
+
+                    b.HasIndex("Guid")
+                        .IsUnique();
 
                     b.ToTable("Compras");
                 });
@@ -258,10 +285,16 @@ namespace NexusLS.Core.Migrations
                     b.Property<bool>("Ativa")
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateTime>("AtualizadoEm")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("CriadaEm")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("DataSaldoInicial")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("Guid")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Nome")
@@ -279,6 +312,9 @@ namespace NexusLS.Core.Migrations
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Guid")
+                        .IsUnique();
 
                     b.ToTable("ContasFinanceiras");
                 });
@@ -319,6 +355,9 @@ namespace NexusLS.Core.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateTime>("AtualizadoEm")
+                        .HasColumnType("TEXT");
+
                     b.Property<long>("ConferidoCartaoCentavos")
                         .HasColumnType("INTEGER");
 
@@ -340,6 +379,9 @@ namespace NexusLS.Core.Migrations
                     b.Property<long>("EsperadoPixCentavos")
                         .HasColumnType("INTEGER");
 
+                    b.Property<Guid>("Guid")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Observacao")
                         .HasMaxLength(300)
                         .HasColumnType("TEXT");
@@ -356,6 +398,9 @@ namespace NexusLS.Core.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Guid")
+                        .IsUnique();
+
                     b.HasIndex("TurnoId", "Versao")
                         .IsUnique();
 
@@ -371,6 +416,9 @@ namespace NexusLS.Core.Migrations
                     b.Property<bool>("Ativo")
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateTime>("AtualizadoEm")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("DataCadastro")
                         .HasColumnType("TEXT");
 
@@ -380,6 +428,9 @@ namespace NexusLS.Core.Migrations
 
                     b.Property<string>("Email")
                         .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("Guid")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Nome")
@@ -396,6 +447,9 @@ namespace NexusLS.Core.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Guid")
+                        .IsUnique();
 
                     b.HasIndex("Nome");
 
@@ -498,14 +552,19 @@ namespace NexusLS.Core.Migrations
                     b.Property<DateTime>("CriadoEm")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Entidade")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("EntidadeGuid")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime?>("EnviadoEm")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Estado")
                         .HasColumnType("INTEGER");
-
-                    b.Property<Guid>("ProdutoGuid")
-                        .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("ProximaTentativa")
                         .HasColumnType("TEXT");
@@ -526,7 +585,7 @@ namespace NexusLS.Core.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProdutoGuid")
+                    b.HasIndex("Entidade", "EntidadeGuid")
                         .IsUnique();
 
                     b.HasIndex("Estado", "ProximaTentativa");
@@ -621,6 +680,9 @@ namespace NexusLS.Core.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateTime>("AtualizadoEm")
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("Cancelado")
                         .HasColumnType("INTEGER");
 
@@ -653,6 +715,9 @@ namespace NexusLS.Core.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<Guid?>("GrupoId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("Guid")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("MotivoCancelamento")
@@ -691,6 +756,9 @@ namespace NexusLS.Core.Migrations
 
                     b.HasIndex("GrupoId");
 
+                    b.HasIndex("Guid")
+                        .IsUnique();
+
                     b.HasIndex("PagoEm");
 
                     b.HasIndex("Vencimento");
@@ -704,6 +772,9 @@ namespace NexusLS.Core.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateTime>("AtualizadoEm")
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("Cancelada")
                         .HasColumnType("INTEGER");
 
@@ -714,6 +785,9 @@ namespace NexusLS.Core.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("Data")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("Guid")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("MotivoCancelamento")
@@ -734,6 +808,9 @@ namespace NexusLS.Core.Migrations
 
                     b.HasIndex("ContaId");
 
+                    b.HasIndex("Guid")
+                        .IsUnique();
+
                     b.HasIndex("VendaId");
 
                     b.ToTable("LiquidacoesCartao");
@@ -745,7 +822,13 @@ namespace NexusLS.Core.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateTime>("AtualizadoEm")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("DataHora")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("Guid")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Motivo")
@@ -770,6 +853,9 @@ namespace NexusLS.Core.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Guid")
+                        .IsUnique();
+
                     b.HasIndex("ProdutoId");
 
                     b.ToTable("Movimentacoes");
@@ -781,11 +867,17 @@ namespace NexusLS.Core.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateTime>("AtualizadoEm")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("DataHora")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Descricao")
                         .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("Guid")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Tipo")
@@ -799,6 +891,9 @@ namespace NexusLS.Core.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Guid")
+                        .IsUnique();
+
                     b.HasIndex("TurnoId");
 
                     b.ToTable("MovimentosCaixa");
@@ -810,6 +905,9 @@ namespace NexusLS.Core.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateTime>("AtualizadoEm")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("ClienteId")
                         .HasColumnType("INTEGER");
 
@@ -818,6 +916,9 @@ namespace NexusLS.Core.Migrations
 
                     b.Property<int>("Forma")
                         .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("Guid")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Observacao")
                         .HasMaxLength(200)
@@ -833,6 +934,9 @@ namespace NexusLS.Core.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ClienteId");
+
+                    b.HasIndex("Guid")
+                        .IsUnique();
 
                     b.ToTable("PagamentosCliente");
                 });
@@ -859,6 +963,9 @@ namespace NexusLS.Core.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CriadoEm")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("Guid")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("MotivoCancelamento")
@@ -889,6 +996,9 @@ namespace NexusLS.Core.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CriadoEm");
+
+                    b.HasIndex("Guid")
+                        .IsUnique();
 
                     b.HasIndex("Status");
 
@@ -1076,6 +1186,9 @@ namespace NexusLS.Core.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateTime>("AtualizadoEm")
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("Cancelada")
                         .HasColumnType("INTEGER");
 
@@ -1098,6 +1211,9 @@ namespace NexusLS.Core.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid>("Guid")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("MotivoCancelamento")
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
@@ -1117,6 +1233,9 @@ namespace NexusLS.Core.Migrations
 
                     b.HasIndex("Data");
 
+                    b.HasIndex("Guid")
+                        .IsUnique();
+
                     b.ToTable("Transferencias");
                 });
 
@@ -1126,10 +1245,16 @@ namespace NexusLS.Core.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateTime>("AtualizadoEm")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("DataAbertura")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("DataFechamento")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("Guid")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Operador")
@@ -1143,6 +1268,9 @@ namespace NexusLS.Core.Migrations
 
                     b.HasIndex("DataAbertura");
 
+                    b.HasIndex("Guid")
+                        .IsUnique();
+
                     b.ToTable("TurnosCaixa");
                 });
 
@@ -1151,6 +1279,9 @@ namespace NexusLS.Core.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("AtualizadoEm")
+                        .HasColumnType("TEXT");
 
                     b.Property<bool>("Cancelada")
                         .HasColumnType("INTEGER");
@@ -1179,6 +1310,9 @@ namespace NexusLS.Core.Migrations
 
                     b.Property<int>("FormaPagamento")
                         .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("Guid")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("MotivoCancelamento")
                         .HasMaxLength(300)
@@ -1215,6 +1349,9 @@ namespace NexusLS.Core.Migrations
                     b.HasIndex("ClienteId");
 
                     b.HasIndex("DataHora");
+
+                    b.HasIndex("Guid")
+                        .IsUnique();
 
                     b.ToTable("Vendas");
                 });

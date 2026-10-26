@@ -11,7 +11,7 @@ public enum TipoLancamento
 /// Uma conta a pagar ou a receber. Nunca é apagada: cancela-se com motivo. "Pago" é só ter a data de pagamento;
 /// estornar o pagamento volta o lançamento para "em aberto". As vendas do PDV NÃO viram lançamento: entram direto no resumo.
 /// </summary>
-public class Lancamento
+public class Lancamento : EntidadeSincronizavel
 {
     public int Id { get; set; }
     public TipoLancamento Tipo { get; set; }

@@ -64,8 +64,8 @@ Regra geral: **grava no SQLite → entra na fila na mesma transação → um pro
 ## 7. Ordem sugerida para o que falta
 
 1. **Teste manual do que existe** com um projeto Firebase de teste (login, produto, queda de conexão).
-2. Migration: `Guid`, `AtualizadoEm` e `ChaveUnica` obrigatória em vendas, clientes, caixa e lançamentos.
-3. Generalizar a fila: de "um produto" para "uma entidade" (`Entidade`, `EntidadeGuid`), mantendo a tabela atual compatível.
+2. **[feito em 25/10/2026]** Migration `EntidadesSincronizaveis`: `Guid` (único) e `AtualizadoEm` em venda, cliente, pagamento de cliente, turno, movimento e fechamento de caixa, lançamento, fornecedor, compra, pedido, movimentação de estoque, conta financeira, transferência, liquidação de cartão e cheque. Linhas antigas ganham Guid por SQL; a venda que tinha `ChaveUnica` usa a mesma como Guid. O id global da venda é o `Guid` (= `ChaveUnica` quando existe); `ChaveUnica` continua opcional.
+3. **[feito em 25/10/2026]** Fila generalizada: `FilaSincronizacao` tem `Entidade` + `EntidadeGuid` (era `ProdutoGuid`; linhas antigas viraram `produto`). O interceptador enfileira qualquer entidade sincronizável e, ao alterar uma parte (tamanho, item de venda/compra/pedido, evento de pedido), enfileira a dona. O `ProcessadorFila` do catálogo continua tratando só `produto`; as demais ficam pendentes até existir o destino delas.
 4. Destino do projeto B e envio das **vendas** (maior valor, menor risco: imutáveis).
 5. Caixa e financeiro; depois clientes e cadastros.
 6. Importar pedidos do site (A → SQLite).

@@ -34,7 +34,7 @@ public sealed class FilaSincronizacaoTests : IDisposable
     private List<ItemFilaSincronizacao> Fila()
     {
         using var db = _banco.CriarContexto();
-        return db.FilaSincronizacao.AsNoTracking().OrderBy(f => f.Id).ToList();
+        return db.FilaSincronizacao.AsNoTracking().Where(f => f.Entidade == NomesEntidade.Produto).OrderBy(f => f.Id).ToList();
     }
 
     [Fact]
@@ -44,7 +44,7 @@ public sealed class FilaSincronizacaoTests : IDisposable
 
         var fila = Fila();
         var item = Assert.Single(fila);
-        Assert.Equal(p.Guid, item.ProdutoGuid);
+        Assert.Equal(p.Guid, item.EntidadeGuid);
         Assert.Equal(EstadoFila.Pendente, item.Estado);
         Assert.Equal("uid-ana", item.UsuarioUid);
     }
@@ -54,7 +54,7 @@ public sealed class FilaSincronizacaoTests : IDisposable
     {
         var p = await Cadastrar("Camiseta", "C1");
         await _produtos.EditarAsync(p.Id, new DadosProduto("Camiseta nova", "C1", 6000, 2000, 1));
-        await _estoque.AjustarAsync(p.Id, TipoMovimentacao.Entrada, 3, "reposição");
+        await _estoque.AjustarAsync(p.Id, TipoMovimentacao.Entrada, 3, "reposiÃ§Ã£o");
 
         var item = Assert.Single(Fila());
         Assert.True(item.Versao >= 3);
@@ -92,7 +92,7 @@ public sealed class FilaSincronizacaoTests : IDisposable
         var proc = Processador();
         await proc.ProcessarAsync();
 
-        // Salvar de novo sem mudar nada de publicável (só marca o item na fila).
+        // Salvar de novo sem mudar nada de publicÃ¡vel (sÃ³ marca o item na fila).
         await using (var db = _banco.CriarContexto())
         {
             var prod = await db.Produtos.FirstAsync(x => x.Id == p.Id);
@@ -112,7 +112,7 @@ public sealed class FilaSincronizacaoTests : IDisposable
     public async Task Sem_internet_o_item_fica_pendente_com_espera_e_depois_envia()
     {
         await Cadastrar("Camiseta", "C1");
-        _destino.FalhaNaVerificacao = new FalhaDestinoException("Sem conexão com a internet.");
+        _destino.FalhaNaVerificacao = new FalhaDestinoException("Sem conexÃ£o com a internet.");
         var proc = Processador();
 
         var r1 = await proc.ProcessarAsync();
@@ -139,7 +139,7 @@ public sealed class FilaSincronizacaoTests : IDisposable
     public async Task Queda_de_conexao_no_meio_do_envio_reagenda_so_o_que_nao_foi_confirmado()
     {
         for (var i = 1; i <= 3; i++) await Cadastrar($"Produto {i}", $"C{i}");
-        _destino.Falha = (n, _) => n == 2 ? new FalhaDestinoException("conexão caiu") : null;
+        _destino.Falha = (n, _) => n == 2 ? new FalhaDestinoException("conexÃ£o caiu") : null;
         var proc = new ProcessadorFila(_banco.Fabrica, _repo, _destino, () => _agora, tamanhoLote: 1);
 
         var r = await proc.ProcessarAsync();
@@ -160,7 +160,7 @@ public sealed class FilaSincronizacaoTests : IDisposable
     public async Task Programa_fechado_no_meio_do_envio_recupera_e_envia_sem_duplicar()
     {
         var p = await Cadastrar("Camiseta", "C1");
-        // Simula a queda: o item ficou "Enviando" e o programa fechou antes da confirmação.
+        // Simula a queda: o item ficou "Enviando" e o programa fechou antes da confirmaÃ§Ã£o.
         await using (var db = _banco.CriarContexto())
         {
             var f = await db.FilaSincronizacao.FirstAsync();
@@ -168,7 +168,7 @@ public sealed class FilaSincronizacaoTests : IDisposable
             await db.SaveChangesAsync();
         }
         var proc = Processador();
-        Assert.True((await proc.ProcessarAsync()).NadaFeito); // preso: nada acontece sem a recuperação
+        Assert.True((await proc.ProcessarAsync()).NadaFeito); // preso: nada acontece sem a recuperaÃ§Ã£o
 
         Assert.Equal(1, await proc.RecuperarInterrompidosAsync());
         var r = await proc.ProcessarAsync();
@@ -184,14 +184,14 @@ public sealed class FilaSincronizacaoTests : IDisposable
         await using (var db = _banco.CriarContexto())
         {
             var f = await db.FilaSincronizacao.FirstAsync();
-            f.Estado = EstadoFila.Enviando; // servidor recebeu, mas o hash local não foi gravado
+            f.Estado = EstadoFila.Enviando; // servidor recebeu, mas o hash local nÃ£o foi gravado
             await db.SaveChangesAsync();
         }
         var proc = Processador();
         await proc.RecuperarInterrompidosAsync();
         await proc.ProcessarAsync();
 
-        // O reenvio usa o mesmo id de documento (o Guid): sobrescreve, não cria outro.
+        // O reenvio usa o mesmo id de documento (o Guid): sobrescreve, nÃ£o cria outro.
         Assert.Equal(p.Guid, _destino.TodasAsOperacoes.Single().Item.Produto.Guid);
         Assert.Single(Fila());
     }
@@ -219,20 +219,20 @@ public sealed class FilaSincronizacaoTests : IDisposable
         var ruim = await Cadastrar("Ruim", "C1");
         await Cadastrar("Bom", "C2");
         _destino.Falha = (_, lote) => lote.Any(o => o.Item.Produto.Guid == ruim.Guid)
-            ? new FalhaDestinoException("campo inválido", GravidadeFalha.DadosRecusados) : null;
+            ? new FalhaDestinoException("campo invÃ¡lido", GravidadeFalha.DadosRecusados) : null;
 
         var r = await Processador().ProcessarAsync();
 
         Assert.Equal(1, r.Enviados);
         Assert.Equal(1, r.Recusados);
         var fila = Fila();
-        Assert.Equal(EstadoFila.Falhou, fila.Single(f => f.ProdutoGuid == ruim.Guid).Estado);
-        Assert.Contains("campo inválido", fila.Single(f => f.ProdutoGuid == ruim.Guid).UltimoErro);
+        Assert.Equal(EstadoFila.Falhou, fila.Single(f => f.EntidadeGuid == ruim.Guid).Estado);
+        Assert.Contains("campo invÃ¡lido", fila.Single(f => f.EntidadeGuid == ruim.Guid).UltimoErro);
 
-        // Corrigir o produto devolve o item à fila.
+        // Corrigir o produto devolve o item Ã  fila.
         _destino.Falha = null;
         await _produtos.EditarAsync(ruim.Id, new DadosProduto("Ruim corrigido", "C1", 5000, 2000, 1));
-        Assert.Equal(EstadoFila.Pendente, Fila().Single(f => f.ProdutoGuid == ruim.Guid).Estado);
+        Assert.Equal(EstadoFila.Pendente, Fila().Single(f => f.EntidadeGuid == ruim.Guid).Estado);
         Assert.Equal(1, (await Processador().ProcessarAsync()).Enviados);
     }
 
@@ -240,7 +240,7 @@ public sealed class FilaSincronizacaoTests : IDisposable
     public async Task Tentativas_registram_falha_no_log_de_sincronizacao()
     {
         await Cadastrar("Camiseta", "C1");
-        _destino.FalhaNaVerificacao = new FalhaDestinoException("Sem conexão com a internet.");
+        _destino.FalhaNaVerificacao = new FalhaDestinoException("Sem conexÃ£o com a internet.");
         await Processador().ProcessarAsync("ana");
 
         var log = Assert.Single(await _repo.UltimosLogsAsync());
@@ -262,7 +262,7 @@ public sealed class FilaSincronizacaoTests : IDisposable
         var proc = Processador();
 
         Assert.Equal(2, await proc.EnfileirarExistentesAsync());
-        Assert.Equal(0, await proc.EnfileirarExistentesAsync()); // repetir não duplica
+        Assert.Equal(0, await proc.EnfileirarExistentesAsync()); // repetir nÃ£o duplica
         Assert.Equal(2, Fila().Count);
 
         Assert.Equal(2, (await proc.ProcessarAsync()).Enviados);
@@ -304,7 +304,7 @@ public sealed class FilaSincronizacaoTests : IDisposable
         var proc = Processador();
 
         var primeira = proc.ProcessarAsync();
-        var segunda = await proc.ProcessarAsync(); // enquanto a primeira está presa no destino
+        var segunda = await proc.ProcessarAsync(); // enquanto a primeira estÃ¡ presa no destino
         liberar.SetResult();
         await primeira;
 

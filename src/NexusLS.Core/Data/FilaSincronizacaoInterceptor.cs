@@ -1,16 +1,36 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using NexusLS.Core.Models;
 
 namespace NexusLS.Core.Data;
 
 /// <summary>
-/// Quando qualquer parte do programa salva um produto (cadastro, edição, ajuste de estoque, venda, compra...), anota o
-/// produto na fila de sincronização dentro da mesma transação do SaveChanges. Assim nenhuma alteração escapa da fila,
-/// sem precisar mexer em cada serviço.
+/// Quando qualquer parte do programa salva uma entidade sincronizável (produto, venda, cliente, lançamento...), anota-a na
+/// fila dentro da mesma transação do SaveChanges. Assim nenhuma alteração escapa da fila, sem mexer em cada serviço.
+/// Alterar uma parte (tamanho do produto, item da venda, evento do pedido) anota a entidade dona.
 /// </summary>
 public sealed class FilaSincronizacaoInterceptor : SaveChangesInterceptor
 {
+    private static readonly EntityState[] Alterados = { EntityState.Added, EntityState.Modified, EntityState.Deleted };
+
+    /// <summary>Partes que pertencem a outra entidade: tipo da parte, tipo da dona, chave da dona e busca do Guid da dona.</summary>
+    private sealed record Parte(Type Tipo, Type Dona, string NomeDona, Func<object, int> IdDaDona, Func<DbContext, List<int>, List<Guid>> GuidsDasDonas);
+
+    private static readonly Parte[] Partes =
+    {
+        new(typeof(ProdutoTamanho), typeof(Produto), NomesEntidade.Produto, o => ((ProdutoTamanho)o).ProdutoId,
+            (db, ids) => db.Set<Produto>().AsNoTracking().Where(p => ids.Contains(p.Id)).Select(p => p.Guid).ToList()),
+        new(typeof(ItemVenda), typeof(Venda), NomesEntidade.Venda, o => ((ItemVenda)o).VendaId,
+            (db, ids) => db.Set<Venda>().AsNoTracking().Where(v => ids.Contains(v.Id)).Select(v => v.Guid).ToList()),
+        new(typeof(ItemCompra), typeof(Compra), NomesEntidade.Compra, o => ((ItemCompra)o).CompraId,
+            (db, ids) => db.Set<Compra>().AsNoTracking().Where(c => ids.Contains(c.Id)).Select(c => c.Guid).ToList()),
+        new(typeof(ItemPedido), typeof(Pedido), NomesEntidade.Pedido, o => ((ItemPedido)o).PedidoId,
+            (db, ids) => db.Set<Pedido>().AsNoTracking().Where(p => ids.Contains(p.Id)).Select(p => p.Guid).ToList()),
+        new(typeof(EventoPedido), typeof(Pedido), NomesEntidade.Pedido, o => ((EventoPedido)o).PedidoId,
+            (db, ids) => db.Set<Pedido>().AsNoTracking().Where(p => ids.Contains(p.Id)).Select(p => p.Guid).ToList()),
+    };
+
     private readonly Func<string?> _usuarioUid;
     private readonly Func<DateTime> _agora;
 
@@ -35,37 +55,45 @@ public sealed class FilaSincronizacaoInterceptor : SaveChangesInterceptor
 
     private void Enfileirar(DbContext db)
     {
-        var alterados = new[] { EntityState.Added, EntityState.Modified, EntityState.Deleted };
-        var guids = new HashSet<Guid>();
-        var idsSemProduto = new HashSet<int>();
+        var mudou = new HashSet<(string Entidade, Guid Guid)>();
+        var entradas = db.ChangeTracker.Entries().Where(e => Alterados.Contains(e.State)).ToList();
 
-        foreach (var e in db.ChangeTracker.Entries<Produto>().Where(e => alterados.Contains(e.State)))
-            guids.Add(e.Entity.Guid);
+        // 1) A própria entidade sincronizável.
+        foreach (var e in entradas)
+            if (e.Entity is IEntidadeSincronizavel s && s.Guid != Guid.Empty)
+                mudou.Add((NomesEntidade.De(e.Entity.GetType()), s.Guid));
 
-        foreach (var e in db.ChangeTracker.Entries<ProdutoTamanho>().Where(e => alterados.Contains(e.State)))
+        // 2) Partes: anota a dona (a que já está no contexto, ou procura o Guid no banco).
+        foreach (var parte in Partes)
         {
-            if (e.Entity.ProdutoId <= 0) continue; // produto novo: já entrou pelo laço acima
-            var rastreado = db.ChangeTracker.Entries<Produto>().FirstOrDefault(p => p.Entity.Id == e.Entity.ProdutoId);
-            if (rastreado is not null) guids.Add(rastreado.Entity.Guid);
-            else idsSemProduto.Add(e.Entity.ProdutoId);
+            var idsDasDonas = entradas.Where(e => parte.Tipo.IsInstanceOfType(e.Entity))
+                .Select(e => parte.IdDaDona(e.Entity)).Where(id => id > 0).Distinct().ToList();
+            if (idsDasDonas.Count == 0) continue;
+
+            var faltam = new List<int>();
+            foreach (var id in idsDasDonas)
+            {
+                var rastreada = db.ChangeTracker.Entries()
+                    .FirstOrDefault(e => e.Entity.GetType() == parte.Dona && (int)e.Property("Id").CurrentValue! == id);
+                if (rastreada?.Entity is IEntidadeSincronizavel dona) mudou.Add((parte.NomeDona, dona.Guid));
+                else faltam.Add(id);
+            }
+            if (faltam.Count > 0)
+                foreach (var g in parte.GuidsDasDonas(db, faltam)) mudou.Add((parte.NomeDona, g));
         }
 
-        if (idsSemProduto.Count > 0)
-            foreach (var g in db.Set<Produto>().AsNoTracking().Where(p => idsSemProduto.Contains(p.Id)).Select(p => p.Guid).ToList())
-                guids.Add(g);
-
-        guids.Remove(Guid.Empty);
-        if (guids.Count == 0) return;
+        mudou.RemoveWhere(m => m.Guid == Guid.Empty);
+        if (mudou.Count == 0) return;
 
         var agora = _agora();
         var uid = _usuarioUid();
-        var lista = guids.ToList();
-        var existentes = db.Set<ItemFilaSincronizacao>().Where(f => lista.Contains(f.ProdutoGuid))
-            .ToDictionary(f => f.ProdutoGuid);
+        var guids = mudou.Select(m => m.Guid).Distinct().ToList();
+        var existentes = db.Set<ItemFilaSincronizacao>().Where(f => guids.Contains(f.EntidadeGuid)).ToList()
+            .ToDictionary(f => (f.Entidade, f.EntidadeGuid));
 
-        foreach (var guid in lista)
+        foreach (var (entidade, guid) in mudou)
         {
-            if (existentes.TryGetValue(guid, out var item))
+            if (existentes.TryGetValue((entidade, guid), out var item))
             {
                 item.Versao++;
                 item.Estado = EstadoFila.Pendente;
@@ -79,7 +107,7 @@ public sealed class FilaSincronizacaoInterceptor : SaveChangesInterceptor
             {
                 db.Set<ItemFilaSincronizacao>().Add(new ItemFilaSincronizacao
                 {
-                    ProdutoGuid = guid, UsuarioUid = uid, CriadoEm = agora, AtualizadoEm = agora
+                    Entidade = entidade, EntidadeGuid = guid, UsuarioUid = uid, CriadoEm = agora, AtualizadoEm = agora
                 });
             }
         }

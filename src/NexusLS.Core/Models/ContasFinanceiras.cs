@@ -6,7 +6,7 @@ namespace NexusLS.Core.Models;
 /// Onde o dinheiro fica: a gaveta do caixa, o cofre ou uma conta de banco. O saldo NÃO é guardado: é sempre calculado
 /// pelo motor financeiro (saldo inicial + o que entrou − o que saiu). Nunca é apagada: desativa-se.
 /// </summary>
-public class ContaFinanceira
+public class ContaFinanceira : EntidadeSincronizavel
 {
     public int Id { get; set; }
     public string Nome { get; set; } = string.Empty;
@@ -23,7 +23,7 @@ public class ContaFinanceira
 }
 
 /// <summary>Dinheiro que mudou de uma conta para outra. Não é receita nem despesa. Nunca é apagada: cancela-se com motivo.</summary>
-public class TransferenciaConta
+public class TransferenciaConta : EntidadeSincronizavel
 {
     public int Id { get; set; }
     public int ContaOrigemId { get; set; }
@@ -45,7 +45,7 @@ public class TransferenciaConta
 /// O dia em que o dinheiro de uma venda no cartão caiu na conta (e a taxa descontada). Enquanto não existir, a venda
 /// fica "em compensação" (cartão a liquidar). Cancelar a liquidação (com motivo) devolve a venda para "a liquidar".
 /// </summary>
-public class LiquidacaoCartao
+public class LiquidacaoCartao : EntidadeSincronizavel
 {
     public int Id { get; set; }
     public int VendaId { get; set; }
@@ -67,7 +67,7 @@ public enum SituacaoCheque { Pendente = 1, Compensado = 2, Devolvido = 3, Cancel
 /// Cheque que a loja recebeu. Pendente fica "em compensação" (não é saldo). Compensado entra na conta; devolvido não entra
 /// (a cobrança volta para quem pagou). Venda ou pagamento de cliente no cheque cria um cheque pendente sozinho.
 /// </summary>
-public class ChequeRecebido
+public class ChequeRecebido : EntidadeSincronizavel
 {
     public int Id { get; set; }
     public long ValorCentavos { get; set; }
