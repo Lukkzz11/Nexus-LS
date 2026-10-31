@@ -16,22 +16,44 @@ public sealed class GestorLogin : IProvedorToken
     private ServicoLogin? _servico;
     private string? _chave;
 
-    public GestorLogin(ConfiguracaoFirebaseStore config, HttpClient http, SessaoStore sessaoStore, IProtetorSegredo protetor, Func<DateTime>? agora = null)
+    private readonly Operacional.ConfiguracaoOperacionalStore? _operacional;
+
+    public GestorLogin(ConfiguracaoFirebaseStore config, HttpClient http, SessaoStore sessaoStore, IProtetorSegredo protetor,
+        Func<DateTime>? agora = null, Operacional.ConfiguracaoOperacionalStore? operacional = null)
     {
         _config = config;
         _http = http;
         _sessaoStore = sessaoStore;
         _protetor = protetor;
         _agora = agora;
+        _operacional = operacional;
     }
+
+    /// <summary>
+    /// Em qual projeto os usuários entram: no operacional (projeto B), se estiver configurado; senão no do catálogo
+    /// (comportamento de quem usa um projeto só). Usuários do Firebase existem dentro de UM projeto.
+    /// </summary>
+    public (string ProjectId, string ApiKey) ProjetoDoLogin
+    {
+        get
+        {
+            var op = _operacional?.Carregar();
+            if (op is { EstaCompleta: true }) return (op.ProjectId.Trim(), op.ApiKey.Trim());
+            var c = _config.Carregar();
+            return (c.ProjectId.Trim(), c.ApiKey.Trim());
+        }
+    }
+
+    /// <summary>O login vale também para o catálogo (os dois são o mesmo projeto).</summary>
+    public bool LoginServeAoCatalogo => string.Equals(ProjetoDoLogin.ProjectId, _config.Carregar().ProjectId.Trim(), StringComparison.Ordinal);
 
     /// <summary>Há projeto e chave de API para o login funcionar.</summary>
     public bool Configurado
     {
         get
         {
-            var c = _config.Carregar();
-            return !string.IsNullOrWhiteSpace(c.ProjectId) && !string.IsNullOrWhiteSpace(c.ApiKey);
+            var (projeto, chave) = ProjetoDoLogin;
+            return !string.IsNullOrWhiteSpace(projeto) && !string.IsNullOrWhiteSpace(chave);
         }
     }
 
@@ -61,7 +83,7 @@ public sealed class GestorLogin : IProvedorToken
 
     private ServicoLogin Servico()
     {
-        var chave = _config.Carregar().ApiKey.Trim();
+        var chave = ProjetoDoLogin.ApiKey;
         lock (_trava)
         {
             if (_servico is null || chave != _chave)
@@ -100,7 +122,7 @@ public sealed class DestinoFilaFirestore : IDestinoCatalogo
     }
 
     /// <summary>Dá para enviar agora: há usuário logado ou a licença antiga está completa.</summary>
-    public bool PodeEnviar => _login.Atual is not null || _config.Carregar().EstaCompleta;
+    public bool PodeEnviar => (_login.Atual is not null && _login.LoginServeAoCatalogo) || _config.Carregar().EstaCompleta;
 
     public Task VerificarAsync(CancellationToken ct = default) => Escolher().VerificarAsync(ct);
 
@@ -112,7 +134,8 @@ public sealed class DestinoFilaFirestore : IDestinoCatalogo
 
     private IDestinoCatalogo Escolher()
     {
-        if (_login.Atual is null) return _legado;
+        // O token do usuário só vale no projeto onde ele tem conta; se o login é do projeto operacional, o catálogo usa o login da licença.
+        if (_login.Atual is null || !_login.LoginServeAoCatalogo) return _legado;
         var projeto = _config.Carregar().ProjectId.Trim();
         lock (_trava)
         {

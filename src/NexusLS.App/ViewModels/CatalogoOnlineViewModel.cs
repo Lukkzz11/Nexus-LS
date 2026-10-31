@@ -38,19 +38,23 @@ public partial class CatalogoOnlineViewModel : ViewModelBase
     private readonly IDestinoCatalogo _destino;
     private readonly ConfiguracaoService? _loja;
 
+    private readonly NexusLS.Core.Sincronizacao.Operacional.ConfiguracaoOperacionalStore? _operacional;
     private PlanoSincronizacao? _planoPendente;
     private CancellationTokenSource? _cancelamento;
 
     public CatalogoOnlineViewModel(
         ConfiguracaoFirebaseStore config, SincronizadorCatalogo sincronizador, SincronizacaoRepositorio repo,
-        IDestinoCatalogo destino, ConfiguracaoService? loja = null)
+        IDestinoCatalogo destino, ConfiguracaoService? loja = null,
+        NexusLS.Core.Sincronizacao.Operacional.ConfiguracaoOperacionalStore? operacional = null)
     {
         _config = config;
         _sincronizador = sincronizador;
         _repo = repo;
         _destino = destino;
         _loja = loja;
+        _operacional = operacional;
         CarregarConfiguracao();
+        CarregarOperacional();
         Carregamento = AtualizarHistoricoAsync();
     }
 
@@ -94,6 +98,37 @@ public partial class CatalogoOnlineViewModel : ViewModelBase
         SenhaNova = "";
         AtualizarSituacao(c);
     }
+
+    // ---- Nuvem operacional (projeto B): vendas e demais registros. Os usuários entram neste projeto. ----
+
+    public bool TemOperacional => _operacional is not null;
+
+    [ObservableProperty] private string _operProjectId = "";
+    [ObservableProperty] private string _operApiKey = "";
+    [ObservableProperty] private string _operLojaId = "";
+    [ObservableProperty] private string _situacaoOperacional = "";
+
+    private void CarregarOperacional()
+    {
+        if (_operacional is null) return;
+        var c = _operacional.Carregar();
+        OperProjectId = c.ProjectId;
+        OperApiKey = c.ApiKey;
+        OperLojaId = c.LojaId;
+        SituacaoOperacional = c.EstaCompleta
+            ? $"Vendas enviadas ao projeto {c.ProjectId}, loja {c.LojaId}. Os usuários entram neste projeto."
+            : "Ainda não configurado: sem isso as vendas ficam só neste computador (na fila, esperando).";
+    }
+
+    [RelayCommand]
+    private Task SalvarOperacionalAsync() => ExecutarAsync(() =>
+    {
+        _operacional?.Salvar(new NexusLS.Core.Sincronizacao.Operacional.ConfiguracaoOperacional
+            { ProjectId = OperProjectId, ApiKey = OperApiKey, LojaId = OperLojaId });
+        CarregarOperacional();
+        MostrarSucesso("Nuvem operacional salva. Entre com seu usuário (menu lateral) para enviar as vendas.");
+        return Task.CompletedTask;
+    });
 
     private void AtualizarSituacao(ConfiguracaoFirebase c)
     {

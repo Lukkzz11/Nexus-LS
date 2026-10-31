@@ -94,6 +94,24 @@
                 </StackPanel>
             </Border>
 
+            <!-- ===== Nuvem operacional (vendas e demais registros; os usuários entram neste projeto) ===== -->
+            <Border Style="{StaticResource Painel}" Margin="0,16,0,0" Visibility="{Binding TemOperacional, Converter={StaticResource BoolVis}}">
+                <StackPanel IsEnabled="{Binding PodeEditar}">
+                    <TextBlock Text="Nuvem operacional (vendas)" FontSize="18" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding SituacaoOperacional}" TextWrapping="Wrap" Foreground="{StaticResource CorTextoSuave}" Margin="0,4,0,0" />
+
+                    <TextBlock Text="Id do projeto operacional (outro projeto, privado)" Style="{StaticResource Rotulo}" />
+                    <TextBox Text="{Binding OperProjectId, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Projeto operacional" />
+                    <TextBlock Text="Chave da API (Web API Key)" Style="{StaticResource Rotulo}" />
+                    <TextBox Text="{Binding OperApiKey, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Chave da API operacional" />
+                    <TextBlock Text="Nome da loja nos caminhos (ex.: minha-loja)" Style="{StaticResource Rotulo}" />
+                    <TextBox Text="{Binding OperLojaId, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Loja operacional" />
+
+                    <Button Content="Salvar nuvem operacional" Style="{StaticResource BotaoSecundario}" Margin="0,16,0,0" HorizontalAlignment="Left"
+                            Command="{Binding SalvarOperacionalCommand}" />
+                </StackPanel>
+            </Border>
+
             <!-- ===== Histórico ===== -->
             <Border Style="{StaticResource Painel}" Margin="0,16,0,24">
                 <StackPanel>

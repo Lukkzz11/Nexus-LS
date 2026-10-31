@@ -46,6 +46,8 @@ public sealed class ContainerDeServicos
     public RascunhoService Rascunho { get; }
     public NexusLS.Core.Sincronizacao.Firebase.GestorLogin Login { get; }
     public NexusLS.Core.Sincronizacao.ProcessadorFila Fila { get; }
+    public NexusLS.Core.Sincronizacao.Operacional.ConfiguracaoOperacionalStore Operacional { get; }
+    public NexusLS.Core.Sincronizacao.Operacional.ProcessadorFilaOperacional FilaOperacional { get; }
     public NexusLS.App.ViewModels.SincronizacaoViewModel Sincronizacao { get; }
 
     public ContainerDeServicos(DbContextOptions<PdvDbContext> opcoesBanco)
@@ -87,10 +89,15 @@ public sealed class ContainerDeServicos
         DestinoCatalogo = new NexusLS.Core.Sincronizacao.Firebase.DestinoFirestoreConfiguravel(Firebase, _httpFirebase);
         Sincronizador = new(SincronizacaoRepo, DestinoCatalogo);
         var protetor = new NexusLS.App.Seguranca.ProtetorDpapi();
-        Login = new(Firebase, _httpFirebase, new NexusLS.Core.Sincronizacao.Firebase.SessaoStore(NexusLS.Core.Sincronizacao.Firebase.SessaoStore.CaminhoPadrao()), protetor);
+        Operacional = new(NexusLS.Core.Sincronizacao.Operacional.ConfiguracaoOperacionalStore.CaminhoPadrao());
+        Login = new(Firebase, _httpFirebase, new NexusLS.Core.Sincronizacao.Firebase.SessaoStore(NexusLS.Core.Sincronizacao.Firebase.SessaoStore.CaminhoPadrao()), protetor,
+            operacional: Operacional);
         var destinoFila = new NexusLS.Core.Sincronizacao.Firebase.DestinoFilaFirestore(Login, Firebase, _httpFirebase, DestinoCatalogo);
         Fila = new(fabrica, SincronizacaoRepo, destinoFila);
-        Sincronizacao = new(new NexusLS.Core.Sincronizacao.MonitorSincronizacao(Fila, () => Login.Configurado, () => destinoFila.PodeEnviar), Login,
+        var destinoOperacional = new NexusLS.Core.Sincronizacao.Operacional.DestinoOperacionalConfiguravel(Operacional, Login, _httpFirebase);
+        FilaOperacional = new(fabrica, new NexusLS.Core.Sincronizacao.Operacional.MontadorOperacional(fabrica), destinoOperacional);
+        Sincronizacao = new(new NexusLS.Core.Sincronizacao.MonitorSincronizacao(Fila, () => Login.Configurado, () => destinoFila.PodeEnviar,
+                FilaOperacional, () => destinoOperacional.PodeEnviar), Login,
             () => NexusLS.App.Seguranca.Sessao.Atual?.Nome);
         Rascunho = new(new RascunhoStore(RascunhoStore.CaminhoPadrao()), fabrica);
     }

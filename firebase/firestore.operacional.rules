@@ -1,0 +1,51 @@
+rules_version = '2';
+
+// Regras de segurança do Firestore do projeto OPERACIONAL do Nexus LS (vendas e demais registros da loja).
+// É OUTRO projeto que o do catálogo: aqui NADA é público.
+//
+// COMO USAR (uma vez, no projeto Firebase operacional):
+//   1. Authentication > Sign-in method > ative "E-mail/senha" e crie um usuário para cada pessoa que usa o programa.
+//   2. Firestore Database > crie o banco em modo de produção.
+//   3. Firestore Database > Regras: cole este arquivo, troque os e-mails pelos dos usuários do passo 1 e publique.
+//   4. No programa: Catálogo online > "Nuvem operacional": informe o id deste projeto, a chave da API e o nome da loja.
+//
+// O que estas regras fazem:
+//   - Só os usuários listados leem e gravam, e só em lojas/{loja}/...
+//   - Cada documento precisa vir do Nexus LS (campo origem) e ter o campo guid (o id do registro).
+//   - Ninguém apaga: o Nexus LS nunca apaga (venda cancelada é um campo no mesmo documento).
+//   - Todo o resto fica fechado.
+//
+// IMPORTANTE: estas regras NÃO foram executadas num emulador do Firebase neste projeto (falta o JDK 21 no
+// computador de desenvolvimento). Teste no emulador ou no "Simulador de regras" do console antes de usar.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function usuarioDaLoja() {
+      return request.auth != null
+          && request.auth.token.email in [
+            'TROQUE-PELO-EMAIL-DO-USUARIO-1@exemplo.com',
+            'TROQUE-PELO-EMAIL-DO-USUARIO-2@exemplo.com'
+          ];
+    }
+
+    // Documento da própria loja: o programa lê para conferir login e permissão.
+    match /lojas/{lojaId} {
+      allow read: if usuarioDaLoja();
+      allow write: if false;
+
+      match /{colecao}/{registroId} {
+        allow read: if usuarioDaLoja();
+        allow create, update: if usuarioDaLoja()
+          && request.resource.data.origem == 'nexus-ls'
+          && request.resource.data.guid is string
+          && request.resource.data.guid == registroId;
+        allow delete: if false;
+      }
+    }
+
+    match /{outro=**} {
+      allow read, write: if false;
+    }
+  }
+}
