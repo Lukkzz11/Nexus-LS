@@ -80,7 +80,7 @@ public partial class ImportacaoErpViewModel : ViewModelBase
                 return;
             }
             Resultado = "Lendo o ERP...";
-            var r = await _criarImportador().ImportarAsync();
+            var r = await _criarImportador().ImportarAsync(default, new Progress<string>(m => Resultado = m));
             Resultado = Resumir(r);
             MostrarSucesso(r.Novos + r.Atualizados == 0 ? "Nada mudou no ERP desde a última importação." : "Importação concluída.");
         }

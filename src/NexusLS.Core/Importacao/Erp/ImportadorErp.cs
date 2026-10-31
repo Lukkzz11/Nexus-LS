@@ -55,8 +55,9 @@ public sealed class ImportadorErp
 
     private delegate Task<bool?> Aplicar(PdvDbContext db, DocumentoErp doc, ImportacaoErpItem? ligacao, ResultadoImportacaoErp r);
 
-    public async Task<ResultadoImportacaoErp> ImportarAsync(CancellationToken ct = default)
+    public async Task<ResultadoImportacaoErp> ImportarAsync(CancellationToken ct = default, IProgress<string>? progresso = null)
     {
+        _progresso = progresso;
         var r = new ResultadoImportacaoErp();
         // Ordem importa: vendas apontam para produtos e clientes.
         await ColecaoAsync("produtos", new[] { "atualizadoEm" }, ProdutoAsync, r, ct);
@@ -67,8 +68,11 @@ public sealed class ImportadorErp
         return r;
     }
 
+    private IProgress<string>? _progresso;
+
     private async Task ColecaoAsync(string colecao, string[] campos, Aplicar aplicar, ResultadoImportacaoErp r, CancellationToken ct)
     {
+        _progresso?.Report($"Lendo {colecao} do ERP...");
         var resumo = new ResumoColecaoErp { Colecao = colecao };
         r.Colecoes.Add(resumo);
         var inicio = _agora();
@@ -96,6 +100,7 @@ public sealed class ImportadorErp
                 ct.ThrowIfCancellationRequested();
                 var docs = await _fonte.LerAsync(colecao, campo, cursor, limite, ct);
                 resumo.Lidos += docs.Count;
+                _progresso?.Report($"{colecao}: {resumo.Lidos} documentos lidos...");
 
                 // Nova posição: a maior data lida; sem nenhuma data (primeira leitura) vale "agora - folga".
                 DateTime? maior = docs.Select(d => LerData(d.Campos, campo)).Where(x => x is not null).Max();
