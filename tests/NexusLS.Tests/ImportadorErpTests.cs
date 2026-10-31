@@ -212,6 +212,70 @@ public sealed class ImportadorErpTests : IDisposable
         Assert.Equal(1, await db.FilaSincronizacao.CountAsync(f => f.Entidade == NomesEntidade.Produto));
     }
 
+    private void VendaPrazoNoErp()
+    {
+        ProdutoNoErp("p1", "Camiseta", "2026-10-30T10:00:00Z");
+        _fonte.Por("clientes", "c1", """{"nome":"Ana","atualizadoEm":"2026-10-30T09:00:00Z"}""");
+        _fonte.Por("vendas", "v1", """
+            {"dataHoraVenda":"2026-10-30T14:00:00Z","itens":[{"id":"p1","nome":"Camiseta","quantidade":1,"precoUnitario":100,"subtotal":100}],
+             "total":100,"formaPagamento":"prazo","cliente":{"id":"c1","nome":"Ana"},"criadoEm":"2026-10-30T14:00:00Z"}
+            """);
+    }
+
+    private static string Titulo(string pagamentos, string atualizado = "2026-10-30T15:00:00Z") => $$"""
+        {"origemVendaId":"v1","cliente":{"id":"c1"},"valorOriginal":100,"status":"pago_parcial","criadoEm":"2026-10-30T14:00:00Z","atualizadoEm":"{{atualizado}}",
+         "historicoPagamentos":[{{pagamentos}}]}
+        """;
+
+    [Fact]
+    public async Task Pagamentos_de_divida_viram_pagamentos_do_cliente_e_o_estornado_fica_de_fora()
+    {
+        VendaPrazoNoErp();
+        _fonte.Por("contas_receber", "t1", Titulo("""
+            {"id":"g1:t1","data":"2026-10-30","hora":"16:30","valor":30,"forma":"pix","operador":"ana"},
+            {"id":"g2:t1","data":"2026-10-30","hora":"17:00","valor":20,"forma":"dinheiro","estornado":true}
+            """));
+
+        await Importador().ImportarAsync();
+
+        await using var db = _banco.CriarContexto();
+        var pg = await db.PagamentosCliente.SingleAsync();
+        Assert.Equal(3000, pg.ValorCentavos);
+        Assert.Equal(FormaPagamento.Pix, pg.Forma);
+        Assert.Equal(new DateTime(2026, 10, 30, 16, 30, 0), pg.DataHora);
+        var conta = await new NexusLS.Core.Services.ClienteService(_banco.Fabrica).ContaAsync(pg.ClienteId);
+        Assert.Equal(7000, conta.SaldoDevedorCentavos); // 100 de venda a prazo - 30 pagos
+    }
+
+    [Fact]
+    public async Task Estorno_feito_depois_no_ERP_remove_o_pagamento_importado()
+    {
+        VendaPrazoNoErp();
+        string Pg(string extra) => "{\"id\":\"g1:t1\",\"data\":\"2026-10-30\",\"valor\":30,\"forma\":\"pix\"" + extra + "}";
+        _fonte.Por("contas_receber", "t1", Titulo(Pg("")));
+        var imp = Importador();
+        await imp.ImportarAsync();
+        _agora = _agora.AddHours(2);
+        _fonte.Por("contas_receber", "t1", Titulo(Pg(",\"estornado\":true"), "2026-10-31T13:00:00Z"));
+
+        var r = await imp.ImportarAsync();
+
+        Assert.Equal(0, await _banco.CriarContexto().PagamentosCliente.CountAsync());
+        Assert.Contains(r.Avisos, a => a.Contains("estornado"));
+    }
+
+    [Fact]
+    public async Task Titulo_sem_venda_de_origem_fica_de_fora_com_aviso()
+    {
+        _fonte.Por("clientes", "c1", """{"nome":"Ana","atualizadoEm":"2026-10-30T09:00:00Z"}""");
+        _fonte.Por("contas_receber", "t9", """{"origemVendaId":"","cliente":{"id":"c1"},"valorOriginal":50,"criadoEm":"2026-10-30T14:00:00Z","historicoPagamentos":[{"id":"x","valor":10,"forma":"pix"}]}""");
+
+        var r = await Importador().ImportarAsync();
+
+        Assert.Equal(0, await _banco.CriarContexto().PagamentosCliente.CountAsync());
+        Assert.Contains(r.Avisos, a => a.Contains("t9"));
+    }
+
     // ---- leitura REST ----
 
     private sealed class ManipuladorFalso : HttpMessageHandler

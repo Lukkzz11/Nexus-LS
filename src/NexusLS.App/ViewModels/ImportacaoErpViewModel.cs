@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NexusLS.Core.Importacao.Erp;
 using NexusLS.Core.Sincronizacao;
@@ -108,6 +108,6 @@ public partial class ImportacaoErpViewModel : ViewModelBase
 
     private static string Nome(string colecao) => colecao switch
     {
-        "produtos" => "Produtos", "clientes" => "Clientes", "caixa_turnos" => "Turnos de caixa", "vendas" => "Vendas", _ => colecao
+        "produtos" => "Produtos", "clientes" => "Clientes", "caixa_turnos" => "Turnos de caixa", "vendas" => "Vendas", "contas_receber" => "Dívidas (títulos a prazo)", _ => colecao
     };
 }

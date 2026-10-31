@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json.Nodes;
@@ -63,6 +63,7 @@ public sealed class ImportadorErp
         await ColecaoAsync("clientes", new[] { "atualizadoEm" }, ClienteAsync, r, ct);
         await ColecaoAsync("caixa_turnos", new[] { "criadoEm", "atualizadoEm" }, TurnoAsync, r, ct);
         await ColecaoAsync("vendas", new[] { "criadoEm", "atualizadoEm" }, VendaAsync, r, ct);
+        await ColecaoAsync("contas_receber", new[] { "criadoEm", "atualizadoEm" }, TituloAsync, r, ct);
         return r;
     }
 
@@ -379,6 +380,80 @@ public sealed class ImportadorErp
         db.ImportacaoErp.Add(new ImportacaoErpItem { Colecao = "produtos", ErpId = erpId, EntidadeGuid = p.Guid, Hash = "historico", ImportadoEm = _agora() });
         r.Avisos.Add($"Produto {erpId} ({nome}) não está mais no ERP; criado inativo só para o histórico das vendas.");
         return p.Id;
+    }
+
+    // ------------------------------------------------------------------ pagamentos de dívidas (contas_receber)
+
+    /// <summary>
+    /// A dívida aqui é "vendas a prazo - pagamentos". As vendas a prazo já vieram em <c>vendas</c>; do título só interessam os
+    /// pagamentos recebidos, que viram <see cref="PagamentoCliente"/> (um por entrada do histórico). Pagamento estornado no ERP
+    /// deixa de existir aqui (o registro importado é removido). Título sem venda de origem (saldo anterior) não tem
+    /// onde entrar na dívida daqui e fica de fora, com aviso.
+    /// </summary>
+    private async Task<bool?> TituloAsync(PdvDbContext db, DocumentoErp doc, ImportacaoErpItem? ligacao, ResultadoImportacaoErp r)
+    {
+        var c = doc.Campos;
+        UltimoGuid = ligacao?.EntidadeGuid ?? Guid.NewGuid();
+
+        var vendaErp = Texto(c, "origemVendaId");
+        var clienteErp = c["cliente"] is JsonObject cl ? Texto(cl, "id") : null;
+        var ligVenda = vendaErp is null ? null : await db.ImportacaoErp.AsNoTracking().FirstOrDefaultAsync(x => x.Colecao == "vendas" && x.ErpId == vendaErp);
+        var ligCliente = clienteErp is null ? null : await db.ImportacaoErp.AsNoTracking().FirstOrDefaultAsync(x => x.Colecao == "clientes" && x.ErpId == clienteErp);
+        if (ligVenda is null || ligCliente is null)
+        {
+            r.Avisos.Add($"contas_receber/{doc.Id}: sem venda ou cliente importados (saldo anterior ou venda ignorada); fica fora da dívida daqui.");
+            return null;
+        }
+        var clienteId = (await db.Clientes.AsNoTracking().FirstOrDefaultAsync(x => x.Guid == ligCliente.EntidadeGuid))?.Id;
+        var vendaCancelada = await db.Vendas.AsNoTracking().AnyAsync(v => v.Guid == ligVenda.EntidadeGuid && v.Cancelada);
+        if (clienteId is null) return null;
+
+        var historico = c["historicoPagamentos"] as JsonArray ?? new JsonArray();
+        var i = 0;
+        foreach (var entrada in historico.OfType<JsonObject>())
+        {
+            var id = Texto(entrada, "id") ?? $"{doc.Id}#{i}";
+            i++;
+            var valor = Centavos(entrada, "valor");
+            var vale = !vendaCancelada && Texto(c, "status") != "cancelado" && Booleano(entrada, "estornado") != true && valor > 0;
+
+            var lig = db.ImportacaoErp.Local.FirstOrDefault(x => x.Colecao == PagamentosDivida && x.ErpId == id)
+                      ?? await db.ImportacaoErp.FirstOrDefaultAsync(x => x.Colecao == PagamentosDivida && x.ErpId == id);
+            if (vale && lig is null)
+            {
+                var forma = Forma(Texto(entrada, "forma"));
+                if (forma is null or FormaPagamento.APrazo)
+                {
+                    r.Avisos.Add($"contas_receber/{doc.Id}: forma de recebimento \"{Texto(entrada, "forma")}\" não reconhecida; gravada como dinheiro.");
+                    forma = FormaPagamento.Dinheiro;
+                }
+                var pagamento = new PagamentoCliente
+                {
+                    ClienteId = clienteId.Value, DataHora = DataDoPagamento(entrada) ?? _agora().ToLocalTime(), ValorCentavos = valor,
+                    Forma = forma.Value, Observacao = Texto(entrada, "observacao"), Operador = Texto(entrada, "operador")
+                };
+                db.PagamentosCliente.Add(pagamento);
+                db.ImportacaoErp.Add(new ImportacaoErpItem { Colecao = PagamentosDivida, ErpId = id, EntidadeGuid = pagamento.Guid, Hash = "pagamento", ImportadoEm = _agora() });
+            }
+            else if (!vale && lig is not null)
+            {
+                var existente = await db.PagamentosCliente.FirstOrDefaultAsync(p => p.Guid == lig.EntidadeGuid);
+                if (existente is not null) db.PagamentosCliente.Remove(existente);
+                db.ImportacaoErp.Remove(lig);
+                r.Avisos.Add($"contas_receber/{doc.Id}: pagamento de {valor / 100m:N2} foi estornado ou cancelado no ERP; removido daqui.");
+            }
+        }
+        return ligacao is null;
+    }
+
+    private const string PagamentosDivida = "pagamentos_divida";
+
+    private static DateTime? DataDoPagamento(JsonObject entrada)
+    {
+        var data = Texto(entrada, "data");
+        if (data is null) return null;
+        var texto = Texto(entrada, "hora") is { } h ? $"{data} {h}" : data;
+        return DateTime.TryParse(texto, CultureInfo.InvariantCulture, DateTimeStyles.None, out var d) ? d : null;
     }
 
     // ------------------------------------------------------------------ conversões
