@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using NexusLS.Core.Financeiro;
 using NexusLS.Core.Models;
 using NexusLS.Core.Services;
@@ -6,6 +6,7 @@ using NexusLS.Tests.Infra;
 
 namespace NexusLS.Tests;
 
+[Collection("OperadorAtual")] // mexe no OperadorAtual (estático): não pode rodar junto das outras que também mexem
 public class ContasCartaoChequeTests : IDisposable
 {
     private static readonly DateTime Agora = new(2026, 10, 20, 15, 0, 0);

@@ -276,6 +276,51 @@ public sealed class ImportadorErpTests : IDisposable
         Assert.Contains(r.Avisos, a => a.Contains("t9"));
     }
 
+    [Fact]
+    public async Task Pedido_do_catalogo_vira_pedido_com_itens_cliente_e_produto_ligados()
+    {
+        ProdutoNoErp("p1", "Camiseta", "2026-10-30T10:00:00Z");
+        _fonte.Por("clientes", "c1", """{"nome":"Ana","telefone":"8199","atualizadoEm":"2026-10-30T09:00:00Z"}""");
+        _fonte.Por("pedidos", "o1", """
+            {"numeroPedido":"PED-0001","origem":"catalogo","status":"novo","cliente":{"id":"c1","nome":"Ana","telefone":"8199"},
+             "itens":[{"id":"p1","nome":"Camiseta","tamanho":"M","quantidade":2,"precoUnitario":50}],"total":100,"observacoes":"entregar sexta",
+             "criadoEm":"2026-10-30T15:00:00Z"}
+            """);
+
+        await Importador().ImportarAsync();
+
+        await using var db = _banco.CriarContexto();
+        var ped = await db.Pedidos.Include(p => p.Itens).Include(p => p.Historico).SingleAsync();
+        Assert.Equal("PED-0001", ped.Numero);
+        Assert.Equal(OrigemPedido.Catalogo, ped.Origem);
+        Assert.Equal(StatusPedido.Novo, ped.Status);
+        Assert.Equal(10000, ped.TotalCentavos);
+        Assert.Equal((await db.Clientes.SingleAsync()).Id, ped.ClienteId);
+        var item = Assert.Single(ped.Itens);
+        Assert.Equal((await db.Produtos.SingleAsync()).Id, item.ProdutoId);
+        Assert.Equal(5000, item.PrecoUnitarioCentavos);
+        Assert.Single(ped.Historico);
+    }
+
+    [Fact]
+    public async Task Mudanca_de_etapa_no_ERP_atualiza_o_mesmo_pedido_e_registra_no_historico()
+    {
+        string Pedido(string status, string extra) => "{\"numeroPedido\":\"PED-7\",\"origem\":\"whatsapp\",\"status\":\"" + status + "\",\"cliente\":{\"nome\":\"Bia\"},\"itens\":[{\"nome\":\"Livre\",\"quantidade\":1,\"precoUnitario\":10}],\"total\":10,\"criadoEm\":\"2026-10-30T15:00:00Z\"" + extra + "}";
+        _fonte.Por("pedidos", "o1", Pedido("novo", ""));
+        var imp = Importador();
+        await imp.ImportarAsync();
+        _agora = _agora.AddHours(2);
+        _fonte.Por("pedidos", "o1", Pedido("separado", ",\"atualizadoEm\":\"2026-10-31T13:00:00Z\""));
+
+        await imp.ImportarAsync();
+
+        await using var db = _banco.CriarContexto();
+        var ped = await db.Pedidos.Include(p => p.Historico).SingleAsync(); // o mesmo pedido, não dois
+        Assert.Equal(StatusPedido.Separado, ped.Status);
+        Assert.Equal(2, ped.Historico.Count);
+        Assert.Null((await db.Pedidos.Include(p => p.Itens).SingleAsync()).Itens.Single().ProdutoId); // item livre
+    }
+
     // ---- leitura REST ----
 
     private sealed class ManipuladorFalso : HttpMessageHandler

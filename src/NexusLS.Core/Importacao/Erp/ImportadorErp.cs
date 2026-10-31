@@ -65,6 +65,7 @@ public sealed class ImportadorErp
         await ColecaoAsync("caixa_turnos", new[] { "criadoEm", "atualizadoEm" }, TurnoAsync, r, ct);
         await ColecaoAsync("vendas", new[] { "criadoEm", "atualizadoEm" }, VendaAsync, r, ct);
         await ColecaoAsync("contas_receber", new[] { "criadoEm", "atualizadoEm" }, TituloAsync, r, ct);
+        await ColecaoAsync("pedidos", new[] { "criadoEm", "atualizadoEm" }, PedidoAsync, r, ct);
         return r;
     }
 
@@ -460,6 +461,99 @@ public sealed class ImportadorErp
         var texto = Texto(entrada, "hora") is { } h ? $"{data} {h}" : data;
         return DateTime.TryParse(texto, CultureInfo.InvariantCulture, DateTimeStyles.None, out var d) ? d : null;
     }
+
+    // ------------------------------------------------------------------ pedidos (atacado, WhatsApp, catálogo, venda a prazo)
+
+    private async Task<bool?> PedidoAsync(PdvDbContext db, DocumentoErp doc, ImportacaoErpItem? ligacao, ResultadoImportacaoErp r)
+    {
+        var c = doc.Campos;
+        var status = StatusDoPedido(Texto(c, "status"));
+        var agora = _agora().ToLocalTime(); // o Pedido guarda a hora local
+
+        Pedido? p = ligacao is null ? null : await db.Pedidos.Include(x => x.Historico).FirstOrDefaultAsync(x => x.Guid == ligacao.EntidadeGuid);
+        if (p is not null)
+        {
+            if (p.Status != status)
+            {
+                p.Status = status;
+                p.Historico.Add(new EventoPedido { Status = status, DataHora = agora, Operador = "Importado do ERP", Observacao = "Mudança de etapa no ERP" });
+            }
+            p.MotivoCancelamento = status == StatusPedido.Cancelado ? Texto(c, "motivoCancelamento") ?? p.MotivoCancelamento ?? "Cancelado no ERP" : p.MotivoCancelamento;
+            p.AtualizadoEm = agora;
+            UltimoGuid = p.Guid;
+            return false;
+        }
+
+        var cliente = c["cliente"] as JsonObject;
+        var clienteErp = cliente is null ? null : Texto(cliente, "id");
+        int? clienteId = null;
+        if (clienteErp is not null)
+        {
+            var lig = await db.ImportacaoErp.AsNoTracking().FirstOrDefaultAsync(x => x.Colecao == "clientes" && x.ErpId == clienteErp);
+            if (lig is not null) clienteId = (await db.Clientes.AsNoTracking().FirstOrDefaultAsync(x => x.Guid == lig.EntidadeGuid))?.Id;
+        }
+        int? vendaId = null;
+        if (Texto(c, "vendaId") is { } vendaErp)
+        {
+            var lig = await db.ImportacaoErp.AsNoTracking().FirstOrDefaultAsync(x => x.Colecao == "vendas" && x.ErpId == vendaErp);
+            if (lig is not null) vendaId = (await db.Vendas.AsNoTracking().FirstOrDefaultAsync(x => x.Guid == lig.EntidadeGuid))?.Id;
+        }
+
+        var criado = DataLocal(c, "criadoEm") ?? agora;
+        p = new Pedido
+        {
+            Numero = Texto(c, "numeroPedido") ?? $"ERP-{doc.Id}",
+            ClienteId = clienteId,
+            ClienteNome = (cliente is null ? null : Texto(cliente, "nome")) ?? "Consumidor final",
+            ClienteTelefone = cliente is null ? null : Texto(cliente, "telefone"),
+            Origem = OrigemDoPedido(Texto(c, "origem")),
+            Status = status,
+            TotalCentavos = Centavos(c, "total"),
+            Observacao = Texto(c, "observacoes"),
+            VendaId = vendaId,
+            CriadoEm = criado,
+            AtualizadoEm = DataLocal(c, "atualizadoEm") ?? criado,
+            MotivoCancelamento = status == StatusPedido.Cancelado ? Texto(c, "motivoCancelamento") ?? "Cancelado no ERP" : null
+        };
+        foreach (var item in (c["itens"] as JsonArray ?? new JsonArray()).OfType<JsonObject>())
+        {
+            var qtd = (int)Math.Round(Numero(item["quantidade"]));
+            if (qtd <= 0) continue;
+            int? produtoId = null;
+            if (Texto(item, "id") is { } pErp)
+            {
+                var lig = await db.ImportacaoErp.AsNoTracking().FirstOrDefaultAsync(x => x.Colecao == "produtos" && x.ErpId == pErp);
+                if (lig is not null) produtoId = (await db.Produtos.AsNoTracking().FirstOrDefaultAsync(x => x.Guid == lig.EntidadeGuid))?.Id;
+            }
+            p.Itens.Add(new ItemPedido
+            {
+                ProdutoId = produtoId, Nome = Texto(item, "nome") ?? "Item", Tamanho = Texto(item, "tamanho") ?? Tamanhos.SemTamanho,
+                Quantidade = qtd, PrecoUnitarioCentavos = Centavos(item, "precoUnitario")
+            });
+        }
+        p.Historico.Add(new EventoPedido { Status = status, DataHora = criado, Operador = "Importado do ERP", Observacao = "Pedido importado do ERP" });
+        db.Pedidos.Add(p);
+        UltimoGuid = p.Guid;
+        return true;
+    }
+
+    private static OrigemPedido OrigemDoPedido(string? origem) => origem switch
+    {
+        "balcao" => OrigemPedido.Balcao,
+        "catalogo" => OrigemPedido.Catalogo,
+        "encomenda" => OrigemPedido.Encomenda,
+        _ => OrigemPedido.WhatsApp // whatsapp, venda_prazo e desconhecidos
+    };
+
+    private static StatusPedido StatusDoPedido(string? status) => status?.ToLowerInvariant() switch
+    {
+        "em_separacao" or "em_producao" => StatusPedido.EmSeparacao,
+        "separado" => StatusPedido.Separado,
+        "pronto" or "pronto_retirada" => StatusPedido.ProntoRetirada,
+        "entregue" => StatusPedido.Entregue,
+        "cancelado" => StatusPedido.Cancelado,
+        _ => StatusPedido.Novo // novo, pendente, aprovado e desconhecidos
+    };
 
     // ------------------------------------------------------------------ conversões
 

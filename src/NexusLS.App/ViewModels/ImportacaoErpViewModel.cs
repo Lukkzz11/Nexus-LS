@@ -108,6 +108,6 @@ public partial class ImportacaoErpViewModel : ViewModelBase
 
     private static string Nome(string colecao) => colecao switch
     {
-        "produtos" => "Produtos", "clientes" => "Clientes", "caixa_turnos" => "Turnos de caixa", "vendas" => "Vendas", "contas_receber" => "Dívidas (títulos a prazo)", _ => colecao
+        "produtos" => "Produtos", "clientes" => "Clientes", "caixa_turnos" => "Turnos de caixa", "vendas" => "Vendas", "contas_receber" => "Dívidas (títulos a prazo)", "pedidos" => "Pedidos", _ => colecao
     };
 }
