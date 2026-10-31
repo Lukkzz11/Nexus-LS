@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using NexusLS.Core.Data;
 using NexusLS.Core.Models;
@@ -107,7 +107,8 @@ public sealed class MontadorOperacional : IMontadorDocumentos
     {
         NomesEntidade.Venda, NomesEntidade.TurnoCaixa, NomesEntidade.MovimentoCaixa, NomesEntidade.FechamentoCaixa,
         NomesEntidade.PagamentoCliente, NomesEntidade.Lancamento, NomesEntidade.ContaFinanceira,
-        NomesEntidade.TransferenciaConta, NomesEntidade.LiquidacaoCartao, NomesEntidade.ChequeRecebido
+        NomesEntidade.TransferenciaConta, NomesEntidade.LiquidacaoCartao, NomesEntidade.ChequeRecebido,
+        NomesEntidade.Cliente, NomesEntidade.Fornecedor, NomesEntidade.Compra, NomesEntidade.Pedido
     };
 
     public Task<DocumentosMontados> MontarAsync(string entidade, IReadOnlyList<Guid> guids) => entidade switch
@@ -122,6 +123,10 @@ public sealed class MontadorOperacional : IMontadorDocumentos
         NomesEntidade.TransferenciaConta => MontarTransferenciasAsync(guids),
         NomesEntidade.LiquidacaoCartao => MontarLiquidacoesAsync(guids),
         NomesEntidade.ChequeRecebido => MontarChequesAsync(guids),
+        NomesEntidade.Cliente => MontarClientesAsync(guids),
+        NomesEntidade.Fornecedor => MontarFornecedoresAsync(guids),
+        NomesEntidade.Compra => MontarComprasAsync(guids),
+        NomesEntidade.Pedido => MontarPedidosAsync(guids),
         _ => throw new ArgumentException($"Entidade sem montador: {entidade}", nameof(entidade))
     };
     private async Task<DocumentosMontados> MontarVendasAsync(IReadOnlyList<Guid> guids)
@@ -286,6 +291,67 @@ public sealed class MontadorOperacional : IMontadorDocumentos
            ("conta", e => ((ChequeRecebido)e).ContaId, typeof(ContaFinanceira)));
     }
 
+    // ---------- cadastros, compras e pedidos ----------
+
+    private async Task<DocumentosMontados> MontarClientesAsync(IReadOnlyList<Guid> guids)
+    {
+        await using var db = await _fabrica.CreateDbContextAsync();
+        return await Montar<Cliente>(db, guids, "clientes", (c, _) => new()
+        {
+            ["nome"] = c.Nome, ["documento"] = c.Documento, ["telefone"] = c.Telefone, ["observacao"] = c.Observacao,
+            ["ativo"] = c.Ativo, ["cadastradoEm"] = Utc(c.DataCadastro), ["limiteCreditoCentavos"] = c.LimiteCreditoCentavos
+        });
+    }
+
+    private async Task<DocumentosMontados> MontarFornecedoresAsync(IReadOnlyList<Guid> guids)
+    {
+        await using var db = await _fabrica.CreateDbContextAsync();
+        return await Montar<Fornecedor>(db, guids, "fornecedores", (f, _) => new()
+        {
+            ["nome"] = f.Nome, ["documento"] = f.Documento, ["telefone"] = f.Telefone, ["email"] = f.Email,
+            ["observacao"] = f.Observacao, ["ativo"] = f.Ativo, ["cadastradoEm"] = Utc(f.DataCadastro)
+        });
+    }
+
+    private async Task<DocumentosMontados> MontarComprasAsync(IReadOnlyList<Guid> guids)
+    {
+        await using var db = await _fabrica.CreateDbContextAsync();
+        return await Montar<Compra>(db, guids, "compras", (c, g) => new()
+        {
+            ["fornecedorGuid"] = g.De<Fornecedor>(c.FornecedorId), ["dataHora"] = Utc(c.DataHora), ["numeroNota"] = c.NumeroNota,
+            ["totalCentavos"] = c.TotalCentavos, ["observacao"] = c.Observacao, ["operador"] = c.Operador,
+            ["cancelada"] = c.Cancelada, ["canceladaEm"] = Utc(c.CanceladaEm), ["motivoCancelamento"] = c.MotivoCancelamento,
+            ["itens"] = c.Itens.OrderBy(i => i.Id).Select(i => (object?)new Dictionary<string, object?>
+            {
+                ["produtoGuid"] = g.De<Produto>(i.ProdutoId), ["nome"] = i.NomeProduto, ["tamanho"] = i.Tamanho,
+                ["quantidade"] = i.Quantidade, ["custoUnitarioCentavos"] = i.CustoUnitarioCentavos, ["totalCentavos"] = i.TotalCentavos
+            }).ToList()
+        }, q => q.Include(c => c.Itens), c => c.Itens.Select(i => (typeof(Produto), (int?)i.ProdutoId)),
+           ("fornecedor", e => ((Compra)e).FornecedorId, typeof(Fornecedor)));
+    }
+
+    private async Task<DocumentosMontados> MontarPedidosAsync(IReadOnlyList<Guid> guids)
+    {
+        await using var db = await _fabrica.CreateDbContextAsync();
+        return await Montar<Pedido>(db, guids, "pedidos", (p, g) => new()
+        {
+            ["numero"] = p.Numero, ["clienteGuid"] = g.De<Cliente>(p.ClienteId), ["clienteNome"] = p.ClienteNome,
+            ["clienteTelefone"] = p.ClienteTelefone, ["origem"] = p.Origem.ToString(), ["status"] = p.Status.ToString(),
+            ["totalCentavos"] = p.TotalCentavos, ["observacao"] = p.Observacao, ["vendaGuid"] = g.De<Venda>(p.VendaId),
+            ["criadoEm"] = Utc(p.CriadoEm), ["motivoCancelamento"] = p.MotivoCancelamento,
+            ["itens"] = p.Itens.OrderBy(i => i.Id).Select(i => (object?)new Dictionary<string, object?>
+            {
+                ["produtoGuid"] = g.De<Produto>(i.ProdutoId), ["nome"] = i.Nome, ["tamanho"] = i.Tamanho,
+                ["quantidade"] = i.Quantidade, ["precoUnitarioCentavos"] = i.PrecoUnitarioCentavos, ["totalCentavos"] = i.TotalCentavos
+            }).ToList(),
+            ["historico"] = p.Historico.OrderBy(e => e.Id).Select(e => (object?)new Dictionary<string, object?>
+            {
+                ["status"] = e.Status.ToString(), ["dataHora"] = Utc(e.DataHora), ["operador"] = e.Operador, ["observacao"] = e.Observacao
+            }).ToList()
+        }, q => q.Include(p => p.Itens).Include(p => p.Historico), p => p.Itens.Select(i => (typeof(Produto), i.ProdutoId)),
+           ("cliente", e => ((Pedido)e).ClienteId, typeof(Cliente)), ("venda", e => ((Pedido)e).VendaId, typeof(Venda)));
+    }
+
     /// <summary>Guids das entidades referenciadas (por tipo e id local), carregados de uma vez para o lote.</summary>
     private sealed class Guids
     {
@@ -298,18 +364,31 @@ public sealed class MontadorOperacional : IMontadorDocumentos
     /// Lê as entidades do lote, resolve as chaves locais para Guid e monta os documentos (campos comuns: guid, atualizadoEm,
     /// origem, versaoDoFormato). Registro que não existe mais é devolvido em "Ausentes".
     /// </summary>
+    private Task<DocumentosMontados> Montar<T>(
+        PdvDbContext db, IReadOnlyList<Guid> guids, string colecao,
+        Func<T, Guids, Dictionary<string, object?>> campos,
+        params (string Nome, Func<object, int?> Id, Type Tipo)[] referencias) where T : class, IEntidadeSincronizavel =>
+        Montar(db, guids, colecao, campos, null, null, referencias);
+
+    /// <param name="incluir">Carrega as partes (itens, histórico) junto com a entidade.</param>
+    /// <param name="extras">Referências que ficam dentro das partes (ex.: o produto de cada item).</param>
     private async Task<DocumentosMontados> Montar<T>(
         PdvDbContext db, IReadOnlyList<Guid> guids, string colecao,
         Func<T, Guids, Dictionary<string, object?>> campos,
+        Func<IQueryable<T>, IQueryable<T>>? incluir,
+        Func<T, IEnumerable<(Type Tipo, int? Id)>>? extras,
         params (string Nome, Func<object, int?> Id, Type Tipo)[] referencias) where T : class, IEntidadeSincronizavel
     {
-        var linhas = await db.Set<T>().AsNoTracking().Where(e => guids.Contains(EF.Property<Guid>(e, "Guid"))).ToListAsync();
+        IQueryable<T> consulta = db.Set<T>().AsNoTracking();
+        if (incluir is not null) consulta = incluir(consulta);
+        var linhas = await consulta.Where(e => guids.Contains(EF.Property<Guid>(e, "Guid"))).ToListAsync();
 
         var g = new Guids();
-        foreach (var grupo in referencias.GroupBy(r => r.Tipo))
+        var pedidos = referencias.SelectMany(r => linhas.Select(l => (Tipo: r.Tipo, Id: r.Id(l))))
+            .Concat(extras is null ? Enumerable.Empty<(Type Tipo, int? Id)>() : linhas.SelectMany(l => extras(l)));
+        foreach (var grupo in pedidos.Where(x => x.Id != null).GroupBy(x => x.Tipo))
         {
-            var ids = linhas.SelectMany(l => grupo.Select(r => r.Id(l))).Where(i => i != null).Select(i => i!.Value).Distinct().ToList();
-            if (ids.Count == 0) continue;
+            var ids = grupo.Select(x => x.Id!.Value).Distinct().ToList();
             foreach (var (id, guid) in await GuidsDeAsync(db, grupo.Key, ids)) g.Adicionar(grupo.Key, id, guid);
         }
 
@@ -317,7 +396,7 @@ public sealed class MontadorOperacional : IMontadorDocumentos
         {
             var c = campos(l, g);
             c["guid"] = l.Guid;
-            c["atualizadoEm"] = DateTime.SpecifyKind(l.AtualizadoEm, DateTimeKind.Utc); // o carimbo já é gravado em UTC
+            c["atualizadoEm"] = l is Pedido pedido ? Utc(pedido.AtualizadoEm) : DateTime.SpecifyKind(l.AtualizadoEm, DateTimeKind.Utc); // o carimbo já é gravado em UTC (o do Pedido é hora local)
             c["origem"] = "nexus-ls";
             c["versaoDoFormato"] = VersaoDoFormato;
             return new DocumentoOperacional(colecao, l.Guid, c);
@@ -335,6 +414,8 @@ public sealed class MontadorOperacional : IMontadorDocumentos
         if (tipo == typeof(Compra)) return await Ler<Compra>(db, ids);
         if (tipo == typeof(Venda)) return await Ler<Venda>(db, ids);
         if (tipo == typeof(PagamentoCliente)) return await Ler<PagamentoCliente>(db, ids);
+        if (tipo == typeof(Produto)) return await Ler<Produto>(db, ids);
+        if (tipo == typeof(Fornecedor)) return await Ler<Fornecedor>(db, ids);
         throw new ArgumentException($"Referência sem resolução: {tipo.Name}");
     }
 

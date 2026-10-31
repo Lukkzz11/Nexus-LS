@@ -106,7 +106,6 @@ pode demorar e consumir escritas (20 mil por dia no plano gratuito). Deixe o pro
 - Movimentos e fechamentos de caixa do ERP não são importados; só os turnos.
 - Vendas do ERP com pagamento misto são ignoradas, com aviso.
 - Fotos dos produtos não são importadas.
-- Clientes, fornecedores, compras e pedidos do Nexus ainda não são enviados ao projeto B.
 - As regras de segurança nunca rodaram num emulador (use o Simulador de regras do console).
 
 ---

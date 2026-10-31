@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using NexusLS.Core.Data;
 using NexusLS.Core.Models;
 
@@ -97,6 +97,10 @@ public class ProcessadorFilaOperacional
         await Enfileirar<TransferenciaConta>(NomesEntidade.TransferenciaConta);
         await Enfileirar<LiquidacaoCartao>(NomesEntidade.LiquidacaoCartao);
         await Enfileirar<ChequeRecebido>(NomesEntidade.ChequeRecebido);
+        await Enfileirar<Cliente>(NomesEntidade.Cliente);
+        await Enfileirar<Fornecedor>(NomesEntidade.Fornecedor);
+        await Enfileirar<Compra>(NomesEntidade.Compra);
+        await Enfileirar<Pedido>(NomesEntidade.Pedido);
 
         await db.SaveChangesAsync();
         return criadas;
