@@ -503,6 +503,53 @@ namespace NexusLS.Core.Migrations
                     b.ToTable("Funcionarios");
                 });
 
+            modelBuilder.Entity("NexusLS.Core.Models.ImportacaoErpCursor", b =>
+                {
+                    b.Property<string>("Chave")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("Valor")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Chave");
+
+                    b.ToTable("ImportacaoErpCursores");
+                });
+
+            modelBuilder.Entity("NexusLS.Core.Models.ImportacaoErpItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Colecao")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("EntidadeGuid")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ErpId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Hash")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("ImportadoEm")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EntidadeGuid");
+
+                    b.HasIndex("Colecao", "ErpId")
+                        .IsUnique();
+
+                    b.ToTable("ImportacaoErp");
+                });
+
             modelBuilder.Entity("NexusLS.Core.Models.ItemCompra", b =>
                 {
                     b.Property<int>("Id")

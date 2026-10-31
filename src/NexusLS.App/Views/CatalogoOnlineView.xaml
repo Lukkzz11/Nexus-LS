@@ -112,6 +112,34 @@
                 </StackPanel>
             </Border>
 
+            <!-- ===== Importar do ERP (só leitura; traz só o que mudou) ===== -->
+            <Border Style="{StaticResource Painel}" Margin="0,16,0,0" Visibility="{Binding TemErp, Converter={StaticResource BoolVis}}">
+                <StackPanel DataContext="{Binding Erp}">
+                    <StackPanel IsEnabled="{Binding PodeEditar}">
+                        <TextBlock Text="Importar do ERP" FontSize="18" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding Situacao}" TextWrapping="Wrap" Foreground="{StaticResource CorTextoSuave}" Margin="0,4,0,0" />
+
+                        <TextBlock Text="Id do projeto Firebase do ERP" Style="{StaticResource Rotulo}" />
+                        <TextBox Text="{Binding ErpProjectId, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Projeto do ERP" />
+                        <TextBlock Text="Chave da API (Web API Key) do projeto do ERP" Style="{StaticResource Rotulo}" />
+                        <TextBox Text="{Binding ErpApiKey, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Chave da API do ERP" />
+                        <TextBlock Text="Empresa no ERP (ex.: lifesurf-principal)" Style="{StaticResource Rotulo}" />
+                        <TextBox Text="{Binding ErpEmpresaId, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Empresa do ERP" />
+
+                        <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+                            <Button Content="Salvar" Style="{StaticResource BotaoSecundario}" Command="{Binding SalvarCommand}" />
+                            <Button Content="Importar do ERP" Style="{StaticResource BotaoPrimario}" Margin="8,0,0,0"
+                                    IsEnabled="{Binding PodeImportar}" Command="{Binding ImportarCommand}" />
+                            <Button Content="Sair da conta do ERP" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0" Command="{Binding SairDoErpCommand}" />
+                        </StackPanel>
+                    </StackPanel>
+                    <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" />
+                    <TextBlock Text="{Binding Resultado}" TextWrapping="Wrap" Margin="0,8,0,0" />
+                    <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,8,0,0"
+                               Text="O Nexus só lê o ERP. A primeira vez lê tudo; depois, só o que foi criado ou alterado (poucas leituras no Firebase). Vendas importadas não mexem no estoque: o saldo vem do produto." />
+                </StackPanel>
+            </Border>
+
             <!-- ===== Histórico ===== -->
             <Border Style="{StaticResource Painel}" Margin="0,16,0,24">
                 <StackPanel>

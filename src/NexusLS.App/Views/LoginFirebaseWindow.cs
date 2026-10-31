@@ -10,7 +10,7 @@ namespace NexusLS.App.Views;
 /// </summary>
 public sealed class LoginFirebaseWindow : Window
 {
-    private readonly GestorLogin _login;
+    private readonly Func<string, string, Task<SessaoUsuario>> _entrarNaConta;
     private readonly TextBox _email = new() { MinHeight = 36, Margin = new Thickness(0, 4, 0, 12) };
     private readonly PasswordBox _senha = new() { MinHeight = 36, Margin = new Thickness(0, 4, 0, 0) };
     private readonly TextBlock _erro = new() { Foreground = System.Windows.Media.Brushes.Firebrick, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 8, 0, 0), MinHeight = 20 };
@@ -19,9 +19,15 @@ public sealed class LoginFirebaseWindow : Window
     public SessaoUsuario? Entrou { get; private set; }
 
     public LoginFirebaseWindow(GestorLogin login)
+        : this((e, s) => login.EntrarAsync(e, s), login.EmailSugerido, "Nexus LS — Entrar na conta", "Conta do Nexus LS",
+            "Entre para enviar o catálogo à nuvem. As vendas e o estoque continuam funcionando sem internet.")
     {
-        _login = login;
-        Title = "Nexus LS — Entrar na conta";
+    }
+
+    public LoginFirebaseWindow(Func<string, string, Task<SessaoUsuario>> entrar, string emailSugerido, string titulo, string cabecalho, string explicacao)
+    {
+        _entrarNaConta = entrar;
+        Title = titulo;
         Width = 420;
         SizeToContent = SizeToContent.Height;
         ResizeMode = ResizeMode.NoResize;
@@ -29,14 +35,14 @@ public sealed class LoginFirebaseWindow : Window
         if (Application.Current?.TryFindResource("BotaoPrimario") is Style primario) _entrar.Style = primario;
 
         var depois = new Button { Content = "Continuar sem entrar", IsCancel = true, Padding = new Thickness(16, 8, 16, 8), Margin = new Thickness(8, 0, 0, 0) };
-        _email.Text = login.EmailSugerido;
+        _email.Text = emailSugerido;
         Content = new StackPanel
         {
             Margin = new Thickness(28),
             Children =
             {
-                new TextBlock { Text = "Conta do Nexus LS", FontSize = 22, FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 0, 0, 6) },
-                new TextBlock { Text = "Entre para enviar o catálogo à nuvem. As vendas e o estoque continuam funcionando sem internet.", TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 0, 0, 16) },
+                new TextBlock { Text = cabecalho, FontSize = 22, FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 0, 0, 6) },
+                new TextBlock { Text = explicacao, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 0, 0, 16) },
                 new TextBlock { Text = "E-mail" }, _email,
                 new TextBlock { Text = "Senha" }, _senha,
                 new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 16, 0, 0), Children = { _entrar, depois } },
@@ -54,7 +60,7 @@ public sealed class LoginFirebaseWindow : Window
         _erro.Text = "Entrando...";
         try
         {
-            Entrou = await _login.EntrarAsync(_email.Text, _senha.Password);
+            Entrou = await _entrarNaConta(_email.Text, _senha.Password);
             DialogResult = true;
         }
         catch (FalhaLoginException ex)
@@ -67,6 +73,14 @@ public sealed class LoginFirebaseWindow : Window
         {
             _entrar.IsEnabled = true;
         }
+    }
+
+    /// <summary>Entrada no Firebase do ERP (só para ler dados de lá).</summary>
+    public static SessaoUsuario? PedirErp(NexusLS.Core.Importacao.Erp.ContaErp conta, Window? dono)
+    {
+        var janela = new LoginFirebaseWindow((e, s) => conta.EntrarAsync(e, s), conta.Email ?? "", "Nexus LS — Entrar no ERP", "Conta do ERP",
+            "Use o mesmo e-mail e senha do ERP. O Nexus só lê as informações de lá; nada é gravado no ERP.") { Owner = dono };
+        return janela.ShowDialog() == true ? janela.Entrou : null;
     }
 
     /// <summary>Mostra a janela. Devolve a sessão, ou nulo se a pessoa preferiu continuar sem entrar.</summary>

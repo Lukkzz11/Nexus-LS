@@ -25,6 +25,8 @@ public class PdvDbContext : DbContext
     public DbSet<SincronizacaoProduto> SincronizacaoProdutos => Set<SincronizacaoProduto>();
     public DbSet<SincronizacaoLog> SincronizacaoLogs => Set<SincronizacaoLog>();
     public DbSet<ItemFilaSincronizacao> FilaSincronizacao => Set<ItemFilaSincronizacao>();
+    public DbSet<ImportacaoErpItem> ImportacaoErp => Set<ImportacaoErpItem>();
+    public DbSet<ImportacaoErpCursor> ImportacaoErpCursores => Set<ImportacaoErpCursor>();
     public DbSet<Lancamento> Lancamentos => Set<Lancamento>();
     public DbSet<Fornecedor> Fornecedores => Set<Fornecedor>();
     public DbSet<Funcionario> Funcionarios => Set<Funcionario>();
@@ -114,6 +116,13 @@ public class PdvDbContext : DbContext
             e.Property(x => x.Mensagem).HasMaxLength(1000);
             e.HasIndex(x => x.IniciadaEm);
         });
+
+        modelBuilder.Entity<ImportacaoErpItem>(e =>
+        {
+            e.HasIndex(x => new { x.Colecao, x.ErpId }).IsUnique(); // um documento do ERP = um registro aqui
+            e.HasIndex(x => x.EntidadeGuid);
+        });
+        modelBuilder.Entity<ImportacaoErpCursor>(e => e.HasKey(x => x.Chave));
 
         modelBuilder.Entity<ItemFilaSincronizacao>(e =>
         {

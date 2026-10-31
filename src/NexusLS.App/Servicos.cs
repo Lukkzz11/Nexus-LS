@@ -49,6 +49,9 @@ public sealed class ContainerDeServicos
     public NexusLS.Core.Sincronizacao.Operacional.ConfiguracaoOperacionalStore Operacional { get; }
     public NexusLS.Core.Sincronizacao.Operacional.ProcessadorFilaOperacional FilaOperacional { get; }
     public NexusLS.App.ViewModels.SincronizacaoViewModel Sincronizacao { get; }
+    public NexusLS.Core.Importacao.Erp.ConfiguracaoErpStore ErpConfig { get; }
+    public NexusLS.Core.Importacao.Erp.ContaErp ContaErp { get; }
+    public Func<NexusLS.Core.Importacao.Erp.ImportadorErp> CriarImportadorErp { get; }
 
     public ContainerDeServicos(DbContextOptions<PdvDbContext> opcoesBanco)
     {
@@ -99,6 +102,9 @@ public sealed class ContainerDeServicos
         Sincronizacao = new(new NexusLS.Core.Sincronizacao.MonitorSincronizacao(Fila, () => Login.Configurado, () => destinoFila.PodeEnviar,
                 FilaOperacional, () => destinoOperacional.PodeEnviar), Login,
             () => NexusLS.App.Seguranca.Sessao.Atual?.Nome);
+        ErpConfig = new(NexusLS.Core.Importacao.Erp.ConfiguracaoErpStore.CaminhoPadrao());
+        ContaErp = new(ErpConfig, _httpFirebase, protetor);
+        CriarImportadorErp = () => new NexusLS.Core.Importacao.Erp.ImportadorErp(fabrica, ContaErp.CriarFonte());
         Rascunho = new(new RascunhoStore(RascunhoStore.CaminhoPadrao()), fabrica);
     }
 }

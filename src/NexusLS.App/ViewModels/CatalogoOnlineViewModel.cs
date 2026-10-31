@@ -45,8 +45,10 @@ public partial class CatalogoOnlineViewModel : ViewModelBase
     public CatalogoOnlineViewModel(
         ConfiguracaoFirebaseStore config, SincronizadorCatalogo sincronizador, SincronizacaoRepositorio repo,
         IDestinoCatalogo destino, ConfiguracaoService? loja = null,
-        NexusLS.Core.Sincronizacao.Operacional.ConfiguracaoOperacionalStore? operacional = null)
+        NexusLS.Core.Sincronizacao.Operacional.ConfiguracaoOperacionalStore? operacional = null,
+        ImportacaoErpViewModel? erp = null)
     {
+        Erp = erp;
         _config = config;
         _sincronizador = sincronizador;
         _repo = repo;
@@ -57,6 +59,10 @@ public partial class CatalogoOnlineViewModel : ViewModelBase
         CarregarOperacional();
         Carregamento = AtualizarHistoricoAsync();
     }
+
+    /// <summary>Seção "Importar do ERP" (nulo = não disponível, como nos testes antigos).</summary>
+    public ImportacaoErpViewModel? Erp { get; }
+    public bool TemErp => Erp is not null;
 
     /// <summary>A primeira carga do histórico (os testes esperam por ela).</summary>
     public Task Carregamento { get; }
