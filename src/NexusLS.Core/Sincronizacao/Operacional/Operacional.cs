@@ -154,6 +154,8 @@ public sealed class MontadorOperacional : IMontadorDocumentos
                 ["parcelas"] = v.Parcelas,
                 ["subtotalCentavos"] = v.SubtotalCentavos,
                 ["descontoCentavos"] = v.DescontoCentavos,
+                ["acrescimoCentavos"] = v.AcrescimoCentavos,
+                ["acrescimoCentavos"] = v.AcrescimoCentavos,
                 ["totalCentavos"] = v.TotalCentavos,
                 ["valorRecebidoCentavos"] = v.ValorRecebidoCentavos,
                 ["trocoCentavos"] = v.TrocoCentavos,

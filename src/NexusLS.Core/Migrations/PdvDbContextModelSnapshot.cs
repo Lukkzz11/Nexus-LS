@@ -1327,6 +1327,9 @@ namespace NexusLS.Core.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<long>("AcrescimoCentavos")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime>("AtualizadoEm")
                         .HasColumnType("TEXT");
 

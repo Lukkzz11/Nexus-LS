@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -11,6 +11,8 @@ namespace NexusLS.App.ViewModels;
 public partial class PdvViewModel
 {
     // ================= Etapa: desconto → pagamento =================
+
+    [ObservableProperty] private string _acrescimoTexto = "";
 
     private void AbrirDesconto()
     {
@@ -50,7 +52,8 @@ public partial class PdvViewModel
         OpcoesPagamento.Clear();
         foreach (var forma in SelecaoPagamento.Formas) OpcoesPagamento.Add(new OpcaoViewModel(SelecaoPagamento.Nome(forma)));
         OpcoesParcela.Clear();
-        for (var n = 1; n <= SelecaoPagamento.MaxParcelas; n++) OpcoesParcela.Add(new OpcaoViewModel($"{n}x"));
+        for (var n = 1; n <= SelecaoPagamento.MaxParcelas; n++)
+            OpcoesParcela.Add(new OpcaoViewModel($"{n}x", $"{TaxasCartao.Percentual(n):0}% de acréscimo"));
 
         Mensagem = "";
         AtualizarPagamento();
@@ -114,6 +117,10 @@ public partial class PdvViewModel
         OnPropertyChanged(nameof(EmDinheiro));
         OnPropertyChanged(nameof(EmCredito));
         OnPropertyChanged(nameof(EmAPrazo));
+        TotalFinalTexto = Dinheiro.Formatar(_pagamento!.TotalCentavos);
+        AcrescimoTexto = _pagamento.AcrescimoCentavos > 0
+            ? $"Acréscimo do crédito em {_pagamento.Parcelas}x ({TaxasCartao.Percentual(_pagamento.Parcelas):0}%): {Dinheiro.Formatar(_pagamento.AcrescimoCentavos)}  ·  {_pagamento.Parcelas}x de {Dinheiro.Formatar((_pagamento.TotalCentavos + _pagamento.Parcelas - 1) / _pagamento.Parcelas)}"
+            : "";
         AtualizarTroco();
     }
 

@@ -338,7 +338,9 @@ public sealed class ImportadorErp
         var soma = venda.Itens.Sum(i => i.TotalCentavos);
         venda.TotalCentavos = c["total"] is null ? soma : Centavos(c, "total");
         venda.SubtotalCentavos = c["subtotal"] is null ? soma : Centavos(c, "subtotal");
-        venda.DescontoCentavos = Math.Max(0, venda.SubtotalCentavos - venda.TotalCentavos);
+        // Desconto como o ERP gravou; o que sobra acima de "subtotal - desconto" é o acréscimo do crédito.
+        venda.DescontoCentavos = c["desconto"] is null ? Math.Max(0, venda.SubtotalCentavos - venda.TotalCentavos) : Math.Clamp(Centavos(c, "desconto"), 0, venda.SubtotalCentavos);
+        venda.AcrescimoCentavos = Math.Max(0, venda.TotalCentavos - (venda.SubtotalCentavos - venda.DescontoCentavos));
 
         var clienteErp = (c["cliente"] as JsonObject) is { } cl ? Texto(cl, "id") : null;
         if (clienteErp is not null)

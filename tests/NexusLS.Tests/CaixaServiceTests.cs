@@ -1,4 +1,4 @@
-using NexusLS.Core.Models;
+﻿using NexusLS.Core.Models;
 using NexusLS.Core.Services;
 using NexusLS.Tests.Infra;
 
@@ -87,7 +87,7 @@ public class CaixaServiceTests
         var resumo = await c.Caixa.ResumoAsync(turno.Id);
 
         Assert.Equal(1000, resumo.EsperadoPixCentavos);
-        Assert.Equal(3000, resumo.EsperadoCartaoCentavos);
+        Assert.Equal(3050, resumo.EsperadoCartaoCentavos); // débito 20,00 + crédito 10,00 com 5% de acréscimo
         Assert.Equal(3, resumo.VendasValidas);
         Assert.Equal(1, resumo.VendasCanceladas);
     }

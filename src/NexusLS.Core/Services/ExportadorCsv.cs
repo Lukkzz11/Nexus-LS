@@ -16,7 +16,7 @@ public static class ExportadorCsv
     public static string Vendas(IEnumerable<Venda> vendas)
     {
         var csv = new StringBuilder();
-        Linha(csv, "Nº", "Data", "Cliente", "Tabela", "Pagamento", "Parcelas", "Subtotal", "Desconto", "Total",
+        Linha(csv, "Nº", "Data", "Cliente", "Tabela", "Pagamento", "Parcelas", "Subtotal", "Desconto", "Acréscimo", "Total",
             "Recebido", "Troco", "Situação", "Operador", "Motivo do cancelamento");
 
         foreach (var v in vendas.OrderBy(v => v.DataHora).ThenBy(v => v.Id))
@@ -30,6 +30,7 @@ public static class ExportadorCsv
                 v.Parcelas.ToString(CultureInfo.InvariantCulture),
                 Valor(v.SubtotalCentavos),
                 Valor(v.DescontoCentavos),
+                Valor(v.AcrescimoCentavos),
                 Valor(v.TotalCentavos),
                 v.ValorRecebidoCentavos is long r ? Valor(r) : "",
                 v.FormaPagamento == FormaPagamento.Dinheiro ? Valor(v.TrocoCentavos) : "",

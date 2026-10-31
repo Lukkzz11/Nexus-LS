@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using NexusLS.Core.Models;
 
 namespace NexusLS.Core.Services;
@@ -151,13 +151,20 @@ public class SelecaoPagamento
 
     public const int MaxParcelas = 4;
 
-    public SelecaoPagamento(long totalCentavos)
+    public SelecaoPagamento(long baseCentavos)
     {
-        TotalCentavos = totalCentavos;
-        ValorRecebidoTexto = Dinheiro.FormatarParaEdicao(totalCentavos);
+        BaseCentavos = baseCentavos;
+        ValorRecebidoTexto = Dinheiro.FormatarParaEdicao(baseCentavos);
     }
 
-    public long TotalCentavos { get; }
+    /// <summary>Total depois do desconto, antes do acréscimo do crédito.</summary>
+    public long BaseCentavos { get; }
+
+    /// <summary>Acréscimo do crédito para as parcelas escolhidas (zero nas outras formas).</summary>
+    public long AcrescimoCentavos => Forma == FormaPagamento.CartaoCredito ? TaxasCartao.Acrescimo(BaseCentavos, Parcelas) : 0;
+
+    /// <summary>O que o cliente paga: a base mais o acréscimo do crédito.</summary>
+    public long TotalCentavos => BaseCentavos + AcrescimoCentavos;
     public FormaPagamento Forma { get; private set; } = FormaPagamento.Dinheiro;
     public int Parcelas { get; private set; } = 1;
     public string ValorRecebidoTexto { get; set; }

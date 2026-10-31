@@ -1,4 +1,4 @@
-using NexusLS.App.ViewModels;
+﻿using NexusLS.App.ViewModels;
 using NexusLS.Core.Financeiro;
 using NexusLS.Core.Models;
 using NexusLS.Core.Services;
@@ -51,15 +51,15 @@ public sealed class ContasESaldosViewModelTests : IDisposable
     public async Task Visao_geral_mostra_saldo_a_receber_e_resultado()
     {
         await VenderAsync(FormaPagamento.Dinheiro, 2);   // R$ 100,00 na gaveta
-        await VenderAsync(FormaPagamento.CartaoCredito); // R$ 50,00 a liquidar
+        await VenderAsync(FormaPagamento.CartaoCredito); // R$ 50,00 + 5% de acréscimo = R$ 52,50 a liquidar
         var vm = Criar();
         await EsperarTudoAsync(vm);
 
         Assert.Equal(Dinheiro.Formatar(10000), vm.Saldos.SaldoDisponivelTexto);
-        Assert.Equal(Dinheiro.Formatar(5000), vm.Saldos.EmCompensacaoTexto);
-        Assert.Equal(Dinheiro.Formatar(5000), vm.Saldos.AReceberTexto);
-        Assert.Equal(Dinheiro.Formatar(15000), vm.Saldos.ReceitaBrutaTexto);
-        Assert.Equal(Dinheiro.Formatar(15000 - 6000), vm.Saldos.ResultadoTexto);
+        Assert.Equal(Dinheiro.Formatar(5250), vm.Saldos.EmCompensacaoTexto);
+        Assert.Equal(Dinheiro.Formatar(5250), vm.Saldos.AReceberTexto);
+        Assert.Equal(Dinheiro.Formatar(15250), vm.Saldos.ReceitaBrutaTexto);
+        Assert.Equal(Dinheiro.Formatar(15250 - 6000), vm.Saldos.ResultadoTexto);
         Assert.False(vm.Saldos.ResultadoNegativo);
         Assert.Single(vm.Saldos.Contas);
     }

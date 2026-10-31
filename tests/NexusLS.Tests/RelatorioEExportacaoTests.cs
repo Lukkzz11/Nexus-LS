@@ -191,8 +191,8 @@ public class ExportadorCsvTests
         var csv = ExportadorCsv.Vendas(new[] { Venda(7) });
 
         var linhas = Linhas(csv);
-        Assert.Equal("Nº;Data;Cliente;Tabela;Pagamento;Parcelas;Subtotal;Desconto;Total;Recebido;Troco;Situação;Operador;Motivo do cancelamento", linhas[0]);
-        Assert.Equal("7;18/10/2026 14:05;;Varejo;Dinheiro;1;1250,50;50,50;1200,00;1500,00;300,00;Concluída;;", linhas[1]);
+        Assert.Equal("Nº;Data;Cliente;Tabela;Pagamento;Parcelas;Subtotal;Desconto;Acréscimo;Total;Recebido;Troco;Situação;Operador;Motivo do cancelamento", linhas[0]);
+        Assert.Equal("7;18/10/2026 14:05;;Varejo;Dinheiro;1;1250,50;50,50;0,00;1200,00;1500,00;300,00;Concluída;;", linhas[1]);
     }
 
     [Fact]
@@ -205,7 +205,7 @@ public class ExportadorCsvTests
         });
 
         var linha = Linhas(csv)[1];
-        Assert.Equal("1;18/10/2026 14:05;Maria;Atacado;Cartão crédito;3;1250,50;50,50;1200,00;;;Cancelada;;", linha);
+        Assert.Equal("1;18/10/2026 14:05;Maria;Atacado;Cartão crédito;3;1250,50;50,50;0,00;1200,00;;;Cancelada;;", linha);
     }
 
     [Fact]

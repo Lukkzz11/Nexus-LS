@@ -84,47 +84,48 @@ public class PosicaoFinanceiraServiceTests : IDisposable
         Assert.Equal(49000, Saldo(p, _bancoId));
         Assert.Equal(65000, p.SaldoDisponivelCentavos);
 
-        // Em compensação: cartões 50 + 100 ; cheque 50
-        Assert.Equal(15000, p.EmCompensacao.CartoesCentavos);
+        // Em compensação: cartões 50 + 107 (100 + 7% do crédito em 2x) ; cheque 50
+        Assert.Equal(15700, p.EmCompensacao.CartoesCentavos);
         Assert.Equal(5000, p.EmCompensacao.ChequesCentavos);
 
         // A receber: dívida 150 − 40 = 110 (em dia) ; serviço 30 (vencido) ; em compensação 200
         Assert.Equal(11000, p.AReceber.EmDiaCentavos);
         Assert.Equal(3000, p.AReceber.VencidoCentavos);
-        Assert.Equal(20000, p.AReceber.EmCompensacaoCentavos);
-        Assert.Equal(34000, p.AReceber.TotalCentavos);
+        Assert.Equal(20700, p.AReceber.EmCompensacaoCentavos);
+        Assert.Equal(34700, p.AReceber.TotalCentavos);
 
         // A pagar: aluguel 80
         Assert.Equal(8000, p.APagar.TotalCentavos);
 
         // Resultado: 10 peças vendidas (500) − custo 200 = lucro bruto 300 ; energia 120 ; troco inicial e sangria não entram
-        Assert.Equal(50000, p.Periodo.ReceitaBrutaCentavos);
+        // (a venda no crédito em 2x entra com o acréscimo de 7%: 107,00 em vez de 100,00)
+        Assert.Equal(50700, p.Periodo.ReceitaBrutaCentavos);
         Assert.Equal(20000, p.Periodo.CustoMercadoriasCentavos);
-        Assert.Equal(30000, p.Periodo.LucroBrutoCentavos);
+        Assert.Equal(30700, p.Periodo.LucroBrutoCentavos);
         Assert.Equal(12000, p.Periodo.DespesasOperacionaisCentavos);
-        Assert.Equal(18000, p.Periodo.ResultadoCentavos);
+        Assert.Equal(18700, p.Periodo.ResultadoCentavos);
         Assert.Empty(p.Avisos);
 
         // Projeção a 30 dias: disponível 650 + a receber (dívida vence em 30 dias, serviço vencido, cheque em 30, débito amanhã,
         // crédito em 30) − aluguel 80  =  650 + 110 + 30 + 50 + 50 + 100 − 80
-        Assert.Equal(65000 + 11000 + 3000 + 5000 + 5000 + 10000 - 8000, p.Projecao.PorDias[30]);
+        Assert.Equal(65000 + 11000 + 3000 + 5000 + 5000 + 10700 - 8000, p.Projecao.PorDias[30]);
     }
 
     [Fact]
     public async Task Liquidar_o_cartao_move_o_dinheiro_para_a_conta_e_a_taxa_vira_despesa()
     {
         await PrepararAsync();
-        var v = await VenderAsync(FormaPagamento.CartaoCredito, 2, parcelas: 2); // 100,00
-        Assert.Equal(10000, (await CalcularAsync()).EmCompensacao.CartoesCentavos);
+        var v = await VenderAsync(FormaPagamento.CartaoCredito, 2, parcelas: 2); // 100,00 + 7% de acréscimo do crédito em 2x = 107,00
+        Assert.Equal(10700, (await CalcularAsync()).EmCompensacao.CartoesCentavos);
 
         await new LiquidacaoCartaoService(_banco.Fabrica, () => Agora).LiquidarAsync(v.Id, Agora, _bancoId, 300);
 
         var p = await CalcularAsync();
         Assert.Equal(0, p.EmCompensacao.CartoesCentavos);
-        Assert.Equal(50000 + 10000 - 300, Saldo(p, _bancoId)); // a taxa já saiu da conta
+        Assert.Equal(50000 + 10700 - 300, Saldo(p, _bancoId)); // a taxa já saiu da conta
         Assert.Equal(300, p.Periodo.DespesasOperacionaisCentavos);
         Assert.Equal(300, p.Periodo.DespesasPorCategoria["Taxas de cartão"]);
-        Assert.Equal(10000 - 4000 - 300, p.Periodo.ResultadoCentavos); // 100 de venda − 40 de custo − 3 de taxa
+        Assert.Equal(10700 - 4000 - 300, p.Periodo.ResultadoCentavos); // 107 de venda (com o acréscimo) − 40 de custo − 3 de taxa
     }
 
     [Fact]

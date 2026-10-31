@@ -1,4 +1,4 @@
-namespace NexusLS.Core.Models;
+﻿namespace NexusLS.Core.Models;
 
 public class Venda : EntidadeSincronizavel
 {
@@ -10,6 +10,9 @@ public class Venda : EntidadeSincronizavel
 
     public long SubtotalCentavos { get; set; }
     public long DescontoCentavos { get; set; }
+    /// <summary>Acréscimo do cartão de crédito (igual ao do ERP: 5%, 7%, 9% ou 10% conforme as parcelas). Total = Subtotal - Desconto + Acréscimo.</summary>
+    public long AcrescimoCentavos { get; set; }
+
     public long TotalCentavos { get; set; }
 
     public FormaPagamento FormaPagamento { get; set; }

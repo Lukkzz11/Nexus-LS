@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using NexusLS.Core.Data;
 using NexusLS.Core.Models;
 
@@ -382,7 +382,10 @@ public class VendaService
             throw new RegraDeNegocioException("O desconto não pode ser maior que o subtotal.");
 
         venda.DescontoCentavos = desconto;
-        venda.TotalCentavos = venda.SubtotalCentavos - desconto;
+        venda.AcrescimoCentavos = pedido.FormaPagamento == FormaPagamento.CartaoCredito
+            ? TaxasCartao.Acrescimo(venda.SubtotalCentavos - desconto, pedido.Parcelas)
+            : 0;
+        venda.TotalCentavos = venda.SubtotalCentavos - desconto + venda.AcrescimoCentavos;
 
         if (pedido.FormaPagamento == FormaPagamento.Dinheiro)
         {

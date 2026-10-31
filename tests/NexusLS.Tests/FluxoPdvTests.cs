@@ -1,4 +1,4 @@
-using NexusLS.Core.Models;
+﻿using NexusLS.Core.Models;
 using NexusLS.Core.Services;
 using NexusLS.Tests.Infra;
 
@@ -270,7 +270,7 @@ public class SelecaoPagamentoTests
         credito.Proxima(); credito.Proxima(); credito.Proxima();
         credito.MaisParcelas(); credito.MaisParcelas();
         var v1 = await vendas.FinalizarAsync(credito.ParaPedido(carrinho, resolvido));
-        Assert.Equal((FormaPagamento.CartaoCredito, 3, 9000L), (v1.FormaPagamento, v1.Parcelas, v1.TotalCentavos));
+        Assert.Equal((FormaPagamento.CartaoCredito, 3, 9810L), (v1.FormaPagamento, v1.Parcelas, v1.TotalCentavos));
 
         // a prazo com cliente
         var prazo = new SelecaoPagamento(9000) { ClienteId = maria.Id };
