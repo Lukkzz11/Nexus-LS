@@ -73,21 +73,34 @@ public class ProcessadorFilaOperacional
     public async Task<int> EnfileirarExistentesAsync()
     {
         await using var db = await _fabrica.CreateDbContextAsync();
-        var criadas = 0;
         var agora = _agora();
-        if (_entidades.Contains(NomesEntidade.Venda))
+        var criadas = 0;
+
+        async Task Enfileirar<T>(string entidade) where T : class, IEntidadeSincronizavel
         {
-            var faltam = await db.Vendas.AsNoTracking()
-                .Where(v => !db.FilaSincronizacao.Any(f => f.Entidade == NomesEntidade.Venda && f.EntidadeGuid == v.Guid))
-                .Select(v => v.Guid).ToListAsync();
+            if (!_entidades.Contains(entidade)) return;
+            var faltam = await db.Set<T>().AsNoTracking()
+                .Where(e => !db.FilaSincronizacao.Any(f => f.Entidade == entidade && f.EntidadeGuid == EF.Property<Guid>(e, "Guid")))
+                .Select(e => EF.Property<Guid>(e, "Guid")).ToListAsync();
             foreach (var g in faltam)
-                db.FilaSincronizacao.Add(new ItemFilaSincronizacao { Entidade = NomesEntidade.Venda, EntidadeGuid = g, CriadoEm = agora, AtualizadoEm = agora });
+                db.FilaSincronizacao.Add(new ItemFilaSincronizacao { Entidade = entidade, EntidadeGuid = g, CriadoEm = agora, AtualizadoEm = agora });
             criadas += faltam.Count;
         }
+
+        await Enfileirar<Venda>(NomesEntidade.Venda);
+        await Enfileirar<TurnoCaixa>(NomesEntidade.TurnoCaixa);
+        await Enfileirar<MovimentoCaixa>(NomesEntidade.MovimentoCaixa);
+        await Enfileirar<FechamentoCaixa>(NomesEntidade.FechamentoCaixa);
+        await Enfileirar<PagamentoCliente>(NomesEntidade.PagamentoCliente);
+        await Enfileirar<Lancamento>(NomesEntidade.Lancamento);
+        await Enfileirar<ContaFinanceira>(NomesEntidade.ContaFinanceira);
+        await Enfileirar<TransferenciaConta>(NomesEntidade.TransferenciaConta);
+        await Enfileirar<LiquidacaoCartao>(NomesEntidade.LiquidacaoCartao);
+        await Enfileirar<ChequeRecebido>(NomesEntidade.ChequeRecebido);
+
         await db.SaveChangesAsync();
         return criadas;
     }
-
     /// <summary>Um ciclo. Nunca lança por falha de rede.</summary>
     public async Task<ResultadoFila> ProcessarAsync(CancellationToken ct = default)
     {

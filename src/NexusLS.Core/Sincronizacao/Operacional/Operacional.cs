@@ -103,13 +103,27 @@ public sealed class MontadorOperacional : IMontadorDocumentos
 
     public MontadorOperacional(IDbContextFactory<PdvDbContext> fabrica) => _fabrica = fabrica;
 
-    public IReadOnlyCollection<string> Entidades { get; } = new[] { NomesEntidade.Venda };
+    public IReadOnlyCollection<string> Entidades { get; } = new[]
+    {
+        NomesEntidade.Venda, NomesEntidade.TurnoCaixa, NomesEntidade.MovimentoCaixa, NomesEntidade.FechamentoCaixa,
+        NomesEntidade.PagamentoCliente, NomesEntidade.Lancamento, NomesEntidade.ContaFinanceira,
+        NomesEntidade.TransferenciaConta, NomesEntidade.LiquidacaoCartao, NomesEntidade.ChequeRecebido
+    };
 
-    public Task<DocumentosMontados> MontarAsync(string entidade, IReadOnlyList<Guid> guids) =>
-        entidade == NomesEntidade.Venda
-            ? MontarVendasAsync(guids)
-            : throw new ArgumentException($"Entidade sem montador: {entidade}", nameof(entidade));
-
+    public Task<DocumentosMontados> MontarAsync(string entidade, IReadOnlyList<Guid> guids) => entidade switch
+    {
+        NomesEntidade.Venda => MontarVendasAsync(guids),
+        NomesEntidade.TurnoCaixa => MontarTurnosAsync(guids),
+        NomesEntidade.MovimentoCaixa => MontarMovimentosCaixaAsync(guids),
+        NomesEntidade.FechamentoCaixa => MontarFechamentosAsync(guids),
+        NomesEntidade.PagamentoCliente => MontarPagamentosClienteAsync(guids),
+        NomesEntidade.Lancamento => MontarLancamentosAsync(guids),
+        NomesEntidade.ContaFinanceira => MontarContasAsync(guids),
+        NomesEntidade.TransferenciaConta => MontarTransferenciasAsync(guids),
+        NomesEntidade.LiquidacaoCartao => MontarLiquidacoesAsync(guids),
+        NomesEntidade.ChequeRecebido => MontarChequesAsync(guids),
+        _ => throw new ArgumentException($"Entidade sem montador: {entidade}", nameof(entidade))
+    };
     private async Task<DocumentosMontados> MontarVendasAsync(IReadOnlyList<Guid> guids)
     {
         await using var db = await _fabrica.CreateDbContextAsync();
@@ -166,6 +180,172 @@ public sealed class MontadorOperacional : IMontadorDocumentos
         return new DocumentosMontados(documentos, guids.Where(g => !achados.Contains(g)).ToList());
     }
 
+    // ---------- caixa e financeiro ----------
+    // Chaves locais (TurnoId, ContaId...) viram o Guid da entidade referenciada: o id inteiro só existe neste SQLite.
+    // Momentos (DataHora...) vão em UTC; datas de calendário (vencimento, bom para...) vão como texto "AAAA-MM-DD".
+
+    private async Task<DocumentosMontados> MontarTurnosAsync(IReadOnlyList<Guid> guids)
+    {
+        await using var db = await _fabrica.CreateDbContextAsync();
+        return await Montar<TurnoCaixa>(db, guids, "turnos", (t, _) => new()
+        {
+            ["abertoEm"] = Utc(t.DataAbertura), ["fechadoEm"] = Utc(t.DataFechamento), ["operador"] = t.Operador,
+            ["trocoInicialCentavos"] = t.TrocoInicialCentavos
+        });
+    }
+
+    private async Task<DocumentosMontados> MontarMovimentosCaixaAsync(IReadOnlyList<Guid> guids)
+    {
+        await using var db = await _fabrica.CreateDbContextAsync();
+        return await Montar<MovimentoCaixa>(db, guids, "movimentosCaixa", (m, g) => new()
+        {
+            ["turnoGuid"] = g.De<TurnoCaixa>(m.TurnoId), ["dataHora"] = Utc(m.DataHora), ["tipo"] = m.Tipo.ToString(),
+            ["valorCentavos"] = m.ValorCentavos, ["descricao"] = m.Descricao
+        }, ("turno", e => ((MovimentoCaixa)e).TurnoId, typeof(TurnoCaixa)));
+    }
+
+    private async Task<DocumentosMontados> MontarFechamentosAsync(IReadOnlyList<Guid> guids)
+    {
+        await using var db = await _fabrica.CreateDbContextAsync();
+        return await Montar<FechamentoCaixa>(db, guids, "fechamentosCaixa", (f, g) => new()
+        {
+            ["turnoGuid"] = g.De<TurnoCaixa>(f.TurnoId), ["versao"] = f.Versao, ["dataHora"] = Utc(f.DataHora), ["operador"] = f.Operador,
+            ["esperadoDinheiroCentavos"] = f.EsperadoDinheiroCentavos, ["conferidoDinheiroCentavos"] = f.ConferidoDinheiroCentavos,
+            ["esperadoCartaoCentavos"] = f.EsperadoCartaoCentavos, ["conferidoCartaoCentavos"] = f.ConferidoCartaoCentavos,
+            ["esperadoPixCentavos"] = f.EsperadoPixCentavos, ["conferidoPixCentavos"] = f.ConferidoPixCentavos, ["observacao"] = f.Observacao
+        }, ("turno", e => ((FechamentoCaixa)e).TurnoId, typeof(TurnoCaixa)));
+    }
+
+    private async Task<DocumentosMontados> MontarPagamentosClienteAsync(IReadOnlyList<Guid> guids)
+    {
+        await using var db = await _fabrica.CreateDbContextAsync();
+        return await Montar<PagamentoCliente>(db, guids, "pagamentosCliente", (p, g) => new()
+        {
+            ["clienteGuid"] = g.De<Cliente>(p.ClienteId), ["dataHora"] = Utc(p.DataHora), ["valorCentavos"] = p.ValorCentavos,
+            ["forma"] = p.Forma.ToString(), ["observacao"] = p.Observacao, ["operador"] = p.Operador
+        }, ("cliente", e => ((PagamentoCliente)e).ClienteId, typeof(Cliente)));
+    }
+
+    private async Task<DocumentosMontados> MontarLancamentosAsync(IReadOnlyList<Guid> guids)
+    {
+        await using var db = await _fabrica.CreateDbContextAsync();
+        return await Montar<Lancamento>(db, guids, "lancamentos", (l, g) => new()
+        {
+            ["tipo"] = l.Tipo.ToString(), ["descricao"] = l.Descricao, ["categoria"] = l.Categoria, ["contraparte"] = l.Contraparte,
+            ["valorCentavos"] = l.ValorCentavos, ["vencimento"] = Dia(l.Vencimento), ["pagoEm"] = Utc(l.PagoEm),
+            ["formaPagamento"] = l.FormaPagamento?.ToString(), ["contaGuid"] = g.De<ContaFinanceira>(l.ContaId),
+            ["grupoGuid"] = l.GrupoId, ["parcela"] = l.Parcela, ["totalParcelas"] = l.TotalParcelas,
+            ["compraGuid"] = g.De<Compra>(l.CompraId), ["observacao"] = l.Observacao, ["criadoEm"] = Utc(l.CriadoEm), ["operador"] = l.Operador,
+            ["cancelado"] = l.Cancelado, ["motivoCancelamento"] = l.MotivoCancelamento, ["canceladoEm"] = Utc(l.CanceladoEm)
+        }, ("conta", e => ((Lancamento)e).ContaId, typeof(ContaFinanceira)), ("compra", e => ((Lancamento)e).CompraId, typeof(Compra)));
+    }
+
+    private async Task<DocumentosMontados> MontarContasAsync(IReadOnlyList<Guid> guids)
+    {
+        await using var db = await _fabrica.CreateDbContextAsync();
+        return await Montar<ContaFinanceira>(db, guids, "contas", (c, _) => new()
+        {
+            ["nome"] = c.Nome, ["tipo"] = c.Tipo.ToString(), ["saldoInicialCentavos"] = c.SaldoInicialCentavos,
+            ["dataSaldoInicial"] = c.DataSaldoInicial is { } d ? Dia(d) : null, ["padrao"] = c.Padrao, ["ativa"] = c.Ativa, ["criadaEm"] = Utc(c.CriadaEm)
+        });
+    }
+
+    private async Task<DocumentosMontados> MontarTransferenciasAsync(IReadOnlyList<Guid> guids)
+    {
+        await using var db = await _fabrica.CreateDbContextAsync();
+        return await Montar<TransferenciaConta>(db, guids, "transferencias", (t, g) => new()
+        {
+            ["contaOrigemGuid"] = g.De<ContaFinanceira>(t.ContaOrigemId), ["contaDestinoGuid"] = g.De<ContaFinanceira>(t.ContaDestinoId),
+            ["valorCentavos"] = t.ValorCentavos, ["data"] = Dia(t.Data), ["descricao"] = t.Descricao, ["operador"] = t.Operador,
+            ["criadaEm"] = Utc(t.CriadaEm), ["cancelada"] = t.Cancelada, ["motivoCancelamento"] = t.MotivoCancelamento, ["canceladaEm"] = Utc(t.CanceladaEm)
+        }, ("conta", e => ((TransferenciaConta)e).ContaOrigemId, typeof(ContaFinanceira)), ("conta", e => ((TransferenciaConta)e).ContaDestinoId, typeof(ContaFinanceira)));
+    }
+
+    private async Task<DocumentosMontados> MontarLiquidacoesAsync(IReadOnlyList<Guid> guids)
+    {
+        await using var db = await _fabrica.CreateDbContextAsync();
+        return await Montar<LiquidacaoCartao>(db, guids, "liquidacoesCartao", (l, g) => new()
+        {
+            ["vendaGuid"] = g.De<Venda>(l.VendaId), ["data"] = Dia(l.Data), ["contaGuid"] = g.De<ContaFinanceira>(l.ContaId),
+            ["taxaCentavos"] = l.TaxaCentavos, ["operador"] = l.Operador, ["criadaEm"] = Utc(l.CriadaEm),
+            ["cancelada"] = l.Cancelada, ["motivoCancelamento"] = l.MotivoCancelamento
+        }, ("venda", e => ((LiquidacaoCartao)e).VendaId, typeof(Venda)), ("conta", e => ((LiquidacaoCartao)e).ContaId, typeof(ContaFinanceira)));
+    }
+
+    private async Task<DocumentosMontados> MontarChequesAsync(IReadOnlyList<Guid> guids)
+    {
+        await using var db = await _fabrica.CreateDbContextAsync();
+        return await Montar<ChequeRecebido>(db, guids, "cheques", (c, g) => new()
+        {
+            ["valorCentavos"] = c.ValorCentavos, ["numero"] = c.Numero, ["banco"] = c.Banco, ["emitente"] = c.Emitente,
+            ["bomPara"] = Dia(c.BomPara), ["situacao"] = c.Situacao.ToString(), ["vendaGuid"] = g.De<Venda>(c.VendaId),
+            ["pagamentoClienteGuid"] = g.De<PagamentoCliente>(c.PagamentoClienteId), ["compensadoEm"] = Utc(c.CompensadoEm),
+            ["contaGuid"] = g.De<ContaFinanceira>(c.ContaId), ["observacao"] = c.Observacao, ["motivoDevolucao"] = c.MotivoDevolucao,
+            ["operador"] = c.Operador, ["criadoEm"] = Utc(c.CriadoEm)
+        }, ("venda", e => ((ChequeRecebido)e).VendaId, typeof(Venda)), ("pagamentoCliente", e => ((ChequeRecebido)e).PagamentoClienteId, typeof(PagamentoCliente)),
+           ("conta", e => ((ChequeRecebido)e).ContaId, typeof(ContaFinanceira)));
+    }
+
+    /// <summary>Guids das entidades referenciadas (por tipo e id local), carregados de uma vez para o lote.</summary>
+    private sealed class Guids
+    {
+        private readonly Dictionary<(Type, int), Guid> _mapa = new();
+        public void Adicionar(Type tipo, int id, Guid guid) => _mapa[(tipo, id)] = guid;
+        public Guid? De<T>(int? id) => id is int i && _mapa.TryGetValue((typeof(T), i), out var g) ? g : null;
+    }
+
+    /// <summary>
+    /// Lê as entidades do lote, resolve as chaves locais para Guid e monta os documentos (campos comuns: guid, atualizadoEm,
+    /// origem, versaoDoFormato). Registro que não existe mais é devolvido em "Ausentes".
+    /// </summary>
+    private async Task<DocumentosMontados> Montar<T>(
+        PdvDbContext db, IReadOnlyList<Guid> guids, string colecao,
+        Func<T, Guids, Dictionary<string, object?>> campos,
+        params (string Nome, Func<object, int?> Id, Type Tipo)[] referencias) where T : class, IEntidadeSincronizavel
+    {
+        var linhas = await db.Set<T>().AsNoTracking().Where(e => guids.Contains(EF.Property<Guid>(e, "Guid"))).ToListAsync();
+
+        var g = new Guids();
+        foreach (var grupo in referencias.GroupBy(r => r.Tipo))
+        {
+            var ids = linhas.SelectMany(l => grupo.Select(r => r.Id(l))).Where(i => i != null).Select(i => i!.Value).Distinct().ToList();
+            if (ids.Count == 0) continue;
+            foreach (var (id, guid) in await GuidsDeAsync(db, grupo.Key, ids)) g.Adicionar(grupo.Key, id, guid);
+        }
+
+        var documentos = linhas.Select(l =>
+        {
+            var c = campos(l, g);
+            c["guid"] = l.Guid;
+            c["atualizadoEm"] = DateTime.SpecifyKind(l.AtualizadoEm, DateTimeKind.Utc); // o carimbo já é gravado em UTC
+            c["origem"] = "nexus-ls";
+            c["versaoDoFormato"] = VersaoDoFormato;
+            return new DocumentoOperacional(colecao, l.Guid, c);
+        }).ToList();
+
+        var achados = linhas.Select(l => l.Guid).ToHashSet();
+        return new DocumentosMontados(documentos, guids.Where(x => !achados.Contains(x)).ToList());
+    }
+
+    private static async Task<List<(int Id, Guid Guid)>> GuidsDeAsync(PdvDbContext db, Type tipo, List<int> ids)
+    {
+        if (tipo == typeof(TurnoCaixa)) return await Ler<TurnoCaixa>(db, ids);
+        if (tipo == typeof(Cliente)) return await Ler<Cliente>(db, ids);
+        if (tipo == typeof(ContaFinanceira)) return await Ler<ContaFinanceira>(db, ids);
+        if (tipo == typeof(Compra)) return await Ler<Compra>(db, ids);
+        if (tipo == typeof(Venda)) return await Ler<Venda>(db, ids);
+        if (tipo == typeof(PagamentoCliente)) return await Ler<PagamentoCliente>(db, ids);
+        throw new ArgumentException($"Referência sem resolução: {tipo.Name}");
+    }
+
+    private static async Task<List<(int, Guid)>> Ler<T>(PdvDbContext db, List<int> ids) where T : class, IEntidadeSincronizavel =>
+        (await db.Set<T>().AsNoTracking().Where(e => ids.Contains(EF.Property<int>(e, "Id")))
+            .Select(e => new { Id = EF.Property<int>(e, "Id"), e.Guid }).ToListAsync()).Select(x => (x.Id, x.Guid)).ToList();
+
+    private static DateTime? Utc(DateTime? d) => d is { } v ? Utc(v) : null;
+
+    /// <summary>Data de calendário, sem hora nem fuso: "2026-10-30".</summary>
+    private static string Dia(DateTime d) => d.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
     /// <summary>As datas da venda são gravadas na hora local do computador; a nuvem recebe sempre UTC.</summary>
     private static DateTime Utc(DateTime d) => d.Kind switch
     {
