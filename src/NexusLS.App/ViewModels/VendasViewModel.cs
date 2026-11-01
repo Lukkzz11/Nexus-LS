@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NexusLS.Core.Models;
@@ -124,6 +125,17 @@ public partial class VendasViewModel : ViewModelBase
         if (Selecionada is not { } venda) return;
         await _cupons.ImprimirAsync(venda.Id);
         MostrarSucesso($"Cupom da venda #{venda.Id} enviado para a impressora.");
+    });
+
+    /// <summary>Salva a nota da venda selecionada em PDF.</summary>
+    [RelayCommand]
+    private Task NotaEmPdfAsync() => ExecutarAsync(async () =>
+    {
+        if (Selecionada is not { } venda) return;
+        var caminho = EscolherArquivoParaSalvar($"nota-{venda.Id}.pdf");
+        if (caminho is null) return;
+        await File.WriteAllBytesAsync(caminho, await _cupons.GerarPdfAsync(venda.Id));
+        MostrarSucesso($"Nota salva: {caminho}");
     });
 
     [RelayCommand(CanExecute = nameof(PodeCancelar))]

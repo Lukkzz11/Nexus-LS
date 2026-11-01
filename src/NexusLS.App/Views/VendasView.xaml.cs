@@ -64,11 +64,12 @@ public partial class VendasView : UserControl
     /// <summary>A caixa "Salvar como" do Windows. Devolve o caminho escolhido ou nulo se cancelou.</summary>
     private string? SalvarComo(string nomeSugerido)
     {
+        var pdf = nomeSugerido.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase);
         var dialogo = new Microsoft.Win32.SaveFileDialog
         {
             FileName = nomeSugerido,
-            DefaultExt = ".csv",
-            Filter = "Planilha CSV (Excel)|*.csv"
+            DefaultExt = pdf ? ".pdf" : ".csv",
+            Filter = pdf ? "Documento PDF|*.pdf" : "Planilha CSV (Excel)|*.csv"
         };
         return dialogo.ShowDialog(Window.GetWindow(this)) == true ? dialogo.FileName : null;
     }

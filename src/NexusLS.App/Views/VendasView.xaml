@@ -154,6 +154,8 @@
                     <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
                         <Button Content="Reimprimir cupom" Style="{StaticResource BotaoSecundario}"
                                 Command="{Binding ReimprimirCupomCommand}" />
+                        <Button Content="Nota em PDF" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0"
+                                Command="{Binding NotaEmPdfCommand}" />
                         <Button Content="Cancelar venda" Style="{StaticResource BotaoPerigo}" Margin="8,0,0,0"
                                 Command="{Binding CancelarVendaCommand}" />
                     </StackPanel>

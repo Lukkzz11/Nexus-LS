@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using NexusLS.Core.Data;
 using NexusLS.Core.Models;
 
@@ -38,6 +38,13 @@ public class CupomService
     {
         var (texto, loja) = await GerarAsync(vendaId);
         await _impressora.ImprimirAsync(texto, loja);
+    }
+
+    /// <summary>A nota da venda em PDF (o mesmo texto do cupom), para guardar ou mandar ao cliente.</summary>
+    public async Task<byte[]> GerarPdfAsync(int vendaId)
+    {
+        var (texto, _) = await GerarAsync(vendaId);
+        return NotaPdf.Gerar(texto.ReplaceLineEndings("\n").Split('\n'));
     }
 
     /// <summary>Chamado logo após finalizar a venda: só imprime se a impressão automática estiver ligada. Devolve se imprimiu.</summary>

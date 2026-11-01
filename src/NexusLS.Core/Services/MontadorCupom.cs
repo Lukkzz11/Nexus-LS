@@ -45,8 +45,6 @@ public static class MontadorCupom
             linhas.Add(DuasPontas("Desconto", "-" + Reais(venda.DescontoCentavos), largura));
         if (venda.AcrescimoCentavos > 0)
             linhas.Add(DuasPontas("Acréscimo crédito", "+" + Reais(venda.AcrescimoCentavos), largura));
-        if (venda.AcrescimoCentavos > 0)
-            linhas.Add(DuasPontas("Acréscimo crédito", "+" + Reais(venda.AcrescimoCentavos), largura));
         linhas.Add(DuasPontas("TOTAL", Reais(venda.TotalCentavos), largura));
         linhas.Add(traco);
 
