@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using NexusLS.Core.Models;
 
 namespace NexusLS.Core.Data;
@@ -29,6 +29,10 @@ public class PdvDbContext : DbContext
     public DbSet<ImportacaoErpCursor> ImportacaoErpCursores => Set<ImportacaoErpCursor>();
     public DbSet<Lancamento> Lancamentos => Set<Lancamento>();
     public DbSet<Fornecedor> Fornecedores => Set<Fornecedor>();
+    public DbSet<MateriaPrima> MateriasPrimas => Set<MateriaPrima>();
+    public DbSet<OrdemProducao> OrdensProducao => Set<OrdemProducao>();
+    public DbSet<OrdemProducaoGrade> GradesOrdemProducao => Set<OrdemProducaoGrade>();
+    public DbSet<PerdaProducao> PerdasProducao => Set<PerdaProducao>();
     public DbSet<Funcionario> Funcionarios => Set<Funcionario>();
     public DbSet<Pedido> Pedidos => Set<Pedido>();
     public DbSet<ItemPedido> ItensPedido => Set<ItemPedido>();
@@ -241,6 +245,47 @@ public class PdvDbContext : DbContext
             e.Property(f => f.Email).HasMaxLength(120);
             e.Property(f => f.Observacao).HasMaxLength(300);
             e.HasIndex(f => f.Nome);
+        });
+
+        modelBuilder.Entity<MateriaPrima>(e =>
+        {
+            e.Property(m => m.Nome).IsRequired().HasMaxLength(120);
+            e.Property(m => m.Tipo).HasMaxLength(60);
+            e.Property(m => m.Unidade).IsRequired().HasMaxLength(20);
+            e.Property(m => m.Fornecedor).HasMaxLength(120);
+            e.Property(m => m.Localizacao).HasMaxLength(80);
+            e.Ignore(m => m.AbaixoDoMinimo);
+            e.HasIndex(m => m.Nome);
+        });
+
+        modelBuilder.Entity<OrdemProducao>(e =>
+        {
+            e.Property(o => o.Codigo).IsRequired().HasMaxLength(20);
+            e.Property(o => o.Modelo).IsRequired().HasMaxLength(150);
+            e.Property(o => o.Referencia).HasMaxLength(60);
+            e.Property(o => o.Categoria).HasMaxLength(60);
+            e.Property(o => o.TecidoUtilizado).HasMaxLength(120);
+            e.Property(o => o.Responsavel).HasMaxLength(80);
+            e.Property(o => o.Observacoes).HasMaxLength(500);
+            e.Ignore(o => o.TotalPlanejado);
+            e.Ignore(o => o.CustoEstimadoTotalCentavos);
+            e.HasMany(o => o.Grade).WithOne().HasForeignKey(g => g.OrdemProducaoId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(o => o.Codigo).IsUnique();
+        });
+
+        modelBuilder.Entity<OrdemProducaoGrade>(e =>
+        {
+            e.Property(g => g.Tamanho).IsRequired().HasMaxLength(30);
+        });
+
+        modelBuilder.Entity<PerdaProducao>(e =>
+        {
+            e.Property(p => p.OrdemCodigo).HasMaxLength(20);
+            e.Property(p => p.MaterialNome).IsRequired().HasMaxLength(120);
+            e.Property(p => p.Unidade).IsRequired().HasMaxLength(20);
+            e.Property(p => p.Observacao).HasMaxLength(300);
+            e.Property(p => p.RegistradoPor).HasMaxLength(80);
+            e.HasIndex(p => p.DataHora);
         });
 
         modelBuilder.Entity<Compra>(e =>

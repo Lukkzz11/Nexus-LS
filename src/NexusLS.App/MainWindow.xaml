@@ -112,6 +112,12 @@
                             <TextBlock Text="Estoque da loja" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
+                    <Button Tag="Fabrica" Visibility="{Binding VerEstoque, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Estoque de fábrica" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaFabricaCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Building24" Style="{StaticResource IconeDoMenu}" />
+                            <TextBlock Text="Fábrica" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
                     <Button Tag="CalculadoraPrecos" Visibility="{Binding VerEstoque, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Calculadora de preços" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaCalculadoraPrecosCommand}">
                         <StackPanel Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="Calculator24" Style="{StaticResource IconeDoMenu}" />

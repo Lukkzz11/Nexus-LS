@@ -25,6 +25,7 @@ public sealed class ContainerDeServicos
     public InicioService Inicio { get; }
     public RelatorioService Relatorios { get; }
     public DesempenhoService Desempenho { get; }
+    public ProducaoService Producao { get; }
     public FinanceiroService Financeiro { get; }
     public FornecedorService Fornecedores { get; }
     public CompraService Compras { get; }
@@ -68,6 +69,7 @@ public sealed class ContainerDeServicos
         Inicio = new(fabrica);
         Relatorios = new(fabrica);
         Desempenho = new(fabrica);
+        Producao = new(fabrica, Produtos);
         Financeiro = new(fabrica);
         Fornecedores = new(fabrica);
         Compras = new(fabrica);

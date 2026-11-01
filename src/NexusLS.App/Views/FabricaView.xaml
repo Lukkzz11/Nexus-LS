@@ -1,0 +1,227 @@
+<UserControl x:Class="NexusLS.App.Views.FabricaView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <UserControl.Resources>
+        <Style x:Key="Rotulo" TargetType="TextBlock">
+            <Setter Property="Margin" Value="0,8,0,2" />
+            <Setter Property="FontSize" Value="13" />
+        </Style>
+        <Style x:Key="Grade" TargetType="DataGrid">
+            <Setter Property="AutoGenerateColumns" Value="False" />
+            <Setter Property="IsReadOnly" Value="True" />
+            <Setter Property="SelectionMode" Value="Single" />
+            <Setter Property="SelectionUnit" Value="FullRow" />
+            <Setter Property="CanUserAddRows" Value="False" />
+            <Setter Property="HeadersVisibility" Value="Column" />
+            <Setter Property="GridLinesVisibility" Value="Horizontal" />
+            <Setter Property="HorizontalGridLinesBrush" Value="{StaticResource CorLinhaGrade}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Background" Value="{StaticResource CorPainel}" />
+            <Setter Property="RowHeight" Value="34" />
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Estoque de fábrica" Style="{StaticResource TituloTela}" Margin="0,0,0,10" />
+        <TextBlock Grid.Row="1" Text="{Binding ResumoAlertas}" Foreground="DarkOrange" TextWrapping="Wrap" Margin="0,0,0,8" />
+
+        <TabControl Grid.Row="2">
+            <!-- ORDENS DE PRODUÇÃO -->
+            <TabItem Header="Ordens de produção">
+                <Grid Margin="0,10,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="16" />
+                        <ColumnDefinition Width="340" />
+                    </Grid.ColumnDefinitions>
+
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Border Style="{StaticResource Painel}" Padding="0">
+                            <DataGrid Style="{StaticResource Grade}" ItemsSource="{Binding Ordens}" SelectedItem="{Binding OrdemSelecionada}">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Código" Binding="{Binding Codigo, Mode=OneWay}" Width="110" />
+                                    <DataGridTextColumn Header="Modelo" Binding="{Binding Modelo, Mode=OneWay}" Width="*" />
+                                    <DataGridTextColumn Header="Etapa" Binding="{Binding Etapa, Mode=OneWay}" Width="190" />
+                                    <DataGridTextColumn Header="Peças" Binding="{Binding Total, Mode=OneWay}" Width="70" />
+                                    <DataGridTextColumn Header="Grade" Binding="{Binding Grade, Mode=OneWay}" Width="170" />
+                                    <DataGridTextColumn Header="Previsão" Binding="{Binding Previsao, Mode=OneWay}" Width="100" />
+                                    <DataGridTextColumn Header="Custo estimado" Binding="{Binding CustoTotal, Mode=OneWay}" Width="130" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Border>
+                        <WrapPanel Grid.Row="1" Margin="0,10,0,0">
+                            <Button Content="Avançar etapa" Style="{StaticResource BotaoPrimario}" Command="{Binding AvancarEtapaCommand}" />
+                            <Button Content="Cancelar ordem" Style="{StaticResource BotaoPerigo}" Margin="8,0,0,0" Command="{Binding CancelarOrdemCommand}" />
+                        </WrapPanel>
+                    </Grid>
+
+                    <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <Border Style="{StaticResource Painel}">
+                                <StackPanel>
+                                    <TextBlock Text="Nova ordem" FontWeight="SemiBold" />
+                                    <TextBlock Text="Modelo" Style="{StaticResource Rotulo}" />
+                                    <TextBox Text="{Binding OpModelo, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBlock Text="Referência" Style="{StaticResource Rotulo}" />
+                                    <TextBox Text="{Binding OpReferencia, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBlock Text="Categoria" Style="{StaticResource Rotulo}" />
+                                    <TextBox Text="{Binding OpCategoria, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBlock Text="Grade (ex.: P:10, M:20, G:5)" Style="{StaticResource Rotulo}" />
+                                    <TextBox Text="{Binding OpGrade, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBlock Text="Custo estimado por peça (R$)" Style="{StaticResource Rotulo}" />
+                                    <TextBox Text="{Binding OpCustoPeca, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBlock Text="Tecido utilizado" Style="{StaticResource Rotulo}" />
+                                    <TextBox Text="{Binding OpTecido, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBlock Text="Previsão de término" Style="{StaticResource Rotulo}" />
+                                    <DatePicker SelectedDateFormat="Short" SelectedDate="{Binding OpPrevisao}" />
+                                    <Button Content="Criar ordem" Style="{StaticResource BotaoPrimario}" Margin="0,12,0,0" HorizontalAlignment="Left"
+                                            Command="{Binding CriarOrdemCommand}" />
+                                </StackPanel>
+                            </Border>
+
+                            <Border Style="{StaticResource Painel}" Margin="0,12,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="Transferir para a loja (ordem selecionada)" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                    <TextBlock Text="Peças prontas por tamanho" Style="{StaticResource Rotulo}" />
+                                    <TextBox Text="{Binding TrGrade, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBlock Text="Nome do produto na loja" Style="{StaticResource Rotulo}" />
+                                    <TextBox Text="{Binding TrNome, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBlock Text="Preço de varejo (R$, se for produto novo)" Style="{StaticResource Rotulo}" />
+                                    <TextBox Text="{Binding TrPrecoVarejo, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBlock Text="Preço de atacado (R$, opcional)" Style="{StaticResource Rotulo}" />
+                                    <TextBox Text="{Binding TrPrecoAtacado, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBlock Text="Se já houver produto com a mesma referência (ou nome), as peças somam no estoque dele. A ordem fica concluída."
+                                               TextWrapping="Wrap" FontSize="12" Opacity="0.75" Margin="0,8,0,0" />
+                                    <Button Content="Transferir para a loja" Style="{StaticResource BotaoPrimario}" Margin="0,10,0,0" HorizontalAlignment="Left"
+                                            Command="{Binding TransferirParaLojaCommand}" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </TabItem>
+
+            <!-- MATÉRIA-PRIMA -->
+            <TabItem Header="Matéria-prima">
+                <Grid Margin="0,10,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="16" />
+                        <ColumnDefinition Width="340" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border Style="{StaticResource Painel}" Padding="0">
+                        <DataGrid Style="{StaticResource Grade}" ItemsSource="{Binding Materias}" SelectedItem="{Binding MateriaSelecionada}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Material" Binding="{Binding Nome, Mode=OneWay}" Width="*" />
+                                <DataGridTextColumn Header="Tipo" Binding="{Binding Tipo, Mode=OneWay}" Width="160" />
+                                <DataGridTextColumn Header="Estoque" Binding="{Binding Estoque, Mode=OneWay}" Width="120" />
+                                <DataGridTextColumn Header="Mínimo" Binding="{Binding Minimo, Mode=OneWay}" Width="80" />
+                                <DataGridTextColumn Header="Custo unit." Binding="{Binding Custo, Mode=OneWay}" Width="100" />
+                                <DataGridTextColumn Header="Situação" Binding="{Binding Situacao, Mode=OneWay}" Width="130" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+
+                    <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
+                        <Border Style="{StaticResource Painel}">
+                            <StackPanel>
+                                <TextBlock Text="Cadastro (selecione na lista para editar)" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                <TextBlock Text="Nome" Style="{StaticResource Rotulo}" />
+                                <TextBox Text="{Binding MpNome, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Text="Tipo" Style="{StaticResource Rotulo}" />
+                                <ComboBox ItemsSource="{Binding TiposMateria}" IsEditable="True" Text="{Binding MpTipo, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Text="Unidade (metros, kg, un...)" Style="{StaticResource Rotulo}" />
+                                <TextBox Text="{Binding MpUnidade, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Text="Estoque mínimo" Style="{StaticResource Rotulo}" />
+                                <TextBox Text="{Binding MpMinimo, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Text="Custo por unidade (R$)" Style="{StaticResource Rotulo}" />
+                                <TextBox Text="{Binding MpCusto, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Text="Fornecedor" Style="{StaticResource Rotulo}" />
+                                <TextBox Text="{Binding MpFornecedor, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Text="Localização" Style="{StaticResource Rotulo}" />
+                                <TextBox Text="{Binding MpLocal, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Text="Estoque inicial (só ao cadastrar)" Style="{StaticResource Rotulo}" />
+                                <TextBox Text="{Binding MpEstoqueInicial, UpdateSourceTrigger=PropertyChanged}" />
+                                <WrapPanel Margin="0,12,0,0">
+                                    <Button Content="Cadastrar" Style="{StaticResource BotaoPrimario}" Command="{Binding CadastrarMateriaCommand}" />
+                                    <Button Content="Salvar edição" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0" Command="{Binding SalvarMateriaCommand}" />
+                                    <Button Content="Desativar" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0" Command="{Binding DesativarMateriaCommand}" />
+                                </WrapPanel>
+                                <TextBlock Text="Entrada ou saída de estoque (material selecionado)" FontWeight="SemiBold" Margin="0,18,0,0" TextWrapping="Wrap" />
+                                <TextBox Text="{Binding MpMovimento, UpdateSourceTrigger=PropertyChanged}" Margin="0,6,0,0" />
+                                <WrapPanel Margin="0,8,0,0">
+                                    <Button Content="Dar entrada" Style="{StaticResource BotaoSecundario}" Command="{Binding EntradaMateriaCommand}" />
+                                    <Button Content="Dar saída" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0" Command="{Binding SaidaMateriaCommand}" />
+                                </WrapPanel>
+                            </StackPanel>
+                        </Border>
+                    </ScrollViewer>
+                </Grid>
+            </TabItem>
+
+            <!-- PERDAS -->
+            <TabItem Header="Perdas">
+                <Grid Margin="0,10,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="16" />
+                        <ColumnDefinition Width="340" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border Style="{StaticResource Painel}" Padding="0">
+                        <DataGrid Style="{StaticResource Grade}" ItemsSource="{Binding Perdas}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Data" Binding="{Binding Data, Mode=OneWay}" Width="140" />
+                                <DataGridTextColumn Header="Ordem" Binding="{Binding Ordem, Mode=OneWay}" Width="110" />
+                                <DataGridTextColumn Header="Motivo" Binding="{Binding Motivo, Mode=OneWay}" Width="150" />
+                                <DataGridTextColumn Header="Material" Binding="{Binding Material, Mode=OneWay}" Width="*" />
+                                <DataGridTextColumn Header="Quantidade" Binding="{Binding Quantidade, Mode=OneWay}" Width="110" />
+                                <DataGridTextColumn Header="Custo estimado" Binding="{Binding Custo, Mode=OneWay}" Width="120" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+
+                    <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
+                        <Border Style="{StaticResource Painel}">
+                            <StackPanel>
+                                <TextBlock Text="Registrar perda" FontWeight="SemiBold" />
+                                <TextBlock Text="Motivo" Style="{StaticResource Rotulo}" />
+                                <ComboBox ItemsSource="{Binding Motivos}" DisplayMemberPath="Texto" SelectedItem="{Binding PdMotivo}" />
+                                <TextBlock Text="Matéria-prima (ou deixe em branco)" Style="{StaticResource Rotulo}" />
+                                <ComboBox ItemsSource="{Binding MateriasAtivas}" DisplayMemberPath="Nome" SelectedItem="{Binding PdMateria}" />
+                                <TextBlock Text="Material (se não estiver cadastrado)" Style="{StaticResource Rotulo}" />
+                                <TextBox Text="{Binding PdMaterialLivre, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Text="Ordem de produção (opcional)" Style="{StaticResource Rotulo}" />
+                                <ComboBox ItemsSource="{Binding OrdensAbertas}" DisplayMemberPath="Codigo" SelectedItem="{Binding PdOrdem}" />
+                                <TextBlock Text="Quantidade perdida" Style="{StaticResource Rotulo}" />
+                                <TextBox Text="{Binding PdQuantidade, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Text="Custo estimado (R$, vazio = quantidade × custo do material)" Style="{StaticResource Rotulo}" TextWrapping="Wrap" />
+                                <TextBox Text="{Binding PdCusto, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Text="Observação" Style="{StaticResource Rotulo}" />
+                                <TextBox Text="{Binding PdObservacao, UpdateSourceTrigger=PropertyChanged}" />
+                                <CheckBox Content="Tirar do estoque da matéria-prima" IsChecked="{Binding PdBaixar}" Margin="0,10,0,0" />
+                                <Button Content="Registrar perda" Style="{StaticResource BotaoPrimario}" Margin="0,12,0,0" HorizontalAlignment="Left"
+                                        Command="{Binding RegistrarPerdaCommand}" />
+                            </StackPanel>
+                        </Border>
+                    </ScrollViewer>
+                </Grid>
+            </TabItem>
+        </TabControl>
+
+        <TextBlock Grid.Row="3" Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" />
+    </Grid>
+</UserControl>
