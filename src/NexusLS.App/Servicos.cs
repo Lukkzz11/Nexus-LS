@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using NexusLS.App.Impressao;
 using NexusLS.Core.Data;
 using NexusLS.Core.Services;
@@ -24,6 +24,7 @@ public sealed class ContainerDeServicos
     public ConfiguracaoService Configuracao { get; }
     public InicioService Inicio { get; }
     public RelatorioService Relatorios { get; }
+    public DesempenhoService Desempenho { get; }
     public FinanceiroService Financeiro { get; }
     public FornecedorService Fornecedores { get; }
     public CompraService Compras { get; }
@@ -66,6 +67,7 @@ public sealed class ContainerDeServicos
         Configuracao = new(fabrica);
         Inicio = new(fabrica);
         Relatorios = new(fabrica);
+        Desempenho = new(fabrica);
         Financeiro = new(fabrica);
         Fornecedores = new(fabrica);
         Compras = new(fabrica);

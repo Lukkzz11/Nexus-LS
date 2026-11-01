@@ -1,0 +1,178 @@
+<UserControl x:Class="NexusLS.App.Views.DesempenhoVendasView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <UserControl.Resources>
+        <!-- Barra horizontal: rótulo, barra proporcional e o valor por extenso -->
+        <DataTemplate x:Key="BarraHorizontal">
+            <Grid Margin="0,3">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="150" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{Binding Rotulo}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" ToolTip="{Binding Rotulo}" />
+                <StackPanel Grid.Column="1">
+                    <ProgressBar Minimum="0" Maximum="1" Value="{Binding Fracao, Mode=OneWay}" Height="12" />
+                    <TextBlock Text="{Binding Texto}" FontSize="12" Opacity="0.75" />
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+
+        <!-- Coluna vertical do gráfico de vendas no tempo -->
+        <DataTemplate x:Key="ColunaVertical">
+            <StackPanel Margin="2,0" ToolTip="{Binding Texto}">
+                <Border Height="150" BorderBrush="LightGray" BorderThickness="0,0,0,1">
+                    <Border Background="#2563EB" CornerRadius="3,3,0,0" VerticalAlignment="Stretch" RenderTransformOrigin="0.5,1">
+                        <Border.RenderTransform>
+                            <ScaleTransform ScaleY="{Binding Fracao, Mode=OneWay}" />
+                        </Border.RenderTransform>
+                    </Border>
+                </Border>
+                <TextBlock Text="{Binding Rotulo}" FontSize="10" HorizontalAlignment="Center" Margin="0,4,0,0" TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate x:Key="LinhaDeRanking">
+            <Grid Margin="0,3">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{Binding Nome}" TextTrimming="CharacterEllipsis" />
+                <TextBlock Grid.Column="1" Text="{Binding Detalhe}" Margin="12,0,0,0" Opacity="0.75" />
+            </Grid>
+        </DataTemplate>
+
+        <Style x:Key="Subtitulo" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Margin" Value="0,0,0,8" />
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Desempenho de vendas" Style="{StaticResource TituloTela}" Margin="0,0,0,14" />
+
+        <StackPanel Grid.Row="1" Margin="0,0,0,10">
+            <WrapPanel>
+                <Button Content="Hoje" Style="{StaticResource BotaoSecundario}" Padding="12,6" Command="{Binding HojeCommand}" />
+                <Button Content="7 dias" Style="{StaticResource BotaoSecundario}" Padding="12,6" Margin="8,0,0,0" Command="{Binding UltimosSeteDiasCommand}" />
+                <Button Content="30 dias" Style="{StaticResource BotaoSecundario}" Padding="12,6" Margin="8,0,0,0" Command="{Binding UltimosTrintaDiasCommand}" />
+                <Button Content="Este mês" Style="{StaticResource BotaoSecundario}" Padding="12,6" Margin="8,0,0,0" Command="{Binding MesAtualCommand}" />
+                <TextBlock Text="De:" VerticalAlignment="Center" Margin="20,0,8,0" />
+                <DatePicker SelectedDateFormat="Short" SelectedDate="{Binding De}" Width="150" />
+                <TextBlock Text="até:" VerticalAlignment="Center" Margin="12,0,8,0" />
+                <DatePicker SelectedDateFormat="Short" SelectedDate="{Binding Ate}" Width="150" />
+                <TextBlock Text="Gráfico por:" VerticalAlignment="Center" Margin="20,0,8,0" />
+                <RadioButton Content="Dia" GroupName="gran" IsChecked="{Binding PorDia}" Margin="0,0,10,0" />
+                <RadioButton Content="Semana" GroupName="gran" IsChecked="{Binding PorSemana}" Margin="0,0,10,0" />
+                <RadioButton Content="Mês" GroupName="gran" IsChecked="{Binding PorMes}" />
+            </WrapPanel>
+            <TextBlock Text="{Binding TextoPeriodo}" Opacity="0.75" Margin="0,8,0,0" />
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="0,0,8,0">
+                <!-- Indicadores -->
+                <ItemsControl ItemsSource="{Binding Indicadores}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource Painel}" Width="250" Margin="0,0,12,12">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Titulo}" Opacity="0.75" />
+                                    <TextBlock Text="{Binding Valor}" FontSize="22" FontWeight="SemiBold" Margin="0,4,0,4" />
+                                    <TextBlock Text="{Binding Variacao}" FontSize="12">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="Gray" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Subiu}" Value="True"><Setter Property="Foreground" Value="SeaGreen" /></DataTrigger>
+                                                    <DataTrigger Binding="{Binding Caiu}" Value="True"><Setter Property="Foreground" Value="Firebrick" /></DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBlock Text="{Binding AvisoLucro}" Foreground="DarkOrange" TextWrapping="Wrap" Margin="0,0,0,12" />
+
+                <TextBlock Text="Nenhuma venda neste período." Margin="0,8" Opacity="0.75">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Visibility" Value="Visible" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding TemVendas}" Value="True"><Setter Property="Visibility" Value="Collapsed" /></DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+
+                <!-- Vendas no tempo -->
+                <Border Style="{StaticResource Painel}" Margin="0,0,0,12">
+                    <StackPanel>
+                        <TextBlock Text="Faturamento no tempo" Style="{StaticResource Subtitulo}" />
+                        <ItemsControl ItemsSource="{Binding VendasNoTempo}" ItemTemplate="{StaticResource ColunaVertical}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><UniformGrid Rows="1" /></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <UniformGrid Columns="2">
+                    <Border Style="{StaticResource Painel}" Margin="0,0,6,12">
+                        <StackPanel>
+                            <TextBlock Text="Por categoria" Style="{StaticResource Subtitulo}" />
+                            <ItemsControl ItemsSource="{Binding PorCategoriaBarras}" ItemTemplate="{StaticResource BarraHorizontal}" />
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource Painel}" Margin="6,0,0,12">
+                        <StackPanel>
+                            <TextBlock Text="Por forma de pagamento" Style="{StaticResource Subtitulo}" />
+                            <ItemsControl ItemsSource="{Binding PorFormaBarras}" ItemTemplate="{StaticResource BarraHorizontal}" />
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource Painel}" Margin="0,0,6,12">
+                        <StackPanel>
+                            <TextBlock Text="Por quem vendeu" Style="{StaticResource Subtitulo}" />
+                            <ItemsControl ItemsSource="{Binding PorOperadorBarras}" ItemTemplate="{StaticResource BarraHorizontal}" />
+                            <TextBlock Text="{Binding AvisoOperador}" TextWrapping="Wrap" Opacity="0.75" />
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource Painel}" Margin="6,0,0,12">
+                        <StackPanel>
+                            <TextBlock Text="Mais vendidos" Style="{StaticResource Subtitulo}" />
+                            <ItemsControl ItemsSource="{Binding MaisVendidosLista}" ItemTemplate="{StaticResource LinhaDeRanking}" />
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource Painel}" Margin="0,0,6,12">
+                        <StackPanel>
+                            <TextBlock Text="Menos vendidos (entre os que venderam)" Style="{StaticResource Subtitulo}" />
+                            <ItemsControl ItemsSource="{Binding MenosVendidosLista}" ItemTemplate="{StaticResource LinhaDeRanking}" />
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource Painel}" Margin="6,0,0,12">
+                        <StackPanel>
+                            <TextBlock Text="Sem nenhuma venda no período" Style="{StaticResource Subtitulo}" />
+                            <ItemsControl ItemsSource="{Binding SemVendasLista}" ItemTemplate="{StaticResource LinhaDeRanking}" />
+                        </StackPanel>
+                    </Border>
+                </UniformGrid>
+            </StackPanel>
+        </ScrollViewer>
+
+        <TextBlock Grid.Row="3" Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" />
+    </Grid>
+</UserControl>

@@ -7,7 +7,7 @@ using NexusLS.Core.Models;
 namespace NexusLS.App.ViewModels;
 
 /// <summary>Os itens do menu lateral. O nome do item é também o "Tag" do botão: assim o menu destaca o da tela aberta.</summary>
-public enum ItemMenu { Inicio, Pdv, Caixa, Fechamento, Pedidos, MaisVendidos, EstoqueDaLoja, CalculadoraPrecos, Compras, Fornecedores, Etiquetas, Clientes, Financeiro, ContasESaldos, Relatorios, CatalogoOnline, Funcionarios, Atividades, Configuracoes }
+public enum ItemMenu { Inicio, Pdv, Caixa, Fechamento, Pedidos, MaisVendidos, Desempenho, EstoqueDaLoja, CalculadoraPrecos, Compras, Fornecedores, Etiquetas, Clientes, Financeiro, ContasESaldos, Relatorios, CatalogoOnline, Funcionarios, Atividades, Configuracoes }
 
 /// <summary>
 /// ViewModel = a "lógica da tela". Ele guarda os dados que a tela mostra e os comandos dos botões,
@@ -58,6 +58,7 @@ public partial class MainViewModel : ObservableObject
             case ItemMenu.Fechamento: IrParaFechamento(); break;
             case ItemMenu.Pedidos: IrParaPedidos(); break;
             case ItemMenu.MaisVendidos: IrParaMaisVendidos(); break;
+            case ItemMenu.Desempenho: IrParaDesempenho(); break;
             case ItemMenu.EstoqueDaLoja: IrParaEstoque(); break;
             case ItemMenu.CalculadoraPrecos: IrParaCalculadoraPrecos(); break;
             case ItemMenu.Compras: IrParaCompras(); break;
@@ -81,6 +82,7 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand] private void IrParaCaixa() => Abrir(new VendasViewModel(_servicos.Vendas, _servicos.Cupons, _servicos.Caixa), ItemMenu.Caixa);
     [RelayCommand] private void IrParaFechamento() => Abrir(new FechamentoViewModel(_servicos.Caixa), ItemMenu.Fechamento);
     [RelayCommand] private void IrParaPedidos() => Abrir(new PedidosViewModel(_servicos.Pedidos, _servicos.Produtos, _servicos.Clientes, _servicos.Cupons), ItemMenu.Pedidos);
+    [RelayCommand] private void IrParaDesempenho() => Abrir(new DesempenhoVendasViewModel(_servicos.Desempenho), ItemMenu.Desempenho);
     [RelayCommand] private void IrParaMaisVendidos() => Abrir(new MaisVendidosViewModel(_servicos.Relatorios), ItemMenu.MaisVendidos);
 
     // Estoque
@@ -139,7 +141,7 @@ public partial class MainViewModel : ObservableObject
         ItemMenu.Pdv => Sessao.Pode(Permissao.Vender),
         ItemMenu.Caixa or ItemMenu.Fechamento => Sessao.Pode(Permissao.Caixa),
         ItemMenu.Pedidos => Sessao.Pode(Permissao.Vender),
-        ItemMenu.MaisVendidos or ItemMenu.Relatorios => Sessao.Pode(Permissao.Relatorios),
+        ItemMenu.MaisVendidos or ItemMenu.Desempenho or ItemMenu.Relatorios => Sessao.Pode(Permissao.Relatorios),
         ItemMenu.EstoqueDaLoja or ItemMenu.Etiquetas or ItemMenu.CalculadoraPrecos => Sessao.Pode(Permissao.Estoque),
         ItemMenu.Compras or ItemMenu.Fornecedores => Sessao.Pode(Permissao.Compras),
         ItemMenu.Clientes => Sessao.Pode(Permissao.Clientes),

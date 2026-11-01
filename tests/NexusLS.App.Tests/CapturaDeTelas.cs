@@ -1,4 +1,4 @@
-using System.Windows.Controls;
+﻿using System.Windows.Controls;
 using System.IO;
 using System.Windows;
 using System.Windows.Media;
@@ -314,6 +314,9 @@ internal static class Capturador
 
     public static void SalvarConfiguracoes(ConfiguracoesViewModel vm, string caminho, int largura = 1400, int altura = 820) =>
         Desenhar(() => new ConfiguracoesView { DataContext = vm }, caminho, largura, altura);
+
+    public static void SalvarDesempenho(DesempenhoVendasViewModel vm, string caminho, int largura = 1400, int altura = 1100) =>
+        Desenhar(() => new DesempenhoVendasView { DataContext = vm }, caminho, largura, altura);
 
     public static void SalvarCalculadora(CalculadoraPrecosViewModel vm, string caminho, int largura = 1400, int altura = 820) =>
         Desenhar(() => new CalculadoraPrecosView { DataContext = vm }, caminho, largura, altura);
