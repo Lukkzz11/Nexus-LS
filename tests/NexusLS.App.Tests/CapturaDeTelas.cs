@@ -315,6 +315,9 @@ internal static class Capturador
     public static void SalvarConfiguracoes(ConfiguracoesViewModel vm, string caminho, int largura = 1400, int altura = 820) =>
         Desenhar(() => new ConfiguracoesView { DataContext = vm }, caminho, largura, altura);
 
+    public static void SalvarCalculadora(CalculadoraPrecosViewModel vm, string caminho, int largura = 1400, int altura = 820) =>
+        Desenhar(() => new CalculadoraPrecosView { DataContext = vm }, caminho, largura, altura);
+
     /// <summary>Desenha uma janela pronta (como a de login) num PNG, sem tirá-la do lugar nem roubar o foco.</summary>
     internal static void SalvarJanela(Func<Window> criar, string caminho)
     {

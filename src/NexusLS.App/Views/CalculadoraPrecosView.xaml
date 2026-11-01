@@ -1,0 +1,156 @@
+<UserControl x:Class="NexusLS.App.Views.CalculadoraPrecosView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <UserControl.Resources>
+        <Style x:Key="Rotulo" TargetType="TextBlock">
+            <Setter Property="Margin" Value="0,8,0,2" />
+            <Setter Property="FontSize" Value="13" />
+        </Style>
+        <Style x:Key="Resultado" TargetType="TextBox">
+            <Setter Property="IsReadOnly" Value="True" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="AcceptsReturn" Value="True" />
+            <Setter Property="VerticalScrollBarVisibility" Value="Auto" />
+            <Setter Property="MinHeight" Value="170" />
+            <Setter Property="Margin" Value="0,12,0,0" />
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Calculadora de preços" Style="{StaticResource TituloTela}" Margin="0,0,0,14" />
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="330" />
+                <ColumnDefinition Width="16" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Custos e despesas: valem para todas as abas -->
+            <Border Style="{StaticResource Painel}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <TextBlock Text="Custo (R$ por peça)" FontWeight="SemiBold" />
+                        <TextBlock Text="Custo de compra" Style="{StaticResource Rotulo}" />
+                        <TextBox Text="{Binding CustoCompra, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBlock Text="Frete (R$)" Style="{StaticResource Rotulo}" />
+                        <TextBox Text="{Binding FreteReais, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBlock Text="Embalagem e etiquetas (R$)" Style="{StaticResource Rotulo}" />
+                        <TextBox Text="{Binding EmbalagemReais, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBlock Text="Outros custos (% do custo de compra)" Style="{StaticResource Rotulo}" />
+                        <TextBox Text="{Binding OutrosCustosPct, UpdateSourceTrigger=PropertyChanged}" />
+
+                        <TextBlock Text="Despesas variáveis (% do preço)" FontWeight="SemiBold" Margin="0,16,0,0" />
+                        <TextBlock Text="Impostos (%)" Style="{StaticResource Rotulo}" />
+                        <TextBox Text="{Binding ImpostosPct, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBlock Text="Comissão (%)" Style="{StaticResource Rotulo}" />
+                        <TextBox Text="{Binding ComissaoPct, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBlock Text="Outras (%)" Style="{StaticResource Rotulo}" />
+                        <TextBox Text="{Binding OutrasVariaveisPct, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBlock Text="Outras (R$ por peça vendida)" Style="{StaticResource Rotulo}" />
+                        <TextBox Text="{Binding OutrasVariaveisReais, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBlock Text="Taxa da forma de pagamento (%)" Style="{StaticResource Rotulo}" />
+                        <TextBox Text="{Binding TaxaPagamentoPct, UpdateSourceTrigger=PropertyChanged}" />
+
+                        <TextBlock Text="Despesas fixas" FontWeight="SemiBold" Margin="0,16,0,0" />
+                        <TextBlock Text="Fixas (% do faturamento)" Style="{StaticResource Rotulo}" />
+                        <TextBox Text="{Binding FixasPct, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBlock Text="Fixas por mês (R$)" Style="{StaticResource Rotulo}" />
+                        <TextBox Text="{Binding FixasMensais, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBlock Text="Peças vendidas por mês" Style="{StaticResource Rotulo}" />
+                        <TextBox Text="{Binding PecasPorMes, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <TabControl Grid.Column="2">
+                <TabItem Header="Preço">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="12">
+                        <StackPanel>
+                            <TextBlock Text="Margem desejada (% do preço de venda)" Style="{StaticResource Rotulo}" />
+                            <TextBox Text="{Binding MargemPct, UpdateSourceTrigger=PropertyChanged}" Width="160" HorizontalAlignment="Left" />
+                            <CheckBox Content="Terminar o preço em ,90" IsChecked="{Binding TerminarEm90}" Margin="0,10,0,0" />
+                            <Button Content="Calcular preço" Style="{StaticResource BotaoPrimario}" HorizontalAlignment="Left"
+                                    Margin="0,12,0,0" Command="{Binding CalcularPrecoCommand}" />
+                            <TextBox Text="{Binding ResultadoPreco, Mode=OneWay}" Style="{StaticResource Resultado}" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+
+                <TabItem Header="Promoção">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="12">
+                        <StackPanel>
+                            <TextBlock Text="Preço original (R$)" Style="{StaticResource Rotulo}" />
+                            <TextBox Text="{Binding PrecoOriginal, UpdateSourceTrigger=PropertyChanged}" Width="160" HorizontalAlignment="Left" />
+                            <TextBlock Text="Desconto" Style="{StaticResource Rotulo}" />
+                            <StackPanel Orientation="Horizontal">
+                                <TextBox Text="{Binding Desconto, UpdateSourceTrigger=PropertyChanged}" Width="160" />
+                                <CheckBox Content="em R$ (desmarcado = em %)" IsChecked="{Binding DescontoEmReais}" Margin="12,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                            <TextBlock Text="Preço mínimo aceito (R$, opcional)" Style="{StaticResource Rotulo}" />
+                            <TextBox Text="{Binding PrecoMinimo, UpdateSourceTrigger=PropertyChanged}" Width="160" HorizontalAlignment="Left" />
+                            <TextBlock Text="Margem mínima (%, opcional)" Style="{StaticResource Rotulo}" />
+                            <TextBox Text="{Binding MargemMinima, UpdateSourceTrigger=PropertyChanged}" Width="160" HorizontalAlignment="Left" />
+                            <Button Content="Simular promoção" Style="{StaticResource BotaoPrimario}" HorizontalAlignment="Left"
+                                    Margin="0,12,0,0" Command="{Binding CalcularPromocaoCommand}" />
+                            <TextBox Text="{Binding ResultadoPromocao, Mode=OneWay}" Style="{StaticResource Resultado}" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+
+                <TabItem Header="Pagamentos">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="12">
+                        <StackPanel>
+                            <TextBlock Text="Preço de venda (R$)" Style="{StaticResource Rotulo}" />
+                            <TextBox Text="{Binding PrecoPagamento, UpdateSourceTrigger=PropertyChanged}" Width="160" HorizontalAlignment="Left" />
+                            <TextBlock Text="Formas e taxas (uma por linha: nome; taxa em %)" Style="{StaticResource Rotulo}" />
+                            <TextBox Text="{Binding FormasPagamento, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" MinHeight="120" />
+                            <Button Content="Comparar" Style="{StaticResource BotaoPrimario}" HorizontalAlignment="Left"
+                                    Margin="0,12,0,0" Command="{Binding CompararPagamentosCommand}" />
+                            <TextBox Text="{Binding ResultadoPagamentos, Mode=OneWay}" Style="{StaticResource Resultado}" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+
+                <TabItem Header="Quantidades">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="12">
+                        <StackPanel>
+                            <TextBlock Text="Preço de venda (R$)" Style="{StaticResource Rotulo}" />
+                            <TextBox Text="{Binding PrecoQuantidades, UpdateSourceTrigger=PropertyChanged}" Width="160" HorizontalAlignment="Left" />
+                            <TextBlock Text="Quantidades (separadas por vírgula)" Style="{StaticResource Rotulo}" />
+                            <TextBox Text="{Binding Quantidades, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock Text="Meta de lucro (R$, opcional)" Style="{StaticResource Rotulo}" />
+                            <TextBox Text="{Binding MetaLucro, UpdateSourceTrigger=PropertyChanged}" Width="160" HorizontalAlignment="Left" />
+                            <Button Content="Simular" Style="{StaticResource BotaoPrimario}" HorizontalAlignment="Left"
+                                    Margin="0,12,0,0" Command="{Binding SimularQuantidadesCommand}" />
+                            <TextBox Text="{Binding ResultadoQuantidades, Mode=OneWay}" Style="{StaticResource Resultado}" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+
+                <TabItem Header="Custo de lote">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="12">
+                        <StackPanel>
+                            <TextBlock Text="Itens (uma linha por item: nome; quantidade; custo unitário)" Style="{StaticResource Rotulo}" />
+                            <TextBox Text="{Binding ItensLote, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" MinHeight="90" />
+                            <TextBlock Text="Despesas do lote (nome; valor; proporcional ou quantidade)" Style="{StaticResource Rotulo}" />
+                            <TextBox Text="{Binding DespesasLote, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" MinHeight="70" />
+                            <Button Content="Ratear" Style="{StaticResource BotaoPrimario}" HorizontalAlignment="Left"
+                                    Margin="0,12,0,0" Command="{Binding RatearLoteCommand}" />
+                            <TextBox Text="{Binding ResultadoLote, Mode=OneWay}" Style="{StaticResource Resultado}" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+            </TabControl>
+        </Grid>
+
+        <TextBlock Grid.Row="2" Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" />
+    </Grid>
+</UserControl>
