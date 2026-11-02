@@ -66,6 +66,7 @@ public class GoogleStore
 public class GoogleOAuth
 {
     public const string Escopo = "https://www.googleapis.com/auth/drive.file";   // só arquivos criados pelo próprio programa
+    public const string EscopoAgenda = "https://www.googleapis.com/auth/calendar.events"; // só os eventos (não lê nem apaga as agendas em si)
     private const string UrlAutorizar = "https://accounts.google.com/o/oauth2/v2/auth";
     private const string UrlToken = "https://oauth2.googleapis.com/token";
 
@@ -92,7 +93,7 @@ public class GoogleOAuth
 
     public static string MontarUrlAutorizacao(string clientId, string redirect, string desafio, string estado) =>
         $"{UrlAutorizar}?client_id={Uri.EscapeDataString(clientId)}&redirect_uri={Uri.EscapeDataString(redirect)}&response_type=code" +
-        $"&scope={Uri.EscapeDataString(Escopo)}&code_challenge={desafio}&code_challenge_method=S256&state={estado}&access_type=offline&prompt=consent";
+        $"&scope={Uri.EscapeDataString(Escopo + " " + EscopoAgenda)}&code_challenge={desafio}&code_challenge_method=S256&state={estado}&access_type=offline&prompt=consent";
 
     /// <summary>
     /// Abre o navegador para o usuário autorizar e espera a volta. <paramref name="abrirNavegador"/> recebe a URL.

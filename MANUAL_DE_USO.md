@@ -74,7 +74,10 @@ Configurações > Backup > **Google Drive** envia uma cópia do backup para a pa
 3. Em "Credenciais" crie um **ID do cliente OAuth** do tipo **App para computador** e copie o Client ID e o Client Secret.
 4. No Nexus LS cole os dois, clique em **Salvar credenciais** e depois em **Conectar ao Google**; autorize no navegador.
 5. Faça um backup e clique em **Enviar o backup ... ao Drive**.
-O segredo e a permissão ficam protegidos pelo Windows neste computador. **(a confirmar)** Foi testado só com um Google simulado; a primeira conexão real depende da sua conta e do projeto que você criar. Para o Calendário e o Gmail ainda não há integração.
+O segredo e a permissão ficam protegidos pelo Windows neste computador. **(a confirmar)** Foi testado só com um Google simulado; a primeira conexão real depende da sua conta e do projeto que você criar. 
+
+### Google Agenda
+Na tela **Agenda**, o botão **Enviar o dia ao Google Agenda** cria no seu Google Agenda principal os compromissos do dia escolhido; enviar de novo atualiza os mesmos eventos (sem duplicar) e remover um compromisso apaga o evento também. Para isso, no Google Cloud ative também a **Google Calendar API**. Quem já tinha conectado o Google antes desta versão precisa **desconectar e conectar de novo** (a permissão da agenda é nova). Gmail ainda não tem integração.
 
 ## 7. Se algo der errado
 

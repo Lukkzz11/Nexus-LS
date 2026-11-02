@@ -7,6 +7,8 @@ Estado em 25/10/2026. Marcado como **[feito]**, **[proposto]** ou **[decisão pe
 
 `Core/Google/GoogleDrive.cs`: `GoogleOAuth` (OAuth 2.0 de aplicativo instalado com PKCE S256, retorno em `http://127.0.0.1:{porta}/`, escopo `drive.file`, `access_type=offline`; guarda só o refresh token, protegido com DPAPI), `DriveRest` (procura/cria a pasta "Nexus LS Backups" e envia o arquivo por upload retomável) e `GoogleDriveBackup` (o que a tela usa). Cada cliente cria o seu Client ID/Secret no Google Cloud; nada de chave do desenvolvedor no programa. Erros do Google viram mensagens em português e nunca incluem token ou segredo. Testes usam um servidor simulado e um navegador simulado; a conexão real não foi testada.
 
+O escopo `calendar.events` também é pedido na conexão. `Core/Google/GoogleCalendar.cs`: `CalendarRest` (POST/PUT/DELETE em `calendars/primary/events`; dia inteiro usa `date` com fim exclusivo, os outros `dateTime` com o fuso do computador) e `AgendaGoogle` (envia o dia; guarda `Compromisso.GoogleEventoId`; evento apagado no Google é recriado). Envio é manual, em um sentido (Nexus LS → Google).
+
 ## 5f. Vitrine (editor do catálogo)
 
 `ConfiguracaoVitrine` (Core/Vitrine) guarda modelo, fonte, cores, textos, loja, atacado, banners e ordem dos produtos em `%LOCALAPPDATA%\NexusLS\vitrine.json` (`VitrineStore`). `Normalizar()` valida tudo antes de salvar ou publicar. `PublicadorVitrineRest` faz `PATCH .../documents/meta/vitrine` (substitui o documento) com o mesmo login do catálogo; ids de modelo, fonte e cor seguem o `temaVitrine.js` do ERP. Nada é enviado sem o clique em Publicar. Não testado contra um Firebase real; a regra do Firestore precisa liberar escrita em `meta/vitrine`.

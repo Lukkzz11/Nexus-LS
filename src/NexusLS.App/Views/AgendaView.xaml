@@ -56,7 +56,11 @@
 
             <StackPanel>
                 <Calendar SelectedDate="{Binding Dia, Mode=TwoWay}" DisplayDate="{Binding Dia, Mode=OneWay}" AutomationProperties.Name="Calendário" />
-                <Button Content="Ir para hoje" Command="{Binding HojeCommand}" Style="{StaticResource BotaoSecundario}" HorizontalAlignment="Left" Margin="0,10,0,0" />
+                <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                    <Button Content="Ir para hoje" Command="{Binding HojeCommand}" Style="{StaticResource BotaoSecundario}" />
+                    <Button Content="Enviar o dia ao Google Agenda" Command="{Binding EnviarDiaAoGoogleCommand}" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0"
+                            Visibility="{Binding TemGoogle, Converter={StaticResource BoolVis}}" />
+                </StackPanel>
                 <Border Style="{StaticResource Painel}" Margin="0,16,0,0">
                     <StackPanel>
                         <TextBlock Text="Próximos compromissos" FontWeight="SemiBold" Margin="0,0,0,6" />

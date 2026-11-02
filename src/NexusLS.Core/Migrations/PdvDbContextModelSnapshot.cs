@@ -246,6 +246,9 @@ namespace NexusLS.Core.Migrations
                     b.Property<DateTime?>("Fim")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("GoogleEventoId")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("Inicio")
                         .HasColumnType("TEXT");
 

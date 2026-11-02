@@ -14,4 +14,7 @@ public class Compromisso
 
     public bool Concluido { get; set; }
     public DateTime CriadoEm { get; set; }
+
+    /// <summary>Id do evento correspondente no Google Agenda (nulo = nunca enviado). Evita duplicar ao reenviar.</summary>
+    public string? GoogleEventoId { get; set; }
 }

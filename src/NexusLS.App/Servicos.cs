@@ -48,6 +48,7 @@ public sealed class ContainerDeServicos
     public NexusLS.Core.Sincronizacao.SincronizadorCatalogo Sincronizador { get; }
     public FotoProdutoService Fotos { get; }
     public NexusLS.Core.Google.GoogleDriveBackup Google { get; }
+    public NexusLS.Core.Google.AgendaGoogle AgendaNoGoogle { get; }
     public PreferenciasStore Preferencias { get; }
     public NexusLS.Core.Vitrine.VitrineStore Vitrine { get; }
     public NexusLS.Core.Vitrine.IPublicadorVitrine PublicadorVitrine { get; }
@@ -114,6 +115,7 @@ public sealed class ContainerDeServicos
         var googleStore = new NexusLS.Core.Google.GoogleStore(NexusLS.Core.Google.GoogleStore.CaminhoPadrao(), new NexusLS.App.Seguranca.ProtetorDpapi());
         var googleAuth = new NexusLS.Core.Google.GoogleOAuth(_httpFirebase, googleStore);
         Google = new(googleStore, googleAuth, new NexusLS.Core.Google.DriveRest(_httpFirebase, googleAuth));
+        AgendaNoGoogle = new(googleStore, new NexusLS.Core.Google.CalendarRest(_httpFirebase, googleAuth));
         Fotos = new(fabrica, new NexusLS.App.Imagens.ProcessadorImagemWpf(), FotoProdutoService.PastaPadrao(),
             new NexusLS.Core.Sincronizacao.Firebase.EnviadorFotoConfiguravel(Firebase, _httpFirebase));
         var protetor = new NexusLS.App.Seguranca.ProtetorDpapi();

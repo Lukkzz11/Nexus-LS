@@ -110,7 +110,7 @@ public partial class MainViewModel : ObservableObject
 
     // Gestão
     [RelayCommand] private void IrParaEditorCatalogo() => Abrir(new CatalogoWebViewModel(_servicos.CatalogoWeb), ItemMenu.EditorCatalogo);
-    [RelayCommand] private void IrParaAgenda() => Abrir(new AgendaViewModel(_servicos.Agenda), ItemMenu.Agenda);
+    [RelayCommand] private void IrParaAgenda() => Abrir(new AgendaViewModel(_servicos.Agenda, null, _servicos.AgendaNoGoogle), ItemMenu.Agenda);
     [RelayCommand] private void IrParaClientes() => Abrir(new ClientesViewModel(_servicos.Clientes), ItemMenu.Clientes);
     [RelayCommand] private void IrParaFinanceiro() => Abrir(new FinanceiroViewModel(_servicos.Financeiro), ItemMenu.Financeiro);
     [RelayCommand] private void IrParaContasESaldos() => Abrir(new ContasESaldosViewModel(_servicos.Posicao, _servicos.ContasFinanceiras, _servicos.Cartoes, _servicos.Cheques), ItemMenu.ContasESaldos);

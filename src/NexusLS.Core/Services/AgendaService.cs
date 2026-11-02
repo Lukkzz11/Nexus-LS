@@ -57,6 +57,14 @@ public class AgendaService
         await db.SaveChangesAsync();
     }
 
+    public async Task DefinirGoogleEventoAsync(int id, string? eventoId)
+    {
+        await using var db = await _fabrica.CreateDbContextAsync();
+        var c = await db.Compromissos.FirstOrDefaultAsync(x => x.Id == id) ?? throw new RegraDeNegocioException("Compromisso não encontrado.");
+        c.GoogleEventoId = eventoId;
+        await db.SaveChangesAsync();
+    }
+
     public async Task DefinirConcluidoAsync(int id, bool concluido)
     {
         await using var db = await _fabrica.CreateDbContextAsync();

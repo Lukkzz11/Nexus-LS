@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using NexusLS.Core.Google;
 using NexusLS.Core.Models;
 using NexusLS.Core.Services;
 
@@ -16,11 +17,13 @@ public partial class AgendaViewModel : ViewModelBase
     private static readonly CultureInfo PtBr = CultureInfo.GetCultureInfo("pt-BR");
     private readonly AgendaService _agenda;
     private readonly Func<DateTime> _hoje;
+    private readonly AgendaGoogle? _google;
     private int? _editandoId;
 
-    public AgendaViewModel(AgendaService agenda, Func<DateTime>? hoje = null)
+    public AgendaViewModel(AgendaService agenda, Func<DateTime>? hoje = null, AgendaGoogle? google = null)
     {
         _agenda = agenda;
+        _google = google;
         _hoje = hoje ?? (() => DateTime.Today);
         _dia = _hoje().Date;
         _ = RecarregarAsync();
@@ -41,6 +44,7 @@ public partial class AgendaViewModel : ViewModelBase
     private bool _diaInteiro;
 
     public bool HorarioAtivo => !DiaInteiro;
+    public bool TemGoogle => _google is not null;
     [ObservableProperty] private string _descricao = "";
     [ObservableProperty] private string _tituloDoDia = "";
     [ObservableProperty] private string _formularioTitulo = "Novo compromisso";
@@ -145,9 +149,23 @@ public partial class AgendaViewModel : ViewModelBase
         if (linha is null) return;
         if (!Confirmar($"Remover o compromisso \"{linha.Titulo}\"?")) return;
         await _agenda.RemoverAsync(linha.Id);
+        var aviso = _google is null ? null : await _google.ExcluirAsync(linha.Origem.GoogleEventoId);
         if (_editandoId == linha.Id) Novo();
         await RecarregarAsync();
-        MostrarSucesso("Compromisso removido.");
+        if (aviso is null) MostrarSucesso("Compromisso removido.");
+        else MostrarSucesso("Compromisso removido aqui, mas o evento continua no Google Agenda: " + aviso);
+    });
+
+    /// <summary>Envia os compromissos do dia mostrado ao Google Agenda. Reenviar atualiza os mesmos eventos, sem duplicar.</summary>
+    [RelayCommand]
+    private Task EnviarDiaAoGoogleAsync() => ExecutarAsync(async () =>
+    {
+        if (_google is null) throw new RegraDeNegocioException("O Google Agenda não está disponível.");
+        var lista = (await _agenda.DoDiaAsync(Dia.Date)).ToList();
+        if (lista.Count == 0) throw new RegraDeNegocioException("Não há compromissos neste dia para enviar.");
+        var r = await _google.EnviarAsync(lista, (id, evento) => _agenda.DefinirGoogleEventoAsync(id, evento));
+        await RecarregarAsync();
+        MostrarSucesso($"Google Agenda: {r.Criados} criado(s), {r.Atualizados} atualizado(s).");
     });
 
     [RelayCommand]

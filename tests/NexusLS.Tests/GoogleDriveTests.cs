@@ -79,7 +79,7 @@ public sealed class GoogleDriveTests : IDisposable
         });
 
         Assert.Contains("code_challenge_method=S256", urlAberta);
-        Assert.Contains("scope=" + Uri.EscapeDataString("https://www.googleapis.com/auth/drive.file"), urlAberta);
+        Assert.Contains("scope=" + Uri.EscapeDataString("https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/calendar.events"), urlAberta);
         Assert.Equal("Conectado ao Google Drive.", g.Situacao());
         Assert.Equal("refresh-1", _store.RefreshToken());
         var troca = Assert.Single(servidor.Pedidos);
