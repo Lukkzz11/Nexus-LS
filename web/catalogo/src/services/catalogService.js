@@ -4,8 +4,22 @@ import { getProductImageUrl } from "./imageUploadService";
 
 let cache = null;
 
+// A resposta da ponte chega só à página principal (não aos iframes). A prévia do catálogo roda num iframe do
+// editor, então lê os dados que a página principal já carregou (mesma origem).
+const dentroDeIframe = typeof window !== "undefined" && window.parent !== window;
+
 export async function carregarTudo(forcar = false) {
-  if (!cache || forcar) cache = await chamar("carregar");
+  if (dentroDeIframe) {
+    try {
+      if (window.parent.__nexusDados) return window.parent.__nexusDados;
+    } catch {
+      /* origem diferente: segue pela ponte */
+    }
+  }
+  if (!cache || forcar) {
+    cache = await chamar("carregar");
+    if (!dentroDeIframe) window.__nexusDados = cache;
+  }
   return cache;
 }
 
