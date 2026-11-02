@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NexusLS.Core.Models;
 using NexusLS.Core.Services;
@@ -12,7 +12,8 @@ namespace NexusLS.App.ViewModels;
 public partial class PdvViewModel
 {
     /// <summary>Desconto por peça que a Venda Cliente sugere (o operador pode mudar na tela de desconto).</summary>
-    public const long DescontoPorPecaPadraoCentavos = 200;
+    /// <summary>Desconto sugerido por peça no modo cliente. O programa troca por uma leitura das Preferências; o padrão é R$ 2,00.</summary>
+    public static Func<long> DescontoPorPecaPadrao { get; set; } = () => 200;
 
     private Cliente? _clienteFixo;
 
@@ -67,7 +68,7 @@ public partial class PdvViewModel
     private string DescontoInicial()
     {
         if (_clienteFixo is null) return "";
-        var desconto = Math.Min(DescontoPorPecaPadraoCentavos * _carrinho.QuantidadeTotal, _carrinho.SubtotalCentavos);
+        var desconto = Math.Min(DescontoPorPecaPadrao() * _carrinho.QuantidadeTotal, _carrinho.SubtotalCentavos);
         return desconto > 0 ? Dinheiro.FormatarParaEdicao(desconto) : "";
     }
 

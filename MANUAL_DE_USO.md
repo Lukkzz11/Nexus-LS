@@ -6,6 +6,7 @@ Este manual explica o dia a dia do programa. Ele descreve o que o programa faz h
 
 1. **Instale e abra** o `NexusLS.exe`. Os dados ficam em `%LOCALAPPDATA%\NexusLS` (banco `nexus.db`). O programa funciona **sem internet**.
 2. Em **Configurações**, preencha os **Dados da loja** (nome, CNPJ, endereço, logo). Eles saem no cupom e na nota em PDF.
+   As Configurações têm quatro abas: **Loja e cupom** (dados, impressora, prévia), **Vendas e aparência** (tamanho das telas e desconto por peça da Venda Cliente), **Backup** e **Sistema** (pasta dos dados, tamanho do banco, licença, atualizações, atalhos do teclado e apagar dados).
 3. Escolha a impressora do cupom (80 mm) e teste uma impressão.
 4. Se quiser que o programa abra direto no PDV, ligue "Abrir no PDV" em Configurações.
 5. **Funcionários e permissões:** em Funcionários, cadastre quem usa o programa. Com pelo menos um funcionário com login cadastrado, o programa passa a pedir entrada. Cada perfil enxerga só os menus permitidos.

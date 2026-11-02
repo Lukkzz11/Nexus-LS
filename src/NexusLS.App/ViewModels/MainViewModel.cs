@@ -30,12 +30,16 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private object? _telaAtual;
 
+    /// <summary>Fator de tamanho das telas (1,0 = normal), vindo das Preferências.</summary>
+    [ObservableProperty] private double _zoom = 1.0;
+
     [ObservableProperty]
     private ItemMenu _itemAtivo;
 
     public MainViewModel(ContainerDeServicos servicos)
     {
         _servicos = servicos;
+        Zoom = _servicos.Preferencias.Carregar().ZoomPercentual / 100.0;
         _pdv = new(_servicos.Produtos, _servicos.Vendas, _servicos.Rascunho, _servicos.Clientes, _servicos.Cupons,
             configuracao: _servicos.Configuracao);
         // Abre na tela Início (indicadores e atalhos). Quem preferir o PDV direto liga isso em Configurações.
@@ -132,7 +136,10 @@ public partial class MainViewModel : ObservableObject
             try { File.Delete(NexusLS.Core.Services.RascunhoStore.CaminhoPadrao()); } catch (IOException) { }
             dialogos.Reiniciar();
         });
-        Abrir(new ConfiguracoesViewModel(_servicos.Configuracao, _servicos.Cupons, _servicos.Backup, dialogos, limpar, _servicos.Atualizacao), ItemMenu.Configuracoes);
+        var config = new ConfiguracoesViewModel(_servicos.Configuracao, _servicos.Cupons, _servicos.Backup, dialogos, limpar, _servicos.Atualizacao);
+        config.UsarPreferencias(_servicos.Preferencias, z => Zoom = z, () => LicencaTexto);
+        config.AbrirPasta = pasta => System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", "\"" + pasta + "\"") { UseShellExecute = true });
+        Abrir(config, ItemMenu.Configuracoes);
     }
 
     /// <summary>Apagar dados é só do administrador. Com o login desligado (ninguém cadastrado) vale como administrador.</summary>

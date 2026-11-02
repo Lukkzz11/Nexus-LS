@@ -47,6 +47,7 @@ public sealed class ContainerDeServicos
     public NexusLS.Core.Sincronizacao.IDestinoCatalogo DestinoCatalogo { get; }
     public NexusLS.Core.Sincronizacao.SincronizadorCatalogo Sincronizador { get; }
     public FotoProdutoService Fotos { get; }
+    public PreferenciasStore Preferencias { get; }
     public NexusLS.Core.Vitrine.VitrineStore Vitrine { get; }
     public NexusLS.Core.Vitrine.IPublicadorVitrine PublicadorVitrine { get; }
     public RascunhoService Rascunho { get; }
@@ -102,6 +103,8 @@ public sealed class ContainerDeServicos
         Sincronizador = new(SincronizacaoRepo, DestinoCatalogo);
         Vitrine = new(NexusLS.Core.Vitrine.VitrineStore.CaminhoPadrao());
         PublicadorVitrine = new NexusLS.Core.Vitrine.PublicadorVitrineConfiguravel(Firebase, _httpFirebase);
+        Preferencias = new(PreferenciasStore.CaminhoPadrao());
+        NexusLS.App.ViewModels.PdvViewModel.DescontoPorPecaPadrao = () => Preferencias.Carregar().DescontoPorPecaCentavos;
         Fotos = new(fabrica, new NexusLS.App.Imagens.ProcessadorImagemWpf(), FotoProdutoService.PastaPadrao(),
             new NexusLS.Core.Sincronizacao.Firebase.EnviadorFotoConfiguravel(Firebase, _httpFirebase));
         var protetor = new NexusLS.App.Seguranca.ProtetorDpapi();
