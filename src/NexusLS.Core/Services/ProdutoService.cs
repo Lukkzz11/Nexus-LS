@@ -83,6 +83,18 @@ public class ProdutoService
         await db.SaveChangesAsync();
     }
 
+    /// <summary>Muda só o preço de venda (varejo) do produto; nada mais é tocado. Usado pela calculadora de preços.</summary>
+    public async Task AplicarPrecoVendaAsync(int id, long precoVendaCentavos)
+    {
+        if (precoVendaCentavos <= 0)
+            throw new RegraDeNegocioException("O preço de venda precisa ser maior que zero.");
+        await using var db = await _fabrica.CreateDbContextAsync();
+        var produto = await db.Produtos.FindAsync(id)
+            ?? throw new RegraDeNegocioException("Produto não encontrado.");
+        produto.PrecoVendaCentavos = precoVendaCentavos;
+        await db.SaveChangesAsync();
+    }
+
     /// <summary>Desativar não apaga: o produto some do PDV, mas o histórico de vendas continua intacto.</summary>
     public Task DesativarAsync(int id) => DefinirAtivoAsync(id, false);
 

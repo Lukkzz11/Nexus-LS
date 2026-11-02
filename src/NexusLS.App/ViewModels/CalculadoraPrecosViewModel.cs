@@ -114,6 +114,7 @@ public partial class CalculadoraPrecosViewModel : ViewModelBase
     [RelayCommand]
     private Task CalcularPrecoAsync() => ExecutarAsync(() =>
     {
+        _precoCalculado = null;
         var s = Precificar(MontarParametros(comMargem: true), TerminarEm90);
         var sb = new StringBuilder();
         if (!s.Ok) foreach (var e in s.Erros) sb.AppendLine(e);
@@ -121,6 +122,7 @@ public partial class CalculadoraPrecosViewModel : ViewModelBase
         {
             foreach (var a in s.Avisos) sb.AppendLine("Atenção: " + a);
             Detalhe(sb, s.Analise!);
+            _precoCalculado = s.Analise!.PrecoCentavos;
             var eq = PrecoDeEquilibrio(MontarParametros());
             if (eq is long e) sb.AppendLine($"Preço de equilíbrio (lucro zero): {R(e)}");
             sb.AppendLine("Lucro estimado é uma estimativa para decidir preço, não o lucro líquido contábil.");

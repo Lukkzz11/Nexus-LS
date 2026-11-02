@@ -97,7 +97,7 @@ public partial class MainViewModel : ObservableObject
     // Estoque
     [RelayCommand] private void IrParaEstoque() => Abrir(new EstoqueLojaViewModel(_servicos.Produtos, _servicos.Estoque), ItemMenu.EstoqueDaLoja);
     [RelayCommand] private void IrParaFabrica() => Abrir(new FabricaViewModel(_servicos.Producao), ItemMenu.Fabrica);
-    [RelayCommand] private void IrParaCalculadoraPrecos() => Abrir(new CalculadoraPrecosViewModel(), ItemMenu.CalculadoraPrecos);
+    [RelayCommand] private void IrParaCalculadoraPrecos() => Abrir(new CalculadoraPrecosViewModel(_servicos.Produtos), ItemMenu.CalculadoraPrecos);
     [RelayCommand] private void IrParaCompras() => Abrir(new ComprasViewModel(_servicos.Compras, _servicos.Produtos, _servicos.Fornecedores), ItemMenu.Compras);
     [RelayCommand] private void IrParaFornecedores() => Abrir(new FornecedoresViewModel(_servicos.Fornecedores), ItemMenu.Fornecedores);
     [RelayCommand] private void IrParaEtiquetas() => Abrir(new EtiquetasViewModel(_servicos.Produtos, _servicos.ModelosEtiqueta), ItemMenu.Etiquetas);
