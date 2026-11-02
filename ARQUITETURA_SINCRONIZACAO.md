@@ -1,7 +1,11 @@
-﻿# Arquitetura de sincronização do Nexus LS
+# Arquitetura de sincronização do Nexus LS
 
 Define quais dados pertencem a cada banco, quem é a fonte oficial de cada um e como cada fluxo é sincronizado.
 Estado em 25/10/2026. Marcado como **[feito]**, **[proposto]** ou **[decisão pendente]**.
+
+## 5e. Fotos dos produtos
+
+`Produto.FotoArquivo` (arquivo local em `%LOCALAPPDATA%\NexusLS\fotos`) e `Produto.FotoUrl` (endereço no Firebase Storage). `FotoProdutoService` reduz (via `IProcessadorImagem`, WPF no App), grava no disco e, em `EnviarPendentesAsync`, sobe pelo `StorageRestEnviador` (`POST firebasestorage.googleapis.com/v0/b/{bucket}/o?uploadType=media`, cabeçalho `Authorization: Firebase {idToken}`, mesmo login do catálogo). O bucket padrão é `{projectId}.firebasestorage.app` (campo opcional em Catálogo online). `fotoUrl` entra no documento do produto e no hash (`VersaoDoFormato` = v2, o que reenvia todos os produtos uma vez); a máscara de atualização só inclui `fotoUrl` quando o Nexus tem foto, para não apagar a que veio da vitrine online. As regras do Storage do projeto precisam liberar escrita ao login da licença. Não testado contra um Firebase real.
 
 ## 1. Os três lugares dos dados
 

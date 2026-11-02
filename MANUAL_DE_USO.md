@@ -42,6 +42,7 @@ Menu **Vendas > Venda Cliente**: escolha o cliente (a lista mostra quanto cada u
 ## 4. Estoque, compras e fábrica
 
 - **Estoque da loja:** cadastro com tamanhos, preço de varejo/atacado, custo, categoria, código de barras e código interno. Importação por planilha. Ajustes de estoque gravam histórico (Kardex). Filtro **Sobras** mostra o que parou.
+- **Foto do produto:** no cadastro (produto já salvo), **Escolher foto...**. O programa reduz a imagem (máx. 1200 px, JPEG) e guarda no computador; funciona sem internet. Ao **Atualizar Firestore** no Catálogo online as fotos novas sobem para o Firebase Storage e o endereço vai junto do produto. Trocar ou remover a foto vale na próxima atualização. Se o Storage não estiver ativo no projeto, o aviso aparece na lista de problemas e o catálogo segue sem a foto. **(a confirmar com um Firebase real)**
 - **Compras e fornecedores:** a compra soma ao estoque, atualiza o custo e pode gerar conta a pagar. Compra cancelada desfaz.
 - **Etiquetas:** editor com modelos salvos; o código de barras é obrigatório no modelo.
 - **Fábrica:** matéria-prima (com alerta de mínimo), **ordens de produção** com grade por tamanho e etapas (planejamento, corte, costura, estampa, acabamento), **perdas** (baixam a matéria) e **transferência para a loja**, que soma ao produto e conclui a ordem de uma vez só.
