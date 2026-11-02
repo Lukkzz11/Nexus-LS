@@ -24,14 +24,40 @@ public partial class EstoqueLojaViewModel : ViewModelBase
 
     private readonly FotoProdutoService? _fotos;
 
-    public EstoqueLojaViewModel(ProdutoService produtos, EstoqueService estoque, FotoProdutoService? fotos = null)
+    private readonly ConfiguracaoService? _configuracao;
+    private int _estoqueMinimoPadrao;
+    private int _margemPadrao;
+
+    public EstoqueLojaViewModel(ProdutoService produtos, EstoqueService estoque, FotoProdutoService? fotos = null, ConfiguracaoService? configuracao = null)
     {
         _fotos = fotos;
+        _configuracao = configuracao;
         _produtos = produtos;
         _estoque = estoque;
         _tipoSelecionado = Opcoes[0];
         Novo();
         _ = BuscarAsync();
+        _ = CarregarPadroesAsync();
+    }
+
+    /// <summary>Lê o estoque mínimo e a margem sugeridos nas Configurações e aplica se o formulário ainda é um produto novo em branco.</summary>
+    private async Task CarregarPadroesAsync()
+    {
+        if (_configuracao is null) return;
+        try
+        {
+            var c = await _configuracao.ObterAsync();
+            _estoqueMinimoPadrao = c.EstoqueMinimoPadrao;
+            _margemPadrao = c.MargemPadraoPercentual;
+            if (IdEditando is null && EstoqueMinimo == "0" && string.IsNullOrEmpty(MargemDesejada)) AplicarPadroes();
+        }
+        catch (Exception) { /* sem os padrões o cadastro continua normal */ }
+    }
+
+    private void AplicarPadroes()
+    {
+        EstoqueMinimo = _estoqueMinimoPadrao.ToString(CultureInfo.InvariantCulture);
+        MargemDesejada = _margemPadrao > 0 ? _margemPadrao.ToString(CultureInfo.InvariantCulture) : "";
     }
 
     // ----- Importar produtos de um arquivo CSV -----
@@ -326,6 +352,7 @@ public partial class EstoqueLojaViewModel : ViewModelBase
         VenderSemBaixa = false;
         MargemDesejada = "";
         EstoqueMinimo = "0";
+        AplicarPadroes();
         EstoqueInicial = "0";
         ProdutoAtivo = true;
         EstoqueTotalEditando = 0;

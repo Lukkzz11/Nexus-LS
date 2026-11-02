@@ -64,13 +64,13 @@ public sealed class ConfiguracoesAbasTests : IDisposable
     }
 
     [Fact]
-    public void As_quatro_abas_abrem_com_os_estilos_do_programa()
+    public void As_cinco_abas_abrem_com_os_estilos_do_programa()
     {
         var vm = Criar();
         vm.UsarPreferencias(new PreferenciasStore(_arquivo), _ => { }, () => "Licença válida até 31/12/2027", Path.GetTempPath());
         var pasta = Environment.GetEnvironmentVariable("NEXUSLS_PRINTS") ?? Path.GetTempPath();
         Directory.CreateDirectory(pasta);
-        for (var aba = 0; aba < 4; aba++)
+        for (var aba = 0; aba < 5; aba++)
         {
             var png = Path.Combine(pasta, $"configuracoes-aba{aba}.png");
             Capturador.SalvarConfiguracoesAba(vm, aba, png);

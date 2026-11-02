@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NexusLS.Core.Models;
@@ -23,9 +23,12 @@ public partial class FechamentoViewModel : ViewModelBase
 {
     private readonly CaixaService _caixa;
 
-    public FechamentoViewModel(CaixaService caixa)
+    private readonly ConfiguracaoService? _configuracao;
+
+    public FechamentoViewModel(CaixaService caixa, ConfiguracaoService? configuracao = null)
     {
         _caixa = caixa;
+        _configuracao = configuracao;
         _movimentoSelecionado = OpcoesMovimento[0];
         _ = AtualizarAsync();
     }
@@ -96,6 +99,11 @@ public partial class FechamentoViewModel : ViewModelBase
     {
         var aberto = await _caixa.ObterAbertoAsync();
         TurnoAberto = aberto is not null;
+        if (aberto is null && _configuracao is not null && string.IsNullOrWhiteSpace(TrocoInicialTexto))
+        {
+            var padrao = (await _configuracao.ObterAsync()).FundoTrocoPadraoCentavos;
+            if (padrao > 0) TrocoInicialTexto = Dinheiro.FormatarParaEdicao(padrao);   // já sugere; dá para mudar
+        }
         if (aberto is not null) TurnoEmConferencia = aberto.Id;
         else if (!Refazendo) TurnoEmConferencia = null;
 

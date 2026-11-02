@@ -95,13 +95,13 @@ public partial class MainViewModel : ObservableObject
         IrParaPdv(); // o mesmo PDV, agora no modo cliente
     }), ItemMenu.VendaCliente);
     [RelayCommand] private void IrParaCaixa() => Abrir(new VendasViewModel(_servicos.Vendas, _servicos.Cupons, _servicos.Caixa), ItemMenu.Caixa);
-    [RelayCommand] private void IrParaFechamento() => Abrir(new FechamentoViewModel(_servicos.Caixa), ItemMenu.Fechamento);
+    [RelayCommand] private void IrParaFechamento() => Abrir(new FechamentoViewModel(_servicos.Caixa, _servicos.Configuracao), ItemMenu.Fechamento);
     [RelayCommand] private void IrParaPedidos() => Abrir(new PedidosViewModel(_servicos.Pedidos, _servicos.Produtos, _servicos.Clientes, _servicos.Cupons), ItemMenu.Pedidos);
     [RelayCommand] private void IrParaDesempenho() => Abrir(new DesempenhoVendasViewModel(_servicos.Desempenho), ItemMenu.Desempenho);
     [RelayCommand] private void IrParaMaisVendidos() => Abrir(new MaisVendidosViewModel(_servicos.Relatorios), ItemMenu.MaisVendidos);
 
     // Estoque
-    [RelayCommand] private void IrParaEstoque() => Abrir(new EstoqueLojaViewModel(_servicos.Produtos, _servicos.Estoque, _servicos.Fotos), ItemMenu.EstoqueDaLoja);
+    [RelayCommand] private void IrParaEstoque() => Abrir(new EstoqueLojaViewModel(_servicos.Produtos, _servicos.Estoque, _servicos.Fotos, _servicos.Configuracao), ItemMenu.EstoqueDaLoja);
     [RelayCommand] private void IrParaFabrica() => Abrir(new FabricaViewModel(_servicos.Producao), ItemMenu.Fabrica);
     [RelayCommand] private void IrParaCalculadoraPrecos() => Abrir(new CalculadoraPrecosViewModel(_servicos.Produtos, new NexusLS.Core.Services.ParametrosCalculadoraStore(NexusLS.Core.Services.ParametrosCalculadoraStore.CaminhoPadrao())), ItemMenu.CalculadoraPrecos);
     [RelayCommand] private void IrParaCompras() => Abrir(new ComprasViewModel(_servicos.Compras, _servicos.Produtos, _servicos.Fornecedores), ItemMenu.Compras);

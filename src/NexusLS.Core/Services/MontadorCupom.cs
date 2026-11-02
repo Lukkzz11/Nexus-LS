@@ -17,9 +17,12 @@ public static class MontadorCupom
 
         // Cabeçalho da loja
         linhas.AddRange(Centralizar(loja.NomeLoja, largura));
-        if (!string.IsNullOrWhiteSpace(loja.Documento)) linhas.AddRange(Centralizar($"CNPJ/CPF: {loja.Documento}", largura));
-        if (!string.IsNullOrWhiteSpace(loja.Endereco)) linhas.AddRange(Centralizar(loja.Endereco, largura));
-        if (!string.IsNullOrWhiteSpace(loja.Telefone)) linhas.AddRange(Centralizar($"Tel: {loja.Telefone}", largura));
+        if (loja.CupomMostrarRazaoSocial && !string.IsNullOrWhiteSpace(loja.RazaoSocial)) linhas.AddRange(Centralizar(loja.RazaoSocial, largura));
+        if (loja.CupomMostrarDocumento && !string.IsNullOrWhiteSpace(loja.Documento)) linhas.AddRange(Centralizar($"CNPJ/CPF: {loja.Documento}", largura));
+        if (loja.CupomMostrarDocumento && !string.IsNullOrWhiteSpace(loja.InscricaoEstadual)) linhas.AddRange(Centralizar($"IE: {loja.InscricaoEstadual}", largura));
+        if (loja.CupomMostrarEndereco && !string.IsNullOrWhiteSpace(loja.Endereco)) linhas.AddRange(Centralizar(loja.Endereco, largura));
+        if (loja.CupomMostrarEndereco && !string.IsNullOrWhiteSpace(loja.CidadeUf)) linhas.AddRange(Centralizar(loja.CidadeUf, largura));
+        if (loja.CupomMostrarTelefone && !string.IsNullOrWhiteSpace(loja.Telefone)) linhas.AddRange(Centralizar($"Tel: {loja.Telefone}", largura));
 
         linhas.Add(traco);
         linhas.AddRange(Centralizar("CUPOM NÃO FISCAL", largura));
@@ -67,8 +70,13 @@ public static class MontadorCupom
             linhas.Add(traco);
             linhas.AddRange(Centralizar(loja.MensagemCupom, largura));
         }
+        if (loja.CupomMostrarPix && !string.IsNullOrWhiteSpace(loja.ChavePix))
+        {
+            if (string.IsNullOrWhiteSpace(loja.MensagemCupom)) linhas.Add(traco);
+            linhas.AddRange(Centralizar($"Pix: {loja.ChavePix}", largura));
+        }
 
-        linhas.Add("");
+        for (var i = 0; i < Math.Clamp(loja.CupomLinhasFinais, 0, 15); i++) linhas.Add("");
         return string.Join("\n", linhas);
     }
 

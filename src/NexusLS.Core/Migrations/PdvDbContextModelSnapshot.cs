@@ -269,13 +269,46 @@ namespace NexusLS.Core.Migrations
                     b.Property<bool>("AbrirNoPdv")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("ChavePix")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CidadeUf")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CupomLinhasFinais")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("CupomMostrarDocumento")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("CupomMostrarEndereco")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("CupomMostrarPix")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("CupomMostrarRazaoSocial")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("CupomMostrarTelefone")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Documento")
                         .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Email")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Endereco")
                         .HasMaxLength(250)
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("EstoqueMinimoPadrao")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("FundoTrocoPadraoCentavos")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("ImpressoraCupom")
                         .HasMaxLength(200)
@@ -284,7 +317,13 @@ namespace NexusLS.Core.Migrations
                     b.Property<bool>("ImprimirCupomAoFinalizar")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("InscricaoEstadual")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("LarguraCupom")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("MargemPadraoPercentual")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("MensagemCupom")
@@ -303,6 +342,9 @@ namespace NexusLS.Core.Migrations
 
                     b.Property<bool>("PerguntarTamanho")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("RazaoSocial")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Telefone")
                         .HasMaxLength(30)

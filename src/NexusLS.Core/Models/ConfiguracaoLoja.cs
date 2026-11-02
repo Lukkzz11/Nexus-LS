@@ -35,4 +35,30 @@ public class ConfiguracaoLoja
     /// ao apertar F1. Ligado: abre direto no PDV, como nas versões antigas.
     /// </summary>
     public bool AbrirNoPdv { get; set; }
+
+    // ----- Dados da empresa (saem no cupom, conforme as opções abaixo) -----
+    public string? RazaoSocial { get; set; }
+    public string? InscricaoEstadual { get; set; }
+    public string? Email { get; set; }
+    /// <summary>Cidade e UF, ex.: Caruaru - PE.</summary>
+    public string? CidadeUf { get; set; }
+    /// <summary>Chave Pix da loja. Pode sair no rodapé do cupom.</summary>
+    public string? ChavePix { get; set; }
+
+    // ----- O que mostrar no cupom -----
+    public bool CupomMostrarRazaoSocial { get; set; } = true;
+    public bool CupomMostrarDocumento { get; set; } = true;
+    public bool CupomMostrarEndereco { get; set; } = true;
+    public bool CupomMostrarTelefone { get; set; } = true;
+    public bool CupomMostrarPix { get; set; }
+    /// <summary>Linhas em branco depois do cupom, para o corte da impressora não pegar o texto (0 a 15).</summary>
+    public int CupomLinhasFinais { get; set; } = 1;
+
+    // ----- Parâmetros de operação -----
+    /// <summary>Troco inicial que a tela de abertura do caixa já sugere (centavos).</summary>
+    public long FundoTrocoPadraoCentavos { get; set; }
+    /// <summary>Estoque mínimo sugerido ao cadastrar um produto novo.</summary>
+    public int EstoqueMinimoPadrao { get; set; }
+    /// <summary>Margem desejada (%) sugerida no cadastro do produto. 0 = em branco.</summary>
+    public int MargemPadraoPercentual { get; set; }
 }
