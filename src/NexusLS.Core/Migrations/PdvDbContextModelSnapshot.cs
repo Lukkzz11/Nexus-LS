@@ -224,6 +224,43 @@ namespace NexusLS.Core.Migrations
                     b.ToTable("Compras");
                 });
 
+            modelBuilder.Entity("NexusLS.Core.Models.Compromisso", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("Concluido")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CriadoEm")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Descricao")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("DiaInteiro")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("Fim")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("Inicio")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Titulo")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Inicio");
+
+                    b.ToTable("Compromissos");
+                });
+
             modelBuilder.Entity("NexusLS.Core.Models.ConfiguracaoLoja", b =>
                 {
                     b.Property<int>("Id")

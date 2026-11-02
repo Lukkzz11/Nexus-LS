@@ -45,6 +45,9 @@
             <DataTemplate DataType="{x:Type vm:CalculadoraPrecosViewModel}">
                 <views:CalculadoraPrecosView />
             </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:AgendaViewModel}">
+                <views:AgendaView />
+            </DataTemplate>
             <DataTemplate DataType="{x:Type vm:VendaClienteViewModel}">
                 <views:VendaClienteView />
             </DataTemplate>

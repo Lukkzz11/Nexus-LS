@@ -145,6 +145,12 @@
                     </Button>
 
                     <TextBlock Text="GESTÃO" Style="{StaticResource SecaoMenu}" Visibility="{Binding VerSecaoGestao, Converter={StaticResource BoolVis}}" />
+                    <Button Tag="Agenda" AutomationProperties.Name="Agenda" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaAgendaCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="CalendarLtr24" Style="{StaticResource IconeDoMenu}" />
+                            <TextBlock Text="Agenda" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
                     <Button Tag="Clientes" Visibility="{Binding VerClientes, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Clientes" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaClientesCommand}">
                         <StackPanel Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="People24" Style="{StaticResource IconeDoMenu}" />

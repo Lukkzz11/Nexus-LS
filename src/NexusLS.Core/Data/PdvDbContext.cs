@@ -29,6 +29,7 @@ public class PdvDbContext : DbContext
     public DbSet<ImportacaoErpCursor> ImportacaoErpCursores => Set<ImportacaoErpCursor>();
     public DbSet<Lancamento> Lancamentos => Set<Lancamento>();
     public DbSet<Fornecedor> Fornecedores => Set<Fornecedor>();
+    public DbSet<Compromisso> Compromissos => Set<Compromisso>();
     public DbSet<MateriaPrima> MateriasPrimas => Set<MateriaPrima>();
     public DbSet<OrdemProducao> OrdensProducao => Set<OrdemProducao>();
     public DbSet<OrdemProducaoGrade> GradesOrdemProducao => Set<OrdemProducaoGrade>();
@@ -245,6 +246,13 @@ public class PdvDbContext : DbContext
             e.Property(f => f.Email).HasMaxLength(120);
             e.Property(f => f.Observacao).HasMaxLength(300);
             e.HasIndex(f => f.Nome);
+        });
+
+        modelBuilder.Entity<Compromisso>(e =>
+        {
+            e.Property(c => c.Titulo).IsRequired().HasMaxLength(150);
+            e.Property(c => c.Descricao).HasMaxLength(1000);
+            e.HasIndex(c => c.Inicio);
         });
 
         modelBuilder.Entity<MateriaPrima>(e =>
