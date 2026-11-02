@@ -8,6 +8,12 @@ namespace NexusLS.App.Tests;
 [Collection("OperadorAtual")]
 public sealed class ConfiguracoesAbasTests : IDisposable
 {
+    private sealed class ProtetorFalso : NexusLS.Core.Sincronizacao.Firebase.IProtetorSegredo
+    {
+        public string Proteger(string t) => t;
+        public string? Desproteger(string t) => t;
+    }
+
     private readonly BancoDeTeste _banco = new();
     private readonly string _arquivo = Path.Combine(Path.GetTempPath(), "pref-app-" + Guid.NewGuid().ToString("N") + ".json");
 
@@ -68,6 +74,9 @@ public sealed class ConfiguracoesAbasTests : IDisposable
     {
         var vm = Criar();
         vm.UsarPreferencias(new PreferenciasStore(_arquivo), _ => { }, () => "Licença válida até 31/12/2027", Path.GetTempPath());
+        var gs = new NexusLS.Core.Google.GoogleStore(Path.Combine(Path.GetTempPath(), "g-" + Guid.NewGuid().ToString("N") + ".json"), new ProtetorFalso());
+        var ga = new NexusLS.Core.Google.GoogleOAuth(new System.Net.Http.HttpClient(), gs);
+        vm.UsarGoogle(new NexusLS.Core.Google.GoogleDriveBackup(gs, ga, new NexusLS.Core.Google.DriveRest(new System.Net.Http.HttpClient(), ga)), _ => { });
         var pasta = Environment.GetEnvironmentVariable("NEXUSLS_PRINTS") ?? Path.GetTempPath();
         Directory.CreateDirectory(pasta);
         for (var aba = 0; aba < 5; aba++)

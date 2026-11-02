@@ -3,6 +3,10 @@
 Define quais dados pertencem a cada banco, quem é a fonte oficial de cada um e como cada fluxo é sincronizado.
 Estado em 25/10/2026. Marcado como **[feito]**, **[proposto]** ou **[decisão pendente]**.
 
+## 5g. Google Drive (backup)
+
+`Core/Google/GoogleDrive.cs`: `GoogleOAuth` (OAuth 2.0 de aplicativo instalado com PKCE S256, retorno em `http://127.0.0.1:{porta}/`, escopo `drive.file`, `access_type=offline`; guarda só o refresh token, protegido com DPAPI), `DriveRest` (procura/cria a pasta "Nexus LS Backups" e envia o arquivo por upload retomável) e `GoogleDriveBackup` (o que a tela usa). Cada cliente cria o seu Client ID/Secret no Google Cloud; nada de chave do desenvolvedor no programa. Erros do Google viram mensagens em português e nunca incluem token ou segredo. Testes usam um servidor simulado e um navegador simulado; a conexão real não foi testada.
+
 ## 5f. Vitrine (editor do catálogo)
 
 `ConfiguracaoVitrine` (Core/Vitrine) guarda modelo, fonte, cores, textos, loja, atacado, banners e ordem dos produtos em `%LOCALAPPDATA%\NexusLS\vitrine.json` (`VitrineStore`). `Normalizar()` valida tudo antes de salvar ou publicar. `PublicadorVitrineRest` faz `PATCH .../documents/meta/vitrine` (substitui o documento) com o mesmo login do catálogo; ids de modelo, fonte e cor seguem o `temaVitrine.js` do ERP. Nada é enviado sem o clique em Publicar. Não testado contra um Firebase real; a regra do Firestore precisa liberar escrita em `meta/vitrine`.

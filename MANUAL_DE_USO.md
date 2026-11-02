@@ -67,6 +67,15 @@ Menu **Vendas > Venda Cliente**: escolha o cliente (a lista mostra quanto cada u
 ### Editor do catálogo
 Menu **Gestão > Editor do catálogo**: modelo e fonte, cores (formato #RRGGBB, com aviso quando a leitura fica difícil), textos do topo, dados da loja (WhatsApp, Instagram, endereço...), mínimo do atacado, quantidade de novidades e os dois banners. **Salvar** guarda neste computador; **Publicar no Firebase** grava o documento `meta/vitrine`. É um subconjunto do editor visual do ERP: ainda não há arrastar blocos, fotos de banner, logo, seleção de produtos, desfazer/refazer nem catálogo em PDF. **(a confirmar)** A vitrine pública precisa ler `meta/vitrine` para usar estas escolhas.
 
+### Backup no Google Drive
+Configurações > Backup > **Google Drive** envia uma cópia do backup para a pasta "Nexus LS Backups" do seu Drive (o programa só enxerga o que ele mesmo criou). Passo a passo, uma vez só:
+1. Em console.cloud.google.com crie um projeto e ative a **Google Drive API**.
+2. Em "Tela de permissão OAuth" escolha tipo Externo, preencha o nome do app e adicione o seu e-mail como usuário de teste.
+3. Em "Credenciais" crie um **ID do cliente OAuth** do tipo **App para computador** e copie o Client ID e o Client Secret.
+4. No Nexus LS cole os dois, clique em **Salvar credenciais** e depois em **Conectar ao Google**; autorize no navegador.
+5. Faça um backup e clique em **Enviar o backup ... ao Drive**.
+O segredo e a permissão ficam protegidos pelo Windows neste computador. **(a confirmar)** Foi testado só com um Google simulado; a primeira conexão real depende da sua conta e do projeto que você criar. Para o Calendário e o Gmail ainda não há integração.
+
 ## 7. Se algo der errado
 
 - **Mensagem vermelha:** leia o texto, ele diz o que corrigir.

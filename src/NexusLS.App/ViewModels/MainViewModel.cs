@@ -139,6 +139,7 @@ public partial class MainViewModel : ObservableObject
         var config = new ConfiguracoesViewModel(_servicos.Configuracao, _servicos.Cupons, _servicos.Backup, dialogos, limpar, _servicos.Atualizacao);
         config.UsarPreferencias(_servicos.Preferencias, z => Zoom = z, () => LicencaTexto);
         config.AbrirPasta = pasta => System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", "\"" + pasta + "\"") { UseShellExecute = true });
+        config.UsarGoogle(_servicos.Google, url => System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true }));
         Abrir(config, ItemMenu.Configuracoes);
     }
 

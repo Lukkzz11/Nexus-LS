@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json.Nodes;
@@ -11,6 +11,12 @@ namespace NexusLS.Core.Vitrine;
 public interface IPublicadorVitrine
 {
     Task PublicarAsync(ConfiguracaoVitrine config, CancellationToken ct = default);
+}
+
+/// <summary>Publica a vitrine completa do editor visual (o JSON inteiro, num campo <c>v2</c> do mesmo documento, sem tocar nos outros campos).</summary>
+public interface IPublicadorVitrineCompleta
+{
+    Task PublicarCompletaAsync(string json, CancellationToken ct = default);
 }
 
 public static class VitrineJson
@@ -48,7 +54,7 @@ public static class VitrineJson
     }
 }
 
-public sealed class PublicadorVitrineRest : IPublicadorVitrine
+public sealed class PublicadorVitrineRest : IPublicadorVitrine, IPublicadorVitrineCompleta
 {
     private readonly HttpClient _http;
     private readonly string _projectId;
@@ -63,11 +69,25 @@ public sealed class PublicadorVitrineRest : IPublicadorVitrine
         _agora = agora ?? (() => DateTime.Now);
     }
 
-    public async Task PublicarAsync(ConfiguracaoVitrine config, CancellationToken ct = default)
+    public Task PublicarAsync(ConfiguracaoVitrine config, CancellationToken ct = default)
     {
         config.Normalizar();
-        var url = $"https://firestore.googleapis.com/v1/projects/{_projectId}/databases/(default)/documents/meta/vitrine";
         var corpo = new JsonObject { ["fields"] = VitrineJson.Campos(config, _agora()) }.ToJsonString();
+        return EnviarAsync(UrlDocumento, corpo, ct);
+    }
+
+    /// <summary>Grava só <c>v2</c> e <c>atualizadoEm</c> (máscara de campos): o resto do documento fica como está.</summary>
+    public Task PublicarCompletaAsync(string json, CancellationToken ct = default)
+    {
+        var campos = new JsonObject { ["v2"] = FirestoreJson.Texto(json), ["atualizadoEm"] = FirestoreJson.Momento(_agora()) };
+        var corpo = new JsonObject { ["fields"] = campos }.ToJsonString();
+        return EnviarAsync(UrlDocumento + "?updateMask.fieldPaths=v2&updateMask.fieldPaths=atualizadoEm", corpo, ct);
+    }
+
+    private string UrlDocumento => $"https://firestore.googleapis.com/v1/projects/{_projectId}/databases/(default)/documents/meta/vitrine";
+
+    private async Task EnviarAsync(string url, string corpo, CancellationToken ct)
+    {
         for (var tentativa = 1; ; tentativa++)
         {
             var token = await _token.ObterAsync(ct);
@@ -94,18 +114,22 @@ public sealed class PublicadorVitrineRest : IPublicadorVitrine
 }
 
 /// <summary>O publicador que o programa usa: lê a configuração do Firebase salva a cada uso.</summary>
-public sealed class PublicadorVitrineConfiguravel : IPublicadorVitrine
+public sealed class PublicadorVitrineConfiguravel : IPublicadorVitrine, IPublicadorVitrineCompleta
 {
     private readonly ConfiguracaoFirebaseStore _store;
     private readonly HttpClient _http;
     public PublicadorVitrineConfiguravel(ConfiguracaoFirebaseStore store, HttpClient http) { _store = store; _http = http; }
 
-    public Task PublicarAsync(ConfiguracaoVitrine config, CancellationToken ct = default)
+    public Task PublicarAsync(ConfiguracaoVitrine config, CancellationToken ct = default) => Criar().PublicarAsync(config, ct);
+
+    public Task PublicarCompletaAsync(string json, CancellationToken ct = default) => Criar().PublicarCompletaAsync(json, ct);
+
+    private PublicadorVitrineRest Criar()
     {
         var cfg = _store.Carregar();
         if (!cfg.EstaCompleta)
             throw new FalhaDestinoException("O Firebase ainda não foi configurado. Preencha o projeto, a chave da API, o e-mail e a senha na tela Catálogo online.");
         var auth = new FirebaseAuthRest(_http, cfg.ApiKey, cfg.Email, _store.ObterSenha, () => DateTime.UtcNow);
-        return new PublicadorVitrineRest(_http, cfg.ProjectId, auth).PublicarAsync(config, ct);
+        return new PublicadorVitrineRest(_http, cfg.ProjectId, auth);
     }
 }

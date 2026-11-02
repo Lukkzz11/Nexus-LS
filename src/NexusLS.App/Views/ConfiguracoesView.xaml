@@ -263,6 +263,41 @@
                         </TextBlock>
                     </StackPanel>
                 </Border>
+                    
+                        <Border Style="{StaticResource Painel}" Margin="0,0,0,24" Visibility="{Binding TemGoogle, Converter={StaticResource BoolVis}}">
+                            <StackPanel IsEnabled="{Binding GoogleOcupado, Converter={StaticResource BoolInverso}}">
+                                <TextBlock Text="Google Drive" FontSize="18" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding GoogleSituacao}" Foreground="{StaticResource CorTextoSuave}" Margin="0,4,0,0" />
+                                <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,6,0,0"
+                                           Text="Envia uma cópia do backup para a pasta &quot;Nexus LS Backups&quot; do seu Drive. O programa só enxerga os arquivos que ele mesmo criou. Você precisa criar um acesso (Client ID e Client Secret, tipo &quot;App para computador&quot;) no Google Cloud, com a Google Drive API ativada; o passo a passo está no manual." />
+
+                                <TextBlock Text="Client ID" Style="{StaticResource Rotulo}" />
+                                <TextBox Text="{Binding GoogleClientId, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Client ID do Google" />
+                                <TextBlock Text="Client Secret (em branco mantém o que já está salvo)" Style="{StaticResource Rotulo}" />
+                                <PasswordBox x:Name="CaixaSegredoGoogle" AutomationProperties.Name="Client Secret do Google" />
+
+                                <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                                    <Button Content="Salvar credenciais" Style="{StaticResource BotaoSecundario}" Command="{Binding SalvarGoogleCommand}" />
+                                    <Button Content="Conectar ao Google" Style="{StaticResource BotaoPrimario}" Margin="8,0,0,0" Command="{Binding ConectarGoogleCommand}" />
+                                    <Button Content="Desconectar" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0" Command="{Binding DesconectarGoogleCommand}" />
+                                </StackPanel>
+                                <Button Content="Enviar o backup selecionado (ou o mais recente) ao Drive" Style="{StaticResource BotaoSecundario}"
+                                        Margin="0,10,0,0" HorizontalAlignment="Left" Command="{Binding EnviarBackupAoDriveCommand}" />
+
+                                <TextBlock Text="{Binding MensagemGoogle}" TextWrapping="Wrap" Margin="0,10,0,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{StaticResource CorPositivo}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding MensagemGoogleEhErro}" Value="True">
+                                                    <Setter Property="Foreground" Value="{StaticResource CorNegativo}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>

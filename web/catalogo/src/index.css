@@ -1,0 +1,1232 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+::selection {
+  background-color: var(--brand-primary);
+  color: #ffffff;
+}
+
+@layer base {
+  :root {
+    --bg-main: #090d16;
+    --bg-card: rgba(15, 23, 42, 0.85);
+    --bg-card-hover: rgba(30, 41, 59, 0.95);
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --border-glow: rgba(56, 189, 248, 0.3);
+    --brand-primary: #0284c7;
+    --brand-primary-rgb: 2, 132, 199;
+    --brand-primary-hover: #38bdf8;
+    --brand-accent: #38bdf8;
+    --brand-accent-rgb: 56, 189, 248;
+    --brand-glow: rgba(56, 189, 248, 0.25);
+  }
+
+  [data-theme="dark-stealth"] {
+    --bg-main: #000000;
+    --bg-card: #0c0e14;
+    --bg-card-hover: #161922;
+    --border-subtle: rgba(255, 255, 255, 0.12);
+    --border-glow: rgba(99, 102, 241, 0.3);
+    --brand-primary: #6366f1;
+    --brand-primary-rgb: 99, 102, 241;
+    --brand-accent: #a855f7;
+    --brand-accent-rgb: 168, 85, 247;
+    --brand-glow: rgba(99, 102, 241, 0.25);
+  }
+
+  [data-theme="emerald-pro"] {
+    --bg-main: #03120c;
+    --bg-card: #062117;
+    --bg-card-hover: #0c3224;
+    --border-subtle: rgba(52, 211, 153, 0.18);
+    --border-glow: rgba(16, 185, 129, 0.3);
+    --brand-primary: #10b981;
+    --brand-primary-rgb: 16, 185, 129;
+    --brand-accent: #34d399;
+    --brand-accent-rgb: 52, 211, 153;
+    --brand-glow: rgba(16, 185, 129, 0.25);
+  }
+
+  [data-theme="sunset-orange"] {
+    --bg-main: #120c09;
+    --bg-card: #22140e;
+    --bg-card-hover: #331f16;
+    --border-subtle: rgba(249, 115, 22, 0.18);
+    --border-glow: rgba(249, 115, 22, 0.3);
+    --brand-primary: #f97316;
+    --brand-primary-rgb: 249, 115, 22;
+    --brand-accent: #fb923c;
+    --brand-accent-rgb: 251, 146, 60;
+    --brand-glow: rgba(249, 115, 22, 0.25);
+  }
+
+  [data-theme="light-clean"] {
+    --bg-main: #f8fafc;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f1f5f9;
+    --border-subtle: rgba(0, 0, 0, 0.08);
+    --border-glow: rgba(2, 132, 199, 0.25);
+    --brand-primary: #0284c7;
+    --brand-primary-rgb: 2, 132, 199;
+    --brand-accent: #0369a1;
+    --brand-accent-rgb: 3, 105, 161;
+    --brand-glow: rgba(2, 132, 199, 0.15);
+  }
+
+  body {
+    background-color: var(--bg-main);
+    color: #f8fafc;
+    font-family: var(--font-family, "Barlow", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif);
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1, "lnum" 1;
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.25s ease, color 0.25s ease;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--bg-main);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+  }
+}
+
+/* Glassmorphism utilities */
+.glass-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  transition: background 0.25s ease, border-color 0.25s ease;
+}
+
+.glass-panel-subtle {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+}
+
+.glass-dropdown {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 12px 28px -8px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* ==========================================================================
+   PROPAGAÇÃO UNIVERSAL DE TEMA: FUNDOS, CARDS, BORDAS E SUPERFÍCIES
+   Garante que qualquer alteração de cor, fundo ou tema escolhida pelo usuário
+   seja refletida instantaneamente no Painel Geral e em todo o ERP.
+   ========================================================================== */
+
+/* Fundo Geral da Aplicação */
+html,
+body,
+.bg-slate-950,
+[class~="bg-slate-950"],
+[class*="bg-slate-950/"] {
+  background-color: var(--bg-main) !important;
+}
+
+/* Superfícies de Cards, Painéis, Blocos e Tabelas */
+.card-themed,
+.bg-slate-900,
+[class~="bg-slate-900"],
+[class*="bg-slate-900/"] {
+  background-color: var(--bg-card) !important;
+}
+
+/* Superfícies Secundárias e Cards Sutis / Menus */
+.bg-slate-850,
+[class~="bg-slate-850"],
+[class*="bg-slate-850/"] {
+  background-color: var(--bg-card-hover, var(--bg-card)) !important;
+}
+
+/* Bordas Sutis e Divisórias Gerais */
+.border-slate-800,
+.border-slate-800\/60,
+.border-slate-800\/80,
+.border-slate-800\/90,
+[class~="border-slate-800"],
+[class*="border-slate-800/"] {
+  border-color: var(--border-subtle) !important;
+}
+
+/* Estados de Hover em superfícies e bordas */
+[class*="hover:bg-slate-900"]:hover,
+[class*="hover:bg-slate-850"]:hover {
+  background-color: var(--bg-card-hover, var(--bg-card)) !important;
+}
+
+[class*="hover:border-slate-700"]:hover,
+[class*="hover:border-slate-800"]:hover {
+  border-color: var(--brand-border, var(--border-subtle)) !important;
+}
+
+/* Títulos e Cabeçalhos Dinâmicos */
+[data-theme] h1,
+[data-theme] h2,
+[data-theme] h3,
+.text-heading-dynamic {
+  color: var(--text-heading);
+}
+
+/* Adaptação inteligente para Modo Claro */
+[data-mode="light"] h1.text-white,
+[data-mode="light"] h2.text-white,
+[data-mode="light"] h3.text-white,
+[data-mode="light"] p.text-white,
+[data-mode="light"] span.text-white:not(button *, .badge *, [class*="bg-sky-"] *, [class*="bg-emerald-"] *) {
+  color: var(--text-heading, #0f172a) !important;
+}
+
+[data-mode="light"] .text-slate-400,
+[data-mode="light"] .text-slate-300,
+[data-mode="light"] .text-slate-200,
+[data-mode="light"] .text-slate-100 {
+  color: #475569 !important;
+}
+
+/* ==========================================================================
+   PROPAGAÇÃO UNIVERSAL DE CORES (ACOMPANHA QUALQUER TEMA OU COR ESCOLHIDA)
+   ========================================================================== */
+
+/* Cores de Texto da Marca */
+[class^="text-sky-300"],
+[class*=" text-sky-300"],
+[class^="text-sky-400"],
+[class*=" text-sky-400"],
+[class^="text-sky-500"],
+[class*=" text-sky-500"] {
+  color: var(--brand-accent) !important;
+}
+
+[class^="text-sky-600"],
+[class*=" text-sky-600"],
+[class^="text-sky-700"],
+[class*=" text-sky-700"] {
+  color: var(--brand-primary) !important;
+}
+
+[class*="hover:text-sky-300"]:hover,
+[class*="hover:text-sky-400"]:hover,
+[class*="hover:text-sky-500"]:hover {
+  color: var(--brand-accent) !important;
+}
+
+/* Fundos Sólidos Primários (Botões, Badges Sólidos, Indicadores) */
+[class~="bg-sky-500"],
+[class~="bg-sky-600"],
+[class~="bg-sky-700"],
+button.bg-sky-500,
+button.bg-sky-600,
+a.bg-sky-500,
+.btn-primary {
+  background-color: var(--brand-primary) !important;
+}
+
+/* (removido) A regra por substring pintava de azul cheio qualquer botão com "hover:bg-sky-500/10".
+   A classe pura bg-sky-500/600/700 já é tratada pelo seletor [class~="..."] acima. */
+
+/* ==========================================================================
+   GARANTIA DE CONTRASTE TOTAL: ABAS E ELEMENTOS SELECIONADOS
+   Evita que o texto fique na mesma cor do fundo sólido, forçando contraste branco nítido.
+   ========================================================================== */
+button[class*="rounded-t-xl"][class*="border-sky-500"],
+button[class*="rounded-t-xl"][class*="bg-sky-500"],
+button[class*="rounded-t-xl"][class*="border-emerald-500"],
+button[class*="rounded-t-xl"][class*="bg-emerald-500"],
+button[class*="bg-sky-500"]:not([class*="bg-sky-500/"]),
+button[class*="bg-sky-600"]:not([class*="bg-sky-600/"]),
+button[class*="bg-emerald-500"]:not([class*="bg-emerald-500/"]),
+button[class*="bg-emerald-600"]:not([class*="bg-emerald-600/"]),
+a[class*="bg-sky-500"]:not([class*="bg-sky-500/"]),
+a[class*="bg-emerald-500"]:not([class*="bg-emerald-500/"]),
+.tab-active {
+  color: #ffffff !important;
+}
+
+button[class*="rounded-t-xl"][class*="border-sky-500"] *,
+button[class*="rounded-t-xl"][class*="bg-sky-500"] *,
+button[class*="rounded-t-xl"][class*="border-emerald-500"] *,
+button[class*="rounded-t-xl"][class*="bg-emerald-500"] *,
+button[class*="bg-sky-500"]:not([class*="bg-sky-500/"]) *,
+button[class*="bg-sky-600"]:not([class*="bg-sky-600/"]) *,
+button[class*="bg-emerald-500"]:not([class*="bg-emerald-500/"]) *,
+button[class*="bg-emerald-600"]:not([class*="bg-emerald-600/"]) *,
+a[class*="bg-sky-500"]:not([class*="bg-sky-500/"]) *,
+a[class*="bg-emerald-500"]:not([class*="bg-emerald-500/"]) *,
+.tab-active * {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+/* Badges e contadores dentro de abas ativas */
+button[class*="rounded-t-xl"][class*="border-sky-500"] span,
+button[class*="rounded-t-xl"][class*="bg-sky-500"] span,
+button[class*="rounded-t-xl"][class*="border-emerald-500"] span,
+button[class*="rounded-t-xl"][class*="bg-emerald-500"] span {
+  color: #ffffff !important;
+}
+
+button[class*="rounded-t-xl"][class*="border-sky-500"] span[class*="font-mono"],
+button[class*="rounded-t-xl"][class*="bg-sky-500"] span[class*="font-mono"],
+button[class*="rounded-t-xl"][class*="border-emerald-500"] span[class*="font-mono"],
+button[class*="rounded-t-xl"][class*="bg-emerald-500"] span[class*="font-mono"],
+button[class*="rounded-t-xl"][class*="border-sky-500"] span[class*="rounded-full"],
+button[class*="rounded-t-xl"][class*="bg-sky-500"] span[class*="rounded-full"],
+button[class*="rounded-t-xl"][class*="border-emerald-500"] span[class*="rounded-full"],
+button[class*="rounded-t-xl"][class*="bg-emerald-500"] span[class*="rounded-full"] {
+  background-color: rgba(255, 255, 255, 0.25) !important;
+  color: #ffffff !important;
+}
+
+/* Estados de Hover em Fundos Sólidos */
+[class*="hover:bg-sky-400"]:hover,
+[class*="hover:bg-sky-500"]:hover,
+[class*="hover:bg-sky-600"]:hover {
+  background-color: var(--brand-primary-hover, var(--brand-accent)) !important;
+}
+
+/* Bordas Sólidas */
+[class~="border-sky-400"],
+[class~="border-sky-500"],
+[class~="border-sky-600"] {
+  border-color: var(--brand-primary) !important;
+}
+
+/* Anéis de Foco e Destaque */
+[class*="ring-sky-400"],
+[class*="ring-sky-500"],
+[class*="ring-sky-600"] {
+  --tw-ring-color: var(--brand-accent) !important;
+}
+
+[class*="focus:border-sky-500"]:focus,
+[class*="focus:border-sky-400"]:focus {
+  border-color: var(--brand-primary) !important;
+}
+
+[class*="focus-visible:ring-sky-400"]:focus-visible,
+[class*="focus-visible:ring-sky-500"]:focus-visible {
+  border-color: var(--brand-primary) !important;
+  --tw-ring-color: var(--brand-accent) !important;
+}
+
+/* Opacidades Dinâmicas de Fundo (/10, /15, /20, /30) para Menus Ativos e Badges */
+[class^="bg-sky-500/"],
+[class*=" bg-sky-500/"],
+[class^="bg-sky-400/"],
+[class*=" bg-sky-400/"],
+[class^="bg-sky-600/"],
+[class*=" bg-sky-600/"] {
+  background-color: rgba(var(--brand-primary-rgb, 2, 132, 199), 0.16) !important;
+}
+
+[class*="hover:bg-sky-500/"]:hover,
+[class*="hover:bg-sky-400/"]:hover {
+  background-color: rgba(var(--brand-primary-rgb, 2, 132, 199), 0.26) !important;
+}
+
+/* Bordas com Opacidade (/20, /30, /40, /50) */
+[class^="border-sky-500/"],
+[class*=" border-sky-500/"],
+[class^="border-sky-400/"],
+[class*=" border-sky-400/"],
+[class^="border-sky-600/"],
+[class*=" border-sky-600/"] {
+  border-color: rgba(var(--brand-primary-rgb, 2, 132, 199), 0.38) !important;
+}
+
+[class*="hover:border-sky-500/"]:hover,
+[class*="hover:border-sky-400/"]:hover {
+  border-color: rgba(var(--brand-primary-rgb, 2, 132, 199), 0.6) !important;
+}
+
+/* Sombras da marca: sem brilho colorido, só profundidade discreta */
+[class^="shadow-sky-"],
+[class*=" shadow-sky-"] {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35) !important;
+}
+
+/* Gradientes da Marca */
+[class*="from-sky-600"] {
+  --tw-gradient-from: var(--brand-primary) var(--tw-gradient-from-position) !important;
+}
+[class*="to-cyan-400"],
+[class*="to-sky-400"] {
+  --tw-gradient-to: var(--brand-accent) var(--tw-gradient-to-position) !important;
+}
+
+/* ==========================================================================
+   PADRÃO ERP MODERNO: TABELAS FLUIDAS & CARDS DE KPIS
+   ========================================================================== */
+.erp-fluid-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+}
+
+.erp-fluid-table thead tr {
+  background-color: rgba(15, 23, 42, 0.7);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.erp-fluid-table tbody tr {
+  transition: background-color 0.15s ease;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.erp-fluid-table tbody tr:nth-child(even) {
+  background-color: rgba(255, 255, 255, 0.015);
+}
+
+.erp-fluid-table tbody tr:hover {
+  background-color: rgba(var(--brand-primary-rgb, 2, 132, 199), 0.07);
+}
+
+.erp-kpi-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.875rem;
+  padding: 1.25rem;
+  background-color: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease-in-out;
+}
+
+.erp-kpi-card:hover {
+  border-color: rgba(var(--brand-primary-rgb, 2, 132, 199), 0.35);
+}
+
+/* ==========================================================================
+   TEMAS ESCUROS: PRETO ABSOLUTO (AMOLED), ESMERALDA ERP & SUNSET LARANJA
+   ========================================================================== */
+
+/* 1. Preto Absoluto (Dark Stealth / AMOLED) */
+[data-theme="dark-stealth"] body,
+[data-theme="dark-stealth"] .min-h-screen,
+[data-theme="dark-stealth"] [class*="bg-slate-950"] {
+  background-color: #000000 !important;
+}
+
+[data-theme="dark-stealth"] [class*="bg-slate-900"],
+[data-theme="dark-stealth"] [class*="bg-slate-850"],
+[data-theme="dark-stealth"] .glass-panel,
+[data-theme="dark-stealth"] .glass-dropdown,
+[data-theme="dark-stealth"] aside,
+[data-theme="dark-stealth"] header {
+  background-color: #0c0e14 !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+[data-theme="dark-stealth"] [class*="bg-slate-800"] {
+  background-color: #161922 !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+/* 2. Esmeralda ERP & Vendas */
+[data-theme="emerald-pro"] body,
+[data-theme="emerald-pro"] .min-h-screen,
+[data-theme="emerald-pro"] [class*="bg-slate-950"] {
+  background-color: #03120c !important;
+}
+
+[data-theme="emerald-pro"] [class*="bg-slate-900"],
+[data-theme="emerald-pro"] [class*="bg-slate-850"],
+[data-theme="emerald-pro"] .glass-panel,
+[data-theme="emerald-pro"] .glass-dropdown,
+[data-theme="emerald-pro"] aside,
+[data-theme="emerald-pro"] header {
+  background-color: #062117 !important;
+  border-color: rgba(52, 211, 153, 0.16) !important;
+}
+
+[data-theme="emerald-pro"] [class*="bg-slate-800"] {
+  background-color: #0c3224 !important;
+  border-color: rgba(52, 211, 153, 0.22) !important;
+}
+
+/* 3. Sunset Laranja & Surfwear */
+[data-theme="sunset-orange"] body,
+[data-theme="sunset-orange"] .min-h-screen,
+[data-theme="sunset-orange"] [class*="bg-slate-950"] {
+  background-color: #120c09 !important;
+}
+
+[data-theme="sunset-orange"] [class*="bg-slate-900"],
+[data-theme="sunset-orange"] [class*="bg-slate-850"],
+[data-theme="sunset-orange"] .glass-panel,
+[data-theme="sunset-orange"] .glass-dropdown,
+[data-theme="sunset-orange"] aside,
+[data-theme="sunset-orange"] header {
+  background-color: #22140e !important;
+  border-color: rgba(249, 115, 22, 0.16) !important;
+}
+
+[data-theme="sunset-orange"] [class*="bg-slate-800"] {
+  background-color: #331f16 !important;
+  border-color: rgba(249, 115, 22, 0.22) !important;
+}
+
+/* ==========================================================================
+   MODO BRANCO CLEAN / LIGHT CORPORATE (ALTO CONTRASTE E LEGIBILIDADE TOTAL)
+   ========================================================================== */
+[data-theme="light-clean"],
+[data-mode="light"],
+.light {
+  color-scheme: light;
+}
+
+[data-theme="light-clean"] body,
+[data-mode="light"] body,
+.light body,
+[data-theme="light-clean"] .min-h-screen,
+[data-mode="light"] .min-h-screen,
+.light .min-h-screen {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+/* Logo da Sidebar no modo claro fica nítido */
+[data-theme="light-clean"] aside img,
+[data-mode="light"] aside img {
+  filter: brightness(0);
+}
+
+/* Superfícies Brancas (Cards, Headers, Modais, Dropdowns, Painéis, Aside) */
+[data-theme="light-clean"] [class*="bg-slate-950"]:not([class*="hover:"]):not([class*="focus:"]),
+[data-theme="light-clean"] [class*="bg-slate-900"]:not([class*="hover:"]):not([class*="focus:"]),
+[data-theme="light-clean"] [class*="bg-slate-850"]:not([class*="hover:"]):not([class*="focus:"]),
+[data-theme="light-clean"] .glass-panel,
+[data-theme="light-clean"] .glass-dropdown,
+[data-theme="light-clean"] aside,
+[data-theme="light-clean"] header,
+[data-mode="light"] [class*="bg-slate-950"]:not([class*="hover:"]):not([class*="focus:"]),
+[data-mode="light"] [class*="bg-slate-900"]:not([class*="hover:"]):not([class*="focus:"]),
+[data-mode="light"] [class*="bg-slate-850"]:not([class*="hover:"]):not([class*="focus:"]),
+[data-mode="light"] .glass-panel,
+[data-mode="light"] .glass-dropdown,
+[data-mode="light"] aside,
+[data-mode="light"] header,
+.light [class*="bg-slate-950"]:not([class*="hover:"]):not([class*="focus:"]),
+.light [class*="bg-slate-900"]:not([class*="hover:"]):not([class*="focus:"]),
+.light [class*="bg-slate-850"]:not([class*="hover:"]):not([class*="focus:"]),
+.light .glass-panel,
+.light .glass-dropdown,
+.light aside,
+.light header {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Superfícies Secundárias / Cinza Claro Suave */
+[data-theme="light-clean"] [class*="bg-slate-800"]:not([class*="hover:"]):not([class*="focus:"]),
+[data-mode="light"] [class*="bg-slate-800"]:not([class*="hover:"]):not([class*="focus:"]),
+.light [class*="bg-slate-800"]:not([class*="hover:"]):not([class*="focus:"]) {
+  background-color: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Efeitos Hover no Modo Claro */
+[data-theme="light-clean"] [class*="hover:bg-slate-900"]:hover,
+[data-theme="light-clean"] [class*="hover:bg-slate-800"]:hover,
+[data-theme="light-clean"] [class*="hover:bg-slate-850"]:hover,
+[data-mode="light"] [class*="hover:bg-slate-900"]:hover,
+[data-mode="light"] [class*="hover:bg-slate-800"]:hover,
+[data-mode="light"] [class*="hover:bg-slate-850"]:hover,
+.light [class*="hover:bg-slate-900"]:hover,
+.light [class*="hover:bg-slate-800"]:hover,
+.light [class*="hover:bg-slate-850"]:hover {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+/* Bordas em Modo Claro */
+[data-theme="light-clean"] [class*="border-slate-800"],
+[data-theme="light-clean"] [class*="border-slate-700"],
+[data-mode="light"] [class*="border-slate-800"],
+[data-mode="light"] [class*="border-slate-700"],
+.light [class*="border-slate-800"],
+.light [class*="border-slate-700"] {
+  border-color: #e2e8f0 !important;
+}
+
+/* Tipografia de Alto Contraste no Modo Claro (Total Legibilidade) */
+[data-theme="light-clean"],
+[data-mode="light"],
+.light {
+  color: #0f172a !important;
+}
+
+[data-theme="light-clean"] h1,
+[data-theme="light-clean"] h2,
+[data-theme="light-clean"] h3,
+[data-theme="light-clean"] h4,
+[data-theme="light-clean"] h5,
+[data-theme="light-clean"] h6,
+[data-theme="light-clean"] strong,
+[data-theme="light-clean"] b,
+[data-theme="light-clean"] th,
+[data-theme="light-clean"] label,
+[data-mode="light"] h1,
+[data-mode="light"] h2,
+[data-mode="light"] h3,
+[data-mode="light"] h4,
+[data-mode="light"] h5,
+[data-mode="light"] h6,
+[data-mode="light"] strong,
+[data-mode="light"] b,
+[data-mode="light"] th,
+[data-mode="light"] label,
+.light h1,
+.light h2,
+.light h3,
+.light h4,
+.light h5,
+.light h6,
+.light strong,
+.light b,
+.light th,
+.light label {
+  color: #0f172a !important;
+}
+
+/* Converte qualquer variante de text-white, text-slate-50, text-slate-100, text-slate-200 para tom escuro nítido */
+[data-theme="light-clean"] [class*="text-white"],
+[data-theme="light-clean"] [class*="text-slate-50"],
+[data-theme="light-clean"] [class*="text-slate-100"],
+[data-theme="light-clean"] [class*="text-slate-200"],
+[data-mode="light"] [class*="text-white"],
+[data-mode="light"] [class*="text-slate-50"],
+[data-mode="light"] [class*="text-slate-100"],
+[data-mode="light"] [class*="text-slate-200"],
+.light [class*="text-white"],
+.light [class*="text-slate-50"],
+.light [class*="text-slate-100"],
+.light [class*="text-slate-200"] {
+  color: #0f172a !important;
+}
+
+[data-theme="light-clean"] [class*="text-slate-300"],
+[data-mode="light"] [class*="text-slate-300"],
+.light [class*="text-slate-300"] {
+  color: #334155 !important;
+}
+
+[data-theme="light-clean"] [class*="text-slate-400"],
+[data-mode="light"] [class*="text-slate-400"],
+.light [class*="text-slate-400"] {
+  color: #64748b !important;
+}
+
+/* Teclado e atalhos kbd em modo claro */
+[data-theme="light-clean"] kbd,
+[data-mode="light"] kbd,
+.light kbd {
+  background-color: #e2e8f0 !important;
+  color: #1e293b !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* Abas de Navegação em Modo Claro */
+[data-mode="light"] button[class*="border-transparent"][class*="text-slate-400"],
+[data-theme="light-clean"] button[class*="border-transparent"][class*="text-slate-400"],
+.light button[class*="border-transparent"][class*="text-slate-400"] {
+  background-color: transparent !important;
+  color: #64748b !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
+}
+
+[data-mode="light"] button[class*="border-transparent"][class*="text-slate-400"]:hover,
+[data-theme="light-clean"] button[class*="border-transparent"][class*="text-slate-400"]:hover,
+.light button[class*="border-transparent"][class*="text-slate-400"]:hover {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+[data-mode="light"] button[class*="border-sky-500"][class*="bg-sky-500/"],
+[data-theme="light-clean"] button[class*="border-sky-500"][class*="bg-sky-500/"],
+.light button[class*="border-sky-500"][class*="bg-sky-500/"] {
+  background-color: rgba(var(--brand-primary-rgb, 2, 132, 199), 0.12) !important;
+  color: var(--brand-accent, #0369a1) !important;
+  border-color: var(--brand-primary, #0284c7) !important;
+  box-shadow: none !important;
+}
+
+/* Botões Secundários, Outline e Ghost no Modo Claro SEMPRE com texto e ícones escuros */
+[data-theme="light-clean"] button[class*="bg-slate-800"],
+[data-theme="light-clean"] button[class*="bg-slate-900"],
+[data-theme="light-clean"] button[class*="border-slate-700"],
+[data-theme="light-clean"] button[class*="hover:bg-slate-800"],
+[data-theme="light-clean"] button[class*="hover:bg-slate-700"],
+[data-mode="light"] button[class*="bg-slate-800"],
+[data-mode="light"] button[class*="bg-slate-900"],
+[data-mode="light"] button[class*="border-slate-700"],
+[data-mode="light"] button[class*="hover:bg-slate-800"],
+[data-mode="light"] button[class*="hover:bg-slate-700"],
+.light button[class*="bg-slate-800"],
+.light button[class*="bg-slate-900"],
+.light button[class*="border-slate-700"],
+.light button[class*="hover:bg-slate-800"],
+.light button[class*="hover:bg-slate-700"] {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+[data-theme="light-clean"] button[class*="bg-slate-800"] *,
+[data-theme="light-clean"] button[class*="bg-slate-900"] *,
+[data-theme="light-clean"] button[class*="border-slate-700"] *,
+[data-mode="light"] button[class*="bg-slate-800"] *,
+[data-mode="light"] button[class*="bg-slate-900"] *,
+[data-mode="light"] button[class*="border-slate-700"] *,
+.light button[class*="bg-slate-800"] *,
+.light button[class*="bg-slate-900"] *,
+.light button[class*="border-slate-700"] * {
+  color: #0f172a !important;
+}
+
+/* EXCEÇÕES CRÍTICAS: Elementos com fundo sólido colorido (Primário, Sucesso, Perigo) MANTÊM texto branco */
+[data-theme="light-clean"] button.bg-rose-600,
+[data-theme="light-clean"] button.bg-rose-500,
+[data-theme="light-clean"] button.bg-emerald-600,
+[data-theme="light-clean"] button.bg-emerald-500,
+[data-theme="light-clean"] button.bg-sky-500,
+[data-theme="light-clean"] button.bg-sky-600,
+[data-theme="light-clean"] button[class*="bg-sky-500"]:not([class*="/"]),
+[data-theme="light-clean"] button[class*="bg-sky-600"]:not([class*="/"]),
+[data-theme="light-clean"] button[class*="bg-rose-"]:not([class*="/"]),
+[data-theme="light-clean"] button[class*="bg-emerald-"]:not([class*="/"]),
+[data-theme="light-clean"] button[class*="bg-indigo-"]:not([class*="/"]),
+[data-theme="light-clean"] button[class*="bg-purple-"]:not([class*="/"]),
+[data-theme="light-clean"] button.bg-sky-500 *,
+[data-theme="light-clean"] button.bg-sky-600 *,
+[data-theme="light-clean"] button[class*="bg-sky-500"]:not([class*="/"]) *,
+[data-theme="light-clean"] button[class*="bg-sky-600"]:not([class*="/"]) *,
+[data-theme="light-clean"] button[class*="bg-rose-"]:not([class*="/"]) *,
+[data-theme="light-clean"] button[class*="bg-emerald-"]:not([class*="/"]) *,
+[data-theme="light-clean"] button[class*="bg-indigo-"]:not([class*="/"]) *,
+[data-theme="light-clean"] button[class*="bg-purple-"]:not([class*="/"]) *,
+[data-mode="light"] button.bg-rose-600,
+[data-mode="light"] button.bg-rose-500,
+[data-mode="light"] button.bg-emerald-600,
+[data-mode="light"] button.bg-emerald-500,
+[data-mode="light"] button.bg-sky-500,
+[data-mode="light"] button.bg-sky-600,
+[data-mode="light"] button[class*="bg-sky-500"]:not([class*="/"]),
+[data-mode="light"] button[class*="bg-sky-600"]:not([class*="/"]),
+[data-mode="light"] button[class*="bg-rose-"]:not([class*="/"]),
+[data-mode="light"] button[class*="bg-emerald-"]:not([class*="/"]),
+[data-mode="light"] button[class*="bg-indigo-"]:not([class*="/"]),
+[data-mode="light"] button[class*="bg-purple-"]:not([class*="/"]),
+[data-mode="light"] button.bg-sky-500 *,
+[data-mode="light"] button.bg-sky-600 *,
+[data-mode="light"] button[class*="bg-sky-500"]:not([class*="/"]) *,
+[data-mode="light"] button[class*="bg-sky-600"]:not([class*="/"]) *,
+[data-mode="light"] button[class*="bg-rose-"]:not([class*="/"]) *,
+[data-mode="light"] button[class*="bg-emerald-"]:not([class*="/"]) *,
+[data-mode="light"] button[class*="bg-indigo-"]:not([class*="/"]) *,
+[data-mode="light"] button[class*="bg-purple-"]:not([class*="/"]) *,
+.light button.bg-sky-500,
+.light button.bg-sky-600,
+.light button.bg-rose-600,
+.light button[class*="bg-sky-500"]:not([class*="/"]),
+.light button[class*="bg-sky-600"]:not([class*="/"]),
+.light button[class*="bg-rose-"]:not([class*="/"]),
+.light button[class*="bg-emerald-"]:not([class*="/"]),
+.light button[class*="bg-indigo-"]:not([class*="/"]),
+.light button[class*="bg-purple-"]:not([class*="/"]),
+.light button.bg-sky-500 *,
+.light button.bg-sky-600 *,
+.light button[class*="bg-sky-500"]:not([class*="/"]) *,
+.light button[class*="bg-sky-600"]:not([class*="/"]) *,
+.light button[class*="bg-rose-"]:not([class*="/"]) *,
+.light button[class*="bg-emerald-"]:not([class*="/"]) *,
+.light button[class*="bg-indigo-"]:not([class*="/"]) *,
+.light button[class*="bg-purple-"]:not([class*="/"]) * {
+  color: #ffffff !important;
+}
+
+/* Inputs, Textareas e Selects no Modo Claro */
+[data-theme="light-clean"] input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+[data-theme="light-clean"] select,
+[data-theme="light-clean"] textarea,
+[data-mode="light"] input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+[data-mode="light"] select,
+[data-mode="light"] textarea,
+.light input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+.light select,
+.light textarea {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+[data-theme="light-clean"] input::placeholder,
+[data-theme="light-clean"] textarea::placeholder,
+[data-mode="light"] input::placeholder,
+[data-mode="light"] textarea::placeholder,
+.light input::placeholder,
+.light textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+[data-theme="light-clean"] select option,
+[data-mode="light"] select option,
+.light select option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+/* Modais e Dialogs no Modo Claro */
+[data-theme="light-clean"] [role="dialog"] > div:last-child,
+[data-mode="light"] [role="dialog"] > div:last-child,
+.light [role="dialog"] > div:last-child {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Tabelas no Modo Claro */
+[data-theme="light-clean"] table,
+[data-mode="light"] table,
+.light table {
+  color: #0f172a !important;
+}
+
+[data-theme="light-clean"] thead,
+[data-theme="light-clean"] thead th,
+[data-mode="light"] thead,
+[data-mode="light"] thead th,
+.light thead,
+.light thead th {
+  background-color: #f8fafc !important;
+  color: #475569 !important;
+  border-color: #e2e8f0 !important;
+}
+
+[data-theme="light-clean"] tbody tr,
+[data-mode="light"] tbody tr,
+.light tbody tr {
+  border-color: #f1f5f9 !important;
+}
+
+[data-theme="light-clean"] tbody tr:hover,
+[data-mode="light"] tbody tr:hover,
+.light tbody tr:hover {
+  background-color: #f8fafc !important;
+}
+
+[data-theme="light-clean"] tbody td,
+[data-mode="light"] tbody td,
+.light tbody td {
+  color: #1e293b !important;
+}
+
+/* Scrollbars no Modo Claro */
+[data-theme="light-clean"] ::-webkit-scrollbar-track,
+[data-mode="light"] ::-webkit-scrollbar-track,
+.light ::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+[data-theme="light-clean"] ::-webkit-scrollbar-thumb,
+[data-mode="light"] ::-webkit-scrollbar-thumb,
+.light ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+}
+[data-theme="light-clean"] ::-webkit-scrollbar-thumb:hover,
+[data-mode="light"] ::-webkit-scrollbar-thumb:hover,
+.light ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* ==========================================================================
+   SISTEMA VISUAL v2 — superfícies planas, bordas finas e números alinhados
+   ========================================================================== */
+
+/* Escala de raios única para todo o sistema (cards 10px, controles 8px) */
+@theme {
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.625rem;
+  --radius-2xl: 0.875rem;
+  --font-mono: var(--font-display, "Barlow Semi Condensed"), ui-monospace, monospace;
+}
+
+@layer base {
+  :root {
+    --font-display: "Barlow Semi Condensed", "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+
+  /* Tailwind v4 usa currentColor em "border" sem cor: sem isto os cards ficam com borda branca */
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--border-subtle, rgba(255, 255, 255, 0.08));
+  }
+
+  /* Seletores de data/hora, barras de rolagem e campos nativos acompanham o tema escuro */
+  [data-mode="dark"] {
+    color-scheme: dark;
+  }
+
+  /* Foco visível por teclado (o PDV é operado pelo teclado) */
+  :where(button, a, [role="button"], [role="link"], summary, [tabindex="0"]):focus-visible {
+    outline: 2px solid var(--brand-accent, #38bdf8);
+    outline-offset: 2px;
+  }
+}
+
+/* Títulos e números usam a família de exibição; peso 600 em vez de 800/900 */
+h1,
+h2,
+h3,
+h4,
+.font-display,
+.font-mono {
+  font-family: var(--font-display);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  letter-spacing: -0.005em;
+  text-transform: none;
+}
+
+h1.font-black,
+h1.font-extrabold,
+h1.font-bold,
+h2.font-black,
+h2.font-extrabold,
+h2.font-bold,
+h3.font-black,
+h3.font-extrabold {
+  font-weight: 600;
+}
+
+/* Cabeçalhos de coluna e rótulos de campo em caixa normal (menos grito, mais leitura) */
+th,
+label {
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+/* Números de apoio nunca em monoespaçada: alinham em colunas pela fonte de exibição */
+.font-mono {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+/* Quem prefere menos movimento não recebe animações de entrada nem transições */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* =========================================================================
+   VITRINE PÚBLICA (catálogo online) — glassmorphism na paleta neutra atual
+   Vidro = superfície branca translúcida com desfoque sobre fundo suave.
+   Sem "vidro" (Editor visual > Estilo) as superfícies voltam a ser brancas sólidas.
+   ========================================================================= */
+/* As cores, a fonte e o layout dos cartões vêm das variáveis --vt-* (Editor visual > Cores, Layout...).
+   Os valores depois da vírgula são o visual padrão e valem quando a variável não existe. */
+.vt-bg {
+  background-color: var(--vt-bg, #fafafa);
+  background-image: var(
+    --vt-bg-img,
+    radial-gradient(60rem 30rem at 12% -8%, rgba(163, 163, 163, 0.28), transparent 60%),
+    radial-gradient(48rem 28rem at 92% 6%, rgba(212, 212, 212, 0.55), transparent 60%),
+    radial-gradient(40rem 26rem at 50% 108%, rgba(115, 115, 115, 0.18), transparent 60%)
+  );
+  background-attachment: fixed;
+  color: var(--vt-pname, #171717);
+  font-family: var(--vt-font, inherit);
+}
+
+.vt-glass {
+  background: color-mix(in srgb, var(--vt-card, #ffffff) 58%, transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(1.35);
+  backdrop-filter: blur(16px) saturate(1.35);
+  border: 1px solid color-mix(in srgb, var(--vt-card, #ffffff) 75%, var(--vt-border, #e5e5e5));
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5) inset, 0 10px 30px -12px rgba(var(--vt-shadow-rgb, 23, 23, 23), calc(var(--vt-shadow-a, 0.4) * 0.55));
+}
+
+.vt-glass-strong {
+  background: color-mix(in srgb, var(--vt-card, #ffffff) 78%, transparent);
+  -webkit-backdrop-filter: blur(22px) saturate(1.4);
+  backdrop-filter: blur(22px) saturate(1.4);
+  border: 1px solid color-mix(in srgb, var(--vt-card, #ffffff) 80%, var(--vt-border, #e5e5e5));
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.6) inset, 0 16px 40px -14px rgba(var(--vt-shadow-rgb, 23, 23, 23), calc(var(--vt-shadow-a, 0.4) * 0.75));
+}
+
+.vt-glass-dark {
+  background: rgba(23, 23, 23, 0.55);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  backdrop-filter: blur(14px) saturate(1.2);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+/* Sem vidro: mesma estrutura, superfície sólida na cor do cartão */
+.vt-flat .vt-glass,
+.vt-flat .vt-glass-strong {
+  background: var(--vt-card, #ffffff);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  border: 1px solid var(--vt-border, #e5e5e5);
+  box-shadow: 0 1px 2px rgba(var(--vt-shadow-rgb, 23, 23, 23), calc(var(--vt-shadow-a, 0.4) * 0.3));
+}
+.vt-flat .vt-glass-dark {
+  background: #171717;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.vt-flat .vt-bg,
+.vt-bg.vt-flat {
+  background-image: none;
+}
+
+/* Cartão de produto: arredondamento, borda e sombra vêm do layout escolhido */
+.vt-bg .vt-produto {
+  border-radius: var(--vt-radius, 16px);
+  border-width: var(--vt-border-w, 1px);
+  border-style: var(--vt-border-style, solid);
+  border-color: var(--vt-border, #e5e5e5);
+  background-color: var(--vt-card, #ffffff);
+  box-shadow: 0 10px 30px -14px rgba(var(--vt-shadow-rgb, 23, 23, 23), var(--vt-shadow-a, 0.4));
+  text-align: var(--vt-align, left);
+  font-size: calc(1rem * var(--vt-fs, 1));
+}
+.vt-bg:not(.vt-flat) .vt-produto {
+  background-color: color-mix(in srgb, var(--vt-card, #ffffff) 62%, transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(1.35);
+  backdrop-filter: blur(16px) saturate(1.35);
+}
+
+.vt-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--vt-cols-m, 2), minmax(0, 1fr));
+  gap: var(--vt-gap, 20px);
+}
+@media (min-width: 640px) {
+  .vt-grid {
+    grid-template-columns: repeat(var(--vt-cols-t, 3), minmax(0, 1fr));
+  }
+}
+@media (min-width: 1024px) {
+  .vt-grid {
+    grid-template-columns: repeat(var(--vt-cols, 4), minmax(0, 1fr));
+  }
+}
+
+/* Cabeçalho e rodapé */
+.vt-bg .vt-header {
+  background: color-mix(in srgb, var(--vt-header, #ffffff) 88%, transparent);
+  color: var(--vt-header-text, #171717);
+  border-color: var(--vt-divider, #e5e5e5);
+}
+.vt-bg .vt-footer {
+  background: var(--vt-footer, #ffffff);
+  color: var(--vt-footer-text, #737373);
+  border-color: var(--vt-divider, #e5e5e5);
+}
+.vt-bg .vt-footer strong,
+.vt-bg .vt-footer a {
+  color: inherit;
+}
+.vt-bg .vt-divider {
+  border-color: var(--vt-divider, #e5e5e5);
+}
+
+/* Textos e botões (cada um com a sua cor no Editor visual) */
+.vt-bg .vt-title {
+  color: var(--vt-title, #171717);
+  font-weight: var(--vt-title-weight, 800);
+}
+.vt-bg .vt-sub {
+  color: var(--vt-sub, #525252);
+}
+.vt-bg .vt-store {
+  color: var(--vt-store, #171717);
+}
+.vt-bg .vt-pname {
+  color: var(--vt-pname, #171717);
+  font-size: calc(0.875rem * var(--vt-fs, 1));
+  font-weight: 600;
+}
+.vt-bg .vt-pdesc {
+  color: var(--vt-pdesc, #525252);
+  font-size: calc(0.75rem * var(--vt-fs, 1));
+}
+.vt-bg .vt-pcode {
+  color: var(--vt-pcode, #737373);
+}
+.vt-bg .vt-price {
+  color: var(--vt-price, #171717);
+  font-size: calc(1.125rem * var(--vt-fs, 1));
+  font-weight: 700;
+}
+.vt-bg .vt-promo {
+  color: var(--vt-promo, #dc2626);
+}
+.vt-bg .vt-btn {
+  background-color: var(--vt-btn, #171717);
+  color: var(--vt-btn-text, #ffffff);
+}
+.vt-bg .vt-btn:hover {
+  filter: brightness(1.12);
+}
+.vt-bg .vt-tag {
+  background-color: var(--vt-tag, #171717);
+  color: var(--vt-tag-text, #ffffff);
+}
+.vt-bg .vt-accent {
+  background-color: var(--vt-accent, #171717);
+  color: var(--vt-btn-text, #ffffff);
+}
+.vt-bg .vt-accent-text {
+  color: var(--vt-accent, #171717);
+}
+
+/* Carrossel de produtos: rolagem com encaixe, sem barra */
+.vt-trilho {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  padding: 0.25rem 0.25rem 0.75rem;
+}
+.vt-trilho::-webkit-scrollbar {
+  display: none;
+}
+.vt-trilho > * {
+  scroll-snap-align: start;
+  flex: 0 0 auto;
+}
+
+/* Pré-visualização do Editor visual: contorno do bloco selecionado */
+.vt-selecionado {
+  outline: 2px solid #2563eb;
+  outline-offset: 6px;
+  border-radius: 1.25rem;
+}
+[data-previa="1"] [data-bloco] {
+  cursor: pointer;
+}
+
+/* Vitrine: o tema escuro do ERP pinta h1-h3 de branco (regra fora das camadas do Tailwind); na vitrine clara
+   os títulos herdam a cor do texto, exceto dentro de janelas (modais têm fundo escuro próprio) */
+.vt-bg :is(h1, h2, h3, h4):not([role="dialog"] *) {
+  color: inherit;
+}
+.vt-bg[data-fonte="custom"] :is(h1, h2, h3, h4, strong, .font-display):not([role="dialog"] *) {
+  font-family: var(--vt-font);
+}
+
+/* =========================================================================
+   CATÁLOGO EM PDF (Editor visual > Exportar PDF)
+   As páginas usam as mesmas variáveis --vt-* da vitrine; a impressão guarda as cores exatas.
+   ========================================================================= */
+.vt-pdf-raiz.vt-bg {
+  background: transparent;
+  background-attachment: scroll;
+}
+.vt-pdf-pagina {
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+  background-color: var(--vt-bg, #ffffff);
+  background-image: var(--vt-bg-img, none);
+  color: var(--vt-pname, #171717);
+  font-family: var(--vt-font, inherit);
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+  break-after: page;
+  page-break-after: always;
+}
+.vt-pdf-pagina .vt-produto {
+  height: 100%;
+}
+#pdf-print-root {
+  display: none;
+}
+@media print {
+  html,
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+  }
+  body > *:not(#pdf-print-root) {
+    display: none !important;
+  }
+  #pdf-print-root {
+    display: block !important;
+  }
+  #pdf-print-root * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+  #pdf-print-root .vt-pdf-pagina {
+    margin: 0 !important;
+    box-shadow: none !important;
+  }
+  #pdf-print-root .vt-pdf-pagina:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+}
+
+/* Gráficos do painel Gestão (paleta de dataviz validada: azul para magnitude, cinza para o período anterior) */
+.viz-root {
+  --viz-surface: #fcfcfb;
+  --viz-text-1: #0b0b0b;
+  --viz-text-2: #52514e;
+  --viz-grid: #e5e4e0;
+  --viz-1: #2a78d6;
+  --viz-neutral: #8a8984;
+}
+.dark .viz-root {
+  --viz-surface: #1a1a19;
+  --viz-text-1: #ffffff;
+  --viz-text-2: #c3c2b7;
+  --viz-grid: #34332f;
+  --viz-1: #3987e5;
+  --viz-neutral: #9a9992;
+}
+
+/* Logo da Life: cor original só no tema azul padrão; nos demais temas fica branca (fundos escuros).
+   Em fundo claro (.logo-life-fundo-claro no modo claro) mantém a cor original, senão sumiria. */
+.logo-life { filter: brightness(0) invert(1); }
+:root[data-theme="lifesurf-blue"] .logo-life { filter: none; }
+:root[data-mode="light"] .logo-life-fundo-claro { filter: none; }
