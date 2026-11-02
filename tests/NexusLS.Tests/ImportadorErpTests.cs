@@ -277,6 +277,36 @@ public sealed class ImportadorErpTests : IDisposable
     }
 
     [Fact]
+    public async Task Movimentos_do_caixa_e_gastos_do_erp_viram_movimentos_do_turno_e_lancamentos_sem_duplicar()
+    {
+        _fonte.Por("caixa_turnos", "t1", """{"abertoEm":"2026-10-30T11:00:00Z","trocoInicial":100,"operador":"ana","status":"fechado","fechadoEm":"2026-10-30T20:00:00Z","criadoEm":"2026-10-30T11:00:00Z"}""");
+        _fonte.Por("transacoes_financeiras", "x1", """{"tipo":"saida","natureza":"retirada","interno":true,"origem":"caixa","afetaGaveta":true,"turnoId":"t1","valor":200,"descricao":"Levou ao banco","data":"2026-10-30","hora":"15:30","status":"concluido","criadoEm":"2026-10-30T15:30:00Z"}""");
+        _fonte.Por("transacoes_financeiras", "x2", """{"tipo":"saida","natureza":"retirada","interno":true,"origem":"caixa","afetaGaveta":true,"turnoId":"sumiu","valor":50,"data":"2026-10-30","status":"concluido","criadoEm":"2026-10-30T16:00:00Z"}""");
+        _fonte.Por("transacoes_financeiras", "x3", """{"tipo":"saida","categoria":"Aluguel","descricao":"Aluguel da loja","valor":1500,"formaPagamento":"pix","data":"2026-10-05","status":"concluido","fornecedorOuCliente":"Imobiliária","criadoEm":"2026-10-05T10:00:00Z"}""");
+        _fonte.Por("transacoes_financeiras", "x4", """{"tipo":"entrada","origem":"caixa","natureza":"entrada_avulsa","afetaGaveta":false,"valor":80,"descricao":"Conserto","formaPagamento":"pix","data":"2026-10-06","status":"cancelado","criadoEm":"2026-10-06T10:00:00Z"}""");
+
+        var r1 = await Importador().ImportarAsync();
+        await Importador().ImportarAsync();
+
+        await using var db = _banco.CriarContexto();
+        var mov = await db.MovimentosCaixa.SingleAsync();
+        Assert.Equal(TipoMovimentoCaixa.Sangria, mov.Tipo);
+        Assert.Equal(20000, mov.ValorCentavos);
+        Assert.Equal((await db.TurnosCaixa.SingleAsync()).Id, mov.TurnoId);
+        Assert.Contains(r1.Avisos, a => a.Contains("x2"));          // sem turno importado: fora, com aviso
+
+        var lancs = await db.Lancamentos.OrderBy(l => l.Id).ToListAsync();
+        Assert.Equal(2, lancs.Count);
+        Assert.Equal(TipoLancamento.Despesa, lancs[0].Tipo);
+        Assert.Equal(150000, lancs[0].ValorCentavos);
+        Assert.Equal(FormaPagamento.Pix, lancs[0].FormaPagamento);
+        Assert.NotNull(lancs[0].PagoEm);
+        Assert.Equal("Imobiliária", lancs[0].Contraparte);
+        Assert.True(lancs[1].Cancelado);
+        Assert.Equal(TipoLancamento.Receita, lancs[1].Tipo);
+    }
+
+    [Fact]
     public async Task Fabrica_do_erp_vira_materia_ordens_com_grade_e_perdas_ligadas_e_importar_de_novo_nao_duplica()
     {
         _fonte.Por("materia_prima", "m1", """{"nome":"Malha PV","tipo":"Tecido","unidade":"kg","estoqueAtual":145.5,"estoqueMinimo":30,"custoUnitario":42,"fornecedor":"Malharia","atualizadoEm":"2026-10-30T09:00:00Z"}""");

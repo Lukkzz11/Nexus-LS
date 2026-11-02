@@ -66,6 +66,7 @@ public sealed class ImportadorErp
         await ColecaoAsync("vendas", new[] { "criadoEm", "atualizadoEm" }, VendaAsync, r, ct);
         await ColecaoAsync("contas_receber", new[] { "criadoEm", "atualizadoEm" }, TituloAsync, r, ct);
         await ColecaoAsync("pedidos", new[] { "criadoEm", "atualizadoEm" }, PedidoAsync, r, ct);
+        await ColecaoAsync("transacoes_financeiras", new[] { "criadoEm", "atualizadoEm" }, TransacaoAsync, r, ct);
         // Fábrica: a matéria-prima e as ordens vêm antes das perdas, que apontam para as duas.
         await ColecaoAsync("materia_prima", new[] { "atualizadoEm" }, MateriaPrimaAsync, r, ct);
         await ColecaoAsync("ordens_producao", new[] { "criadoEm", "atualizadoEm" }, OrdemProducaoAsync, r, ct);
@@ -541,6 +542,92 @@ public sealed class ImportadorErp
         db.Pedidos.Add(p);
         UltimoGuid = p.Guid;
         return true;
+    }
+
+    // ------------------------------------------------------------------ gastos, entradas e movimentos do caixa
+
+    /// <summary>
+    /// As "transações financeiras" do ERP: movimentos de dinheiro da gaveta (sangria, reforço, despesa, entrada avulsa) que
+    /// pertencem a um turno importado viram movimentos do caixa; o resto (gastos e entradas do Financeiro) vira lançamento.
+    /// Retirada e reforço sem turno são só troca de lugar do dinheiro: ficam de fora, com aviso.
+    /// </summary>
+    private async Task<bool?> TransacaoAsync(PdvDbContext db, DocumentoErp doc, ImportacaoErpItem? ligacao, ResultadoImportacaoErp r)
+    {
+        var c = doc.Campos;
+        var valor = Centavos(c, "valor");
+        if (valor <= 0) return null;
+        var status = Texto(c, "status")?.ToLowerInvariant() ?? "concluido";
+        var natureza = Texto(c, "natureza");
+        var entrada = Texto(c, "tipo") == "entrada";
+        var agora = _agora().ToLocalTime();
+        var dia = Texto(c, "data") is { } d && DateTime.TryParse(d, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dd)
+            ? dd : DataLocal(c, "criadoEm") ?? agora;
+        var quando = Texto(c, "hora") is { } h && TimeSpan.TryParse(h, CultureInfo.InvariantCulture, out var hh) ? dia.Date + hh : dia;
+
+        // movimento da gaveta, em um turno que já veio do ERP
+        int? turnoId = null;
+        if (Texto(c, "origem") == "caixa" && Texto(c, "turnoId") is { } turnoErp && Booleano(c, "afetaGaveta") == true)
+        {
+            var lig = await db.ImportacaoErp.AsNoTracking().FirstOrDefaultAsync(x => x.Colecao == "caixa_turnos" && x.ErpId == turnoErp);
+            if (lig is not null) turnoId = (await db.TurnosCaixa.AsNoTracking().FirstOrDefaultAsync(x => x.Guid == lig.EntidadeGuid))?.Id;
+        }
+
+        if (turnoId is int turno)
+        {
+            if (status is "cancelado" or "estornado") return null;
+            var tipo = natureza switch
+            {
+                "retirada" => TipoMovimentoCaixa.Sangria,
+                "reforco" => TipoMovimentoCaixa.Reforco,
+                "despesa" or "devolucao" => TipoMovimentoCaixa.Despesa,
+                _ => entrada ? TipoMovimentoCaixa.EntradaAvulsa : TipoMovimentoCaixa.Despesa
+            };
+            var m = ligacao is null ? null : await db.MovimentosCaixa.FirstOrDefaultAsync(x => x.Guid == ligacao.EntidadeGuid);
+            var novoMov = m is null;
+            if (novoMov) { m = new MovimentoCaixa(); db.MovimentosCaixa.Add(m); }
+            m!.TurnoId = turno;
+            m.DataHora = quando;
+            m.Tipo = tipo;
+            m.ValorCentavos = valor;
+            m.Descricao = Texto(c, "descricao");
+            UltimoGuid = m.Guid;
+            return novoMov;
+        }
+
+        if (Texto(c, "interno") is "true" || Booleano(c, "interno") == true)
+        {
+            r.Avisos.Add($"transacoes_financeiras/{doc.Id}: {natureza ?? "movimento interno"} sem turno importado ficou de fora (só troca o dinheiro de lugar).");
+            return null;
+        }
+
+        var l = ligacao is null ? null : await db.Lancamentos.FirstOrDefaultAsync(x => x.Guid == ligacao.EntidadeGuid);
+        var novo = l is null;
+        if (novo) { l = new Lancamento { CriadoEm = DataLocal(c, "criadoEm") ?? agora }; db.Lancamentos.Add(l); }
+
+        l!.Tipo = entrada ? TipoLancamento.Receita : TipoLancamento.Despesa;
+        l.Descricao = Texto(c, "descricao") ?? Texto(c, "categoria") ?? "Importado do ERP";
+        l.Categoria = Texto(c, "categoria");
+        l.Contraparte = Texto(c, "fornecedorOuCliente");
+        l.ValorCentavos = valor;
+        l.Vencimento = dia.Date;
+        l.PagoEm = status is "pendente" ? null : dia.Date;
+        l.FormaPagamento = Texto(c, "formaPagamento")?.ToLowerInvariant() switch
+        {
+            "dinheiro" => FormaPagamento.Dinheiro,
+            "pix" => FormaPagamento.Pix,
+            "cartao_debito" or "debito" => FormaPagamento.CartaoDebito,
+            "cartao_credito" or "credito" => FormaPagamento.CartaoCredito,
+            "cheque" => FormaPagamento.Cheque,
+            _ => null
+        };
+        l.Observacao = Texto(c, "observacoes");
+        l.Operador = Texto(c, "responsavel") ?? "Importado do ERP";
+        var cancelado = status is "cancelado" or "estornado";
+        l.Cancelado = cancelado;
+        l.MotivoCancelamento = cancelado ? Texto(c, "motivoCancelamento") ?? "Cancelado no ERP" : null;
+        l.CanceladoEm = cancelado ? DataLocal(c, "atualizadoEm") ?? agora : null;
+        UltimoGuid = l.Guid;
+        return novo;
     }
 
     // ------------------------------------------------------------------ fábrica
