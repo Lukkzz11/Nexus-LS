@@ -87,4 +87,39 @@ public sealed class CalculadoraComProdutoTests : IDisposable
         await Assert.ThrowsAsync<RegraDeNegocioException>(() => _produtos.AplicarPrecoVendaAsync(id, 0));
         await Assert.ThrowsAsync<RegraDeNegocioException>(() => _produtos.AplicarPrecoVendaAsync(9999, 1000));
     }
+
+    [Fact]
+    public async Task Parametros_da_loja_sao_guardados_e_voltam_na_proxima_abertura_sem_o_custo()
+    {
+        var arquivo = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"calc-{Guid.NewGuid():N}.json");
+        try
+        {
+            var loja = new ParametrosCalculadoraStore(arquivo);
+            var vm = new CalculadoraPrecosViewModel(null, loja) { ImpostosPct = "8", ComissaoPct = "3", FixasMensais = "5000", PecasPorMes = "400", MargemPct = "35", TerminarEm90 = true, CustoCompra = "99", FreteReais = "7" };
+            await vm.SalvarParametrosCommand.ExecuteAsync(null);
+            Assert.False(vm.MensagemEhErro, vm.Mensagem);
+
+            var outra = new CalculadoraPrecosViewModel(null, loja);
+            Assert.Equal("8", outra.ImpostosPct);
+            Assert.Equal("5000", outra.FixasMensais);
+            Assert.Equal("35", outra.MargemPct);
+            Assert.True(outra.TerminarEm90);
+            Assert.Equal("", outra.CustoCompra);
+            Assert.Equal("", outra.FreteReais);
+        }
+        finally { System.IO.File.Delete(arquivo); }
+    }
+
+    [Fact]
+    public async Task Sem_arquivo_ou_com_arquivo_quebrado_a_calculadora_abre_normal()
+    {
+        var arquivo = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"calc-{Guid.NewGuid():N}.json");
+        try
+        {
+            Assert.Equal("", new CalculadoraPrecosViewModel(null, new ParametrosCalculadoraStore(arquivo)).ImpostosPct);
+            await System.IO.File.WriteAllTextAsync(arquivo, "{ isso nao e json");
+            Assert.Equal("", new CalculadoraPrecosViewModel(null, new ParametrosCalculadoraStore(arquivo)).ImpostosPct);
+        }
+        finally { System.IO.File.Delete(arquivo); }
+    }
 }

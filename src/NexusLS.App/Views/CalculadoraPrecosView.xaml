@@ -51,6 +51,7 @@
                             </StackPanel>
                             <TextBlock Text="{Binding ProdutoInfo}" TextWrapping="Wrap" FontSize="12" Opacity="0.75" Margin="0,6,0,0" />
                         </StackPanel>
+                        <Button Content="Guardar parâmetros da loja" Command="{Binding SalvarParametrosCommand}" Style="{StaticResource BotaoSecundario}" Margin="0,0,0,12" ToolTip="Guarda impostos, comissão, despesas fixas e margem para a próxima vez" />
                         <TextBlock Text="Custo (R$ por peça)" FontWeight="SemiBold" />
                         <TextBlock Text="Custo de compra" Style="{StaticResource Rotulo}" />
                         <TextBox Text="{Binding CustoCompra, UpdateSourceTrigger=PropertyChanged}" />

@@ -12,7 +12,48 @@ public partial class CalculadoraPrecosViewModel
     private readonly ProdutoService? _produtos;
     private long? _precoCalculado;
 
-    public CalculadoraPrecosViewModel(ProdutoService? produtos = null) => _produtos = produtos;
+    private readonly ParametrosCalculadoraStore? _parametros;
+
+    public CalculadoraPrecosViewModel(ProdutoService? produtos = null, ParametrosCalculadoraStore? parametros = null)
+    {
+        _produtos = produtos;
+        _parametros = parametros;
+        CarregarParametros();
+    }
+
+    /// <summary>Os parâmetros que valem para a loja toda (o custo e o frete mudam a cada peça e ficam de fora).</summary>
+    private Dictionary<string, string> LerParametros() => new()
+    {
+        [nameof(EmbalagemReais)] = EmbalagemReais, [nameof(OutrosCustosPct)] = OutrosCustosPct, [nameof(ImpostosPct)] = ImpostosPct,
+        [nameof(ComissaoPct)] = ComissaoPct, [nameof(OutrasVariaveisPct)] = OutrasVariaveisPct, [nameof(OutrasVariaveisReais)] = OutrasVariaveisReais,
+        [nameof(TaxaPagamentoPct)] = TaxaPagamentoPct, [nameof(FixasPct)] = FixasPct, [nameof(FixasMensais)] = FixasMensais,
+        [nameof(PecasPorMes)] = PecasPorMes, [nameof(MargemPct)] = MargemPct, [nameof(TerminarEm90)] = TerminarEm90.ToString(),
+        [nameof(FormasPagamento)] = FormasPagamento, [nameof(Quantidades)] = Quantidades
+    };
+
+    private void CarregarParametros()
+    {
+        if (_parametros is null) return;
+        var v = _parametros.Carregar();
+        string Pega(string chave, string padrao) => v.TryGetValue(chave, out var x) ? x : padrao;
+        EmbalagemReais = Pega(nameof(EmbalagemReais), EmbalagemReais); OutrosCustosPct = Pega(nameof(OutrosCustosPct), OutrosCustosPct);
+        ImpostosPct = Pega(nameof(ImpostosPct), ImpostosPct); ComissaoPct = Pega(nameof(ComissaoPct), ComissaoPct);
+        OutrasVariaveisPct = Pega(nameof(OutrasVariaveisPct), OutrasVariaveisPct); OutrasVariaveisReais = Pega(nameof(OutrasVariaveisReais), OutrasVariaveisReais);
+        TaxaPagamentoPct = Pega(nameof(TaxaPagamentoPct), TaxaPagamentoPct); FixasPct = Pega(nameof(FixasPct), FixasPct);
+        FixasMensais = Pega(nameof(FixasMensais), FixasMensais); PecasPorMes = Pega(nameof(PecasPorMes), PecasPorMes);
+        MargemPct = Pega(nameof(MargemPct), MargemPct); TerminarEm90 = bool.TryParse(Pega(nameof(TerminarEm90), ""), out var b) && b;
+        FormasPagamento = Pega(nameof(FormasPagamento), FormasPagamento); Quantidades = Pega(nameof(Quantidades), Quantidades);
+    }
+
+    /// <summary>Guarda os parâmetros da loja para as próximas vezes.</summary>
+    [RelayCommand]
+    private Task SalvarParametrosAsync() => ExecutarAsync(() =>
+    {
+        if (_parametros is null) throw new RegraDeNegocioException("Não há onde guardar os parâmetros neste modo.");
+        _parametros.Salvar(LerParametros());
+        MostrarSucesso("Parâmetros guardados. Na próxima vez a calculadora abre com eles (o custo e o frete não são guardados).");
+        return Task.CompletedTask;
+    });
 
     /// <summary>A tela define como perguntar "tem certeza?" (assim o ViewModel não depende de MessageBox).</summary>
     public Func<string, bool> Confirmar { get; set; } = _ => true;
