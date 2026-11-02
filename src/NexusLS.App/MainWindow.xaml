@@ -206,6 +206,15 @@
                         </WrapPanel>
                     </StackPanel>
 
+                    <StackPanel Margin="18,18,14,0">
+                        <TextBlock Text="Licença" Style="{StaticResource SecaoMenu}" Margin="0,0,0,2" />
+                        <TextBlock Text="{Binding LicencaTexto}" TextWrapping="Wrap" FontSize="13" AutomationProperties.Name="Situação da licença" />
+                        <TextBlock Text="{Binding LicencaMensagem}" TextWrapping="Wrap" FontSize="12" Opacity="0.8" />
+                        <Button Content="Ativar licença" Style="{StaticResource BotaoSecundario}" Margin="0,8,0,0" Padding="12,6" FontSize="13"
+                                HorizontalAlignment="Left" Command="{Binding AtivarLicencaCommand}"
+                                ToolTip="{Binding CodigoDestaMaquina, StringFormat='Código deste computador: {0}'}" />
+                    </StackPanel>
+
                     <StackPanel Margin="18,18,14,0" Visibility="{Binding TemUsuario, Converter={StaticResource BoolVis}}">
                         <TextBlock Text="Usuário" Style="{StaticResource SecaoMenu}" Margin="0,0,0,2" />
                         <TextBlock Text="{Binding UsuarioTexto}" TextWrapping="Wrap" FontSize="13" AutomationProperties.Name="Usuário atual" />

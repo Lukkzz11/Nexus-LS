@@ -15,6 +15,12 @@ public partial class MainWindow : FluentWindow
         var vm = new MainViewModel(App.Servicos);
         vm.PedirLogin = () => Views.LoginWindow.Pedir(App.Servicos.Funcionarios, this);
         DataContext = vm;
+        vm.EscolherArquivoDeLicenca = () =>
+        {
+            var d = new Microsoft.Win32.OpenFileDialog { Filter = "Licença do Nexus LS|*.json", Title = "Escolha o arquivo de licença" };
+            return d.ShowDialog(this) == true ? d.FileName : null;
+        };
+        vm.AtualizarLicenca();
 
         // Atualização: as perguntas ficam aqui (janela); a consulta ao abrir é silenciosa e nunca atrapalha o uso.
         vm.Atualizacao.Confirmar = texto =>
