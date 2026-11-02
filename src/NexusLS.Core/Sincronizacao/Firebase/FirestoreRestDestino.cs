@@ -55,7 +55,15 @@ public static class FirestoreJson
         if (p.Referencia is not null) campos["referencia"] = Texto(p.Referencia);
         if (p.CodigoBarras is not null) campos["codigoBarras"] = Texto(p.CodigoBarras);
 
-        return Escrita(NomeDoDocumento(projectId, "produtos", IdDoDocumento(p.Guid)), campos, CamposDoErp);
+        // A foto só entra na máscara quando o Nexus tem uma: sem foto aqui, a que foi posta pela vitrine online fica como está.
+        var mascara = CamposDoErp.AsEnumerable();
+        if (p.FotoUrl is not null)
+        {
+            campos["fotoUrl"] = Texto(p.FotoUrl);
+            mascara = mascara.Append("fotoUrl");
+        }
+
+        return Escrita(NomeDoDocumento(projectId, "produtos", IdDoDocumento(p.Guid)), campos, mascara);
     }
 
     /// <summary>O documento <c>meta/catalogo</c>: a vitrine lê dele "atualizado em ...".</summary>

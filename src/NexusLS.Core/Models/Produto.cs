@@ -62,6 +62,12 @@ public class Produto : IEntidadeSincronizavel
     /// <summary>Produto desativado some do PDV, mas continua no histórico de vendas.</summary>
     public bool Ativo { get; set; } = true;
 
+    /// <summary>Nome do arquivo da foto na pasta de fotos desta instalação (ex.: guid-data.jpg). Nulo = sem foto.</summary>
+    public string? FotoArquivo { get; set; }
+
+    /// <summary>Endereço público da foto já enviada ao Firebase Storage. Nulo = ainda não enviada (ou sem foto).</summary>
+    public string? FotoUrl { get; set; }
+
     /// <summary>Grade de tamanhos, cada um com seu próprio estoque.</summary>
     public List<ProdutoTamanho> Tamanhos { get; set; } = new();
 

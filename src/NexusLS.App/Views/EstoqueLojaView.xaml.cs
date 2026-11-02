@@ -22,6 +22,15 @@ public partial class EstoqueLojaView : UserControl
                 };
                 return dialogo.ShowDialog(Window.GetWindow(this)) == true ? dialogo.FileName : null;
             };
+            vm.EscolherFoto = () =>
+            {
+                var dialogo = new Microsoft.Win32.OpenFileDialog
+                {
+                    Title = "Escolha a foto do produto",
+                    Filter = "Imagens|*.jpg;*.jpeg;*.png;*.bmp;*.gif|Todos os arquivos|*.*"
+                };
+                return dialogo.ShowDialog(Window.GetWindow(this)) == true ? dialogo.FileName : null;
+            };
             vm.ConfirmarImportacao = texto =>
                 MessageBox.Show(Window.GetWindow(this), texto, "Importar produtos", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
             vm.InformarImportacao = texto =>

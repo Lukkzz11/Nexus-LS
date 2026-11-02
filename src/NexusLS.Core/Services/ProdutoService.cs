@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using NexusLS.Core.Data;
 using NexusLS.Core.Models;
 
@@ -122,6 +122,12 @@ public class ProdutoService
         }
 
         return await consulta.OrderBy(p => p.Nome).ToListAsync();
+    }
+
+    public async Task<Produto?> ObterAsync(int id)
+    {
+        await using var db = await _fabrica.CreateDbContextAsync();
+        return await db.Produtos.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id);
     }
 
     /// <summary>Usado pelo leitor de código de barras no PDV: só produto ativo, código exato.</summary>

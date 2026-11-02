@@ -78,6 +78,9 @@
                     <TextBlock Text="Chave da API (Web API Key do projeto)" Style="{StaticResource Rotulo}" />
                     <TextBox Text="{Binding ApiKey, UpdateSourceTrigger=PropertyChanged}" />
 
+                    <TextBlock Text="Bucket do Storage das fotos (vazio = padrão do projeto)" Style="{StaticResource Rotulo}" />
+                    <TextBox Text="{Binding Bucket, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Bucket do Storage" />
+
                     <TextBlock Text="E-mail do login da licença" Style="{StaticResource Rotulo}" />
                     <TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}" />
 

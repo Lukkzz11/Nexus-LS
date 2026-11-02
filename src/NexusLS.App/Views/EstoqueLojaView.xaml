@@ -148,6 +148,30 @@
                                 <TextBlock Text="Nome" Style="{StaticResource Rotulo}" />
                                 <TextBox Text="{Binding Nome, UpdateSourceTrigger=PropertyChanged}" />
 
+                                <Grid Visibility="{Binding FotoDisponivel, Converter={StaticResource BoolVis}}" Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border Width="84" Height="84" CornerRadius="6" BorderThickness="1" BorderBrush="{StaticResource CorBorda}" ClipToBounds="True">
+                                        <Grid>
+                                            <Image Source="{Binding FotoImagem}" Stretch="UniformToFill" AutomationProperties.Name="Foto do produto" />
+                                            <TextBlock Text="Sem foto" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                       Foreground="{StaticResource CorTextoSuave}" FontSize="12"
+                                                       Visibility="{Binding TemFoto, Converter={StaticResource BoolInverso}}" />
+                                        </Grid>
+                                    </Border>
+                                    <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding SituacaoFoto}" TextWrapping="Wrap" Foreground="{StaticResource CorTextoSuave}" FontSize="12" />
+                                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                                            <Button Content="Escolher foto..." Style="{StaticResource BotaoSecundario}" Padding="10,4" Command="{Binding TrocarFotoCommand}"
+                                                    AutomationProperties.Name="Escolher foto do produto" />
+                                            <Button Content="Remover" Style="{StaticResource BotaoSecundario}" Padding="10,4" Margin="6,0,0,0" Command="{Binding RemoverFotoCommand}"
+                                                    Visibility="{Binding TemFoto, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Remover foto" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Grid>
+
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />

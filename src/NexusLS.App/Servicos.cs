@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using NexusLS.App.Impressao;
 using NexusLS.Core.Data;
 using NexusLS.Core.Services;
@@ -46,6 +46,7 @@ public sealed class ContainerDeServicos
     public NexusLS.Core.Sincronizacao.SincronizacaoRepositorio SincronizacaoRepo { get; }
     public NexusLS.Core.Sincronizacao.IDestinoCatalogo DestinoCatalogo { get; }
     public NexusLS.Core.Sincronizacao.SincronizadorCatalogo Sincronizador { get; }
+    public FotoProdutoService Fotos { get; }
     public RascunhoService Rascunho { get; }
     public NexusLS.Core.Sincronizacao.Firebase.GestorLogin Login { get; }
     public NexusLS.Core.Sincronizacao.ProcessadorFila Fila { get; }
@@ -97,6 +98,8 @@ public sealed class ContainerDeServicos
         SincronizacaoRepo = new(fabrica);
         DestinoCatalogo = new NexusLS.Core.Sincronizacao.Firebase.DestinoFirestoreConfiguravel(Firebase, _httpFirebase);
         Sincronizador = new(SincronizacaoRepo, DestinoCatalogo);
+        Fotos = new(fabrica, new NexusLS.App.Imagens.ProcessadorImagemWpf(), FotoProdutoService.PastaPadrao(),
+            new NexusLS.Core.Sincronizacao.Firebase.EnviadorFotoConfiguravel(Firebase, _httpFirebase));
         var protetor = new NexusLS.App.Seguranca.ProtetorDpapi();
         Operacional = new(NexusLS.Core.Sincronizacao.Operacional.ConfiguracaoOperacionalStore.CaminhoPadrao());
         Login = new(Firebase, _httpFirebase, new NexusLS.Core.Sincronizacao.Firebase.SessaoStore(NexusLS.Core.Sincronizacao.Firebase.SessaoStore.CaminhoPadrao()), protetor,

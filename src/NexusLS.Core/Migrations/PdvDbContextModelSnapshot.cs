@@ -1338,6 +1338,12 @@ namespace NexusLS.Core.Migrations
                     b.Property<int>("EstoqueMinimo")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("FotoArquivo")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FotoUrl")
+                        .HasColumnType("TEXT");
+
                     b.Property<Guid>("Guid")
                         .HasColumnType("TEXT");
 

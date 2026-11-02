@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -37,6 +37,7 @@ public partial class CatalogoOnlineViewModel : ViewModelBase
     private readonly SincronizacaoRepositorio _repo;
     private readonly IDestinoCatalogo _destino;
     private readonly ConfiguracaoService? _loja;
+    private readonly FotoProdutoService? _fotos;
 
     private readonly NexusLS.Core.Sincronizacao.Operacional.ConfiguracaoOperacionalStore? _operacional;
     private PlanoSincronizacao? _planoPendente;
@@ -46,9 +47,10 @@ public partial class CatalogoOnlineViewModel : ViewModelBase
         ConfiguracaoFirebaseStore config, SincronizadorCatalogo sincronizador, SincronizacaoRepositorio repo,
         IDestinoCatalogo destino, ConfiguracaoService? loja = null,
         NexusLS.Core.Sincronizacao.Operacional.ConfiguracaoOperacionalStore? operacional = null,
-        ImportacaoErpViewModel? erp = null)
+        ImportacaoErpViewModel? erp = null, FotoProdutoService? fotos = null)
     {
         Erp = erp;
+        _fotos = fotos;
         _config = config;
         _sincronizador = sincronizador;
         _repo = repo;
@@ -73,6 +75,7 @@ public partial class CatalogoOnlineViewModel : ViewModelBase
     [ObservableProperty] private string _projectId = "";
     [ObservableProperty] private string _apiKey = "";
     [ObservableProperty] private string _email = "";
+    [ObservableProperty] private string _bucket = "";
 
     /// <summary>Senha digitada agora. Em branco = manter a que já está salva (que nunca é mostrada).</summary>
     [ObservableProperty] private string _senhaNova = "";
@@ -101,6 +104,7 @@ public partial class CatalogoOnlineViewModel : ViewModelBase
         ProjectId = c.ProjectId;
         ApiKey = c.ApiKey;
         Email = c.Email;
+        Bucket = c.Bucket;
         SenhaNova = "";
         AtualizarSituacao(c);
     }
@@ -154,7 +158,7 @@ public partial class CatalogoOnlineViewModel : ViewModelBase
     [RelayCommand]
     private Task SalvarConfiguracaoAsync() => ExecutarAsync(() =>
     {
-        _config.Salvar(new ConfiguracaoFirebase { ProjectId = ProjectId, ApiKey = ApiKey, Email = Email }, SenhaNova);
+        _config.Salvar(new ConfiguracaoFirebase { ProjectId = ProjectId, ApiKey = ApiKey, Email = Email, Bucket = Bucket }, SenhaNova);
         CarregarConfiguracao();
         MostrarSucesso("Configuração salva.");
         return Task.CompletedTask;
@@ -180,6 +184,22 @@ public partial class CatalogoOnlineViewModel : ViewModelBase
     });
 
     /// <summary>O botão "Atualizar Firestore": confere a conexão e mostra o plano para o usuário confirmar. Não envia nada ainda.</summary>
+    /// <summary>Sobe as fotos novas antes do catálogo, para o endereço delas ir junto. Falha aqui não impede o catálogo.</summary>
+    private async Task<string?> EnviarFotosPendentesAsync()
+    {
+        if (_fotos is null || await _fotos.ContarPendentesAsync() == 0) return null;
+        ProgressoTexto = "Enviando as fotos dos produtos...";
+        try
+        {
+            var r = await _fotos.EnviarPendentesAsync();
+            return r.Falhas == 0 ? null : $"{r.Falhas} foto(s) não foram enviadas: {r.PrimeiroErro}";
+        }
+        catch (Exception ex) when (ex is NexusLS.Core.Sincronizacao.FalhaDestinoException or RegraDeNegocioException)
+        {
+            return "Fotos não enviadas: " + ex.Message;
+        }
+    }
+
     [RelayCommand]
     private Task AtualizarFirestoreAsync() => ExecutarAsync(async () =>
     {
@@ -189,6 +209,7 @@ public partial class CatalogoOnlineViewModel : ViewModelBase
         try
         {
             ProgressoTexto = "Conferindo a conexão e calculando o que mudou...";
+            var avisoFotos = await EnviarFotosPendentesAsync();
             var preparo = await _sincronizador.PrepararAsync(await NomeDoOperadorAsync());
             await AtualizarHistoricoAsync();
 
@@ -200,6 +221,7 @@ public partial class CatalogoOnlineViewModel : ViewModelBase
             }
 
             ListarProblemas(preparo.Plano);
+            if (avisoFotos is not null) Problemas.Add(avisoFotos);
             if (!preparo.Plano.TemQueEnviar)
             {
                 // Nada a enviar: ainda assim vira uma linha no histórico ("sem mudanças").

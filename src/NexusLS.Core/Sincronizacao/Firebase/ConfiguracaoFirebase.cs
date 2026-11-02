@@ -30,6 +30,11 @@ public class ConfiguracaoFirebase
     /// <summary>A "Web API Key" do projeto. Não é segredo (aparece em qualquer site Firebase), mas só vale para este projeto.</summary>
     public string ApiKey { get; set; } = "";
 
+    /// <summary>Bucket do Firebase Storage (ex.: meu-projeto.firebasestorage.app). Vazio = o padrão do projeto.</summary>
+    public string Bucket { get; set; } = "";
+
+    public string BucketEfetivo => string.IsNullOrWhiteSpace(Bucket) ? $"{ProjectId}.firebasestorage.app" : Bucket.Trim();
+
     /// <summary>E-mail do usuário do Firebase Authentication que representa esta licença.</summary>
     public string Email { get; set; } = "";
 

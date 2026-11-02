@@ -96,7 +96,7 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand] private void IrParaMaisVendidos() => Abrir(new MaisVendidosViewModel(_servicos.Relatorios), ItemMenu.MaisVendidos);
 
     // Estoque
-    [RelayCommand] private void IrParaEstoque() => Abrir(new EstoqueLojaViewModel(_servicos.Produtos, _servicos.Estoque), ItemMenu.EstoqueDaLoja);
+    [RelayCommand] private void IrParaEstoque() => Abrir(new EstoqueLojaViewModel(_servicos.Produtos, _servicos.Estoque, _servicos.Fotos), ItemMenu.EstoqueDaLoja);
     [RelayCommand] private void IrParaFabrica() => Abrir(new FabricaViewModel(_servicos.Producao), ItemMenu.Fabrica);
     [RelayCommand] private void IrParaCalculadoraPrecos() => Abrir(new CalculadoraPrecosViewModel(_servicos.Produtos, new NexusLS.Core.Services.ParametrosCalculadoraStore(NexusLS.Core.Services.ParametrosCalculadoraStore.CaminhoPadrao())), ItemMenu.CalculadoraPrecos);
     [RelayCommand] private void IrParaCompras() => Abrir(new ComprasViewModel(_servicos.Compras, _servicos.Produtos, _servicos.Fornecedores), ItemMenu.Compras);
@@ -116,7 +116,7 @@ public partial class MainViewModel : ObservableObject
         {
             PedirLogin = () => Views.LoginFirebaseWindow.PedirErp(_servicos.ContaErp, System.Windows.Application.Current?.MainWindow)
         };
-        Abrir(new CatalogoOnlineViewModel(_servicos.Firebase, _servicos.Sincronizador, _servicos.SincronizacaoRepo, _servicos.DestinoCatalogo, _servicos.Configuracao, _servicos.Operacional, erp), ItemMenu.CatalogoOnline);
+        Abrir(new CatalogoOnlineViewModel(_servicos.Firebase, _servicos.Sincronizador, _servicos.SincronizacaoRepo, _servicos.DestinoCatalogo, _servicos.Configuracao, _servicos.Operacional, erp, _servicos.Fotos), ItemMenu.CatalogoOnline);
     }
     [RelayCommand] private void IrParaFuncionarios() => Abrir(new FuncionariosViewModel(_servicos.Funcionarios), ItemMenu.Funcionarios);
     [RelayCommand] private void IrParaAtividades() => Abrir(new AtividadesViewModel(_servicos.Atividades), ItemMenu.Atividades);

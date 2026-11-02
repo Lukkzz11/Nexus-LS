@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -22,8 +22,11 @@ public partial class EstoqueLojaViewModel : ViewModelBase
     private int _versaoBusca;
     private bool _silenciar; // true enquanto a seleção da lista é refeita pelo programa (não pelo operador)
 
-    public EstoqueLojaViewModel(ProdutoService produtos, EstoqueService estoque)
+    private readonly FotoProdutoService? _fotos;
+
+    public EstoqueLojaViewModel(ProdutoService produtos, EstoqueService estoque, FotoProdutoService? fotos = null)
     {
+        _fotos = fotos;
         _produtos = produtos;
         _estoque = estoque;
         _tipoSelecionado = Opcoes[0];
@@ -255,6 +258,45 @@ public partial class EstoqueLojaViewModel : ViewModelBase
         }
     }
 
+    // ----- Foto do produto -----
+    /// <summary>Abre a caixa "Abrir arquivo" para escolher a foto (a View preenche). Nulo = cancelou.</summary>
+    public Func<string?> EscolherFoto { get; set; } = () => null;
+
+    [ObservableProperty] private System.Windows.Media.ImageSource? _fotoImagem;
+    [ObservableProperty] private string _situacaoFoto = "";
+    public bool FotoDisponivel => _fotos is not null;
+    public bool TemFoto => FotoImagem is not null;
+    partial void OnFotoImagemChanged(System.Windows.Media.ImageSource? value) => OnPropertyChanged(nameof(TemFoto));
+
+    private void MostrarFotoDe(Produto? p)
+    {
+        FotoImagem = p is null || _fotos is null ? null : Imagens.ProcessadorImagemWpf.Carregar(_fotos.CaminhoDe(p.FotoArquivo));
+        SituacaoFoto = p?.FotoArquivo is null ? "Sem foto"
+            : p.FotoUrl is null ? "Foto guardada · será enviada na próxima atualização do catálogo online"
+            : "Foto enviada ao catálogo online";
+    }
+
+    [RelayCommand]
+    private Task TrocarFotoAsync() => ExecutarAsync(async () =>
+    {
+        if (_fotos is null) return;
+        if (IdEditando is not int id) throw new RegraDeNegocioException("Salve o produto antes de escolher a foto.");
+        var arquivo = EscolherFoto();
+        if (arquivo is null) return;
+        await _fotos.DefinirAsync(id, await System.IO.File.ReadAllBytesAsync(arquivo));
+        MostrarFotoDe(await _produtos.ObterAsync(id));
+        MostrarSucesso("Foto salva.");
+    });
+
+    [RelayCommand]
+    private Task RemoverFotoAsync() => ExecutarAsync(async () =>
+    {
+        if (_fotos is null || IdEditando is not int id) return;
+        await _fotos.RemoverAsync(id);
+        MostrarFotoDe(await _produtos.ObterAsync(id));
+        MostrarSucesso("Foto removida.");
+    });
+
     /// <summary>Preenche o campo com o próximo código de barras interno (EAN-13, prefixo 2) livre.</summary>
     [RelayCommand]
     private Task GerarCodigoBarrasAsync() => ExecutarAsync(async () =>
@@ -271,6 +313,7 @@ public partial class EstoqueLojaViewModel : ViewModelBase
         finally { _silenciar = false; }
 
         IdEditando = null;
+        MostrarFotoDe(null);
         NomeEditando = "";
         Nome = "";
         CodigoBarras = "";
@@ -361,6 +404,7 @@ public partial class EstoqueLojaViewModel : ViewModelBase
     private async Task AbrirProdutoAsync(Produto produto)
     {
         IdEditando = produto.Id;
+        MostrarFotoDe(produto);
         NomeEditando = produto.Nome;
         Nome = produto.Nome;
         CodigoBarras = produto.CodigoBarras ?? "";

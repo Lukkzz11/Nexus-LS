@@ -20,7 +20,8 @@ public record ProdutoPublicavel(
     long PrecoVendaCentavos,
     bool SemControleDeEstoque,
     bool Ativo,
-    IReadOnlyList<TamanhoPublicavel> Tamanhos)
+    IReadOnlyList<TamanhoPublicavel> Tamanhos,
+    string? FotoUrl = null)
 {
     public int EstoqueTotal => SemControleDeEstoque ? 0 : Tamanhos.Sum(t => t.Estoque);
 }
@@ -56,7 +57,7 @@ public record PlanoSincronizacao(
 public static class RegrasSincronizacao
 {
     /// <summary>Versão do formato do hash. Se um dia a lista de campos publicados mudar, subir este número força o reenvio de todos.</summary>
-    public const string VersaoDoFormato = "v1";
+    public const string VersaoDoFormato = "v2";
 
     public static ProdutoPublicavel Montar(Produto p) => new(
         p.Guid,
@@ -70,7 +71,8 @@ public static class RegrasSincronizacao
         p.Tamanhos
             .OrderBy(t => t.Tamanho, StringComparer.Ordinal)
             .Select(t => new TamanhoPublicavel(t.Tamanho, t.Estoque))
-            .ToList());
+            .ToList(),
+        Vazio(p.FotoUrl));
 
     /// <summary>
     /// Hash (SHA-256) do conteúdo publicável. Mesmo conteúdo = mesmo hash, em qualquer computador e a qualquer hora;
@@ -92,7 +94,8 @@ public static class RegrasSincronizacao
             p.PrecoVendaCentavos,
             p.SemControleDeEstoque ? 1 : 0,
             p.Ativo ? 1 : 0,
-            tamanhos);
+            tamanhos,
+            p.FotoUrl ?? "");
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(texto))).ToLowerInvariant();
     }
 
