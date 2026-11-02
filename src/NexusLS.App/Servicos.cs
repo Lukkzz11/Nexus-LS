@@ -51,6 +51,7 @@ public sealed class ContainerDeServicos
     public PreferenciasStore Preferencias { get; }
     public NexusLS.Core.Vitrine.VitrineStore Vitrine { get; }
     public NexusLS.Core.Vitrine.IPublicadorVitrine PublicadorVitrine { get; }
+    public NexusLS.Core.Vitrine.ServicoCatalogoWeb CatalogoWeb { get; }
     public RascunhoService Rascunho { get; }
     public NexusLS.Core.Sincronizacao.Firebase.GestorLogin Login { get; }
     public NexusLS.Core.Sincronizacao.ProcessadorFila Fila { get; }
@@ -105,6 +106,10 @@ public sealed class ContainerDeServicos
         Vitrine = new(NexusLS.Core.Vitrine.VitrineStore.CaminhoPadrao());
         PublicadorVitrine = new NexusLS.Core.Vitrine.PublicadorVitrineConfiguravel(Firebase, _httpFirebase);
         Preferencias = new(PreferenciasStore.CaminhoPadrao());
+        CatalogoWeb = new(Produtos, Configuracao, new NexusLS.Core.Vitrine.VitrineCompletaStore(NexusLS.Core.Vitrine.VitrineCompletaStore.CaminhoPadrao()),
+            NexusLS.Core.Vitrine.ServicoCatalogoWeb.PastaImagensPadrao(),
+            new NexusLS.Core.Sincronizacao.Firebase.EnviadorFotoConfiguravel(Firebase, _httpFirebase),
+            (NexusLS.Core.Vitrine.IPublicadorVitrineCompleta)PublicadorVitrine);
         NexusLS.App.ViewModels.PdvViewModel.DescontoPorPecaPadrao = () => Preferencias.Carregar().DescontoPorPecaCentavos;
         var googleStore = new NexusLS.Core.Google.GoogleStore(NexusLS.Core.Google.GoogleStore.CaminhoPadrao(), new NexusLS.App.Seguranca.ProtetorDpapi());
         var googleAuth = new NexusLS.Core.Google.GoogleOAuth(_httpFirebase, googleStore);

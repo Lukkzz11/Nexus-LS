@@ -271,3 +271,12 @@ O programa aplica as migrations pendentes sozinho ao abrir, preservando os dados
 ## Fora do escopo desta versão
 
 Multiempresa (o Nexus é de uma loja só, por decisão), loja online completa (só o envio do catálogo existe), cobrança com juros e carnê, fábrica, impressora fiscal. O plano de trazer o restante do ERP anterior está em `PLANO_MIGRACAO_NEXUS.md`.
+
+## Editor do catálogo (JSX dentro do WebView2)
+
+O **Editor do catálogo** e a pré-visualização do catálogo são telas em React/JSX (migradas do ERP), em `web/catalogo`, hospedadas no programa por um WebView2. O resto do Nexus LS continua WPF/XAML.
+
+- **Dados:** a página nunca fala com o Firebase. Ela pede tudo ao programa por mensagens (`web/catalogo/src/ponte.js` ↔ `Web/PonteCatalogo.cs` ↔ `Core/Vitrine/ServicoCatalogoWeb.cs`): produtos do estoque local, vitrine salva, imagens do editor e publicação.
+- **Publicar** (só no clique): guarda no computador, sobe ao Storage as imagens locais e grava a vitrine completa no campo `v2` de `meta/vitrine` (os demais campos do documento não são tocados).
+- **Alterou o JSX?** rode `.\web\construir.ps1` (gera `src/NexusLS.App/Web/catalogo.zip`, embutido no .exe e extraído em `%LocalAppData%\NexusLS\web`) e depois compile. Para ver o editor no navegador com dados de demonstração: `cd web/catalogo; npm run dev`.
+- Precisa do Microsoft Edge WebView2 Runtime (já vem no Windows 11).

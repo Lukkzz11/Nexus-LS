@@ -109,7 +109,7 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand] private void IrParaEtiquetas() => Abrir(new EtiquetasViewModel(_servicos.Produtos, _servicos.ModelosEtiqueta), ItemMenu.Etiquetas);
 
     // Gestão
-    [RelayCommand] private void IrParaEditorCatalogo() => Abrir(new EditorCatalogoViewModel(_servicos.Vitrine, _servicos.PublicadorVitrine), ItemMenu.EditorCatalogo);
+    [RelayCommand] private void IrParaEditorCatalogo() => Abrir(new CatalogoWebViewModel(_servicos.CatalogoWeb), ItemMenu.EditorCatalogo);
     [RelayCommand] private void IrParaAgenda() => Abrir(new AgendaViewModel(_servicos.Agenda), ItemMenu.Agenda);
     [RelayCommand] private void IrParaClientes() => Abrir(new ClientesViewModel(_servicos.Clientes), ItemMenu.Clientes);
     [RelayCommand] private void IrParaFinanceiro() => Abrir(new FinanceiroViewModel(_servicos.Financeiro), ItemMenu.Financeiro);
