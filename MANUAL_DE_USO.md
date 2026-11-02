@@ -54,6 +54,8 @@ Menu **Vendas > Venda Cliente**: escolha o cliente (a lista mostra quanto cada u
 - **Financeiro e Contas e saldos:** contas a pagar/receber, parcelas, cartões a liquidar, cheques, transferências e saldos. Os saldos usam uma fórmula única em todas as telas.
 - **Relatórios, Mais vendidos e Desempenho:** período contra o anterior, ranking, quebra por categoria, pagamento e vendedor, com **filtros** e **exportar CSV**. O lucro só aparece quando o custo é conhecido na maior parte do que foi vendido.
 
+- **Agenda:** calendário com os compromissos do dia (entrega, cobrança, reunião), horário ou dia inteiro, marcar como feito e remover. Fica só neste computador.
+
 ## 6. Catálogo online e importação do ERP
 
 - Em **Catálogo online** você liga sua conta Firebase. Os dados vão para a nuvem por uma **fila**: se a internet cair, nada se perde e o envio continua depois. O indicador no menu lateral mostra o estado da fila.
@@ -66,3 +68,7 @@ Menu **Vendas > Venda Cliente**: escolha o cliente (a lista mostra quanto cada u
 - **Restaurar backup:** Configurações > Backup > Restaurar.
 - **Voltar a versão anterior:** na pasta do programa há o `NexusLS.anterior.exe`.
 - **Impressora não imprime:** a venda já foi gravada; use **Reimprimir cupom**.
+
+## 8. Licença
+
+No menu lateral, em **Licença**, aparece o estado. Para ativar, clique em **Ativar licença** e escolha o arquivo `.json` que o fornecedor enviou. Passe ao fornecedor o **código deste computador** (aparece ao parar o mouse sobre o botão) se a licença for presa a ele. Por enquanto o programa funciona mesmo sem licença.
