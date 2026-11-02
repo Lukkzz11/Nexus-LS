@@ -7,7 +7,7 @@ using NexusLS.Core.Models;
 namespace NexusLS.App.ViewModels;
 
 /// <summary>Os itens do menu lateral. O nome do item é também o "Tag" do botão: assim o menu destaca o da tela aberta.</summary>
-public enum ItemMenu { Inicio, Pdv, VendaCliente, Caixa, Fechamento, Pedidos, MaisVendidos, Desempenho, EstoqueDaLoja, Fabrica, CalculadoraPrecos, Compras, Fornecedores, Etiquetas, Clientes, Agenda, Financeiro, ContasESaldos, Relatorios, CatalogoOnline, Funcionarios, Atividades, Configuracoes }
+public enum ItemMenu { Inicio, Pdv, VendaCliente, Caixa, Fechamento, Pedidos, MaisVendidos, Desempenho, EstoqueDaLoja, Fabrica, CalculadoraPrecos, Compras, Fornecedores, Etiquetas, Clientes, Agenda, EditorCatalogo, Financeiro, ContasESaldos, Relatorios, CatalogoOnline, Funcionarios, Atividades, Configuracoes }
 
 /// <summary>
 /// ViewModel = a "lógica da tela". Ele guarda os dados que a tela mostra e os comandos dos botões,
@@ -69,6 +69,7 @@ public partial class MainViewModel : ObservableObject
             case ItemMenu.Etiquetas: IrParaEtiquetas(); break;
             case ItemMenu.Clientes: IrParaClientes(); break;
             case ItemMenu.Agenda: IrParaAgenda(); break;
+            case ItemMenu.EditorCatalogo: IrParaEditorCatalogo(); break;
             case ItemMenu.Financeiro: IrParaFinanceiro(); break;
             case ItemMenu.ContasESaldos: IrParaContasESaldos(); break;
             case ItemMenu.Relatorios: IrParaRelatorios(); break;
@@ -104,6 +105,7 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand] private void IrParaEtiquetas() => Abrir(new EtiquetasViewModel(_servicos.Produtos, _servicos.ModelosEtiqueta), ItemMenu.Etiquetas);
 
     // Gestão
+    [RelayCommand] private void IrParaEditorCatalogo() => Abrir(new EditorCatalogoViewModel(_servicos.Vitrine, _servicos.PublicadorVitrine), ItemMenu.EditorCatalogo);
     [RelayCommand] private void IrParaAgenda() => Abrir(new AgendaViewModel(_servicos.Agenda), ItemMenu.Agenda);
     [RelayCommand] private void IrParaClientes() => Abrir(new ClientesViewModel(_servicos.Clientes), ItemMenu.Clientes);
     [RelayCommand] private void IrParaFinanceiro() => Abrir(new FinanceiroViewModel(_servicos.Financeiro), ItemMenu.Financeiro);
@@ -160,7 +162,7 @@ public partial class MainViewModel : ObservableObject
         ItemMenu.Agenda => true,
         ItemMenu.Financeiro or ItemMenu.ContasESaldos => Sessao.Pode(Permissao.Financeiro),
         ItemMenu.Funcionarios => Sessao.Pode(Permissao.Funcionarios),
-        ItemMenu.Configuracoes or ItemMenu.CatalogoOnline or ItemMenu.Atividades => Sessao.Pode(Permissao.Configuracoes),
+        ItemMenu.Configuracoes or ItemMenu.CatalogoOnline or ItemMenu.EditorCatalogo or ItemMenu.Atividades => Sessao.Pode(Permissao.Configuracoes),
         _ => false
     };
 

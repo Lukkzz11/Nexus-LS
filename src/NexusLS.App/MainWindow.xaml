@@ -1,4 +1,4 @@
-﻿<ui:FluentWindow x:Class="NexusLS.App.MainWindow"
+<ui:FluentWindow x:Class="NexusLS.App.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
@@ -149,6 +149,12 @@
                         <StackPanel Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="CalendarLtr24" Style="{StaticResource IconeDoMenu}" />
                             <TextBlock Text="Agenda" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Tag="EditorCatalogo" Visibility="{Binding VerConfiguracoes, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Editor do catálogo" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaEditorCatalogoCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="PaintBrush24" Style="{StaticResource IconeDoMenu}" />
+                            <TextBlock Text="Editor do catálogo" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
                     <Button Tag="Clientes" Visibility="{Binding VerClientes, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Clientes" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaClientesCommand}">

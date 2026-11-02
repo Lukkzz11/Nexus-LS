@@ -3,6 +3,10 @@
 Define quais dados pertencem a cada banco, quem é a fonte oficial de cada um e como cada fluxo é sincronizado.
 Estado em 25/10/2026. Marcado como **[feito]**, **[proposto]** ou **[decisão pendente]**.
 
+## 5f. Vitrine (editor do catálogo)
+
+`ConfiguracaoVitrine` (Core/Vitrine) guarda modelo, fonte, cores, textos, loja, atacado, banners e ordem dos produtos em `%LOCALAPPDATA%\NexusLS\vitrine.json` (`VitrineStore`). `Normalizar()` valida tudo antes de salvar ou publicar. `PublicadorVitrineRest` faz `PATCH .../documents/meta/vitrine` (substitui o documento) com o mesmo login do catálogo; ids de modelo, fonte e cor seguem o `temaVitrine.js` do ERP. Nada é enviado sem o clique em Publicar. Não testado contra um Firebase real; a regra do Firestore precisa liberar escrita em `meta/vitrine`.
+
 ## 5e. Fotos dos produtos
 
 `Produto.FotoArquivo` (arquivo local em `%LOCALAPPDATA%\NexusLS\fotos`) e `Produto.FotoUrl` (endereço no Firebase Storage). `FotoProdutoService` reduz (via `IProcessadorImagem`, WPF no App), grava no disco e, em `EnviarPendentesAsync`, sobe pelo `StorageRestEnviador` (`POST firebasestorage.googleapis.com/v0/b/{bucket}/o?uploadType=media`, cabeçalho `Authorization: Firebase {idToken}`, mesmo login do catálogo). O bucket padrão é `{projectId}.firebasestorage.app` (campo opcional em Catálogo online). `fotoUrl` entra no documento do produto e no hash (`VersaoDoFormato` = v2, o que reenvia todos os produtos uma vez); a máscara de atualização só inclui `fotoUrl` quando o Nexus tem foto, para não apagar a que veio da vitrine online. As regras do Storage do projeto precisam liberar escrita ao login da licença. Não testado contra um Firebase real.

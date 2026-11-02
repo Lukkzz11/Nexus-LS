@@ -63,6 +63,9 @@ Menu **Vendas > Venda Cliente**: escolha o cliente (a lista mostra quanto cada u
 - **Importar do ERP:** traz produtos (com grade), clientes, turnos, vendas, dívidas, pedidos, movimentos e gastos do caixa e a fábrica. Importar de novo atualiza sem duplicar. Fica de fora: fechamentos de caixa (o ERP fecha por período, aqui é por turno), saldo anterior sem venda de origem e fotos.
 - **(a confirmar)** A sincronização e a importação ainda não foram testadas com um Firebase real. Siga o `GUIA_TESTE_REAL.md`.
 
+### Editor do catálogo
+Menu **Gestão > Editor do catálogo**: modelo e fonte, cores (formato #RRGGBB, com aviso quando a leitura fica difícil), textos do topo, dados da loja (WhatsApp, Instagram, endereço...), mínimo do atacado, quantidade de novidades e os dois banners. **Salvar** guarda neste computador; **Publicar no Firebase** grava o documento `meta/vitrine`. É um subconjunto do editor visual do ERP: ainda não há arrastar blocos, fotos de banner, logo, seleção de produtos, desfazer/refazer nem catálogo em PDF. **(a confirmar)** A vitrine pública precisa ler `meta/vitrine` para usar estas escolhas.
+
 ## 7. Se algo der errado
 
 - **Mensagem vermelha:** leia o texto, ele diz o que corrigir.

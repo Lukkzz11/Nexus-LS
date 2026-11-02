@@ -324,6 +324,9 @@ internal static class Capturador
     public static void SalvarAgenda(AgendaViewModel vm, string caminho, int largura = 1400, int altura = 820) =>
         Desenhar(() => new AgendaView { DataContext = vm }, caminho, largura, altura);
 
+    public static void SalvarEditorCatalogo(EditorCatalogoViewModel vm, string caminho, int largura = 1400, int altura = 1000) =>
+        Desenhar(() => new EditorCatalogoView { DataContext = vm }, caminho, largura, altura);
+
     public static void SalvarVendaCliente(VendaClienteViewModel vm, string caminho, int largura = 1400, int altura = 820) =>
         Desenhar(() => new VendaClienteView { DataContext = vm }, caminho, largura, altura);
 
