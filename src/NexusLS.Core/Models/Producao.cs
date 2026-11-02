@@ -23,7 +23,7 @@ public enum MotivoPerda
 }
 
 /// <summary>Insumo da fábrica (tecido, linha, zíper, etiqueta...). A quantidade pode ser fracionada (metros, kg).</summary>
-public class MateriaPrima
+public class MateriaPrima : EntidadeSincronizavel
 {
     public int Id { get; set; }
     public string Nome { get; set; } = string.Empty;
@@ -46,13 +46,11 @@ public class MateriaPrima
     /// <summary>Desativada some da lista, mas continua nas perdas antigas.</summary>
     public bool Ativo { get; set; } = true;
 
-    public DateTime AtualizadoEm { get; set; }
-
     public bool AbaixoDoMinimo => EstoqueAtual < EstoqueMinimo;
 }
 
 /// <summary>Uma ordem de produção (OP): o que a fábrica vai fazer, em que etapa está e a grade planejada.</summary>
-public class OrdemProducao
+public class OrdemProducao : EntidadeSincronizavel
 {
     public int Id { get; set; }
 
@@ -70,7 +68,6 @@ public class OrdemProducao
     public string? Observacoes { get; set; }
 
     public DateTime CriadoEm { get; set; }
-    public DateTime AtualizadoEm { get; set; }
 
     /// <summary>Preenchidos quando a ordem foi transferida para a loja.</summary>
     public DateTime? TransferidaEm { get; set; }
@@ -92,7 +89,7 @@ public class OrdemProducaoGrade
 }
 
 /// <summary>Perda ou refugo de produção. Perda nunca é apagada: é a trilha do que se desperdiçou.</summary>
-public class PerdaProducao
+public class PerdaProducao : EntidadeSincronizavel
 {
     public int Id { get; set; }
     public DateTime DataHora { get; set; }

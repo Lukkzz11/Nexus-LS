@@ -101,6 +101,9 @@ public class ProcessadorFilaOperacional
         await Enfileirar<Fornecedor>(NomesEntidade.Fornecedor);
         await Enfileirar<Compra>(NomesEntidade.Compra);
         await Enfileirar<Pedido>(NomesEntidade.Pedido);
+        await Enfileirar<MateriaPrima>(NomesEntidade.MateriaPrima);
+        await Enfileirar<OrdemProducao>(NomesEntidade.OrdemProducao);
+        await Enfileirar<PerdaProducao>(NomesEntidade.PerdaProducao);
 
         await db.SaveChangesAsync();
         return criadas;

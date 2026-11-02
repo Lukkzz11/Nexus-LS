@@ -66,6 +66,10 @@ public sealed class ImportadorErp
         await ColecaoAsync("vendas", new[] { "criadoEm", "atualizadoEm" }, VendaAsync, r, ct);
         await ColecaoAsync("contas_receber", new[] { "criadoEm", "atualizadoEm" }, TituloAsync, r, ct);
         await ColecaoAsync("pedidos", new[] { "criadoEm", "atualizadoEm" }, PedidoAsync, r, ct);
+        // Fábrica: a matéria-prima e as ordens vêm antes das perdas, que apontam para as duas.
+        await ColecaoAsync("materia_prima", new[] { "atualizadoEm" }, MateriaPrimaAsync, r, ct);
+        await ColecaoAsync("ordens_producao", new[] { "criadoEm", "atualizadoEm" }, OrdemProducaoAsync, r, ct);
+        await ColecaoAsync("perdas_producao", new[] { "criadoEm" }, PerdaProducaoAsync, r, ct);
         return r;
     }
 
@@ -538,6 +542,117 @@ public sealed class ImportadorErp
         UltimoGuid = p.Guid;
         return true;
     }
+
+    // ------------------------------------------------------------------ fábrica
+
+    private async Task<bool?> MateriaPrimaAsync(PdvDbContext db, DocumentoErp doc, ImportacaoErpItem? ligacao, ResultadoImportacaoErp r)
+    {
+        var c = doc.Campos;
+        var nome = Texto(c, "nome");
+        if (nome is null) return null;
+
+        var m = ligacao is null ? null : await db.MateriasPrimas.FirstOrDefaultAsync(x => x.Guid == ligacao.EntidadeGuid);
+        var novo = m is null;
+        if (novo) { m = new MateriaPrima(); db.MateriasPrimas.Add(m); }
+
+        m!.Nome = nome;
+        m.Tipo = Texto(c, "tipo") ?? "";
+        m.Unidade = Texto(c, "unidade") ?? "un";
+        m.EstoqueAtual = (decimal)Numero(c["estoqueAtual"]);
+        m.EstoqueMinimo = (decimal)Numero(c["estoqueMinimo"]);
+        m.CustoUnitarioCentavos = Centavos(c, "custoUnitario");
+        m.Fornecedor = Texto(c, "fornecedor");
+        m.Localizacao = Texto(c, "localizacao");
+        UltimoGuid = m.Guid;
+        return novo;
+    }
+
+    private async Task<bool?> OrdemProducaoAsync(PdvDbContext db, DocumentoErp doc, ImportacaoErpItem? ligacao, ResultadoImportacaoErp r)
+    {
+        var c = doc.Campos;
+        var modelo = Texto(c, "modelo");
+        if (modelo is null) return null;
+        var agora = _agora().ToLocalTime();
+
+        var o = ligacao is null ? null : await db.OrdensProducao.Include(x => x.Grade).FirstOrDefaultAsync(x => x.Guid == ligacao.EntidadeGuid);
+        var novo = o is null;
+        if (novo)
+        {
+            o = new OrdemProducao { CriadoEm = DataLocal(c, "criadoEm") ?? agora };
+            db.OrdensProducao.Add(o);
+        }
+
+        var codigo = Texto(c, "codigoOP") ?? $"ERP-{doc.Id}";
+        // O código é único aqui; o do ERP é sorteado e pode repetir. Se já existe outro igual, ganha um sufixo.
+        if (await db.OrdensProducao.AnyAsync(x => x.Codigo == codigo && x.Guid != o!.Guid) || db.OrdensProducao.Local.Any(x => x != o && x.Codigo == codigo))
+            codigo = $"{codigo}-{doc.Id[..Math.Min(4, doc.Id.Length)]}";
+        o!.Codigo = codigo.Length > 20 ? codigo[..20] : codigo;
+        o.Modelo = modelo;
+        o.Referencia = Texto(c, "referencia");
+        o.Categoria = Texto(c, "categoria");
+        o.Status = StatusDaOrdem(Texto(c, "status"));
+        o.PrevisaoTermino = Texto(c, "previsaoTermino") is { } prev && DateTime.TryParse(prev, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt) ? dt : null;
+        o.TecidoUtilizado = Texto(c, "tecidoUtilizado");
+        o.Responsavel = Texto(c, "responsavel");
+        o.CustoEstimadoPecaCentavos = Centavos(c, "custoEstimadoPeca");
+        o.Observacoes = Texto(c, "observacoes");
+        o.TransferidaEm = DataLocal(c, "transferidaEm");
+
+        o.Grade.Clear();
+        if (c["gradePlanejada"] is JsonObject grade)
+            foreach (var (tamanho, valor) in grade)
+            {
+                var qtd = (int)Math.Round(Numero(valor));
+                if (qtd > 0) o.Grade.Add(new OrdemProducaoGrade { Tamanho = tamanho, Quantidade = qtd });
+            }
+        UltimoGuid = o.Guid;
+        return novo;
+    }
+
+    private static StatusOrdemProducao StatusDaOrdem(string? status) => status?.ToLowerInvariant() switch
+    {
+        "corte" => StatusOrdemProducao.Corte,
+        "costura" => StatusOrdemProducao.Costura,
+        "estampa" => StatusOrdemProducao.Estampa,
+        "acabamento" => StatusOrdemProducao.Acabamento,
+        "concluido" => StatusOrdemProducao.Concluida,
+        "cancelado" => StatusOrdemProducao.Cancelada,
+        _ => StatusOrdemProducao.Planejamento
+    };
+
+    private async Task<bool?> PerdaProducaoAsync(PdvDbContext db, DocumentoErp doc, ImportacaoErpItem? ligacao, ResultadoImportacaoErp r)
+    {
+        var c = doc.Campos;
+        var perda = ligacao is null ? null : await db.PerdasProducao.FirstOrDefaultAsync(x => x.Guid == ligacao.EntidadeGuid);
+        var novo = perda is null;
+        if (novo) { perda = new PerdaProducao { DataHora = DataLocal(c, "criadoEm") ?? _agora().ToLocalTime() }; db.PerdasProducao.Add(perda); }
+
+        var codigo = Texto(c, "opCodigo");
+        var material = Texto(c, "materialNome") ?? "Material";
+        perda!.OrdemCodigo = codigo is null || codigo == "Geral" ? null : codigo;
+        perda.OrdemProducaoId = perda.OrdemCodigo is null ? null : (await db.OrdensProducao.AsNoTracking().FirstOrDefaultAsync(x => x.Codigo == perda.OrdemCodigo))?.Id;
+        perda.MaterialNome = material;
+        perda.MateriaPrimaId = (await db.MateriasPrimas.AsNoTracking().FirstOrDefaultAsync(x => x.Nome == material))?.Id;
+        perda.Motivo = MotivoDaPerda(Texto(c, "motivo"));
+        perda.Quantidade = (decimal)Numero(c["quantidade"]);
+        perda.Unidade = Texto(c, "unidade") ?? "un";
+        perda.CustoEstimadoCentavos = Reais(c["custoEstimadoPerda"]);
+        perda.BaixouEstoque = false; // o saldo da matéria-prima já vem pronto do ERP: não baixa de novo
+        perda.Observacao = Texto(c, "observacao");
+        perda.RegistradoPor = Texto(c, "registradoPor") ?? "Importado do ERP";
+        UltimoGuid = perda.Guid;
+        return novo;
+    }
+
+    private static MotivoPerda MotivoDaPerda(string? motivo) => motivo?.ToLowerInvariant() switch
+    {
+        "falha_corte" => MotivoPerda.FalhaNoCorte,
+        "defeito_tecido" => MotivoPerda.DefeitoNoTecido,
+        "erro_costura" => MotivoPerda.ErroNaCostura,
+        "falha_estampa" => MotivoPerda.FalhaNaEstampa,
+        "sobra_rolo" => MotivoPerda.SobraDeRolo,
+        _ => MotivoPerda.Outro
+    };
 
     private static OrigemPedido OrigemDoPedido(string? origem) => origem switch
     {

@@ -27,6 +27,8 @@ public sealed class FilaSincronizacaoInterceptor : SaveChangesInterceptor
             (db, ids) => db.Set<Compra>().AsNoTracking().Where(c => ids.Contains(c.Id)).Select(c => c.Guid).ToList()),
         new(typeof(ItemPedido), typeof(Pedido), NomesEntidade.Pedido, o => ((ItemPedido)o).PedidoId,
             (db, ids) => db.Set<Pedido>().AsNoTracking().Where(p => ids.Contains(p.Id)).Select(p => p.Guid).ToList()),
+        new(typeof(OrdemProducaoGrade), typeof(OrdemProducao), NomesEntidade.OrdemProducao, o => ((OrdemProducaoGrade)o).OrdemProducaoId,
+            (db, ids) => db.Set<OrdemProducao>().AsNoTracking().Where(p => ids.Contains(p.Id)).Select(p => p.Guid).ToList()),
         new(typeof(EventoPedido), typeof(Pedido), NomesEntidade.Pedido, o => ((EventoPedido)o).PedidoId,
             (db, ids) => db.Set<Pedido>().AsNoTracking().Where(p => ids.Contains(p.Id)).Select(p => p.Guid).ToList()),
     };

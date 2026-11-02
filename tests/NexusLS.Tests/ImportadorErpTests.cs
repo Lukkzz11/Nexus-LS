@@ -277,6 +277,41 @@ public sealed class ImportadorErpTests : IDisposable
     }
 
     [Fact]
+    public async Task Fabrica_do_erp_vira_materia_ordens_com_grade_e_perdas_ligadas_e_importar_de_novo_nao_duplica()
+    {
+        _fonte.Por("materia_prima", "m1", """{"nome":"Malha PV","tipo":"Tecido","unidade":"kg","estoqueAtual":145.5,"estoqueMinimo":30,"custoUnitario":42,"fornecedor":"Malharia","atualizadoEm":"2026-10-30T09:00:00Z"}""");
+        _fonte.Por("ordens_producao", "o1", """
+            {"codigoOP":"OP-2026-084","modelo":"Camiseta Silk","referencia":"CAM-001","status":"costura","previsaoTermino":"2026-11-15",
+             "gradePlanejada":{"P":30,"M":60},"custoEstimadoPeca":22.5,"responsavel":"Raimundo","criadoEm":"2026-10-30T10:00:00Z"}
+            """);
+        _fonte.Por("ordens_producao", "o2", """{"codigoOP":"OP-2026-084","modelo":"Bermuda","status":"concluido","gradePlanejada":{"38":10},"criadoEm":"2026-10-30T11:00:00Z"}""");
+        _fonte.Por("perdas_producao", "pe1", """{"opCodigo":"OP-2026-084","motivo":"defeito_tecido","materialNome":"Malha PV","quantidade":2.5,"unidade":"kg","custoEstimadoPerda":105,"criadoEm":"2026-10-30T12:00:00Z"}""");
+
+        await Importador().ImportarAsync();
+        await Importador().ImportarAsync();
+
+        await using var db = _banco.CriarContexto();
+        var materia = await db.MateriasPrimas.SingleAsync();
+        Assert.Equal(145.5m, materia.EstoqueAtual);
+        Assert.Equal(4200, materia.CustoUnitarioCentavos);
+
+        var ordens = await db.OrdensProducao.Include(o => o.Grade).OrderBy(o => o.Id).ToListAsync();
+        Assert.Equal(2, ordens.Count);
+        Assert.Equal(StatusOrdemProducao.Costura, ordens[0].Status);
+        Assert.Equal(90, ordens[0].TotalPlanejado);
+        Assert.Equal(StatusOrdemProducao.Concluida, ordens[1].Status);
+        Assert.NotEqual(ordens[0].Codigo, ordens[1].Codigo);        // código repetido no ERP ganha sufixo
+
+        var perda = await db.PerdasProducao.SingleAsync();
+        Assert.Equal(MotivoPerda.DefeitoNoTecido, perda.Motivo);
+        Assert.Equal(ordens[0].Id, perda.OrdemProducaoId);
+        Assert.Equal(materia.Id, perda.MateriaPrimaId);
+        Assert.False(perda.BaixouEstoque);
+        Assert.Equal(10500, perda.CustoEstimadoCentavos);
+        Assert.Equal(145.5m, (await db.MateriasPrimas.SingleAsync()).EstoqueAtual);   // o saldo não baixa de novo
+    }
+
+    [Fact]
     public async Task Pedido_do_catalogo_vira_pedido_com_itens_cliente_e_produto_ligados()
     {
         ProdutoNoErp("p1", "Camiseta", "2026-10-30T10:00:00Z");

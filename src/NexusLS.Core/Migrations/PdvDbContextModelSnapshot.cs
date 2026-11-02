@@ -888,6 +888,9 @@ namespace NexusLS.Core.Migrations
                         .HasMaxLength(120)
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid>("Guid")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Localizacao")
                         .HasMaxLength(80)
                         .HasColumnType("TEXT");
@@ -908,6 +911,9 @@ namespace NexusLS.Core.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Guid")
+                        .IsUnique();
 
                     b.HasIndex("Nome");
 
@@ -1021,6 +1027,9 @@ namespace NexusLS.Core.Migrations
                     b.Property<long>("CustoEstimadoPecaCentavos")
                         .HasColumnType("INTEGER");
 
+                    b.Property<Guid>("Guid")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Modelo")
                         .IsRequired()
                         .HasMaxLength(150)
@@ -1057,6 +1066,9 @@ namespace NexusLS.Core.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("Codigo")
+                        .IsUnique();
+
+                    b.HasIndex("Guid")
                         .IsUnique();
 
                     b.ToTable("OrdensProducao");
@@ -1200,6 +1212,9 @@ namespace NexusLS.Core.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateTime>("AtualizadoEm")
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("BaixouEstoque")
                         .HasColumnType("INTEGER");
 
@@ -1207,6 +1222,9 @@ namespace NexusLS.Core.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("DataHora")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("Guid")
                         .HasColumnType("TEXT");
 
                     b.Property<int?>("MateriaPrimaId")
@@ -1246,6 +1264,9 @@ namespace NexusLS.Core.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("DataHora");
+
+                    b.HasIndex("Guid")
+                        .IsUnique();
 
                     b.ToTable("PerdasProducao");
                 });

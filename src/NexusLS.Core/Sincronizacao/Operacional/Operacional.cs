@@ -108,7 +108,8 @@ public sealed class MontadorOperacional : IMontadorDocumentos
         NomesEntidade.Venda, NomesEntidade.TurnoCaixa, NomesEntidade.MovimentoCaixa, NomesEntidade.FechamentoCaixa,
         NomesEntidade.PagamentoCliente, NomesEntidade.Lancamento, NomesEntidade.ContaFinanceira,
         NomesEntidade.TransferenciaConta, NomesEntidade.LiquidacaoCartao, NomesEntidade.ChequeRecebido,
-        NomesEntidade.Cliente, NomesEntidade.Fornecedor, NomesEntidade.Compra, NomesEntidade.Pedido
+        NomesEntidade.Cliente, NomesEntidade.Fornecedor, NomesEntidade.Compra, NomesEntidade.Pedido,
+        NomesEntidade.MateriaPrima, NomesEntidade.OrdemProducao, NomesEntidade.PerdaProducao
     };
 
     public Task<DocumentosMontados> MontarAsync(string entidade, IReadOnlyList<Guid> guids) => entidade switch
@@ -127,6 +128,9 @@ public sealed class MontadorOperacional : IMontadorDocumentos
         NomesEntidade.Fornecedor => MontarFornecedoresAsync(guids),
         NomesEntidade.Compra => MontarComprasAsync(guids),
         NomesEntidade.Pedido => MontarPedidosAsync(guids),
+        NomesEntidade.MateriaPrima => MontarMateriasAsync(guids),
+        NomesEntidade.OrdemProducao => MontarOrdensAsync(guids),
+        NomesEntidade.PerdaProducao => MontarPerdasAsync(guids),
         _ => throw new ArgumentException($"Entidade sem montador: {entidade}", nameof(entidade))
     };
     private async Task<DocumentosMontados> MontarVendasAsync(IReadOnlyList<Guid> guids)
@@ -332,6 +336,45 @@ public sealed class MontadorOperacional : IMontadorDocumentos
            ("fornecedor", e => ((Compra)e).FornecedorId, typeof(Fornecedor)));
     }
 
+    private async Task<DocumentosMontados> MontarMateriasAsync(IReadOnlyList<Guid> guids)
+    {
+        await using var db = await _fabrica.CreateDbContextAsync();
+        return await Montar<MateriaPrima>(db, guids, "materias_primas", (m, _) => new()
+        {
+            ["nome"] = m.Nome, ["tipo"] = m.Tipo, ["unidade"] = m.Unidade, ["estoqueAtual"] = m.EstoqueAtual,
+            ["estoqueMinimo"] = m.EstoqueMinimo, ["custoUnitarioCentavos"] = m.CustoUnitarioCentavos,
+            ["fornecedor"] = m.Fornecedor, ["localizacao"] = m.Localizacao, ["ativo"] = m.Ativo
+        });
+    }
+
+    private async Task<DocumentosMontados> MontarOrdensAsync(IReadOnlyList<Guid> guids)
+    {
+        await using var db = await _fabrica.CreateDbContextAsync();
+        return await Montar<OrdemProducao>(db, guids, "ordens_producao", (o, g) => new()
+        {
+            ["codigo"] = o.Codigo, ["modelo"] = o.Modelo, ["referencia"] = o.Referencia, ["categoria"] = o.Categoria,
+            ["status"] = o.Status.ToString(), ["previsaoTermino"] = Utc(o.PrevisaoTermino), ["tecidoUtilizado"] = o.TecidoUtilizado,
+            ["responsavel"] = o.Responsavel, ["custoEstimadoPecaCentavos"] = o.CustoEstimadoPecaCentavos, ["observacoes"] = o.Observacoes,
+            ["criadoEm"] = Utc(o.CriadoEm), ["transferidaEm"] = Utc(o.TransferidaEm), ["produtoDestinoGuid"] = g.De<Produto>(o.ProdutoDestinoId),
+            ["grade"] = o.Grade.OrderBy(i => i.Id).Select(i => (object?)new Dictionary<string, object?>
+            {
+                ["tamanho"] = i.Tamanho, ["quantidade"] = i.Quantidade
+            }).ToList()
+        }, q => q.Include(o => o.Grade), null, ("produtoDestino", e => ((OrdemProducao)e).ProdutoDestinoId, typeof(Produto)));
+    }
+
+    private async Task<DocumentosMontados> MontarPerdasAsync(IReadOnlyList<Guid> guids)
+    {
+        await using var db = await _fabrica.CreateDbContextAsync();
+        return await Montar<PerdaProducao>(db, guids, "perdas_producao", (p, g) => new()
+        {
+            ["dataHora"] = Utc(p.DataHora), ["ordemGuid"] = g.De<OrdemProducao>(p.OrdemProducaoId), ["ordemCodigo"] = p.OrdemCodigo,
+            ["motivo"] = p.Motivo.ToString(), ["materiaGuid"] = g.De<MateriaPrima>(p.MateriaPrimaId), ["materialNome"] = p.MaterialNome,
+            ["quantidade"] = p.Quantidade, ["unidade"] = p.Unidade, ["custoEstimadoCentavos"] = p.CustoEstimadoCentavos,
+            ["baixouEstoque"] = p.BaixouEstoque, ["observacao"] = p.Observacao, ["registradoPor"] = p.RegistradoPor
+        }, ("ordem", e => ((PerdaProducao)e).OrdemProducaoId, typeof(OrdemProducao)), ("materia", e => ((PerdaProducao)e).MateriaPrimaId, typeof(MateriaPrima)));
+    }
+
     private async Task<DocumentosMontados> MontarPedidosAsync(IReadOnlyList<Guid> guids)
     {
         await using var db = await _fabrica.CreateDbContextAsync();
@@ -418,6 +461,8 @@ public sealed class MontadorOperacional : IMontadorDocumentos
         if (tipo == typeof(PagamentoCliente)) return await Ler<PagamentoCliente>(db, ids);
         if (tipo == typeof(Produto)) return await Ler<Produto>(db, ids);
         if (tipo == typeof(Fornecedor)) return await Ler<Fornecedor>(db, ids);
+        if (tipo == typeof(OrdemProducao)) return await Ler<OrdemProducao>(db, ids);
+        if (tipo == typeof(MateriaPrima)) return await Ler<MateriaPrima>(db, ids);
         throw new ArgumentException($"Referência sem resolução: {tipo.Name}");
     }
 
