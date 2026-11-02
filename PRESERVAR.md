@@ -1,4 +1,4 @@
-# O que preservar no Nexus LS
+﻿# O que preservar no Nexus LS
 
 Registro feito em 21/10/2026, na versão 1.1.0 (893 testes verdes), **antes** de refazer o visual. É a lista do que está bom e não pode se perder em nenhuma mudança. Regra de ouro: **o visual pode mudar à vontade (pasta `Views/`, `Resources/`), o `Core` e os testes não**. Se uma mudança deixar um teste vermelho, ela está errada, não o teste.
 
@@ -44,6 +44,10 @@ Registro feito em 21/10/2026, na versão 1.1.0 (893 testes verdes), **antes** de
 - Mudança de dado = migration; o programa aplica sozinho ao abrir, preservando os dados.
 - Código, comentários, telas e commits em **português (BR)**.
 - Atualizador: só HTTPS, só GitHub, confere SHA-256, nunca instala sem o clique, nenhum token no programa.
+
+## Editor do catálogo em JSX (exceção à regra "tudo XAML")
+
+O Editor do catálogo e a pré-visualização do catálogo são React/JSX em `web/catalogo`, dentro de um WebView2 (migrados do ERP). Não migrar o resto para web. Para mexer: alterar `web/catalogo/src`, rodar `.\web\construir.ps1` (gera `src/NexusLS.App/Web/catalogo.zip`, embutido no .exe) e compilar. A página só fala com o programa pela ponte (`ponte.js` / `PonteCatalogo.cs` / `ServicoCatalogoWeb`); nunca com o Firebase. Conferir a tela de verdade: `NEXUSLS_WEBVIEW=<pasta> dotnet test tests/NexusLS.App.Tests --filter CapturaCatalogoWeb`.
 
 ## Dívidas conhecidas (para não esquecer)
 

@@ -81,6 +81,9 @@ if (-not $SemTestes) {
 }
 
 # ---------- 3. gerar o executável ----------
+Passo "Gerando o pacote do editor do catálogo (JSX)"
+& (Join-Path $PSScriptRoot "web\construir.ps1")
+if ($LASTEXITCODE -ne 0) { Falhar "A geração do pacote do editor do catálogo falhou." }
 Passo "Gerando o NexusLS.exe versão $Versao"
 $saida = Join-Path $PSScriptRoot "publicar_release"
 if (Test-Path $saida) { Remove-Item $saida -Recurse -Force }
