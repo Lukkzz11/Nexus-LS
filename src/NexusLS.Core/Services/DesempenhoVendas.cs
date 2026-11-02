@@ -212,7 +212,24 @@ public sealed record RelatorioDesempenho(
     IReadOnlyList<DesempenhoVendas.ProdutoSemVenda> SemVendas,
     IReadOnlyList<DesempenhoVendas.GrupoCategoria> PorCategoria,
     IReadOnlyList<DesempenhoVendas.GrupoForma> PorForma,
-    IReadOnlyList<DesempenhoVendas.GrupoOperador>? PorOperador);
+    IReadOnlyList<DesempenhoVendas.GrupoOperador>? PorOperador,
+    IReadOnlyList<string> Categorias,
+    IReadOnlyList<string> Operadores);
+
+/// <summary>Filtros opcionais da tela de desempenho. Campo nulo/vazio = sem filtro daquele tipo.</summary>
+public sealed record FiltroDesempenho(string? Categoria = null, string? Produto = null, FormaPagamento? Forma = null, string? Operador = null)
+{
+    public bool Vazio => string.IsNullOrWhiteSpace(Categoria) && string.IsNullOrWhiteSpace(Produto) && Forma is null && string.IsNullOrWhiteSpace(Operador);
+
+    public bool SoCategoria => string.IsNullOrWhiteSpace(Produto) && Forma is null && string.IsNullOrWhiteSpace(Operador);
+
+    public List<DesempenhoVendas.Linha> Aplicar(IEnumerable<DesempenhoVendas.Linha> linhas) => linhas
+        .Where(l => string.IsNullOrWhiteSpace(Categoria) || string.Equals(l.Categoria, Categoria, StringComparison.CurrentCultureIgnoreCase))
+        .Where(l => string.IsNullOrWhiteSpace(Produto) || l.Nome.Contains(Produto.Trim(), StringComparison.CurrentCultureIgnoreCase))
+        .Where(l => Forma is null || l.Forma == Forma)
+        .Where(l => string.IsNullOrWhiteSpace(Operador) || string.Equals(l.Operador, Operador, StringComparison.CurrentCultureIgnoreCase))
+        .ToList();
+}
 
 /// <summary>Lê as vendas do período (e do anterior) uma vez e monta o relatório de desempenho.</summary>
 public class DesempenhoService
@@ -221,7 +238,7 @@ public class DesempenhoService
 
     public DesempenhoService(IDbContextFactory<PdvDbContext> fabrica) => _fabrica = fabrica;
 
-    public async Task<RelatorioDesempenho> GerarAsync(DesempenhoVendas.Intervalo periodo, DesempenhoVendas.Granularidade gran)
+    public async Task<RelatorioDesempenho> GerarAsync(DesempenhoVendas.Intervalo periodo, DesempenhoVendas.Granularidade gran, FiltroDesempenho? filtro = null)
     {
         var anterior = DesempenhoVendas.Anterior(periodo);
         await using var db = await _fabrica.CreateDbContextAsync();
@@ -237,14 +254,32 @@ public class DesempenhoService
         var cadastro = produtos.ToDictionary(p => p.Id, p => (p.Categoria, Custo: p.PrecoCustoCentavos));
 
         var linhas = DesempenhoVendas.ExpandirLinhas(vendas, cadastro);
-        var doPeriodo = linhas.Where(l => l.Dia >= periodo.Inicio.Date && l.Dia <= periodo.Fim.Date).ToList();
-        var doAnterior = linhas.Where(l => l.Dia >= anterior.Inicio.Date && l.Dia <= anterior.Fim.Date).ToList();
+        var semFiltro = linhas.Where(l => l.Dia >= periodo.Inicio.Date && l.Dia <= periodo.Fim.Date).ToList();
+        filtro ??= new FiltroDesempenho();
+        var doPeriodo = filtro.Aplicar(semFiltro);
+        var doAnterior = filtro.Aplicar(linhas.Where(l => l.Dia >= anterior.Inicio.Date && l.Dia <= anterior.Fim.Date));
+        var categorias = semFiltro.Select(l => l.Categoria).Where(c => !string.IsNullOrWhiteSpace(c)).Distinct().Order().ToList();
+        var operadores = semFiltro.Where(l => l.OperadorConfiavel).Select(l => l.Operador).Distinct().Order().ToList();
+        // "Sem venda" só faz sentido sem filtro ou filtrando categoria; com os outros filtros listaria tudo.
+        var candidatos = produtos.Where(p => string.IsNullOrWhiteSpace(filtro.Categoria) || string.Equals(p.Categoria, filtro.Categoria, StringComparison.CurrentCultureIgnoreCase));
 
         return new RelatorioDesempenho(periodo, anterior,
             DesempenhoVendas.Resumir(doPeriodo), DesempenhoVendas.Resumir(doAnterior),
             DesempenhoVendas.SerieNoTempo(doPeriodo, periodo, gran),
             DesempenhoVendas.MaisVendidos(doPeriodo), DesempenhoVendas.MenosVendidos(doPeriodo),
-            DesempenhoVendas.SemVendas(produtos.Select(p => (p.Id, p.Nome, p.Categoria, p.Estoque, p.Ativo)), doPeriodo),
-            DesempenhoVendas.PorCategoria(doPeriodo), DesempenhoVendas.PorForma(doPeriodo), DesempenhoVendas.PorOperador(doPeriodo));
+            filtro.SoCategoria ? DesempenhoVendas.SemVendas(candidatos.Select(p => (p.Id, p.Nome, p.Categoria, p.Estoque, p.Ativo)), doPeriodo) : new List<DesempenhoVendas.ProdutoSemVenda>(),
+            DesempenhoVendas.PorCategoria(doPeriodo), DesempenhoVendas.PorForma(doPeriodo), DesempenhoVendas.PorOperador(doPeriodo), categorias, operadores);
+    }
+
+    /// <summary>As linhas vendidas do período (já filtradas), para exportar.</summary>
+    public async Task<List<DesempenhoVendas.Linha>> LinhasAsync(DesempenhoVendas.Intervalo periodo, FiltroDesempenho? filtro = null)
+    {
+        await using var db = await _fabrica.CreateDbContextAsync();
+        var ate = periodo.Fim.Date.AddDays(1);
+        var vendas = await db.Vendas.AsNoTracking().Include(v => v.Itens).Include(v => v.Cliente)
+            .Where(v => !v.Cancelada && v.DataHora >= periodo.Inicio.Date && v.DataHora < ate).ToListAsync();
+        var cadastro = (await db.Produtos.AsNoTracking().Select(p => new { p.Id, p.Categoria, p.PrecoCustoCentavos }).ToListAsync())
+            .ToDictionary(p => p.Id, p => (p.Categoria, Custo: p.PrecoCustoCentavos));
+        return (filtro ?? new FiltroDesempenho()).Aplicar(DesempenhoVendas.ExpandirLinhas(vendas, cadastro));
     }
 }

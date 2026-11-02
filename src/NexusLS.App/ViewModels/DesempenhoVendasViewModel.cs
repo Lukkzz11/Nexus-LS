@@ -48,6 +48,80 @@ public partial class DesempenhoVendasViewModel : ViewModelBase
     public ObservableCollection<LinhaRanking> MenosVendidosLista { get; } = new();
     public ObservableCollection<LinhaRanking> SemVendasLista { get; } = new();
 
+    private const string Todas = "Todas";
+    private bool _preenchendoFiltros;
+
+    public ObservableCollection<string> OpcoesCategoria { get; } = new() { Todas };
+    public ObservableCollection<string> OpcoesOperador { get; } = new() { Todas };
+    public IReadOnlyList<string> OpcoesForma { get; } =
+        new[] { Todas }.Concat(SelecaoPagamento.Formas.Select(SelecaoPagamento.Nome)).ToList();
+
+    [ObservableProperty] private string _filtroCategoria = Todas;
+    [ObservableProperty] private string _filtroOperador = Todas;
+    [ObservableProperty] private string _filtroForma = Todas;
+    [ObservableProperty] private string _filtroProduto = "";
+
+    /// <summary>Pergunta onde salvar o CSV (a tela define; nulo = cancelou).</summary>
+    public Func<string, string?> EscolherArquivoParaSalvar { get; set; } = _ => null;
+
+    partial void OnFiltroCategoriaChanged(string value) => FiltroMudou();
+    partial void OnFiltroOperadorChanged(string value) => FiltroMudou();
+    partial void OnFiltroFormaChanged(string value) => FiltroMudou();
+    partial void OnFiltroProdutoChanged(string value) => FiltroMudou();
+
+    private void FiltroMudou()
+    {
+        if (!_preenchendoFiltros) _ = AtualizarAsync();
+    }
+
+    private FiltroDesempenho MontarFiltro() => new(
+        FiltroCategoria is null or Todas ? null : FiltroCategoria,
+        string.IsNullOrWhiteSpace(FiltroProduto) ? null : FiltroProduto,
+        FiltroForma is null or Todas ? null : SelecaoPagamento.Formas.FirstOrDefault(f => SelecaoPagamento.Nome(f) == FiltroForma),
+        FiltroOperador is null or Todas ? null : FiltroOperador);
+
+    public bool TemFiltro => !MontarFiltro().Vazio;
+
+    [RelayCommand]
+    private void LimparFiltros()
+    {
+        _preenchendoFiltros = true;
+        FiltroCategoria = FiltroOperador = FiltroForma = Todas;
+        FiltroProduto = "";
+        _preenchendoFiltros = false;
+        _ = AtualizarAsync();
+    }
+
+    /// <summary>Atualiza as listas de categoria/operador sem perder o que está escolhido.</summary>
+    private void AtualizarOpcoes(ObservableCollection<string> alvo, IEnumerable<string> novas, string atual, Action<string> restaurar)
+    {
+        var lista = new[] { Todas }.Concat(novas).ToList();
+        if (atual != Todas && !lista.Contains(atual)) lista.Add(atual);
+        if (alvo.SequenceEqual(lista)) return;
+        _preenchendoFiltros = true;
+        alvo.Clear();
+        foreach (var i in lista) alvo.Add(i);
+        restaurar(atual);
+        _preenchendoFiltros = false;
+    }
+
+    /// <summary>Salva em CSV as linhas vendidas do período, respeitando os filtros da tela.</summary>
+    [RelayCommand]
+    private Task ExportarAsync() => ExecutarAsync(async () =>
+    {
+        if (De is not DateTime de || Ate is not DateTime ate)
+            throw new RegraDeNegocioException("Escolha as duas datas do período.");
+        var periodo = Resolver(TipoPeriodo.Personalizado, _hoje(), de, ate);
+        var linhas = await _servico.LinhasAsync(periodo, MontarFiltro());
+        if (linhas.Count == 0)
+            throw new RegraDeNegocioException("Não há vendas neste período e com estes filtros para exportar.");
+
+        var caminho = EscolherArquivoParaSalvar($"desempenho-{de:yyyy-MM-dd}_a_{ate:yyyy-MM-dd}.csv");
+        if (caminho is null) return;
+        ExportadorCsv.Salvar(caminho, ExportadorCsv.Desempenho(linhas));
+        MostrarSucesso($"Arquivo salvo: {caminho} ({linhas.Count} linha(s)).");
+    });
+
     [ObservableProperty] private TipoPeriodo _tipo;
     [ObservableProperty] private DateTime? _de;
     [ObservableProperty] private DateTime? _ate;
@@ -92,10 +166,13 @@ public partial class DesempenhoVendasViewModel : ViewModelBase
             throw new RegraDeNegocioException("Escolha as duas datas do período.");
         var periodo = Resolver(TipoPeriodo.Personalizado, _hoje(), de, ate);
 
-        var r = await _servico.GerarAsync(periodo, Granularidade);
+        var r = await _servico.GerarAsync(periodo, Granularidade, MontarFiltro());
         if (versao != _versao) return; // chegou uma resposta mais nova
 
         Mensagem = "";
+        AtualizarOpcoes(OpcoesCategoria, r.Categorias, FiltroCategoria, v => FiltroCategoria = v);
+        AtualizarOpcoes(OpcoesOperador, r.Operadores, FiltroOperador, v => FiltroOperador = v);
+        OnPropertyChanged(nameof(TemFiltro));
         TextoPeriodo = $"{r.Periodo.Inicio:dd/MM/yyyy} a {r.Periodo.Fim:dd/MM/yyyy} ({r.Periodo.Dias} dia(s)), comparado com {r.Anterior.Inicio:dd/MM} a {r.Anterior.Fim:dd/MM}";
         TemVendas = r.Atual.Vendas > 0;
 

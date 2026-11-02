@@ -41,6 +41,26 @@ public static class ExportadorCsv
         return csv.ToString();
     }
 
+    /// <summary>Desempenho: uma linha por item vendido no período (o que a tela de desempenho soma), já com o filtro aplicado.</summary>
+    public static string Desempenho(IEnumerable<DesempenhoVendas.Linha> linhas)
+    {
+        var csv = new StringBuilder();
+        Linha(csv, "Venda", "Data", "Produto", "Categoria", "Quantidade", "Valor", "Custo unitário", "Pagamento", "Operador", "Cliente");
+        foreach (var l in linhas.OrderBy(l => l.Dia).ThenBy(l => l.VendaId))
+            Linha(csv,
+                l.VendaId.ToString(CultureInfo.InvariantCulture),
+                Data(l.Dia),
+                l.Nome,
+                l.Categoria,
+                l.Quantidade.ToString(CultureInfo.InvariantCulture),
+                Valor(l.ValorCentavos),
+                l.CustoUnitarioCentavos is long c ? Valor(c) : "",
+                SelecaoPagamento.Nome(l.Forma),
+                l.OperadorConfiavel ? l.Operador : "",
+                l.Cliente);
+        return csv.ToString();
+    }
+
     /// <summary>Uma linha por item vendido, com o número e a data da venda repetidos (bom para filtrar e somar no Excel).</summary>
     public static string Itens(IEnumerable<Venda> vendas)
     {

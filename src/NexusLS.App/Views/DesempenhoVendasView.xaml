@@ -74,6 +74,18 @@
                 <RadioButton Content="Semana" GroupName="gran" IsChecked="{Binding PorSemana}" Margin="0,0,10,0" />
                 <RadioButton Content="Mês" GroupName="gran" IsChecked="{Binding PorMes}" />
             </WrapPanel>
+            <WrapPanel Margin="0,10,0,0">
+                <TextBlock Text="Categoria:" VerticalAlignment="Center" Margin="0,0,8,0" />
+                <ComboBox ItemsSource="{Binding OpcoesCategoria}" SelectedItem="{Binding FiltroCategoria}" Width="150" AutomationProperties.Name="Filtrar por categoria" />
+                <TextBlock Text="Produto:" VerticalAlignment="Center" Margin="14,0,8,0" />
+                <TextBox Text="{Binding FiltroProduto, UpdateSourceTrigger=PropertyChanged}" Width="150" AutomationProperties.Name="Filtrar por produto" />
+                <TextBlock Text="Pagamento:" VerticalAlignment="Center" Margin="14,0,8,0" />
+                <ComboBox ItemsSource="{Binding OpcoesForma}" SelectedItem="{Binding FiltroForma}" Width="140" AutomationProperties.Name="Filtrar por pagamento" />
+                <TextBlock Text="Vendedor:" VerticalAlignment="Center" Margin="14,0,8,0" />
+                <ComboBox ItemsSource="{Binding OpcoesOperador}" SelectedItem="{Binding FiltroOperador}" Width="140" AutomationProperties.Name="Filtrar por vendedor" />
+                <Button Content="Limpar filtros" Style="{StaticResource BotaoSecundario}" Padding="12,6" Margin="14,0,0,0" Command="{Binding LimparFiltrosCommand}" />
+                <Button Content="Exportar CSV" Style="{StaticResource BotaoSecundario}" Padding="12,6" Margin="8,0,0,0" Command="{Binding ExportarCommand}" />
+            </WrapPanel>
             <TextBlock Text="{Binding TextoPeriodo}" Opacity="0.75" Margin="0,8,0,0" />
         </StackPanel>
 
