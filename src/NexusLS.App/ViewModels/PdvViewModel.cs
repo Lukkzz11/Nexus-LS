@@ -283,6 +283,7 @@ public partial class PdvViewModel : ViewModelBase, IEditorCarrinho
         OnPropertyChanged(nameof(TabelaTexto));
         OnPropertyChanged(nameof(EhAtacado));
         _rascunho.Descartar();
+        if (_clienteFixo is not null) AplicarTabelaDoCliente(); // a próxima venda do cliente continua no atacado
     }
 
     private void MoverResultado(int passo)

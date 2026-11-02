@@ -1,0 +1,58 @@
+<UserControl x:Class="NexusLS.App.Views.VendaClienteView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Venda Cliente" Style="{StaticResource TituloTela}" Margin="0,0,0,4" />
+        <TextBlock Grid.Row="1" Opacity="0.75" Margin="0,0,0,12" TextWrapping="Wrap"
+                   Text="Escolha o cliente. O PDV abre no atacado, com a venda a prazo no nome dele e desconto de R$ 2,00 por peça (você pode mudar)." />
+
+        <TextBox Grid.Row="2" x:Name="CampoBusca" Text="{Binding Busca, UpdateSourceTrigger=PropertyChanged}"
+                 AutomationProperties.Name="Buscar cliente" Margin="0,0,0,8" Loaded="CampoBusca_Loaded"
+                 PreviewKeyDown="CampoBusca_PreviewKeyDown" />
+
+        <ListBox Grid.Row="3" ItemsSource="{Binding Clientes}" SelectedItem="{Binding Selecionado}"
+                 AutomationProperties.Name="Clientes" MouseDoubleClick="Lista_DuploClique">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Grid Margin="4,3">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="{Binding Cliente.Nome}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Text="{Binding Contato}" FontSize="12" Opacity="0.7" />
+                        </StackPanel>
+                        <TextBlock Grid.Column="1" Text="{Binding Divida}" VerticalAlignment="Center">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Opacity" Value="0.6" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Deve}" Value="True">
+                                            <Setter Property="Foreground" Value="{StaticResource CorAtencaoBorda}" />
+                                            <Setter Property="Opacity" Value="1" />
+                                            <Setter Property="FontWeight" Value="SemiBold" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Grid>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <StackPanel Grid.Row="4" Orientation="Horizontal" Margin="0,10,0,0">
+            <Button Content="Vender para este cliente" Command="{Binding VenderCommand}" Style="{StaticResource BotaoPrimario}" />
+            <TextBlock Text="{Binding Resumo}" VerticalAlignment="Center" Margin="14,0,0,0" Opacity="0.75" />
+        </StackPanel>
+    </Grid>
+</UserControl>

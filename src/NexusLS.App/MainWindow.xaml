@@ -74,6 +74,12 @@
                             <TextBlock Text="PDV  (F1)" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
+                    <Button Tag="VendaCliente" Visibility="{Binding VerPdv, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Venda Cliente" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaVendaClienteCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="PersonCircle24" Style="{StaticResource IconeDoMenu}" />
+                            <TextBlock Text="Venda Cliente" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
                     <Button Tag="Caixa" Visibility="{Binding VerCaixa, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Caixa" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaCaixaCommand}">
                         <StackPanel Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="Receipt24" Style="{StaticResource IconeDoMenu}" />

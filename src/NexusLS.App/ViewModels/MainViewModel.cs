@@ -7,7 +7,7 @@ using NexusLS.Core.Models;
 namespace NexusLS.App.ViewModels;
 
 /// <summary>Os itens do menu lateral. O nome do item é também o "Tag" do botão: assim o menu destaca o da tela aberta.</summary>
-public enum ItemMenu { Inicio, Pdv, Caixa, Fechamento, Pedidos, MaisVendidos, Desempenho, EstoqueDaLoja, Fabrica, CalculadoraPrecos, Compras, Fornecedores, Etiquetas, Clientes, Financeiro, ContasESaldos, Relatorios, CatalogoOnline, Funcionarios, Atividades, Configuracoes }
+public enum ItemMenu { Inicio, Pdv, VendaCliente, Caixa, Fechamento, Pedidos, MaisVendidos, Desempenho, EstoqueDaLoja, Fabrica, CalculadoraPrecos, Compras, Fornecedores, Etiquetas, Clientes, Financeiro, ContasESaldos, Relatorios, CatalogoOnline, Funcionarios, Atividades, Configuracoes }
 
 /// <summary>
 /// ViewModel = a "lógica da tela". Ele guarda os dados que a tela mostra e os comandos dos botões,
@@ -42,6 +42,7 @@ public partial class MainViewModel : ObservableObject
         // Task.Run: lê a configuração fora da thread da tela, sem risco de travar a abertura.
         var abrirNoPdv = Task.Run(() => _servicos.Configuracao.ObterAsync()).GetAwaiter().GetResult().AbrirNoPdv;
         if (abrirNoPdv && Sessao.Pode(Permissao.Vender)) IrParaPdv(); else IrParaInicio();
+        _pdv.TrocarClienteSolicitado += IrParaVendaCliente;
         Sessao.Mudou += AtualizarPermissoes;
         _ = _pdv.RestaurarRascunhoAsync(); // se a venda anterior ficou no meio, ela volta
     }
@@ -54,6 +55,7 @@ public partial class MainViewModel : ObservableObject
         {
             case ItemMenu.Inicio: IrParaInicio(); break;
             case ItemMenu.Pdv: IrParaPdv(); break;
+            case ItemMenu.VendaCliente: IrParaVendaCliente(); break;
             case ItemMenu.Caixa: IrParaCaixa(); break;
             case ItemMenu.Fechamento: IrParaFechamento(); break;
             case ItemMenu.Pedidos: IrParaPedidos(); break;
@@ -80,6 +82,12 @@ public partial class MainViewModel : ObservableObject
 
     // Vendas
     [RelayCommand] private void IrParaPdv() => Abrir(_pdv, ItemMenu.Pdv);
+    [RelayCommand]
+    private void IrParaVendaCliente() => Abrir(new VendaClienteViewModel(_servicos.Clientes, async cliente =>
+    {
+        await _pdv.EntrarModoClienteAsync(cliente);
+        IrParaPdv(); // o mesmo PDV, agora no modo cliente
+    }), ItemMenu.VendaCliente);
     [RelayCommand] private void IrParaCaixa() => Abrir(new VendasViewModel(_servicos.Vendas, _servicos.Cupons, _servicos.Caixa), ItemMenu.Caixa);
     [RelayCommand] private void IrParaFechamento() => Abrir(new FechamentoViewModel(_servicos.Caixa), ItemMenu.Fechamento);
     [RelayCommand] private void IrParaPedidos() => Abrir(new PedidosViewModel(_servicos.Pedidos, _servicos.Produtos, _servicos.Clientes, _servicos.Cupons), ItemMenu.Pedidos);
@@ -140,7 +148,7 @@ public partial class MainViewModel : ObservableObject
     private static bool Permitido(ItemMenu item) => item switch
     {
         ItemMenu.Inicio => true,
-        ItemMenu.Pdv => Sessao.Pode(Permissao.Vender),
+        ItemMenu.Pdv or ItemMenu.VendaCliente => Sessao.Pode(Permissao.Vender),
         ItemMenu.Caixa or ItemMenu.Fechamento => Sessao.Pode(Permissao.Caixa),
         ItemMenu.Pedidos => Sessao.Pode(Permissao.Vender),
         ItemMenu.MaisVendidos or ItemMenu.Desempenho or ItemMenu.Relatorios => Sessao.Pode(Permissao.Relatorios),

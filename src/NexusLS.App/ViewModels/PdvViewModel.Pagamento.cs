@@ -23,7 +23,8 @@ public partial class PdvViewModel
         }
 
         _descontoSel = new SelecaoDesconto();
-        DescontoTexto = "";
+        DescontoTexto = DescontoInicial();
+        _descontoSel.Texto = DescontoTexto; // se o texto não mudou, o evento não dispara
         AtualizarOpcoesDesconto();
         AtualizarResumoDesconto();
         Mensagem = "";
@@ -44,6 +45,7 @@ public partial class PdvViewModel
 
         var total = _carrinho.SubtotalCentavos - _descontoResolvido.ValorEmCentavos;
         _pagamento = new SelecaoPagamento(total);
+        if (_clienteFixo is not null) PrepararPagamentoDoCliente();
         TotalFinalTexto = Dinheiro.Formatar(total);
         ValorRecebidoTexto = _pagamento.ValorRecebidoTexto;
         ClienteBusca = "";
@@ -95,7 +97,12 @@ public partial class PdvViewModel
         AtualizarPagamento();
         Mensagem = "";
 
-        if (EmAPrazo)
+        if (EmAPrazo && _clienteFixo is not null)
+        {
+            PrepararPagamentoDoCliente();
+            FocoSolicitado?.Invoke(AlvoFoco.Modal);
+        }
+        else if (EmAPrazo)
         {
             ClienteBusca = "";
             _ = AtualizarClientesAsync();
@@ -142,7 +149,7 @@ public partial class PdvViewModel
 
     private async Task AtualizarClientesAsync()
     {
-        if (Etapa != EtapaPdv.Pagamento || !EmAPrazo) return;
+        if (Etapa != EtapaPdv.Pagamento || !EmAPrazo || _clienteFixo is not null) return;
 
         _clientesCts?.Cancel();
         var cts = _clientesCts = new CancellationTokenSource();
@@ -205,6 +212,7 @@ public partial class PdvViewModel
         SucessoTitulo = $"Venda #{venda.Id} finalizada!";
         SucessoDetalhe = $"{Dinheiro.Formatar(venda.TotalCentavos)}  ·  {pagou}"
                          + (venda.TrocoCentavos > 0 ? $"  ·  Troco {Dinheiro.Formatar(venda.TrocoCentavos)}" : "");
+        if (_clienteFixo is not null) SucessoDetalhe += await DetalheDoClienteAposVendaAsync();
 
         LimparCarrinho();
         _sucessoSel = new SelecaoSucesso();

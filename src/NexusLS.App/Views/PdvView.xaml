@@ -230,6 +230,19 @@
             <!-- ===== Resumo da venda ===== -->
             <Border Grid.Column="2" Style="{StaticResource Painel}" VerticalAlignment="Top">
                 <StackPanel>
+                    <!-- Venda Cliente: quem está comprando e quanto já deve -->
+                    <Border Visibility="{Binding EmModoCliente, Converter={StaticResource BoolVis}}" Background="{StaticResource CorAtencaoFundo}"
+                            BorderBrush="{StaticResource CorAtencaoBorda}" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,12">
+                        <StackPanel>
+                            <TextBlock Text="Venda Cliente" Style="{StaticResource Rotulo}" />
+                            <TextBlock Text="{Binding ClienteFixoNome}" FontSize="16" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Text="{Binding ClienteFixoDivida}" FontSize="12" Margin="0,0,0,8" />
+                            <StackPanel Orientation="Horizontal">
+                                <Button Content="Trocar cliente" Command="{Binding TrocarClienteCommand}" Focusable="False" Style="{StaticResource BotaoSecundario}" Margin="0,0,6,0" />
+                                <Button Content="Sair" Command="{Binding SairDoModoClienteCommand}" Focusable="False" Style="{StaticResource BotaoSecundario}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
                     <TextBlock Text="Tabela de preço (Espaço troca)" Style="{StaticResource Rotulo}" Margin="0,0,0,4" />
                     <!-- No atacado o botão fica laranja, para ninguém esquecer em que tabela está vendendo. -->
                     <Button Content="{Binding TabelaTexto}" FontSize="18" Focusable="False"
