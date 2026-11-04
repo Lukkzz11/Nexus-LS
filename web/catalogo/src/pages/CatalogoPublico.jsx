@@ -292,8 +292,14 @@ export default function CatalogoPublico() {
       if (dados?.type === "lifesurf:highlight" && typeof dados.id === "string") setBlocoSelecionado(dados.id);
     };
     window.addEventListener("message", aoReceber);
+    // Ajuste de produto no editor (visível, destaque, promoção): atualiza a lista sem recarregar a prévia
+    const aoMudarProdutos = (e) => setProdutos(produtosVisiveisDe(e.detail));
+    window.parent.addEventListener("nexus:produtos", aoMudarProdutos);
     enviarAoEditor({ type: "lifesurf:preview-ready" });
-    return () => window.removeEventListener("message", aoReceber);
+    return () => {
+      window.removeEventListener("message", aoReceber);
+      window.parent.removeEventListener("nexus:produtos", aoMudarProdutos);
+    };
   }, [emPrevia]);
 
   const acaoDoBotaoBanner = (slide) => {

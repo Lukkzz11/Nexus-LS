@@ -1,4 +1,4 @@
-# Nexus LS
+﻿# Nexus LS
 
 PDV (frente de caixa) e controle de estoque para loja de roupas e acessórios, feito em C# com .NET e WPF, para Windows.
 Funciona sem internet e sem login, com uma loja só. Todo o programa, o código e os comentários estão em português.
@@ -280,3 +280,8 @@ O **Editor do catálogo** e a pré-visualização do catálogo são telas em Rea
 - **Publicar** (só no clique): guarda no computador, sobe ao Storage as imagens locais e grava a vitrine completa no campo `v2` de `meta/vitrine` (os demais campos do documento não são tocados).
 - **Alterou o JSX?** rode `.\web\construir.ps1` (gera `src/NexusLS.App/Web/catalogo.zip`, embutido no .exe e extraído em `%LocalAppData%\NexusLS\web`) e depois compile. Para ver o editor no navegador com dados de demonstração: `cd web/catalogo; npm run dev`.
 - Precisa do Microsoft Edge WebView2 Runtime (já vem no Windows 11).
+
+### Ajustes por peça e catálogo para o site
+
+- No painel **Produtos** do editor, a seção **Ajustes por peça** define, para cada produto, se aparece no catálogo, se é destaque e o preço promocional (menor que o varejo). Fica em `%LocalAppData%\NexusLS\catalogo-produtos.json` (não mexe no cadastro nem no PDV) e vai para `produtos/{id}` do Firestore, só nos campos `ativoNoCatalogo`, `destaque` e `precoPromocionalCentavos`, ao clicar em **Salvar e publicar**. Produto ainda não sincronizado é pulado (nada é criado).
+- **Catálogo para o site:** o build gera também `web/catalogo/dist/publico.html`, que lê `meta/vitrine` (campo `v2`) e `produtos` do Firestore por leitura pública (REST, sem login). Hospede a pasta `dist` (por exemplo no Firebase Hosting) e preencha `config.json` com `{ "projectId": "SEU-PROJETO" }` (ou use `?projeto=ID`). Atacado e custo nunca saem do computador, então o site mostra só o varejo. A sacola não grava pedido na nuvem (as regras só permitem leitura): finaliza pelo WhatsApp da loja.

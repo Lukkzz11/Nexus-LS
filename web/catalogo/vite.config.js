@@ -6,5 +6,11 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   base: "./",
   plugins: [tailwindcss(), react()],
-  build: { outDir: "dist", emptyOutDir: true, chunkSizeWarningLimit: 2000 }
+  build: {
+    outDir: "dist",
+    emptyOutDir: true,
+    chunkSizeWarningLimit: 2000,
+    // index.html = editor (dentro do Nexus); publico.html = o catálogo para o site publicado
+    rollupOptions: { input: { index: "index.html", publico: "publico.html" } }
+  }
 });

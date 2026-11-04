@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
-import { ArrowDown, ArrowUp, Search } from "lucide-react";
+import toast from "react-hot-toast";
+import { ArrowDown, ArrowUp, Search, Star } from "lucide-react";
+import { ajustarProdutoCatalogo } from "../../../services/catalogService";
 import { Alternar, Secao, Segmentado } from "./campos";
 import { ItemOrdenavel, ListaOrdenavel } from "./ListaOrdenavel";
 import {
@@ -16,9 +18,43 @@ import { formatCurrency } from "../../../utils/formatters";
 
 const ROTULOS_MODO = { todos: "Todos", categorias: "Categorias", produtos: "Peças" };
 
+/** Uma peça: aparece no catálogo, é destaque, preço promocional. Cada mudança é guardada na hora. */
+function LinhaAjuste({ produto }) {
+  const textoPromo = () => (produto.precoPromocional ? String(produto.precoPromocional).replace(".", ",") : "");
+  const [promo, setPromo] = useState(textoPromo);
+  const visivel = produto.ativoNoCatalogo !== false;
+
+  const salvar = async (mudanca) => {
+    try {
+      await ajustarProdutoCatalogo(produto.id, mudanca);
+    } catch (err) {
+      toast.error(err?.message || "Não foi possível guardar o ajuste.");
+      setPromo(textoPromo());
+    }
+  };
+  const confirmarPromo = () => {
+    const valor = Number(promo.replace(",", ".")) || 0;
+    if (valor === (Number(produto.precoPromocional) || 0)) return;
+    salvar({ precoPromocional: valor });
+  };
+
+  return (
+    <li className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-950/40 px-2 py-1.5">
+      <input type="checkbox" className="h-4 w-4" checked={visivel} aria-label={`${produto.nome} aparece no catálogo`} onChange={() => salvar({ ativoNoCatalogo: !visivel })} />
+      <span className={`min-w-0 flex-1 truncate text-sm ${visivel ? "text-slate-100" : "text-slate-500 line-through"}`}>{produto.nome}</span>
+      <span className="shrink-0 text-xs text-slate-500">{formatCurrency(Number(produto.precoVarejo) || 0)}</span>
+      <button type="button" aria-pressed={Boolean(produto.destaque)} aria-label={`Destaque: ${produto.nome}`} title="Destaque" onClick={() => salvar({ destaque: !produto.destaque })} className={`grid h-7 w-7 shrink-0 place-items-center rounded-md hover:bg-slate-800 ${produto.destaque ? "text-amber-400" : "text-slate-500"}`}>
+        <Star className="h-4 w-4" fill={produto.destaque ? "currentColor" : "none"} />
+      </button>
+      <input type="text" inputMode="decimal" value={promo} placeholder="Promo R$" aria-label={`Preço promocional: ${produto.nome}`} onChange={(e) => setPromo(e.target.value)} onBlur={confirmarPromo} onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()} className="h-8 w-20 shrink-0 rounded-md border border-slate-700 bg-slate-950 px-2 text-right text-xs text-slate-100 outline-none focus:border-sky-400" />
+    </li>
+  );
+}
+
 /** O que aparece em cada produto, em que ordem, e quais produtos entram no catálogo e em que sequência. */
-export default function PainelProdutos({ vitrine, alterar, produtos }) {
+export default function PainelProdutos({ vitrine, alterar, produtos, todosProdutos = produtos }) {
   const [busca, setBusca] = useState("");
+  const [buscaAjuste, setBuscaAjuste] = useState("");
   const p = vitrine.produtos;
   const sel = vitrine.selecao;
 
@@ -147,6 +183,23 @@ export default function PainelProdutos({ vitrine, alterar, produtos }) {
             {sel.produtos.length === 0 && <p className="text-xs text-amber-400">Nenhuma peça marcada: o catálogo mostra todos os produtos.</p>}
           </div>
         )}
+      </Secao>
+
+      <Secao titulo="Ajustes por peça" resumo="visível, destaque, promoção">
+        <p className="text-xs text-slate-400">Guardado neste computador na hora; vai para o catálogo online ao publicar. A promoção precisa ser menor que o preço de varejo (0 = sem promoção).</p>
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+          <input type="text" value={buscaAjuste} placeholder="Buscar peça" aria-label="Buscar peça para ajustar" onChange={(e) => setBuscaAjuste(e.target.value)} className="h-9 w-full rounded-lg border border-slate-700 bg-slate-950 pl-9 pr-3 text-sm text-slate-100 outline-none focus:border-sky-400" />
+        </div>
+        <ul className="max-h-80 space-y-1 overflow-y-auto pr-1">
+          {/* inclui as peças ocultas do catálogo: é aqui que se volta a exibi-las */}
+          {todosProdutos
+            .filter((x) => x.ativo !== false)
+            .filter((x) => !buscaAjuste.trim() || `${x.nome} ${x.referencia || ""}`.toLowerCase().includes(buscaAjuste.toLowerCase()))
+            .map((x) => (
+              <LinhaAjuste key={x.id} produto={x} />
+            ))}
+        </ul>
       </Secao>
 
       <Secao titulo="Ordem dos produtos" resumo={ORDEM_LABELS[sel.ordem]}>

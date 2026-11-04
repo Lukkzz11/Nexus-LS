@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Nodes;
 using NexusLS.Core.Services;
 
@@ -52,9 +52,11 @@ public class ServicoCatalogoWeb
     private readonly IEnviadorFoto? _enviador;
     private readonly IPublicadorVitrineCompleta? _publicador;
     private readonly Func<DateTime> _agora;
+    private readonly AjustesProdutoStore _ajustes;
 
     public ServicoCatalogoWeb(ProdutoService produtos, ConfiguracaoService configuracao, VitrineCompletaStore store,
-        string pastaImagens, IEnviadorFoto? enviador, IPublicadorVitrineCompleta? publicador, Func<DateTime>? agora = null)
+        string pastaImagens, IEnviadorFoto? enviador, IPublicadorVitrineCompleta? publicador, Func<DateTime>? agora = null,
+        AjustesProdutoStore? ajustes = null)
     {
         _produtos = produtos;
         _configuracao = configuracao;
@@ -63,6 +65,7 @@ public class ServicoCatalogoWeb
         _enviador = enviador;
         _publicador = publicador;
         _agora = agora ?? (() => DateTime.UtcNow);
+        _ajustes = ajustes ?? new AjustesProdutoStore(AjustesProdutoStore.CaminhoPadrao());
     }
 
     public static string PastaImagensPadrao() => Path.Combine(
@@ -76,8 +79,11 @@ public class ServicoCatalogoWeb
         var loja = await _configuracao.ObterAsync();
         var lista = await _produtos.BuscarAsync(null);
         var produtos = new JsonArray();
+        var ajustes = _ajustes.Carregar();
         foreach (var p in lista)
         {
+            var id = p.Guid.ToString("D").ToLowerInvariant();
+            var aj = ajustes.GetValueOrDefault(id) ?? new AjusteProdutoCatalogo();
             var grade = new JsonObject();
             foreach (var t in await _produtos.ListarTamanhosAsync(p.Id))
                 if (!t.EhSemTamanho) grade[t.Tamanho] = t.Estoque;
@@ -85,19 +91,19 @@ public class ServicoCatalogoWeb
             string foto = p.FotoUrl ?? (string.IsNullOrWhiteSpace(p.FotoArquivo) ? "" : $"https://{HostFotos}/{Path.GetFileName(p.FotoArquivo)}");
             produtos.Add(new JsonObject
             {
-                ["id"] = p.Guid.ToString("D").ToLowerInvariant(),
+                ["id"] = id,
                 ["nome"] = p.Nome,
                 ["categoria"] = p.Categoria ?? "",
                 ["referencia"] = p.Referencia ?? "",
                 ["precoVarejo"] = p.PrecoVendaCentavos / 100.0,
                 ["precoAtacado"] = p.PrecoAtacadoCentavos / 100.0,
-                ["precoPromocional"] = 0,
+                ["precoPromocional"] = aj.PromocaoCentavos / 100.0,
                 ["descricao"] = "",
                 ["fotoUrl"] = foto,
                 ["cores"] = new JsonArray(),
                 ["ativo"] = p.Ativo,
-                ["ativoNoCatalogo"] = true,
-                ["destaque"] = false,
+                ["ativoNoCatalogo"] = aj.Visivel,
+                ["destaque"] = aj.Destaque,
                 ["gradeTamanhos"] = grade,
                 ["createdAt"] = p.AtualizadoEm.ToString("O")
             });
@@ -114,6 +120,27 @@ public class ServicoCatalogoWeb
             ["mensagemCatalogo"] = ""
         };
         return new DadosCatalogoWeb(_store.Carregar(), empresa, produtos);
+    }
+
+    /// <summary>
+    /// Guarda neste computador como o produto aparece no catálogo (visível, destaque, promoção). A promoção, se houver,
+    /// tem de ser menor que o preço de varejo. Só vai para a nuvem em <see cref="PublicarAsync"/>.
+    /// </summary>
+    public async Task SalvarAjusteProdutoAsync(string id, bool visivel, bool destaque, long promocaoCentavos)
+    {
+        id = (id ?? "").Trim().ToLowerInvariant();
+        if (!Guid.TryParse(id, out _)) throw new RegraDeNegocioException("Produto inválido.");
+        if (promocaoCentavos < 0) throw new RegraDeNegocioException("O preço promocional não pode ser negativo.");
+        var produto = (await _produtos.BuscarAsync(null, incluirInativos: true)).FirstOrDefault(p => p.Guid.ToString("D") == id)
+            ?? throw new RegraDeNegocioException("Produto não encontrado.");
+        if (promocaoCentavos > 0 && promocaoCentavos >= produto.PrecoVendaCentavos)
+            throw new RegraDeNegocioException("O preço promocional precisa ser menor que o preço de varejo.");
+
+        var todos = _ajustes.Carregar();
+        var novo = new AjusteProdutoCatalogo(visivel, destaque, promocaoCentavos);
+        if (novo == new AjusteProdutoCatalogo()) todos.Remove(id); // tudo no padrão: não guarda nada
+        else todos[id] = novo;
+        _ajustes.Salvar(todos);
     }
 
     /// <summary>Guarda a imagem (já reduzida pelo editor, data URL) na pasta desta instalação e devolve o endereço local e o "path".</summary>
@@ -149,7 +176,7 @@ public class ServicoCatalogoWeb
     /// Publica: guarda local, sobe ao Storage as imagens que ainda são locais, troca os endereços e grava no Firestore.
     /// Devolve o JSON já com os endereços públicos. Se a internet falhar, o rascunho local continua salvo.
     /// </summary>
-    public async Task<(string Json, DateTime PublicadoEm)> PublicarAsync(string vitrineJson, CancellationToken ct = default)
+    public async Task<(string Json, DateTime PublicadoEm, int AjustesEnviados)> PublicarAsync(string vitrineJson, CancellationToken ct = default)
     {
         if (_publicador is null) throw new RegraDeNegocioException("A publicação do catálogo não está configurada.");
         var raiz = ValidarJson(vitrineJson);
@@ -160,7 +187,18 @@ public class ServicoCatalogoWeb
         var final = raiz.ToJsonString();
         await _publicador.PublicarCompletaAsync(final, ct);
         _store.Salvar(final);
-        return (final, _agora());
+        var ajustesEnviados = await PublicarAjustesAsync(ct);
+        return (final, _agora(), ajustesEnviados);
+    }
+
+    /// <summary>Manda os ajustes dos produtos (visível, destaque, promoção). Produto que ainda não foi sincronizado é pulado.</summary>
+    private async Task<int> PublicarAjustesAsync(CancellationToken ct)
+    {
+        if (_publicador is not IPublicadorAjustesProduto envio) return 0;
+        var enviados = 0;
+        foreach (var (id, aj) in _ajustes.Carregar())
+            if (await envio.PublicarAjusteAsync(id, aj.Visivel, aj.Destaque, aj.PromocaoCentavos, ct)) enviados++;
+        return enviados;
     }
 
     private async Task SubirImagensAsync(JsonNode? no, Dictionary<string, string> enviadas, CancellationToken ct)

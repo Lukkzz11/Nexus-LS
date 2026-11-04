@@ -19,6 +19,13 @@ public interface IPublicadorVitrineCompleta
     Task PublicarCompletaAsync(string json, CancellationToken ct = default);
 }
 
+/// <summary>Publica, em cada produto já enviado, só os campos do catálogo online (visível, destaque, preço promocional).</summary>
+public interface IPublicadorAjustesProduto
+{
+    /// <summary>Devolve falso se o produto ainda não existe na nuvem (nada é criado: o documento nasce na sincronização do catálogo).</summary>
+    Task<bool> PublicarAjusteAsync(string idProduto, bool visivel, bool destaque, long promocaoCentavos, CancellationToken ct = default);
+}
+
 public static class VitrineJson
 {
     private static JsonObject Mapa(Dictionary<string, JsonObject> campos)
@@ -54,7 +61,7 @@ public static class VitrineJson
     }
 }
 
-public sealed class PublicadorVitrineRest : IPublicadorVitrine, IPublicadorVitrineCompleta
+public sealed class PublicadorVitrineRest : IPublicadorVitrine, IPublicadorVitrineCompleta, IPublicadorAjustesProduto
 {
     private readonly HttpClient _http;
     private readonly string _projectId;
@@ -84,9 +91,23 @@ public sealed class PublicadorVitrineRest : IPublicadorVitrine, IPublicadorVitri
         return EnviarAsync(UrlDocumento + "?updateMask.fieldPaths=v2&updateMask.fieldPaths=atualizadoEm", corpo, ct);
     }
 
+    public Task<bool> PublicarAjusteAsync(string idProduto, bool visivel, bool destaque, long promocaoCentavos, CancellationToken ct = default)
+    {
+        var campos = new JsonObject
+        {
+            ["ativoNoCatalogo"] = FirestoreJson.Booleano(visivel),
+            ["destaque"] = FirestoreJson.Booleano(destaque),
+            ["precoPromocionalCentavos"] = FirestoreJson.Inteiro(promocaoCentavos)
+        };
+        var corpo = new JsonObject { ["fields"] = campos }.ToJsonString();
+        var url = $"https://firestore.googleapis.com/v1/projects/{_projectId}/databases/(default)/documents/produtos/{Uri.EscapeDataString(idProduto)}"
+            + "?updateMask.fieldPaths=ativoNoCatalogo&updateMask.fieldPaths=destaque&updateMask.fieldPaths=precoPromocionalCentavos&currentDocument.exists=true";
+        return EnviarAsync(url, corpo, ct, toleraNaoEncontrado: true);
+    }
+
     private string UrlDocumento => $"https://firestore.googleapis.com/v1/projects/{_projectId}/databases/(default)/documents/meta/vitrine";
 
-    private async Task EnviarAsync(string url, string corpo, CancellationToken ct)
+    private async Task<bool> EnviarAsync(string url, string corpo, CancellationToken ct, bool toleraNaoEncontrado = false)
     {
         for (var tentativa = 1; ; tentativa++)
         {
@@ -98,8 +119,9 @@ public sealed class PublicadorVitrineRest : IPublicadorVitrine, IPublicadorVitri
                 using var resposta = await _http.SendAsync(pedido, ct);
                 var texto = await resposta.Content.ReadAsStringAsync(ct);
                 if (resposta.StatusCode == HttpStatusCode.Unauthorized && tentativa == 1) { _token.Invalidar(); continue; }
+                if (resposta.StatusCode == HttpStatusCode.NotFound && toleraNaoEncontrado) return false;
                 if (resposta.StatusCode != HttpStatusCode.OK) throw FirestoreRestDestino.TraduzirErro(resposta.StatusCode, texto);
-                return;
+                return true;
             }
             catch (HttpRequestException ex)
             {
@@ -114,7 +136,7 @@ public sealed class PublicadorVitrineRest : IPublicadorVitrine, IPublicadorVitri
 }
 
 /// <summary>O publicador que o programa usa: lê a configuração do Firebase salva a cada uso.</summary>
-public sealed class PublicadorVitrineConfiguravel : IPublicadorVitrine, IPublicadorVitrineCompleta
+public sealed class PublicadorVitrineConfiguravel : IPublicadorVitrine, IPublicadorVitrineCompleta, IPublicadorAjustesProduto
 {
     private readonly ConfiguracaoFirebaseStore _store;
     private readonly HttpClient _http;
@@ -123,6 +145,9 @@ public sealed class PublicadorVitrineConfiguravel : IPublicadorVitrine, IPublica
     public Task PublicarAsync(ConfiguracaoVitrine config, CancellationToken ct = default) => Criar().PublicarAsync(config, ct);
 
     public Task PublicarCompletaAsync(string json, CancellationToken ct = default) => Criar().PublicarCompletaAsync(json, ct);
+
+    public Task<bool> PublicarAjusteAsync(string idProduto, bool visivel, bool destaque, long promocaoCentavos, CancellationToken ct = default) =>
+        Criar().PublicarAjusteAsync(idProduto, visivel, destaque, promocaoCentavos, ct);
 
     private PublicadorVitrineRest Criar()
     {

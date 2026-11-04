@@ -10,6 +10,10 @@ export default function EditorCatalogo() {
 
   useEffect(() => {
     carregarTudo(true).then(setDados).catch((e) => setErro(e?.message || "Não foi possível carregar o catálogo."));
+    // Ajuste de produto (visível, destaque, promoção) feito no painel Produtos
+    const aoMudar = (e) => setDados((d) => (d ? { ...d, produtos: e.detail } : d));
+    window.addEventListener("nexus:produtos", aoMudar);
+    return () => window.removeEventListener("nexus:produtos", aoMudar);
   }, []);
 
   const produtos = useMemo(() => dados?.produtos ?? [], [dados]);

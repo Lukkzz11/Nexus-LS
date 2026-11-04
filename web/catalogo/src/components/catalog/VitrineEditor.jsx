@@ -483,7 +483,7 @@ export default function VitrineEditor({ tenantId, vitrineSalva, produtos, catego
           {painel === "modelos" && <PainelModelos vitrine={rascunho} alterar={setRascunho} />}
           {painel === "cores" && <PainelCores vitrine={rascunho} alterar={setRascunho} />}
           {painel === "layout" && <PainelLayout vitrine={rascunho} alterar={setRascunho} />}
-          {painel === "produtos" && <PainelProdutos vitrine={rascunho} alterar={setRascunho} produtos={visiveis} />}
+          {painel === "produtos" && <PainelProdutos vitrine={rascunho} alterar={setRascunho} produtos={visiveis} todosProdutos={produtos} />}
           {painel === "loja" && (
             <PainelLoja
               vitrine={rascunho}

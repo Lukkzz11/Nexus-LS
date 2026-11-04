@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using NexusLS.Core.Services;
@@ -59,9 +59,16 @@ public class PonteCatalogo
                 return new JsonObject();
             case "publicarVitrine":
             {
-                var (json, quando) = await _servico.PublicarAsync(Texto(args, "vitrine"));
-                return new JsonObject { ["vitrine"] = JsonNode.Parse(json), ["publicadoEm"] = quando.ToString("O") };
+                var (json, quando, ajustes) = await _servico.PublicarAsync(Texto(args, "vitrine"));
+                return new JsonObject { ["vitrine"] = JsonNode.Parse(json), ["publicadoEm"] = quando.ToString("O"), ["ajustesEnviados"] = ajustes };
             }
+            case "salvarProdutoCatalogo":
+                await _servico.SalvarAjusteProdutoAsync(
+                    args["id"]?.GetValue<string>() ?? "",
+                    args["visivel"]?.GetValue<bool>() ?? true,
+                    args["destaque"]?.GetValue<bool>() ?? false,
+                    (long)Math.Round((args["precoPromocional"]?.GetValue<double>() ?? 0) * 100));
+                return new JsonObject();
             case "enviarImagem":
             {
                 var (url, path) = _servico.SalvarImagem(args["dataUrl"]?.GetValue<string>() ?? "");
