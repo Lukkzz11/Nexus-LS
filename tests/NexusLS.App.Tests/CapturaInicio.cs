@@ -38,7 +38,11 @@ public sealed class CapturaInicio : IDisposable
         await new VendaService(_banco.Fabrica, () => agora.AddDays(-45)).FinalizarAsync(
             new PedidoVenda(new[] { new ItemCarrinho(bone, 3) }, 0, FormaPagamento.APrazo, ClienteId: maria.Id));
 
-        var vm = new InicioViewModel(new InicioService(_banco.Fabrica, () => agora), null, _ => { }, () => agora);
+        var agenda = new AgendaService(_banco.Fabrica, () => agora);
+        await agenda.CriarAsync(new DadosCompromisso("Cobrar Maria Souza", agora.Date.AddHours(16)));
+        await agenda.CriarAsync(new DadosCompromisso("Retirar pedido na malharia", agora.Date.AddHours(17).AddMinutes(30)));
+
+        var vm = new InicioViewModel(new InicioService(_banco.Fabrica, () => agora), null, _ => { }, () => agora, agenda);
         await vm.Carregamento;
 
         Capturador.SalvarInicio(vm, Path.Combine(saida, "inicio.png"));

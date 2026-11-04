@@ -2,6 +2,177 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <!-- Início fica vazio de propósito, por enquanto. Os dados (InicioViewModel/InicioService) continuam prontos para quando forem usados. -->
-    <Grid />
+    <UserControl.Resources>
+        <Style x:Key="NumeroGrande" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="{StaticResource TamDestaque}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{StaticResource CorTexto}" />
+            <Setter Property="Margin" Value="0,6,0,2" />
+        </Style>
+        <Style x:Key="RotuloIndicador" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="{StaticResource TamRotulo}" />
+            <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />
+        </Style>
+        <!-- Uma linha de "atenção": fio fino embaixo; o texto fica laranja quando há alerta (Tag verdadeiro). -->
+        <Style x:Key="LinhaAtencao" TargetType="Border">
+            <Setter Property="BorderBrush" Value="{StaticResource CorLinhaGrade}" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Setter Property="Padding" Value="0,10" />
+        </Style>
+        <Style x:Key="ValorAtencao" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="{StaticResource CorPositivo}" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource Self}}" Value="True">
+                    <Setter Property="Foreground" Value="{StaticResource CorAviso}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="BotaoAtalho" TargetType="Button" BasedOn="{StaticResource BotaoSecundario}">
+            <Setter Property="Margin" Value="0,0,10,10" />
+            <Setter Property="Padding" Value="14,12" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="MinWidth" Value="150" />
+        </Style>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel MaxWidth="980" HorizontalAlignment="Left">
+
+            <!-- Cabeçalho -->
+            <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="{Binding Saudacao}" Style="{StaticResource TituloTela}" />
+                    <TextBlock Text="{Binding DataTexto}" Foreground="{StaticResource CorTextoSuave}" Margin="0,2,0,0" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="Atualizar" Style="{StaticResource BotaoSecundario}" Command="{Binding AtualizarCommand}" />
+                    <Button Content="Abrir o PDV (F1)" Style="{StaticResource BotaoPrimario}" Margin="8,0,0,0"
+                            AutomationProperties.Name="Abrir o PDV" Command="{Binding AbrirPdvCommand}" />
+                </StackPanel>
+            </Grid>
+
+            <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" Margin="0,8,0,0" />
+
+            <!-- Indicadores do dia -->
+            <UniformGrid Columns="3" Margin="0,18,0,0">
+                <Border Style="{StaticResource Painel}" Margin="0,0,6,0">
+                    <StackPanel>
+                        <TextBlock Text="Vendas de hoje" Style="{StaticResource RotuloIndicador}" />
+                        <TextBlock Text="{Binding VendasHojeTexto}" Style="{StaticResource NumeroGrande}" AutomationProperties.Name="Vendas de hoje" />
+                        <TextBlock Text="{Binding VendasHojeDetalhe}" Style="{StaticResource TextoApoio}" />
+                        <TextBlock Text="{Binding ComparacaoOntemTexto}" Style="{StaticResource TextoApoio}" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Painel}" Margin="6,0">
+                    <StackPanel>
+                        <TextBlock Text="Ticket médio" Style="{StaticResource RotuloIndicador}" />
+                        <TextBlock Text="{Binding TicketMedioTexto}" Style="{StaticResource NumeroGrande}" />
+                        <TextBlock Text="valor médio por venda, hoje" Style="{StaticResource TextoApoio}" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Painel}" Margin="6,0,0,0">
+                    <StackPanel>
+                        <TextBlock Text="Caixa" Style="{StaticResource RotuloIndicador}" />
+                        <TextBlock Text="{Binding CaixaTexto}" Style="{StaticResource NumeroGrande}" FontSize="22" Margin="0,12,0,8"
+                                   AutomationProperties.Name="Situação do caixa" />
+                        <Button Content="Fechamento do caixa" Style="{StaticResource BotaoFantasma}" HorizontalAlignment="Left" Padding="0,2"
+                                Command="{Binding AbrirFechamentoCommand}" />
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
+
+            <!-- Atenção e agenda -->
+            <Grid Margin="0,12,0,0">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="3*" /><ColumnDefinition Width="2*" /></Grid.ColumnDefinitions>
+
+                <Border Style="{StaticResource Painel}" Margin="0,0,6,0">
+                    <StackPanel>
+                        <TextBlock Text="Precisa de atenção" Style="{StaticResource TituloSecao}" />
+                        <TextBlock Text="Tudo em dia por aqui." Style="{StaticResource TextoApoio}" Margin="0,8,0,0"
+                                   Visibility="{Binding TudoEmDia, Converter={StaticResource BoolVis}}" />
+
+                        <Border Style="{StaticResource LinhaAtencao}">
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Estoque" Foreground="{StaticResource CorTextoSuave}" FontSize="{StaticResource TamRotulo}" />
+                                    <TextBlock Text="{Binding EstoqueBaixoTexto}" Style="{StaticResource ValorAtencao}" Tag="{Binding EstoqueBaixoAlerta}" />
+                                    <ItemsControl ItemsSource="{Binding EstoquesBaixos}" Margin="0,4,0,0"
+                                                  Visibility="{Binding EstoqueBaixoAlerta, Converter={StaticResource BoolVis}}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate><TextBlock Text="{Binding}" Style="{StaticResource TextoApoio}" Margin="0,1" /></DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                                <Button Grid.Column="1" Content="Ver" Style="{StaticResource BotaoSecundario}" VerticalAlignment="Top" Command="{Binding AbrirEstoqueCommand}" />
+                            </Grid>
+                        </Border>
+
+                        <Border Style="{StaticResource LinhaAtencao}">
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Clientes devendo (a prazo)" Foreground="{StaticResource CorTextoSuave}" FontSize="{StaticResource TamRotulo}" />
+                                    <TextBlock Text="{Binding DividaTexto}" Style="{StaticResource ValorAtencao}" Tag="{Binding DividaAlerta}" />
+                                    <TextBlock Text="{Binding DividaDetalhe}" Style="{StaticResource TextoApoio}" Margin="0,2,0,0" />
+                                </StackPanel>
+                                <Button Grid.Column="1" Content="Ver" Style="{StaticResource BotaoSecundario}" VerticalAlignment="Top" Command="{Binding AbrirClientesCommand}" />
+                            </Grid>
+                        </Border>
+
+                        <Border Style="{StaticResource LinhaAtencao}" BorderThickness="0" Visibility="{Binding TemBackup, Converter={StaticResource BoolVis}}">
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Backup dos dados" Foreground="{StaticResource CorTextoSuave}" FontSize="{StaticResource TamRotulo}" />
+                                    <TextBlock Text="{Binding BackupTexto}" Style="{StaticResource ValorAtencao}" Tag="{Binding BackupAlerta}"
+                                               AutomationProperties.Name="Situação do backup" />
+                                    <TextBlock Text="{Binding BackupDetalhe}" Style="{StaticResource TextoApoio}" Margin="0,2,0,0" />
+                                </StackPanel>
+                                <Button Grid.Column="1" Content="Abrir" Style="{StaticResource BotaoSecundario}" VerticalAlignment="Top" Command="{Binding AbrirConfiguracoesCommand}" />
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="1" Style="{StaticResource Painel}" Margin="6,0,0,0" Visibility="{Binding TemAgenda, Converter={StaticResource BoolVis}}">
+                    <StackPanel>
+                        <Grid>
+                            <TextBlock Text="Agenda de hoje" Style="{StaticResource TituloSecao}" />
+                            <Button Content="Abrir" Style="{StaticResource BotaoFantasma}" HorizontalAlignment="Right" Padding="6,0"
+                                    Command="{Binding AbrirAgendaCommand}" />
+                        </Grid>
+                        <TextBlock Text="Nenhum compromisso para hoje." Style="{StaticResource TextoApoio}" Margin="0,8,0,0"
+                                   Visibility="{Binding AgendaVazia, Converter={StaticResource BoolVis}}" />
+                        <ItemsControl ItemsSource="{Binding AgendaHoje}" Margin="0,8,0,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate><TextBlock Text="{Binding}" Margin="0,4" TextWrapping="Wrap" /></DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- Atalhos -->
+            <TextBlock Text="Atalhos" Style="{StaticResource TituloSecao}" Margin="0,22,0,10" />
+            <ItemsControl ItemsSource="{Binding Atalhos}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Button Style="{StaticResource BotaoAtalho}" Command="{Binding Abrir}" AutomationProperties.Name="{Binding Nome}">
+                            <StackPanel>
+                                <TextBlock Text="{Binding Nome}" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding Dica}" Style="{StaticResource TextoApoio}" />
+                            </StackPanel>
+                        </Button>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </ScrollViewer>
 </UserControl>

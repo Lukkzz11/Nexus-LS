@@ -12,6 +12,9 @@ Este manual explica o dia a dia do programa. Ele descreve o que o programa faz h
 5. **Funcionários e permissões:** em Funcionários, cadastre quem usa o programa. Com pelo menos um funcionário com login cadastrado, o programa passa a pedir entrada. Cada perfil enxerga só os menus permitidos.
 6. **Backup:** em Configurações > Backup, escolha uma pasta (de preferência em outro disco ou no Drive) e deixe o backup automático ligado.
 
+### Tela Início
+É a primeira tela ao entrar. Mostra a saudação do dia, as vendas de hoje (com a comparação com ontem), o ticket médio, a situação do caixa, o que precisa de atenção (estoque abaixo do mínimo, clientes devendo, backup), os compromissos de hoje que ainda faltam e atalhos para as telas que a sua função permite. O botão **Atualizar** recarrega os números.
+
 ## 2. Vender (PDV)
 
 | Tecla | O que faz |

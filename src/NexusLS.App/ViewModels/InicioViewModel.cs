@@ -4,6 +4,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NexusLS.Core.Backup;
 using NexusLS.Core.Services;
+using NexusLS.App.Seguranca;
+using NexusLS.Core.Models;
 
 namespace NexusLS.App.ViewModels;
 
@@ -19,15 +21,19 @@ public partial class InicioViewModel : ViewModelBase
     private readonly GestorBackup? _backup;
     private readonly Action<ItemMenu> _abrir;
     private readonly Func<DateTime> _agora;
+    private readonly AgendaService? _agenda;
 
-    public InicioViewModel(InicioService inicio, GestorBackup? backup, Action<ItemMenu> abrir, Func<DateTime>? agora = null)
+    public InicioViewModel(InicioService inicio, GestorBackup? backup, Action<ItemMenu> abrir, Func<DateTime>? agora = null, AgendaService? agenda = null)
     {
         _inicio = inicio;
+        _agenda = agenda;
         _backup = backup;
         _abrir = abrir;
         _agora = agora ?? (() => DateTime.Now);
         var data = _agora().ToString("dddd, d 'de' MMMM 'de' yyyy", PtBr);
         DataTexto = char.ToUpper(data[0], PtBr) + data[1..]; // só a primeira letra maiúscula: "Segunda-feira, 19 de outubro de 2026"
+        Saudacao = _agora().Hour switch { < 12 => "Bom dia", < 18 => "Boa tarde", _ => "Boa noite" };
+        Atalhos = MontarAtalhos();
         Carregamento = AtualizarAsync();
     }
 
@@ -35,6 +41,20 @@ public partial class InicioViewModel : ViewModelBase
     public Task Carregamento { get; }
 
     public ObservableCollection<string> EstoquesBaixos { get; } = new();
+
+    /// <summary>Compromissos de hoje que ainda não foram concluídos, em ordem de horário.</summary>
+    public ObservableCollection<string> AgendaHoje { get; } = new();
+
+    /// <summary>Só os atalhos que a pessoa que entrou pode usar.</summary>
+    public IReadOnlyList<AtalhoInicio> Atalhos { get; }
+
+    public bool TemAgenda => _agenda is not null;
+    public bool AgendaVazia => AgendaHoje.Count == 0;
+
+    /// <summary>Nada precisa de atenção agora (estoque, dívida vencida, backup).</summary>
+    public bool TudoEmDia => !EstoqueBaixoAlerta && !DividaAlerta && !BackupAlerta;
+
+    [ObservableProperty] private string _saudacao = "";
 
     /// <summary>O cartão de backup só aparece quando há gestor de backup.</summary>
     public bool TemBackup => _backup is not null;
@@ -50,15 +70,21 @@ public partial class InicioViewModel : ViewModelBase
     [ObservableProperty] private bool _caixaAberto;
 
     [ObservableProperty] private string _estoqueBaixoTexto = "";
-    [ObservableProperty] private bool _estoqueBaixoAlerta;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(TudoEmDia))]
+    private bool _estoqueBaixoAlerta;
 
     [ObservableProperty] private string _dividaTexto = "";
     [ObservableProperty] private string _dividaDetalhe = "";
-    [ObservableProperty] private bool _dividaAlerta;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(TudoEmDia))]
+    private bool _dividaAlerta;
 
     [ObservableProperty] private string _backupTexto = "";
     [ObservableProperty] private string _backupDetalhe = "";
-    [ObservableProperty] private bool _backupAlerta;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(TudoEmDia))]
+    private bool _backupAlerta;
 
     [RelayCommand]
     public Task AtualizarAsync() => ExecutarAsync(async () =>
@@ -103,7 +129,34 @@ public partial class InicioViewModel : ViewModelBase
                 : " · nada vencido");
 
         AtualizarBackup();
+        await AtualizarAgendaAsync();
     });
+
+    private async Task AtualizarAgendaAsync()
+    {
+        if (_agenda is null) return;
+        var hoje = (await _agenda.DoDiaAsync(_agora().Date)).Where(c => !c.Concluido);
+        AgendaHoje.Clear();
+        foreach (var c in hoje) AgendaHoje.Add($"{(c.DiaInteiro ? "Dia inteiro" : c.Inicio.ToString("HH:mm", PtBr))}  ·  {c.Titulo}");
+        OnPropertyChanged(nameof(AgendaVazia));
+    }
+
+    private IReadOnlyList<AtalhoInicio> MontarAtalhos()
+    {
+        var todos = new (string Nome, string Dica, ItemMenu Item, Permissao? Exige)[]
+        {
+            ("PDV", "Vender (F1)", ItemMenu.Pdv, Permissao.Vender),
+            ("Caixa", "Vendas do dia", ItemMenu.Caixa, Permissao.Caixa),
+            ("Estoque", "Produtos e fotos", ItemMenu.EstoqueDaLoja, Permissao.Estoque),
+            ("Clientes", "Cadastro e dívidas", ItemMenu.Clientes, Permissao.Clientes),
+            ("Mais vendidos", "O que mais saiu", ItemMenu.MaisVendidos, Permissao.Relatorios),
+            ("Relatórios", "Resultado e lucro", ItemMenu.Relatorios, Permissao.Relatorios),
+            ("Agenda", "Compromissos", ItemMenu.Agenda, null),
+            ("Configurações", "Loja, backup, Google", ItemMenu.Configuracoes, Permissao.Configuracoes),
+        };
+        return todos.Where(a => a.Exige is not { } p || Sessao.Pode(p))
+            .Select(a => new AtalhoInicio(a.Nome, a.Dica, new RelayCommand(() => _abrir(a.Item)))).ToList();
+    }
 
     private static string Clientes(int n) => n == 1 ? "1 cliente" : $"{n} clientes";
 
@@ -138,4 +191,8 @@ public partial class InicioViewModel : ViewModelBase
     [RelayCommand] private void AbrirRelatorios() => _abrir(ItemMenu.Relatorios);
     [RelayCommand] private void AbrirCatalogoOnline() => _abrir(ItemMenu.CatalogoOnline);
     [RelayCommand] private void AbrirConfiguracoes() => _abrir(ItemMenu.Configuracoes);
+    [RelayCommand] private void AbrirAgenda() => _abrir(ItemMenu.Agenda);
 }
+
+/// <summary>Um botão grande de atalho na tela Início.</summary>
+public sealed record AtalhoInicio(string Nome, string Dica, System.Windows.Input.ICommand Abrir);
