@@ -175,6 +175,12 @@
                         IsEnabled="{Binding PodePagar}" Command="{Binding PagarCommand}" />
                 <Button Content="Editar" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0" Padding="14,8"
                         IsEnabled="{Binding PodeEditar}" Command="{Binding EditarSelecionadaCommand}" />
+                <Button Content="Corrigir (pago)" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0" Padding="14,8"
+                        IsEnabled="{Binding PodeCorrigirPago}" Command="{Binding CorrigirSelecionadaCommand}"
+                        ToolTip="Cancela o lançamento pago e cria o corrigido; o original fica no histórico" />
+                <Button Content="Retirar (pago)" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0" Padding="14,8"
+                        IsEnabled="{Binding PodeCorrigirPago}" Command="{Binding RetirarCommand}"
+                        ToolTip="Tira o valor dos saldos e números; continua no histórico, cancelado, com o motivo" />
                 <Button Content="Estornar pagamento" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0" Padding="14,8"
                         IsEnabled="{Binding PodeEstornar}" Command="{Binding EstornarCommand}" />
                 <Button Content="Cancelar conta" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0" Padding="14,8"

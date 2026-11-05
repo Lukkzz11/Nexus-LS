@@ -78,6 +78,38 @@ public sealed class DividaClienteTests : IDisposable
     }
 
     [Fact]
+    public async Task Ajustar_o_titulo_recalcula_a_divida_e_mostra_o_historico()
+    {
+        var maria = await PrepararAsync();
+        await VenderAPrazoAsync(maria.Id, 2);   // 40,00
+        var titulos = new TituloPrazoService(_banco.Fabrica);
+        var vm = new ClientesViewModel(_clientes, titulos);
+        await AteAsync(() => vm.Clientes.Count == 1, "lista de clientes");
+        vm.Selecionado = vm.Clientes[0];
+        await AteAsync(() => vm.IdEditando == maria.Id && vm.ResumoDivida != "", "abrir o cliente");
+
+        // sem escolher o título, pede para escolher
+        await vm.SalvarAjusteTituloCommand.ExecuteAsync(null);
+        Assert.True(vm.MensagemEhErro);
+
+        vm.TituloSelecionado = vm.Titulos.Single();
+        Assert.Equal("40,00", vm.AjusteValorTexto);
+        vm.AjusteValorTexto = "30,00";
+        vm.AjusteMotivo = "";
+        await vm.SalvarAjusteTituloCommand.ExecuteAsync(null);
+        Assert.True(vm.MensagemEhErro);                          // motivo é obrigatório
+
+        vm.AjusteMotivo = "desconto combinado";
+        await vm.SalvarAjusteTituloCommand.ExecuteAsync(null);
+        Assert.False(vm.MensagemEhErro, vm.Mensagem);
+        Assert.Contains("Deve R$ 30,00", vm.ResumoDivida.Replace(' ', ' '));
+        var ajuste = Assert.Single(vm.Ajustes);
+        Assert.Contains("desconto combinado", ajuste);
+        Assert.Contains("→", ajuste);
+        Assert.StartsWith("ajustado", vm.Titulos.Single().Ajuste);
+    }
+
+    [Fact]
     public async Task Pagamento_maior_que_a_divida_mostra_erro()
     {
         var maria = await PrepararAsync();

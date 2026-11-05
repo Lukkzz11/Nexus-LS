@@ -17,6 +17,55 @@ namespace NexusLS.Core.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.13");
 
+            modelBuilder.Entity("NexusLS.Core.Models.AjusteTituloPrazo", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("AtualizadoEm")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CriadoEm")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("Guid")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Motivo")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Operador")
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("ValorAnteriorCentavos")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("ValorNovoCentavos")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("VencimentoAnterior")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("VencimentoNovo")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("VendaId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Guid")
+                        .IsUnique();
+
+                    b.HasIndex("VendaId");
+
+                    b.ToTable("AjustesTitulosPrazo");
+                });
+
             modelBuilder.Entity("NexusLS.Core.Models.Atividade", b =>
                 {
                     b.Property<int>("Id")
@@ -855,6 +904,10 @@ namespace NexusLS.Core.Migrations
                     b.Property<DateTime?>("CanceladoEm")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("CanceladoPor")
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Categoria")
                         .HasMaxLength(60)
                         .HasColumnType("TEXT");
@@ -871,6 +924,9 @@ namespace NexusLS.Core.Migrations
                     b.Property<string>("Contraparte")
                         .HasMaxLength(120)
                         .HasColumnType("TEXT");
+
+                    b.Property<int?>("CorrigeLancamentoId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("CriadoEm")
                         .HasColumnType("TEXT");
@@ -922,6 +978,8 @@ namespace NexusLS.Core.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CompraId");
+
+                    b.HasIndex("CorrigeLancamentoId");
 
                     b.HasIndex("GrupoId");
 
@@ -1752,6 +1810,15 @@ namespace NexusLS.Core.Migrations
                         .IsUnique();
 
                     b.ToTable("Vendas");
+                });
+
+            modelBuilder.Entity("NexusLS.Core.Models.AjusteTituloPrazo", b =>
+                {
+                    b.HasOne("NexusLS.Core.Models.Venda", null)
+                        .WithMany()
+                        .HasForeignKey("VendaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("NexusLS.Core.Models.Compra", b =>

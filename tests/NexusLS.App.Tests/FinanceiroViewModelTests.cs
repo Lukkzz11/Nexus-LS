@@ -132,6 +132,51 @@ public sealed class FinanceiroViewModelTests : IDisposable
     }
 
     [Fact]
+    public async Task Corrigir_conta_paga_pede_o_motivo_cancela_o_original_e_cria_a_corrigida()
+    {
+        var vm = await CriarAsync();
+        await LancarAsync(vm, "Luz", "200,00", new DateTime(2026, 10, 22));
+        vm.Selecionada = vm.Linhas.Single();
+        await vm.PagarCommand.ExecuteAsync(null);
+        vm.Selecionada = vm.Linhas.Single();
+        Assert.True(vm.PodeCorrigirPago);
+
+        vm.CorrigirSelecionadaCommand.Execute(null);
+        Assert.True(vm.Corrigindo);
+        Assert.Equal("Corrigir lançamento pago", vm.TituloFormulario);
+        vm.FormValor = "250,00";
+
+        vm.PedirMotivo = _ => null;                                  // desistiu: nada muda
+        await vm.SalvarCommand.ExecuteAsync(null);
+        Assert.Single(vm.Linhas);
+
+        vm.PedirMotivo = _ => "valor digitado errado";
+        await vm.SalvarCommand.ExecuteAsync(null);
+        Assert.False(vm.MensagemEhErro, vm.Mensagem);
+        Assert.Equal(2, vm.Linhas.Count);
+        Assert.Contains(vm.Linhas, l => l.SituacaoTexto == "Cancelado");
+        Assert.Contains(vm.Linhas, l => l.ValorTexto.Replace(' ', ' ').Contains("250,00"));
+    }
+
+    [Fact]
+    public async Task Retirar_conta_paga_pede_o_motivo_e_ela_continua_no_historico_cancelada()
+    {
+        var vm = await CriarAsync();
+        await LancarAsync(vm, "Luz", "200,00", new DateTime(2026, 10, 22));
+        vm.Selecionada = vm.Linhas.Single();
+        await vm.PagarCommand.ExecuteAsync(null);
+        vm.Selecionada = vm.Linhas.Single();
+
+        vm.PedirMotivo = _ => null;
+        await vm.RetirarCommand.ExecuteAsync(null);
+        Assert.NotEqual("Cancelado", vm.Linhas.Single().SituacaoTexto);
+
+        vm.PedirMotivo = _ => "lançada por engano";
+        await vm.RetirarCommand.ExecuteAsync(null);
+        Assert.Equal("Cancelado", vm.Linhas.Single().SituacaoTexto);
+    }
+
+    [Fact]
     public async Task Conta_vencida_aparece_como_atrasada_e_no_resumo()
     {
         var vm = await CriarAsync();

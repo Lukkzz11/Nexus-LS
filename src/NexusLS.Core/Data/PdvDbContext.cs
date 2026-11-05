@@ -29,6 +29,7 @@ public class PdvDbContext : DbContext
     public DbSet<ImportacaoErpCursor> ImportacaoErpCursores => Set<ImportacaoErpCursor>();
     public DbSet<Lancamento> Lancamentos => Set<Lancamento>();
     public DbSet<CategoriaFinanceira> CategoriasFinanceiras => Set<CategoriaFinanceira>();
+    public DbSet<AjusteTituloPrazo> AjustesTitulosPrazo => Set<AjusteTituloPrazo>();
     public DbSet<Fornecedor> Fornecedores => Set<Fornecedor>();
     public DbSet<Compromisso> Compromissos => Set<Compromisso>();
     public DbSet<MateriaPrima> MateriasPrimas => Set<MateriaPrima>();
@@ -324,10 +325,20 @@ public class PdvDbContext : DbContext
             e.Property(l => l.Observacao).HasMaxLength(300);
             e.Property(l => l.Operador).HasMaxLength(80);
             e.Property(l => l.MotivoCancelamento).HasMaxLength(200);
+            e.Property(l => l.CanceladoPor).HasMaxLength(80);
+            e.HasIndex(l => l.CorrigeLancamentoId);
             e.HasIndex(l => l.Vencimento);
             e.HasIndex(l => l.PagoEm);
             e.HasIndex(l => l.GrupoId);
             e.HasIndex(l => l.CompraId);
+        });
+
+        modelBuilder.Entity<AjusteTituloPrazo>(e =>
+        {
+            e.Property(a => a.Motivo).IsRequired().HasMaxLength(200);
+            e.Property(a => a.Operador).HasMaxLength(80);
+            e.HasOne<Venda>().WithMany().HasForeignKey(a => a.VendaId).OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(a => a.VendaId);
         });
 
         modelBuilder.Entity<CategoriaFinanceira>(e =>

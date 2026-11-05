@@ -9,18 +9,21 @@ namespace NexusLS.App.ViewModels;
 public record OpcaoForma(string Texto, FormaPagamento Forma);
 
 /// <summary>Uma venda a prazo na tela, com os textos prontos.</summary>
-public record LinhaTitulo(int VendaId, string Data, string Vencimento, string Total, string Pago, string Saldo, string Situacao);
+public record LinhaTitulo(int VendaId, string Data, string Vencimento, string Total, string Pago, string Saldo, string Situacao,
+    string Ajuste = "", long TotalCentavos = 0, DateTime? VencimentoData = null);
 
 /// <summary>Cadastro de clientes (nome, documento, telefone, limite de crédito, observação) com o histórico de compras e a dívida a prazo de cada um.</summary>
 public partial class ClientesViewModel : ViewModelBase
 {
     private readonly ClienteService _clientes;
+    private readonly TituloPrazoService? _titulosPrazo;
     private int _versaoBusca;
     private bool _silenciar; // true enquanto a seleção da lista é refeita pelo programa (não pelo operador)
 
-    public ClientesViewModel(ClienteService clientes)
+    public ClientesViewModel(ClienteService clientes, TituloPrazoService? titulosPrazo = null)
     {
         _clientes = clientes;
+        _titulosPrazo = titulosPrazo;
         _pagamentoForma = FormasDePagamento[0];
         Novo();
         _ = BuscarAsync();
@@ -29,6 +32,23 @@ public partial class ClientesViewModel : ViewModelBase
     public ObservableCollection<Cliente> Clientes { get; } = new();
     public ObservableCollection<Venda> Compras { get; } = new();
     public ObservableCollection<LinhaTitulo> Titulos { get; } = new();
+
+    /// <summary>Histórico dos ajustes de título do cliente (de → para, motivo, quem, quando), do mais recente para o mais antigo.</summary>
+    public ObservableCollection<string> Ajustes { get; } = new();
+    public bool PodeEditarTitulo => _titulosPrazo is not null;
+
+    // ----- Ajuste de título a prazo (a venda não muda; só o valor devido e o vencimento) -----
+    [ObservableProperty] private LinhaTitulo? _tituloSelecionado;
+    [ObservableProperty] private string _ajusteValorTexto = "";
+    [ObservableProperty] private DateTime? _ajusteVencimento;
+    [ObservableProperty] private string _ajusteMotivo = "";
+
+    partial void OnTituloSelecionadoChanged(LinhaTitulo? value)
+    {
+        AjusteValorTexto = value is null ? "" : Dinheiro.FormatarParaEdicao(value.TotalCentavos);
+        AjusteVencimento = value?.VencimentoData;
+        AjusteMotivo = "";
+    }
 
     public IReadOnlyList<OpcaoForma> FormasDePagamento { get; } = new[]
     {
@@ -194,11 +214,25 @@ public partial class ClientesViewModel : ViewModelBase
 
         var conta = await _clientes.ContaAsync(clienteId);
         var agora = DateTime.Now;
+        var selecionadoId = TituloSelecionado?.VendaId;
         Titulos.Clear();
         foreach (var t in conta.Titulos)
             Titulos.Add(new LinhaTitulo(t.VendaId, $"{t.DataVenda:dd/MM/yyyy}", $"{t.Vencimento:dd/MM/yyyy}",
                 Dinheiro.Formatar(t.TotalCentavos), Dinheiro.Formatar(t.PagoCentavos), Dinheiro.Formatar(t.SaldoCentavos),
-                t.Quitado ? "Pago" : t.VencidoEm(agora) ? "VENCIDO" : "Em aberto"));
+                t.Quitado ? "Pago" : t.VencidoEm(agora) ? "VENCIDO" : "Em aberto",
+                t.Ajustado ? $"ajustado (venda: {Dinheiro.Formatar(t.ValorOriginalCentavos)})" : "", t.TotalCentavos, t.Vencimento));
+        TituloSelecionado = Titulos.FirstOrDefault(t => t.VendaId == selecionadoId);
+
+        Ajustes.Clear();
+        if (_titulosPrazo is not null)
+            foreach (var a in await _titulosPrazo.HistoricoDoClienteAsync(clienteId))
+            {
+                var partes = new List<string>();
+                if (a.MudouValor) partes.Add($"{Dinheiro.Formatar(a.ValorAnteriorCentavos)} → {Dinheiro.Formatar(a.ValorNovoCentavos)}");
+                if (a.MudouVencimento) partes.Add($"vence {a.VencimentoAnterior:dd/MM/yyyy} → {a.VencimentoNovo:dd/MM/yyyy}");
+                Ajustes.Add($"Venda #{a.VendaId}: {string.Join(" · ", partes)} · {a.Motivo}" +
+                            $"{(string.IsNullOrWhiteSpace(a.Operador) ? "" : " · " + a.Operador)} · {a.Quando:dd/MM/yyyy HH:mm}");
+            }
 
         var vencido = conta.Titulos.Where(t => t.VencidoEm(agora)).Sum(t => t.SaldoCentavos);
         ResumoDivida = conta.Titulos.Count == 0
@@ -206,6 +240,21 @@ public partial class ClientesViewModel : ViewModelBase
             : $"Deve {Dinheiro.Formatar(conta.SaldoDevedorCentavos)} · Já pagou {Dinheiro.Formatar(conta.TotalPagoCentavos)}"
               + (vencido > 0 ? $" · VENCIDO: {Dinheiro.Formatar(vencido)}" : "");
     }
+
+    /// <summary>Muda o valor devido e/ou o vencimento do título escolhido. A dívida é recalculada por FIFO; a venda não é alterada.</summary>
+    [RelayCommand]
+    private Task SalvarAjusteTituloAsync() => ExecutarAsync(async () =>
+    {
+        if (_titulosPrazo is null || IdEditando is not int id) return;
+        if (TituloSelecionado is not { } t) throw new RegraDeNegocioException("Escolha o título (a venda a prazo) que quer ajustar.");
+        if (!Dinheiro.TentarConverter(AjusteValorTexto, out var valor))
+            throw new RegraDeNegocioException("Valor inválido. Digite um valor como 80,00.");
+
+        await _titulosPrazo.EditarAsync(t.VendaId, valor, AjusteVencimento, AjusteMotivo);
+        AjusteMotivo = "";
+        await CarregarHistoricoAsync(id);
+        MostrarSucesso($"Título da venda #{t.VendaId} ajustado. A dívida do cliente foi recalculada.");
+    });
 
     /// <summary>Recebe um pagamento da dívida do cliente aberto; ele abate as vendas mais antigas primeiro.</summary>
     [RelayCommand]

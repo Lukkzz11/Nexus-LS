@@ -80,11 +80,12 @@ public class InicioService
             .Where(v => v.FormaPagamento == FormaPagamento.APrazo && !v.Cancelada && v.ClienteId != null)
             .ToListAsync();
         var pagamentos = await db.PagamentosCliente.AsNoTracking().ToListAsync();
+        var ajustesTitulos = await db.AjustesTitulosPrazo.AsNoTracking().ToListAsync();
         long dividaTotal = 0, dividaVencida = 0;
         int comDivida = 0, comVencida = 0;
         foreach (var grupo in aPrazo.GroupBy(v => v.ClienteId!.Value))
         {
-            var conta = ContaCorrente.Calcular(grupo, pagamentos.Where(p => p.ClienteId == grupo.Key));
+            var conta = ContaCorrente.Calcular(grupo, pagamentos.Where(p => p.ClienteId == grupo.Key), ajustesTitulos);
             var saldo = conta.SaldoDevedorCentavos;
             if (saldo <= 0) continue;
             comDivida++;

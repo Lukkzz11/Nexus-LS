@@ -143,10 +143,11 @@ public class PosicaoFinanceiraService
         }
 
         // ---- dívidas de clientes em aberto (a receber) ----
+        var ajustesTitulos = await db.AjustesTitulosPrazo.AsNoTracking().ToListAsync();
         var aPrazo = vendas.Where(v => v.FormaPagamento == FormaPagamento.APrazo && v.ClienteId is not null).GroupBy(v => v.ClienteId!.Value);
         foreach (var grupo in aPrazo)
         {
-            var conta = ContaCorrente.Calcular(grupo, pagamentos.Where(p => p.ClienteId == grupo.Key));
+            var conta = ContaCorrente.Calcular(grupo, pagamentos.Where(p => p.ClienteId == grupo.Key), ajustesTitulos);
             foreach (var t in conta.Titulos.Where(t => t.SaldoCentavos > 0))
                 lancs.Add(new($"titulo:{t.VendaId}", OrigemFin.Titulo, ClasseFin.RecebimentoCliente, SentidoFin.Entrada, SituacaoFin.Previsto,
                     t.SaldoCentavos, t.Vencimento, Descricao: $"Venda a prazo #{t.VendaId}"));
@@ -194,8 +195,11 @@ public class PosicaoFinanceiraService
         var idsProdutos = doPeriodo.SelectMany(v => v.Itens).Select(i => i.ProdutoId).Distinct().ToList();
         var custosAtuais = await db.Produtos.AsNoTracking().Where(p => idsProdutos.Contains(p.Id))
             .ToDictionaryAsync(p => p.Id, p => p.PrecoCustoCentavos);
+        var vigentes = ContaCorrente.UltimoPorVenda(ajustesTitulos);
         var vendasFin = doPeriodo.Select(v => new VendaFin($"venda:{v.Id}", v.DataHora, v.TotalCentavos,
-            v.Itens.Sum(i => (i.CustoUnitarioCentavos ?? custosAtuais.GetValueOrDefault(i.ProdutoId)) * i.Quantidade))).ToList();
+            v.Itens.Sum(i => (i.CustoUnitarioCentavos ?? custosAtuais.GetValueOrDefault(i.ProdutoId)) * i.Quantidade),
+            // abatimento/acréscimo no título a prazo: mexe na receita da venda (que em si nunca é alterada)
+            v.FormaPagamento == FormaPagamento.APrazo && vigentes.TryGetValue(v.Id, out var aj) ? aj.ValorNovoCentavos - v.TotalCentavos : 0)).ToList();
 
         var contasFin = contas.Select(c => new ContaFin(c.Id, c.Nome, c.Tipo, c.SaldoInicialCentavos, c.DataSaldoInicial, c.Padrao)).ToList();
         return MotorFinanceiro.Calcular(new EntradaMotor(_agora(), contasFin, lancs, vendasFin, de, ate));

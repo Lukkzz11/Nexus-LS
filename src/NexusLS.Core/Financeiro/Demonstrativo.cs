@@ -9,7 +9,7 @@ namespace NexusLS.Core.Financeiro;
 /// </summary>
 public record DemonstrativoFinanceiro(
     DateTime De, DateTime Ate,
-    long ReceitaBrutaCentavos, long DevolucoesCentavos, long ReceitaLiquidaCentavos,
+    long ReceitaBrutaCentavos, long DevolucoesCentavos, long AjustesTitulosCentavos, long ReceitaLiquidaCentavos,
     long CustoMercadoriasCentavos, long LucroBrutoCentavos, double MargemBrutaPercentual,
     long OutrasReceitasCentavos, long DespesasOperacionaisCentavos, long ResultadoCentavos,
     IReadOnlyList<ResumoCategoriaFinanceira> DespesasPorCategoria,
@@ -55,7 +55,7 @@ public static class Demonstrativo
 
         return new DemonstrativoFinanceiro(
             p.Inicio, p.Fim,
-            p.ReceitaBrutaCentavos, p.DevolucoesCentavos, p.ReceitaLiquidaCentavos,
+            p.ReceitaBrutaCentavos, p.DevolucoesCentavos, p.AjustesTitulosCentavos, p.ReceitaLiquidaCentavos,
             p.CustoMercadoriasCentavos, p.LucroBrutoCentavos, margem,
             p.OutrasReceitasCentavos, p.DespesasOperacionaisCentavos, p.ResultadoCentavos, categorias,
             p.RecebimentosClientesCentavos, p.AportesCentavos, p.OutrasEntradasCentavos,

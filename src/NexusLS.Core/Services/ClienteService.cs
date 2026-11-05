@@ -101,7 +101,9 @@ public class ClienteService
         var vendas = await db.Vendas.AsNoTracking()
             .Where(v => v.ClienteId == clienteId && v.FormaPagamento == FormaPagamento.APrazo).ToListAsync();
         var pagamentos = await db.PagamentosCliente.AsNoTracking().Where(p => p.ClienteId == clienteId).ToListAsync();
-        return ContaCorrente.Calcular(vendas, pagamentos);
+        var ids = vendas.Select(v => v.Id).ToList();
+        var ajustes = await db.AjustesTitulosPrazo.AsNoTracking().Where(a => ids.Contains(a.VendaId)).ToListAsync();
+        return ContaCorrente.Calcular(vendas, pagamentos, ajustes);
     }
 
     /// <summary>Pagamentos recebidos do cliente, do mais recente para o mais antigo.</summary>

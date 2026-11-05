@@ -19,7 +19,10 @@ public enum TipoAtividade
     LiquidacaoEstornada = 14,
     ChequeDevolvido = 15,
     ChequeCancelado = 16,
-    ContaAlterada = 17
+    ContaAlterada = 17,
+    LancamentoCorrigido = 18,
+    LancamentoRetirado = 19,
+    TituloAPrazoEditado = 20
 }
 
 /// <summary>

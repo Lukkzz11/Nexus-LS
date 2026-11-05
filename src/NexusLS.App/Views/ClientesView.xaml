@@ -150,8 +150,9 @@
                     <Separator Margin="0,0,0,12" />
                     <TextBlock Text="Dívida a prazo" FontSize="16" FontWeight="SemiBold" />
                     <TextBlock Text="{Binding ResumoDivida}" TextWrapping="Wrap" Margin="0,4,0,0" />
-                    <ItemsControl ItemsSource="{Binding Titulos}" Margin="0,8,0,0">
-                        <ItemsControl.ItemTemplate>
+                    <ListBox ItemsSource="{Binding Titulos}" SelectedItem="{Binding TituloSelecionado}" Margin="0,8,0,0"
+                             BorderThickness="0" Background="Transparent" AutomationProperties.Name="Títulos a prazo">
+                        <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <TextBlock TextWrapping="Wrap" Margin="0,2">
                                     <Run Text="{Binding VendaId, Mode=OneWay, StringFormat='#{0}'}" FontWeight="SemiBold" />
@@ -159,10 +160,30 @@
                                     <Run Text="{Binding Situacao, Mode=OneWay, StringFormat='· {0}'}" />
                                     <Run Text="{Binding Vencimento, Mode=OneWay, StringFormat='· vence {0}'}" />
                                     <Run Text="{Binding Saldo, Mode=OneWay, StringFormat='· falta {0}'}" />
+                                    <Run Text="{Binding Ajuste, Mode=OneWay, StringFormat='· {0}'}" Foreground="{StaticResource CorTextoSuave}" />
                                 </TextBlock>
                             </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <StackPanel Visibility="{Binding PodeEditarTitulo, Converter={StaticResource BoolVis}}">
+                        <TextBlock Text="Ajustar o título escolhido (valor devido e vencimento; a venda não muda)" Style="{StaticResource Rotulo}" Margin="0,12,0,0" TextWrapping="Wrap" />
+                        <TextBox Text="{Binding AjusteValorTexto, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Novo valor do título" />
+                        <DatePicker SelectedDateFormat="Short" SelectedDate="{Binding AjusteVencimento}" Margin="0,8,0,0"
+                                    AutomationProperties.Name="Novo vencimento do título" />
+                        <TextBox Text="{Binding AjusteMotivo, UpdateSourceTrigger=PropertyChanged}" Margin="0,8,0,0"
+                                 AutomationProperties.Name="Motivo do ajuste" ToolTip="Motivo do ajuste (obrigatório, mínimo 3 letras)" />
+                        <Button Content="Salvar ajuste" Style="{StaticResource BotaoSecundario}" Margin="0,10,0,0"
+                                HorizontalAlignment="Left" Command="{Binding SalvarAjusteTituloCommand}" />
+                        <TextBlock Text="Ajustes feitos (de → para, motivo, quem, quando)" Style="{StaticResource Rotulo}" Margin="0,12,0,0" />
+                        <ItemsControl ItemsSource="{Binding Ajustes}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding}" TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource CorTextoSuave}" Margin="0,2" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
 
                     <TextBlock Text="Receber pagamento" Style="{StaticResource Rotulo}" Margin="0,12,0,0" />
                     <TextBox Text="{Binding PagamentoValorTexto, UpdateSourceTrigger=PropertyChanged}"

@@ -51,6 +51,15 @@ public class Lancamento : EntidadeSincronizavel
     public bool Cancelado { get; set; }
     public string? MotivoCancelamento { get; set; }
     public DateTime? CanceladoEm { get; set; }
+
+    /// <summary>Quem cancelou ou retirou (funcionário logado ou operador configurado).</summary>
+    public string? CanceladoPor { get; set; }
+
+    /// <summary>
+    /// Se este lançamento nasceu de uma CORREÇÃO, o id do lançamento original (que ficou cancelado, com o motivo).
+    /// Nada é apagado nem reescrito: o original continua no histórico e o corrigido é um registro novo.
+    /// </summary>
+    public int? CorrigeLancamentoId { get; set; }
 }
 
 /// <summary>

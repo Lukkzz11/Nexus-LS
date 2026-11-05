@@ -17,6 +17,20 @@ public record DadosLancamento(
     FormaPagamento? Forma = null,
     ClassificacaoLancamento Classificacao = ClassificacaoLancamento.Padrao);
 
+/// <summary>
+/// O que muda numa correção. O lançamento corrigido nasce com o mesmo tipo, parcela e (se já estava pago) a mesma forma e conta;
+/// só a data do pagamento pode ser trocada.
+/// </summary>
+public record DadosCorrecaoLancamento(
+    string Descricao,
+    long ValorCentavos,
+    DateTime Vencimento,
+    string? Categoria = null,
+    string? Contraparte = null,
+    string? Observacao = null,
+    ClassificacaoLancamento? Classificacao = null,
+    DateTime? PagoEm = null);
+
 public record FiltroLancamentos(
     DateTime De, DateTime Ate,
     TipoLancamento? Tipo = null,
@@ -34,9 +48,10 @@ public record ResumoFinanceiro(
     int QuantidadeAtrasados, long AtrasadosCentavos,
     IReadOnlyList<ResumoCategoriaFinanceira> DespesasPorCategoria,
     long OutrasEntradasCentavos = 0, long AportesCentavos = 0,
-    long RetiradasProprietarioCentavos = 0, long OutrasSaidasCentavos = 0)
+    long RetiradasProprietarioCentavos = 0, long OutrasSaidasCentavos = 0, long AjustesTitulosCentavos = 0)
 {
-    public long LucroBrutoCentavos => VendasCentavos - CustoMercadoriasCentavos;
+    /// <summary>Vendas + abatimentos/acréscimos nos títulos a prazo − custo das mercadorias.</summary>
+    public long LucroBrutoCentavos => VendasCentavos + AjustesTitulosCentavos - CustoMercadoriasCentavos;
 
     /// <summary>Entradas (outras entradas + aportes) e saídas (retiradas + outras) que mexem no saldo mas ficam FORA do resultado.</summary>
     public long EntradasForaDoResultadoCentavos => OutrasEntradasCentavos + AportesCentavos;
@@ -221,9 +236,109 @@ public class FinanceiroService
         l.Cancelado = true;
         l.MotivoCancelamento = motivo.Trim();
         l.CanceladoEm = _agora();
+        l.CanceladoPor = Limpar(OperadorAtual.Nome);
         AtividadeService.Registrar(db, TipoAtividade.LancamentoCancelado,
             $"Cancelou \"{l.Descricao}\" ({Dinheiro.Formatar(l.ValorCentavos)}): {motivo.Trim()}", $"Lançamento #{l.Id}", null, l.CanceladoEm);
         await db.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// RETIRA um lançamento, mesmo já pago (ex.: lançamento de teste ou duplicado): ele não é apagado, fica cancelado no
+    /// histórico com o motivo, quem e quando, e deixa de contar nos saldos, no resumo e no DRE. A trilha em Atividades é
+    /// gravada na mesma transação. Conta que veio de uma compra de mercadoria se cancela pela compra.
+    /// </summary>
+    public async Task RetirarAsync(int id, string motivo)
+    {
+        var texto = ValidarMotivo(motivo, "da retirada");
+        await using var db = await _fabrica.CreateDbContextAsync();
+        var l = await ObterAsync(db, id);
+        ValidarCorrigivel(l);
+
+        var agora = _agora();
+        l.Cancelado = true;
+        l.MotivoCancelamento = texto;
+        l.CanceladoEm = agora;
+        l.CanceladoPor = Limpar(OperadorAtual.Nome);
+        var pago = l.PagoEm is not null ? " (já estava pago: o valor sai dos saldos)" : "";
+        AtividadeService.Registrar(db, TipoAtividade.LancamentoRetirado,
+            $"Retirou \"{l.Descricao}\" ({Dinheiro.Formatar(l.ValorCentavos)}){pago}: {texto}", $"Lançamento #{l.Id}", null, agora);
+        await db.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// CORRIGE um lançamento (inclusive já pago): o original é cancelado com o motivo e nasce um lançamento novo, já com os dados
+    /// certos, ligado ao original. Os dois gravam juntos, com o registro em Atividades, ou nenhum grava.
+    /// </summary>
+    public async Task<Lancamento> CorrigirAsync(int id, DadosCorrecaoLancamento dados, string motivo)
+    {
+        var texto = ValidarMotivo(motivo, "da correção");
+        Validar(dados.Descricao, dados.ValorCentavos);
+        await using var db = await _fabrica.CreateDbContextAsync();
+        var original = await ObterAsync(db, id);
+        ValidarCorrigivel(original);
+        var classificacao = dados.Classificacao ?? original.Classificacao;
+        ValidarClassificacao(original.Tipo, classificacao, false);
+
+        var agora = _agora();
+        var pagoEm = original.PagoEm is null ? null : dados.PagoEm ?? original.PagoEm;
+        if (pagoEm is DateTime p && p.Date > agora.Date) throw new RegraDeNegocioException("A data do pagamento não pode ser no futuro.");
+
+        var operador = Limpar(OperadorAtual.Nome);
+        var novo = new Lancamento
+        {
+            Tipo = original.Tipo,
+            Descricao = dados.Descricao.Trim(),
+            Categoria = Limpar(dados.Categoria),
+            Contraparte = Limpar(dados.Contraparte),
+            Observacao = Limpar(dados.Observacao),
+            Classificacao = classificacao,
+            ValorCentavos = dados.ValorCentavos,
+            Vencimento = dados.Vencimento.Date,
+            PagoEm = pagoEm,
+            FormaPagamento = original.FormaPagamento,
+            ContaId = original.ContaId,
+            GrupoId = original.GrupoId,
+            Parcela = original.Parcela,
+            TotalParcelas = original.TotalParcelas,
+            CriadoEm = agora,
+            Operador = operador,
+            CorrigeLancamentoId = original.Id
+        };
+
+        var motivoGravado = $"Corrigido: {texto}";
+        original.Cancelado = true;
+        original.MotivoCancelamento = motivoGravado.Length > 200 ? motivoGravado[..200] : motivoGravado;
+        original.CanceladoEm = agora;
+        original.CanceladoPor = operador;
+        db.Lancamentos.Add(novo);
+
+        var mudancas = new List<string>();
+        if (original.ValorCentavos != novo.ValorCentavos) mudancas.Add($"valor {Dinheiro.Formatar(original.ValorCentavos)} → {Dinheiro.Formatar(novo.ValorCentavos)}");
+        if (original.Vencimento.Date != novo.Vencimento) mudancas.Add($"vencimento {original.Vencimento:dd/MM/yyyy} → {novo.Vencimento:dd/MM/yyyy}");
+        if (original.Descricao != novo.Descricao) mudancas.Add($"descrição \"{original.Descricao}\" → \"{novo.Descricao}\"");
+        if (original.Categoria != novo.Categoria) mudancas.Add($"categoria {original.Categoria ?? "(nenhuma)"} → {novo.Categoria ?? "(nenhuma)"}");
+        if (original.Classificacao != novo.Classificacao) mudancas.Add("classificação");
+        if (original.PagoEm != novo.PagoEm) mudancas.Add($"data do pagamento {original.PagoEm:dd/MM/yyyy} → {novo.PagoEm:dd/MM/yyyy}");
+        var resumo = mudancas.Count == 0 ? "sem mudança de valores" : string.Join("; ", mudancas);
+        AtividadeService.Registrar(db, TipoAtividade.LancamentoCorrigido,
+            $"Corrigiu \"{original.Descricao}\" ({resumo}): {texto}", $"Lançamento #{original.Id}", null, agora);
+        await db.SaveChangesAsync();
+        return novo;
+    }
+
+    private static string ValidarMotivo(string? motivo, string de)
+    {
+        var texto = (motivo ?? "").Trim();
+        if (texto.Length < 3) throw new RegraDeNegocioException($"Informe o motivo {de} (pelo menos 3 letras).");
+        if (texto.Length > 150) throw new RegraDeNegocioException("O motivo pode ter no máximo 150 caracteres.");
+        return texto;
+    }
+
+    private static void ValidarCorrigivel(Lancamento l)
+    {
+        if (l.Cancelado) throw new RegraDeNegocioException("Esse lançamento já está cancelado.");
+        if (l.CompraId is not null)
+            throw new RegraDeNegocioException("Essa conta veio de uma compra de mercadoria: para desfazer, cancele a compra.");
     }
 
     /// <summary>Lista pelo vencimento dentro do período, do mais antigo para o mais novo.</summary>
@@ -258,6 +373,8 @@ public class FinanceiroService
         var vendas = await new RelatorioService(_fabrica).VendasPorPeriodoAsync(de, ate);
 
         await using var db = await _fabrica.CreateDbContextAsync();
+        var ajustesDosTitulos = ContaCorrente.AjustesNaReceita(vendas.Vendas,
+            await db.AjustesTitulosPrazo.AsNoTracking().ToListAsync());
         var todos = await db.Lancamentos.AsNoTracking().Where(l => !l.Cancelado).ToListAsync();
 
         // Conta paga de uma COMPRA de mercadoria não é despesa do período: o custo dela já entra no lucro bruto quando a peça
@@ -293,7 +410,7 @@ public class FinanceiroService
             atrasados.Count, atrasados.Sum(l => l.ValorCentavos),
             porCategoria,
             Soma(ClassificacaoLancamento.OutraEntrada), Soma(ClassificacaoLancamento.Aporte),
-            Soma(ClassificacaoLancamento.RetiradaProprietario), Soma(ClassificacaoLancamento.OutraSaida));
+            Soma(ClassificacaoLancamento.RetiradaProprietario), Soma(ClassificacaoLancamento.OutraSaida), ajustesDosTitulos);
     }
 
     private static void ValidarClassificacao(TipoLancamento tipo, ClassificacaoLancamento classificacao, bool deCompra)

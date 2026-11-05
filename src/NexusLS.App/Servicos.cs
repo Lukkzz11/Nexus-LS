@@ -21,11 +21,12 @@ public sealed class ContainerDeServicos
     public NexusLS.Core.Etiquetas.ModeloEtiquetaStore ModelosEtiqueta { get; }
     public CaixaService Caixa { get; }
     public ClienteService Clientes { get; }
+    public TituloPrazoService TitulosPrazo { get; }
     public ConfiguracaoService Configuracao { get; }
     public InicioService Inicio { get; }
     public RelatorioService Relatorios { get; }
-    public DemonstrativoService Demonstrativo { get; }
     public RelatorioCaixaPeriodoService RelatorioCaixa { get; }
+    public DemonstrativoService Demonstrativo { get; }
     public DesempenhoService Desempenho { get; }
     public ProducaoService Producao { get; }
     public AgendaService Agenda { get; }
@@ -76,11 +77,12 @@ public sealed class ContainerDeServicos
         ModelosEtiqueta = new(NexusLS.Core.Etiquetas.ModeloEtiquetaStore.CaminhoPadrao());
         Caixa = new(fabrica);
         Clientes = new(fabrica);
+        TitulosPrazo = new(fabrica);
         Configuracao = new(fabrica);
         Inicio = new(fabrica);
         Relatorios = new(fabrica);
-        Demonstrativo = new(fabrica);
         RelatorioCaixa = new(fabrica);
+        Demonstrativo = new(fabrica);
         Desempenho = new(fabrica);
         Producao = new(fabrica, Produtos);
         Agenda = new(fabrica);

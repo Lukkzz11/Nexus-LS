@@ -169,7 +169,10 @@ public partial class FinanceiroViewModel : ViewModelBase
 
     public bool Editando => EditandoId is not null;
     public bool PodeParcelar => !Editando;
-    public string TituloFormulario => Editando ? "Editar lançamento" : "Novo lançamento";
+    /// <summary>true = o formulário está corrigindo um lançamento JÁ PAGO (cancela o original e cria o corrigido).</summary>
+    [ObservableProperty] private bool _corrigindo;
+    partial void OnCorrigindoChanged(bool value) => OnPropertyChanged(nameof(TituloFormulario));
+    public string TituloFormulario => Corrigindo ? "Corrigir lançamento pago" : Editando ? "Editar lançamento" : "Novo lançamento";
     partial void OnEditandoIdChanged(int? value)
     {
         OnPropertyChanged(nameof(Editando));
@@ -182,6 +185,9 @@ public partial class FinanceiroViewModel : ViewModelBase
     public bool PodeEstornar => Selecionada is { Situacao: SituacaoLancamento.Pago };
     public bool PodeCancelar => PodePagar;
     public bool PodeEditar => PodePagar;
+
+    /// <summary>Lançamento já pago (que não veio de compra) só se corrige ou se retira: o original fica cancelado no histórico.</summary>
+    public bool PodeCorrigirPago => Selecionada is { Situacao: SituacaoLancamento.Pago } s && s.Lancamento.CompraId is null;
     public string TextoPagar => Selecionada?.Lancamento.Tipo == TipoLancamento.Receita ? "Marcar como recebido" : "Marcar como pago";
 
     partial void OnSelecionadaChanged(LinhaLancamento? value)
@@ -190,6 +196,7 @@ public partial class FinanceiroViewModel : ViewModelBase
         OnPropertyChanged(nameof(PodeEstornar));
         OnPropertyChanged(nameof(PodeCancelar));
         OnPropertyChanged(nameof(PodeEditar));
+        OnPropertyChanged(nameof(PodeCorrigirPago));
         OnPropertyChanged(nameof(TextoPagar));
     }
 
@@ -287,6 +294,7 @@ public partial class FinanceiroViewModel : ViewModelBase
     [RelayCommand]
     private void Novo()
     {
+        Corrigindo = false;
         EditandoId = null;
         FormDescricao = FormCategoria = FormContraparte = FormValor = FormObservacao = "";
         FormParcelas = "1";
@@ -316,6 +324,37 @@ public partial class FinanceiroViewModel : ViewModelBase
     }
 
     [RelayCommand]
+    private void CorrigirSelecionada()
+    {
+        if (Selecionada is not { } s || !PodeCorrigirPago) return;
+        var l = s.Lancamento;
+        EditandoId = l.Id;
+        Corrigindo = true;
+        FormEhDespesa = l.Tipo == TipoLancamento.Despesa;
+        FormClassificacao = Classificacoes.First(c => c.Valor == l.Classificacao);
+        FormDescricao = l.Descricao;
+        FormCategoria = l.Categoria ?? "";
+        FormContraparte = l.Contraparte ?? "";
+        FormValor = Dinheiro.FormatarParaEdicao(l.ValorCentavos);
+        FormVencimento = l.Vencimento;
+        FormObservacao = l.Observacao ?? "";
+        FormJaPago = false;
+        FormParcelas = "1";
+        Mensagem = "";
+    }
+
+    [RelayCommand]
+    private Task RetirarAsync() => ExecutarAsync(async () =>
+    {
+        if (Selecionada is not { } s || !PodeCorrigirPago) return;
+        var motivo = PedirMotivo($"Por que retirar \"{s.Descricao}\" ({s.ValorTexto})? Ele sai dos saldos e continua no histórico, cancelado.");
+        if (motivo is null) return;
+        await _financeiro.RetirarAsync(s.Id, motivo);
+        MostrarSucesso("Lançamento retirado (continua no histórico, com o motivo).");
+        await CarregarAsync();
+    });
+
+    [RelayCommand]
     private Task SalvarAsync() => ExecutarAsync(async () =>
     {
         if (!Dinheiro.TentarConverter(FormValor, out var valor))
@@ -324,7 +363,15 @@ public partial class FinanceiroViewModel : ViewModelBase
             throw new RegraDeNegocioException("Informe a data de vencimento.");
 
         string sucesso;
-        if (EditandoId is int id)
+        if (Corrigindo && EditandoId is int idCorrigir)
+        {
+            var motivo = PedirMotivo("Por que está corrigindo este lançamento já pago? (o original fica cancelado no histórico)");
+            if (motivo is null) return;
+            await _financeiro.CorrigirAsync(idCorrigir, new DadosCorrecaoLancamento(FormDescricao, valor, vencimento,
+                FormCategoria, FormContraparte, FormObservacao, FormClassificacao.Valor), motivo);
+            sucesso = "Lançamento corrigido (o original ficou cancelado no histórico).";
+        }
+        else if (EditandoId is int id)
         {
             await _financeiro.EditarAsync(id, FormDescricao, valor, vencimento, FormCategoria, FormContraparte, FormObservacao, FormClassificacao.Valor);
             sucesso = "Lançamento atualizado.";

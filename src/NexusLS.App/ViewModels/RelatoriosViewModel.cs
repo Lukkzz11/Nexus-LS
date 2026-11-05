@@ -130,6 +130,7 @@ public partial class RelatoriosViewModel : ViewModelBase
 
         L("Receita bruta (vendas do PDV)", d.ReceitaBrutaCentavos);
         L("(−) Devoluções", d.DevolucoesCentavos, recuo: true);
+        L("(+/−) Abatimentos/acréscimos em títulos a prazo", d.AjustesTitulosCentavos, recuo: true);
         L("= Receita líquida", d.ReceitaLiquidaCentavos, destaque: true);
         L("(−) Custo das mercadorias vendidas", d.CustoMercadoriasCentavos, recuo: true);
         Dre.Add(new LinhaDre($"= Lucro bruto (margem {d.MargemBrutaPercentual:0.#}%)", R(d.LucroBrutoCentavos), true, false, d.LucroBrutoCentavos < 0));

@@ -57,7 +57,8 @@ public record LancFin(
     string? Categoria = null);
 
 /// <summary>Venda do período, para a receita bruta e o custo das mercadorias (CMV).</summary>
-public record VendaFin(string Id, DateTime Data, long TotalCentavos, long CustoCentavos);
+/// <param name="AjusteTituloCentavos">Abatimento (negativo) ou acréscimo (positivo) dado no título a prazo desta venda.</param>
+public record VendaFin(string Id, DateTime Data, long TotalCentavos, long CustoCentavos, long AjusteTituloCentavos = 0);
 
 public record EntradaMotor(
     DateTime Hoje,
@@ -94,10 +95,10 @@ public record PeriodoFin(
     long AportesCentavos = 0, long OutrasEntradasCentavos = 0,
     long RetiradasProprietarioCentavos = 0, long OutrasSaidasCentavos = 0,
     long RecebimentosClientesCentavos = 0, long ComprasMercadoriaCentavos = 0,
-    long RetiradasCaixaCentavos = 0, long ReforcosCaixaCentavos = 0)
+    long RetiradasCaixaCentavos = 0, long ReforcosCaixaCentavos = 0, long AjustesTitulosCentavos = 0)
 {
     public long FluxoCaixaCentavos => EntradasRealizadasCentavos - SaidasRealizadasCentavos;
-    public long ReceitaLiquidaCentavos => ReceitaBrutaCentavos - DevolucoesCentavos;
+    public long ReceitaLiquidaCentavos => ReceitaBrutaCentavos - DevolucoesCentavos + AjustesTitulosCentavos;
     public long LucroBrutoCentavos => ReceitaLiquidaCentavos - CustoMercadoriasCentavos;
     public long ResultadoCentavos => LucroBrutoCentavos + OutrasReceitasCentavos - DespesasOperacionaisCentavos;
 }
