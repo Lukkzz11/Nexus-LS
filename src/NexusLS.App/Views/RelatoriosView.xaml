@@ -90,7 +90,9 @@
             </Border>
         </StackPanel>
 
-        <Grid Grid.Row="3">
+        <TabControl Grid.Row="3" Background="Transparent" BorderThickness="0" Padding="0,10,0,0">
+        <TabItem Header="Vendas">
+        <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="14" />
@@ -225,6 +227,64 @@
                 </DataGrid>
             </Border>
         </Grid>
+        </TabItem>
+
+        <TabItem Header="Demonstrativo (DRE)" Visibility="{Binding TemDre, Converter={StaticResource BoolVis}}">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel MaxWidth="760" HorizontalAlignment="Left">
+                    <Border Style="{StaticResource Painel}" Padding="18,12">
+                        <ItemsControl ItemsSource="{Binding Dre}" AutomationProperties.Name="Demonstrativo do período">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,3">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="140" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding Rotulo}" TextWrapping="Wrap">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Margin" Value="0" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Recuo}" Value="True">
+                                                            <Setter Property="Margin" Value="18,0,0,0" />
+                                                            <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Destaque}" Value="True">
+                                                            <Setter Property="FontWeight" Value="SemiBold" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Titulo}" Value="True">
+                                                            <Setter Property="FontWeight" Value="SemiBold" />
+                                                            <Setter Property="Margin" Value="0,14,0,2" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                        <TextBlock Grid.Column="1" Text="{Binding Valor}" HorizontalAlignment="Right">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Destaque}" Value="True">
+                                                            <Setter Property="FontWeight" Value="SemiBold" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Negativo}" Value="True">
+                                                            <Setter Property="Foreground" Value="{StaticResource CorPerigo}" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Border>
+                    <TextBlock Text="{Binding DreAvisos}" TextWrapping="Wrap" Foreground="{StaticResource CorTextoSuave}" Margin="0,10,0,0" />
+                </StackPanel>
+            </ScrollViewer>
+        </TabItem>
+        </TabControl>
 
         <StackPanel Grid.Row="4">
             <TextBlock Text="{Binding AvisoLucro}" TextWrapping="Wrap" Foreground="{StaticResource CorTextoSuave}" Margin="0,8,0,0" />

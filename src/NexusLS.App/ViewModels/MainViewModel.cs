@@ -115,7 +115,7 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand] private void IrParaClientes() => Abrir(new ClientesViewModel(_servicos.Clientes), ItemMenu.Clientes);
     [RelayCommand] private void IrParaFinanceiro() => Abrir(new FinanceiroViewModel(_servicos.Financeiro, null, _servicos.CategoriasFinanceiras), ItemMenu.Financeiro);
     [RelayCommand] private void IrParaContasESaldos() => Abrir(new ContasESaldosViewModel(_servicos.Posicao, _servicos.ContasFinanceiras, _servicos.Cartoes, _servicos.Cheques), ItemMenu.ContasESaldos);
-    [RelayCommand] private void IrParaRelatorios() => Abrir(new RelatoriosViewModel(_servicos.Relatorios), ItemMenu.Relatorios);
+    [RelayCommand] private void IrParaRelatorios() => Abrir(new RelatoriosViewModel(_servicos.Relatorios, null, _servicos.Demonstrativo), ItemMenu.Relatorios);
     [RelayCommand]
     private void IrParaCatalogoOnline()
     {

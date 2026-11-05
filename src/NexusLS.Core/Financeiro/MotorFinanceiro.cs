@@ -115,7 +115,11 @@ public static class MotorFinanceiro
             realizados.Where(l => l.Classe == ClasseFin.Aporte).Sum(l => l.ValorCentavos),
             realizados.Where(l => l.Classe == ClasseFin.OutraEntrada).Sum(l => l.ValorCentavos),
             realizados.Where(l => l.Classe == ClasseFin.RetiradaProprietario).Sum(l => l.ValorCentavos),
-            realizados.Where(l => l.Classe == ClasseFin.OutraSaida).Sum(l => l.ValorCentavos));
+            realizados.Where(l => l.Classe == ClasseFin.OutraSaida).Sum(l => l.ValorCentavos),
+            realizados.Where(l => l.Classe == ClasseFin.RecebimentoCliente && l.Sentido == SentidoFin.Entrada).Sum(l => l.ValorCentavos),
+            realizados.Where(l => l.Classe == ClasseFin.CompraEstoque).Sum(l => l.ValorCentavos),
+            realizados.Where(l => l.Classe == ClasseFin.Retirada).Sum(l => l.ValorCentavos),
+            realizados.Where(l => l.Classe == ClasseFin.Reforco).Sum(l => l.ValorCentavos));
 
         return new PosicaoFinanceira(hoje, porConta, dinheiroFisico, bancos, aReceber, aPagar, emCompensacao, projecao, periodo, avisos);
     }

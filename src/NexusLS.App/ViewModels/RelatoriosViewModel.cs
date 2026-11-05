@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using NexusLS.Core.Financeiro;
 using NexusLS.Core.Models;
 using NexusLS.Core.Services;
 
@@ -12,16 +13,21 @@ public record DiaDoRelatorio(string Dia, int Vendas, string Total, double Percen
 /// <summary>Uma linha de "por categoria" com os textos prontos.</summary>
 public record LinhaCategoria(string Categoria, int Quantidade, string Faturamento, string Lucro);
 
+/// <summary>Uma linha do demonstrativo (DRE) com os textos prontos. Recuo = linha de detalhe; Destaque = total.</summary>
+public record LinhaDre(string Rotulo, string Valor, bool Destaque = false, bool Recuo = false, bool Negativo = false, bool Titulo = false);
+
 /// <summary>Relatório de vendas por período: totais, ticket médio, por forma de pagamento, por dia e a lista das vendas.</summary>
 public partial class RelatoriosViewModel : ViewModelBase
 {
     private readonly RelatorioService _relatorio;
+    private readonly DemonstrativoService? _demonstrativo;
     private int _versao;
     private RelatorioVendas? _atual;
 
-    public RelatoriosViewModel(RelatorioService relatorio, DateTime? hoje = null)
+    public RelatoriosViewModel(RelatorioService relatorio, DateTime? hoje = null, DemonstrativoService? demonstrativo = null)
     {
         _relatorio = relatorio;
+        _demonstrativo = demonstrativo;
         var dia = (hoje ?? DateTime.Today).Date;
         _de = new DateTime(dia.Year, dia.Month, 1); // campos diretos: não disparam o carregamento duas vezes
         _ate = dia;
@@ -35,6 +41,9 @@ public partial class RelatoriosViewModel : ViewModelBase
     public ObservableCollection<ResumoForma> PorForma { get; } = new();
     public ObservableCollection<LinhaCategoria> PorCategoria { get; } = new();
     public ObservableCollection<Venda> Vendas { get; } = new();
+    public ObservableCollection<LinhaDre> Dre { get; } = new();
+    [ObservableProperty] private string _dreAvisos = "";
+    public bool TemDre => _demonstrativo is not null;
 
     [ObservableProperty] private DateTime? _de;
     [ObservableProperty] private DateTime? _ate;
@@ -103,7 +112,49 @@ public partial class RelatoriosViewModel : ViewModelBase
 
         Vendas.Clear();
         foreach (var v in relatorio.Vendas.Reverse()) Vendas.Add(v); // mais recentes primeiro
+
+        if (_demonstrativo is not null)
+        {
+            var dre = await _demonstrativo.MontarAsync(de, ate);
+            if (versao != _versao) return;
+            MontarDre(dre);
+        }
     });
+
+    private void MontarDre(DemonstrativoFinanceiro d)
+    {
+        static string R(long c) => Dinheiro.Formatar(c);
+        Dre.Clear();
+        void L(string rotulo, long valor, bool destaque = false, bool recuo = false) =>
+            Dre.Add(new LinhaDre(rotulo, R(valor), destaque, recuo, destaque && valor < 0));
+
+        L("Receita bruta (vendas do PDV)", d.ReceitaBrutaCentavos);
+        L("(−) Devoluções", d.DevolucoesCentavos, recuo: true);
+        L("= Receita líquida", d.ReceitaLiquidaCentavos, destaque: true);
+        L("(−) Custo das mercadorias vendidas", d.CustoMercadoriasCentavos, recuo: true);
+        Dre.Add(new LinhaDre($"= Lucro bruto (margem {d.MargemBrutaPercentual:0.#}%)", R(d.LucroBrutoCentavos), true, false, d.LucroBrutoCentavos < 0));
+        L("(+) Outras receitas", d.OutrasReceitasCentavos, recuo: true);
+        L("(−) Despesas operacionais", d.DespesasOperacionaisCentavos, recuo: true);
+        foreach (var c in d.DespesasPorCategoria) L(c.Categoria, c.TotalCentavos, recuo: true);
+        L("= Resultado do período", d.ResultadoCentavos, destaque: true);
+
+        Dre.Add(new LinhaDre("Entrou ou saiu, mas NÃO é receita nem despesa", "", Titulo: true));
+        L("Recebimentos de dívidas de clientes (a venda já contou antes)", d.RecebimentosDeDividasCentavos, recuo: true);
+        L("Compras de mercadoria (o custo entra quando a peça é vendida)", d.ComprasMercadoriaCentavos, recuo: true);
+        L("Aportes do proprietário", d.AportesCentavos, recuo: true);
+        L("Outras entradas", d.OutrasEntradasCentavos, recuo: true);
+        L("Retiradas do proprietário", d.RetiradasProprietarioCentavos, recuo: true);
+        L("Outras saídas", d.OutrasSaidasCentavos, recuo: true);
+        L("Sangrias do caixa", d.RetiradasCaixaCentavos, recuo: true);
+        L("Reforços do caixa", d.ReforcosCaixaCentavos, recuo: true);
+
+        Dre.Add(new LinhaDre("Fluxo de caixa (dinheiro que de fato entrou e saiu)", "", Titulo: true));
+        L("Entradas realizadas", d.EntradasRealizadasCentavos, recuo: true);
+        L("Saídas realizadas", d.SaidasRealizadasCentavos, recuo: true);
+        L("= Fluxo líquido", d.FluxoCaixaCentavos, destaque: true);
+
+        DreAvisos = string.Join(Environment.NewLine, d.Avisos ?? Array.Empty<string>());
+    }
 
     private void Limpar()
     {
@@ -113,6 +164,8 @@ public partial class RelatoriosViewModel : ViewModelBase
         PorDia.Clear();
         PorForma.Clear();
         Vendas.Clear();
+        Dre.Clear();
+        DreAvisos = "";
     }
 
     // Atalhos de período

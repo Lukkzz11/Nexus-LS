@@ -272,16 +272,22 @@ public class FinanceiroService
         // "A pagar / a receber": o que está em aberto e vence até o fim do período (inclui o atrasado de antes).
         var abertosAteOFim = abertos.Where(l => l.Vencimento < fim).ToList();
 
+        // A taxa que a operadora desconta do cartão também é despesa (o motor financeiro conta igual).
+        var taxasCartao = await db.LiquidacoesCartao.AsNoTracking()
+            .Where(x => !x.Cancelada && x.Data >= inicio && x.Data < fim).SumAsync(x => x.TaxaCentavos);
+
         var porCategoria = resultado.Where(l => l.Tipo == TipoLancamento.Despesa)
             .GroupBy(l => l.Categoria ?? "Sem categoria")
             .Select(g => new ResumoCategoriaFinanceira(g.Key, g.Sum(l => l.ValorCentavos)))
-            .OrderByDescending(c => c.TotalCentavos).ToList();
+            .ToList();
+        if (taxasCartao > 0) porCategoria.Add(new ResumoCategoriaFinanceira("Taxas de cartão", taxasCartao));
+        porCategoria = porCategoria.OrderByDescending(c => c.TotalCentavos).ToList();
 
         return new ResumoFinanceiro(
             de.Date, ate.Date,
             vendas.TotalCentavos, vendas.CustoTotalCentavos,
             resultado.Where(l => l.Tipo == TipoLancamento.Receita).Sum(l => l.ValorCentavos),
-            resultado.Where(l => l.Tipo == TipoLancamento.Despesa).Sum(l => l.ValorCentavos),
+            resultado.Where(l => l.Tipo == TipoLancamento.Despesa).Sum(l => l.ValorCentavos) + taxasCartao,
             abertosAteOFim.Where(l => l.Tipo == TipoLancamento.Receita).Sum(l => l.ValorCentavos),
             abertosAteOFim.Where(l => l.Tipo == TipoLancamento.Despesa).Sum(l => l.ValorCentavos),
             atrasados.Count, atrasados.Sum(l => l.ValorCentavos),

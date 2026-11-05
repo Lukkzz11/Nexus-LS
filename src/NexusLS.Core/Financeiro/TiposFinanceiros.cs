@@ -92,7 +92,9 @@ public record PeriodoFin(
     long OutrasReceitasCentavos, long DespesasOperacionaisCentavos,
     IReadOnlyDictionary<string, long> DespesasPorCategoria,
     long AportesCentavos = 0, long OutrasEntradasCentavos = 0,
-    long RetiradasProprietarioCentavos = 0, long OutrasSaidasCentavos = 0)
+    long RetiradasProprietarioCentavos = 0, long OutrasSaidasCentavos = 0,
+    long RecebimentosClientesCentavos = 0, long ComprasMercadoriaCentavos = 0,
+    long RetiradasCaixaCentavos = 0, long ReforcosCaixaCentavos = 0)
 {
     public long FluxoCaixaCentavos => EntradasRealizadasCentavos - SaidasRealizadasCentavos;
     public long ReceitaLiquidaCentavos => ReceitaBrutaCentavos - DevolucoesCentavos;
