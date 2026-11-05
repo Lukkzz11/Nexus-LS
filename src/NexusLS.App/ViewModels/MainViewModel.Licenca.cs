@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NexusLS.Core.Services;
@@ -11,6 +13,25 @@ public partial class MainViewModel
 
     /// <summary>A janela define como escolher o arquivo de licença (nulo = cancelou).</summary>
     public Func<string?> EscolherArquivoDeLicenca { get; set; } = () => null;
+
+    /// <summary>Ação para iniciar processos externos (permite interceptar em testes).</summary>
+    public Action<string, string?> ExecutarProcessoExterno { get; set; } = (caminhoOuUrl, argumentos) =>
+    {
+        try
+        {
+            var psi = new ProcessStartInfo(caminhoOuUrl)
+            {
+                UseShellExecute = true,
+                Arguments = argumentos ?? ""
+            };
+            if (File.Exists(caminhoOuUrl))
+            {
+                psi.WorkingDirectory = Path.GetDirectoryName(caminhoOuUrl)!;
+            }
+            Process.Start(psi);
+        }
+        catch { }
+    };
 
     [ObservableProperty] private string _licencaTexto = "";
     [ObservableProperty] private string _licencaMensagem = "";
@@ -41,5 +62,32 @@ public partial class MainViewModel
         {
             LicencaMensagem = ex.Message;
         }
+    }
+
+    [RelayCommand]
+    public void AbrirAtualizador()
+    {
+        var pastaApp = AppContext.BaseDirectory;
+        var caminhos = new[]
+        {
+            Path.Combine(pastaApp, "atualizador.exe"),
+            @"C:\NexusLS\publicar\atualizador.exe"
+        };
+        var exe = caminhos.FirstOrDefault(File.Exists);
+        if (exe != null)
+        {
+            ExecutarProcessoExterno(exe, null);
+        }
+        else
+        {
+            AbrirPortalWeb();
+        }
+    }
+
+    [RelayCommand]
+    public void AbrirPortalWeb()
+    {
+        var url = "https://github.com/Lukkzz11/Nexus-LS---Update";
+        ExecutarProcessoExterno(url, null);
     }
 }

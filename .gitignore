@@ -488,3 +488,7 @@ publicar/
 publicar_novo/
 publicar_release/
 telas-teste/
+
+
+# Web Updater sub-repository
+atualizador-web/

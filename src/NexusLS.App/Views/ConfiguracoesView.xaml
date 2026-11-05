@@ -319,8 +319,14 @@
                         <TextBlock Text="{Binding TamanhoDoBanco}" />
                         <TextBlock Text="Licença" Style="{StaticResource Rotulo}" />
                         <TextBlock Text="{Binding LicencaTexto}" TextWrapping="Wrap" />
-                        <Button Content="Abrir a pasta dos dados" Style="{StaticResource BotaoSecundario}" Margin="0,14,0,0" HorizontalAlignment="Left"
-                                Command="{Binding AbrirPastaDeDadosCommand}" />
+                        <WrapPanel Margin="0,14,0,0">
+                            <Button Content="Abrir a pasta dos dados" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,6"
+                                    Command="{Binding AbrirPastaDeDadosCommand}" />
+                            <Button Content="Abrir Atualizador / Ativador" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,6"
+                                    Command="{Binding AbrirAtualizadorCommand}" />
+                            <Button Content="Portal Web" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,6"
+                                    Command="{Binding AbrirPortalWebCommand}" />
+                        </WrapPanel>
                     </StackPanel>
                 </Border>
 

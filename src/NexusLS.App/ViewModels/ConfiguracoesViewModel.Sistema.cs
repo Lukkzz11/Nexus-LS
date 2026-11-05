@@ -119,4 +119,49 @@ public partial class ConfiguracoesViewModel
     {
         if (!string.IsNullOrEmpty(PastaDeDados)) AbrirPasta(PastaDeDados);
     }
+
+    [RelayCommand]
+    public void AbrirAtualizador()
+    {
+        try
+        {
+            var pastaApp = AppContext.BaseDirectory;
+            var caminhos = new[]
+            {
+                Path.Combine(pastaApp, "atualizador.exe"),
+                @"C:\NexusLS\publicar\atualizador.exe"
+            };
+            var exe = caminhos.FirstOrDefault(File.Exists);
+            if (exe != null)
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(exe)
+                {
+                    UseShellExecute = true,
+                    WorkingDirectory = Path.GetDirectoryName(exe)!
+                });
+                return;
+            }
+            AbrirPortalWeb();
+        }
+        catch (Exception ex)
+        {
+            MensagemPreferencias = "Não foi possível abrir o atualizador: " + ex.Message;
+            MensagemPreferenciasEhErro = true;
+        }
+    }
+
+    [RelayCommand]
+    public void AbrirPortalWeb()
+    {
+        try
+        {
+            var url = "https://github.com/Lukkzz11/Nexus-LS---Update";
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            MensagemPreferencias = "Não foi possível abrir o portal: " + ex.Message;
+            MensagemPreferenciasEhErro = true;
+        }
+    }
 }

@@ -70,6 +70,14 @@ public sealed class ConfiguracoesAbasTests : IDisposable
     }
 
     [Fact]
+    public void Comandos_de_atualizador_e_portal_web_executam_sem_excecao()
+    {
+        var vm = Criar();
+        vm.AbrirAtualizadorCommand.Execute(null);
+        vm.AbrirPortalWebCommand.Execute(null);
+    }
+
+    [Fact]
     public void As_cinco_abas_abrem_com_os_estilos_do_programa()
     {
         var vm = Criar();
