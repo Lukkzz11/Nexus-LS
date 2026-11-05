@@ -27,8 +27,11 @@
                     <DataGrid ItemsSource="{Binding Cheques}" SelectedItem="{Binding Selecionado, Mode=TwoWay}" AutoGenerateColumns="False"
                               IsReadOnly="True" SelectionMode="Single" CanUserAddRows="False" HeadersVisibility="Column" MaxHeight="420"
                               GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0" Background="Transparent"
-                              RowHeight="36" AutomationProperties.Name="Lista de cheques emitidos">
-                        <DataGrid.Columns>
+                              RowHeight="36" ScrollViewer.HorizontalScrollBarVisibility="Disabled" AutomationProperties.Name="Lista de cheques emitidos">
+                        <DataGrid.RowStyle>
+                        <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}" />
+                    </DataGrid.RowStyle>
+                    <DataGrid.Columns>
                             <DataGridTextColumn Header="Bom para" Binding="{Binding BomPara, Mode=OneWay}" Width="100" />
                             <DataGridTextColumn Header="Conta paga" Binding="{Binding Descricao, Mode=OneWay}" Width="2*" MinWidth="120" />
                             <DataGridTextColumn Header="Favorecido" Binding="{Binding Favorecido, Mode=OneWay}" Width="1.4*" MinWidth="100" />

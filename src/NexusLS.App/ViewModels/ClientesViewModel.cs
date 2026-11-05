@@ -10,7 +10,11 @@ public record OpcaoForma(string Texto, FormaPagamento Forma);
 
 /// <summary>Uma venda a prazo na tela, com os textos prontos.</summary>
 public record LinhaTitulo(int VendaId, string Data, string Vencimento, string Total, string Pago, string Saldo, string Situacao,
-    string Ajuste = "", long TotalCentavos = 0, DateTime? VencimentoData = null);
+    string Ajuste = "", long TotalCentavos = 0, DateTime? VencimentoData = null)
+{
+    /// <summary>O resto da linha depois do número da venda; só mostra o ajuste quando existe.</summary>
+    public string Detalhe => $" {Total} · {Situacao} · vence {Vencimento} · falta {Saldo}" + (string.IsNullOrEmpty(Ajuste) ? "" : $" · {Ajuste}");
+}
 
 /// <summary>Cadastro de clientes (nome, documento, telefone, limite de crédito, observação) com o histórico de compras e a dívida a prazo de cada um.</summary>
 public partial class ClientesViewModel : ViewModelBase

@@ -177,6 +177,32 @@ public sealed class FinanceiroViewModelTests : IDisposable
     }
 
     [Fact]
+    public async Task Lista_mostra_classificacao_curta_e_o_motivo_do_cancelamento_no_balaozinho()
+    {
+        var vm = await CriarAsync();
+        await _servico.CriarAsync(new DadosLancamento(TipoLancamento.Receita, "Reembolso", 12000, new DateTime(2026, 10, 12), null, "Malharia Sol",
+            Classificacao: ClassificacaoLancamento.OutraEntrada));
+        await LancarAsync(vm, "Luz", "200,00", new DateTime(2026, 10, 22));
+        vm.Selecionada = vm.Linhas.Single(l => l.Descricao == "Luz");
+        vm.PedirMotivo = _ => "lançada em duplicidade";
+        await vm.CancelarLancamentoCommand.ExecuteAsync(null);
+
+        var reembolso = vm.Linhas.Single(l => l.Descricao == "Reembolso");
+        Assert.Equal("Malharia Sol · Outra entrada", reembolso.Detalhe);                  // curto, cabe na coluna
+        Assert.Contains("(não é faturamento)", reembolso.DetalheCompleto);                // inteiro, no balãozinho
+        Assert.Contains("lançada em duplicidade", vm.Linhas.Single(l => l.Descricao == "Luz").DetalheCompleto);
+    }
+
+    [Fact]
+    public void Texto_do_formulario_muda_ao_corrigir()
+    {
+        var vm = new FinanceiroViewModel(_servico, () => _agora);
+        Assert.Equal("Salvar (Ctrl+S)", vm.TextoSalvar);
+        vm.Corrigindo = true;
+        Assert.Equal("Salvar correção", vm.TextoSalvar);
+    }
+
+    [Fact]
     public async Task Conta_vencida_aparece_como_atrasada_e_no_resumo()
     {
         var vm = await CriarAsync();

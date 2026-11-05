@@ -110,6 +110,16 @@ public sealed class DividaClienteTests : IDisposable
     }
 
     [Fact]
+    public void Linha_do_titulo_so_mostra_o_ajuste_quando_existe()
+    {
+        var sem = new LinhaTitulo(4, "10/10/2026", "09/11/2026", "R$ 40,00", "R$ 0,00", "R$ 40,00", "Em aberto");
+        var com = sem with { Ajuste = "ajustado (venda: R$ 50,00)" };
+        Assert.DoesNotContain("·  ", sem.Detalhe);
+        Assert.False(sem.Detalhe.TrimEnd().EndsWith("·"));
+        Assert.EndsWith("ajustado (venda: R$ 50,00)", com.Detalhe);
+    }
+
+    [Fact]
     public async Task Pagamento_maior_que_a_divida_mostra_erro()
     {
         var maria = await PrepararAsync();

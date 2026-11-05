@@ -154,13 +154,23 @@
                                 <DataTrigger Binding="{Binding Atrasado}" Value="True">
                                     <Setter Property="Foreground" Value="{StaticResource CorPerigo}" />
                                 </DataTrigger>
+                                <DataTrigger Binding="{Binding Situacao}" Value="Cancelado">
+                                    <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />
+                                </DataTrigger>
                             </Style.Triggers>
                         </Style>
                     </DataGrid.RowStyle>
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Vencimento" Binding="{Binding Vencimento, Mode=OneWay}" Width="1*" MinWidth="90" />
-                        <DataGridTextColumn Header="Descrição" Binding="{Binding Descricao, Mode=OneWay}" Width="3*" MinWidth="140" />
-                        <DataGridTextColumn Header="Categoria · fornecedor" Binding="{Binding Detalhe, Mode=OneWay}" Width="2*" MinWidth="120" />
+                        <DataGridTextColumn Header="Descrição" Binding="{Binding Descricao, Mode=OneWay}" Width="2.4*" MinWidth="140" />
+                        <DataGridTextColumn Header="Categoria · fornecedor" Binding="{Binding Detalhe, Mode=OneWay}" Width="2.6*" MinWidth="160">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+                                    <Setter Property="ToolTip" Value="{Binding DetalheCompleto}" />
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
                         <DataGridTextColumn Header="Valor" Binding="{Binding ValorTexto, Mode=OneWay}" Width="1.2*" MinWidth="90" ElementStyle="{StaticResource ColunaNumero}" />
                         <DataGridTextColumn Header="Situação" Binding="{Binding SituacaoTexto, Mode=OneWay}" Width="1.2*" MinWidth="90" />
                     </DataGrid.Columns>
@@ -199,6 +209,9 @@
                         <RadioButton Content="A receber" GroupName="TipoConta" />
                     </StackPanel>
 
+                    <TextBlock Text="O lançamento original fica cancelado no histórico (com o motivo que você informar ao salvar) e este vira o lançamento certo no lugar dele."
+                               TextWrapping="Wrap" FontSize="13" Foreground="{StaticResource CorTextoSuave}" Margin="0,8,0,0"
+                               Visibility="{Binding Corrigindo, Converter={StaticResource BoolVis}}" />
                     <TextBlock Text="Descrição" Style="{StaticResource Rotulo}" />
                     <TextBox Text="{Binding FormDescricao, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Descrição" />
 
@@ -243,7 +256,7 @@
                     <TextBox Text="{Binding FormObservacao, UpdateSourceTrigger=PropertyChanged}" />
 
                     <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
-                        <Button Content="Salvar (Ctrl+S)" Style="{StaticResource BotaoPrimario}" Command="{Binding SalvarCommand}" />
+                        <Button Content="{Binding TextoSalvar}" Style="{StaticResource BotaoPrimario}" Command="{Binding SalvarCommand}" />
                         <Button Content="Novo (Ctrl+N)" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0" Command="{Binding NovoCommand}" />
                     </StackPanel>
                     <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" />

@@ -31,8 +31,27 @@ public record LinhaLancamento(Lancamento Lancamento, SituacaoLancamento Situacao
     public string Vencimento => Lancamento.Vencimento.ToString("dd/MM/yyyy", PtBr);
     public string Descricao => Lancamento.Descricao;
     public string Detalhe => string.Join(" · ", new[] { Lancamento.Categoria, Lancamento.Contraparte, ClassificacaoTexto }.Where(t => !string.IsNullOrEmpty(t)));
+
+    /// <summary>Tudo sobre a linha para o balãozinho: nome completo da classificação e, se cancelada, o motivo e quem cancelou.</summary>
+    public string DetalheCompleto
+    {
+        get
+        {
+            var partes = new List<string> { string.Join(" · ", new[] { Lancamento.Categoria, Lancamento.Contraparte,
+                Lancamento.Classificacao == ClassificacaoLancamento.Padrao ? null : RegrasFinanceiras.NomeClassificacao(Lancamento.Tipo, Lancamento.Classificacao) }
+                .Where(t => !string.IsNullOrEmpty(t))) };
+            if (Lancamento.Cancelado)
+                partes.Add($"Cancelado: {Lancamento.MotivoCancelamento}" +
+                    $"{(string.IsNullOrWhiteSpace(Lancamento.CanceladoPor) ? "" : " (" + Lancamento.CanceladoPor + ")")}" +
+                    $"{(Lancamento.CanceladoEm is DateTime q ? " em " + q.ToString("dd/MM/yyyy", PtBr) : "")}");
+            if (Lancamento.CorrigeLancamentoId is int original) partes.Add($"Corrige o lançamento #{original}");
+            return string.Join("\n", partes.Where(t => !string.IsNullOrEmpty(t)));
+        }
+    }
+
+    // Na lista a classificação aparece curta ("Outra entrada"); o nome inteiro fica no balãozinho.
     private string? ClassificacaoTexto => Lancamento.Classificacao == ClassificacaoLancamento.Padrao
-        ? null : RegrasFinanceiras.NomeClassificacao(Lancamento.Tipo, Lancamento.Classificacao);
+        ? null : System.Text.RegularExpressions.Regex.Replace(RegrasFinanceiras.NomeClassificacao(Lancamento.Tipo, Lancamento.Classificacao), @"\s*\(.*\)$", "");
     public string TipoTexto => Lancamento.Tipo == TipoLancamento.Despesa ? "A pagar" : "A receber";
     public string ValorTexto => (Lancamento.Tipo == TipoLancamento.Despesa ? "−" : "+") + Dinheiro.Formatar(Lancamento.ValorCentavos);
     public string SituacaoTexto => Situacao switch
@@ -171,7 +190,12 @@ public partial class FinanceiroViewModel : ViewModelBase
     public bool PodeParcelar => !Editando;
     /// <summary>true = o formulário está corrigindo um lançamento JÁ PAGO (cancela o original e cria o corrigido).</summary>
     [ObservableProperty] private bool _corrigindo;
-    partial void OnCorrigindoChanged(bool value) => OnPropertyChanged(nameof(TituloFormulario));
+    partial void OnCorrigindoChanged(bool value)
+    {
+        OnPropertyChanged(nameof(TituloFormulario));
+        OnPropertyChanged(nameof(TextoSalvar));
+    }
+    public string TextoSalvar => Corrigindo ? "Salvar correção" : "Salvar (Ctrl+S)";
     public string TituloFormulario => Corrigindo ? "Corrigir lançamento pago" : Editando ? "Editar lançamento" : "Novo lançamento";
     partial void OnEditandoIdChanged(int? value)
     {
