@@ -1,4 +1,4 @@
-namespace NexusLS.Core.Models;
+﻿namespace NexusLS.Core.Models;
 
 /// <summary>
 /// Um produto vendido na loja. Todos os valores em dinheiro ficam em CENTAVOS (long),
@@ -55,6 +55,12 @@ public class Produto : IEntidadeSincronizavel
     /// "Vender sem baixa": o produto é vendido sem conferir nem baixar estoque (serviço, encomenda, peça sob medida).
     /// </summary>
     public bool VenderSemBaixa { get; set; }
+
+    /// <summary>
+    /// "Sobra da loja": peça que sobrou. É estoque de verdade (vende no PDV e entra nos totais); a marca só serve para
+    /// separá-la na lista do Estoque. Não é publicada no catálogo online nem entra no hash dele.
+    /// </summary>
+    public bool Sobra { get; set; }
 
     /// <summary>Quantidade "infinita" mostrada no PDV para produto sem controle de estoque.</summary>
     public const int EstoqueVirtual = 99_999;

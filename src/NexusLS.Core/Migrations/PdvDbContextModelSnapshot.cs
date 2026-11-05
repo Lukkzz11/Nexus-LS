@@ -1450,6 +1450,9 @@ namespace NexusLS.Core.Migrations
                         .HasMaxLength(60)
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("Sobra")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("VenderSemBaixa")
                         .HasColumnType("INTEGER");
 

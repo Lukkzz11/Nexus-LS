@@ -11,6 +11,9 @@ namespace NexusLS.App.ViewModels;
 /// <summary>Uma opção do combo de tipo de ajuste: o valor interno e o texto que o operador lê.</summary>
 public record OpcaoAjuste(TipoMovimentacao Tipo, string Nome);
 
+/// <summary>Visão da lista do Estoque da loja.</summary>
+public enum VisaoEstoque { Todos, Normal, Sobras }
+
 /// <summary>
 /// Estoque da loja: numa tela só, a lista de produtos, o cadastro (nome, preços, mínimo), a grade de tamanhos
 /// com o estoque de cada um e o ajuste de estoque com motivo. Todo ajuste gera uma movimentação no histórico.
@@ -24,13 +27,15 @@ public partial class EstoqueLojaViewModel : ViewModelBase
 
     private readonly FotoProdutoService? _fotos;
     private readonly Func<DateTime> _hoje;
+    private readonly NexusLS.Core.Vitrine.AjustesProdutoStore? _ajustesCatalogo;
 
     private readonly ConfiguracaoService? _configuracao;
     private int _estoqueMinimoPadrao;
     private int _margemPadrao;
 
-    public EstoqueLojaViewModel(ProdutoService produtos, EstoqueService estoque, FotoProdutoService? fotos = null, ConfiguracaoService? configuracao = null, Func<DateTime>? relogio = null)
+    public EstoqueLojaViewModel(ProdutoService produtos, EstoqueService estoque, FotoProdutoService? fotos = null, ConfiguracaoService? configuracao = null, Func<DateTime>? relogio = null, NexusLS.Core.Vitrine.AjustesProdutoStore? ajustesCatalogo = null)
     {
+        _ajustesCatalogo = ajustesCatalogo;
         _hoje = relogio ?? (() => DateTime.Today);
         _fotos = fotos;
         _configuracao = configuracao;
@@ -155,6 +160,25 @@ public partial class EstoqueLojaViewModel : ViewModelBase
     [ObservableProperty] private string _busca = "";
     [ObservableProperty] private bool _mostrarInativos;
     [ObservableProperty] private bool _somenteAbaixoDoMinimo;
+
+    /// <summary>Quais produtos a lista mostra: todos, só o estoque normal ou só as sobras da loja (como no ERP).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(VisaoTodos))]
+    [NotifyPropertyChangedFor(nameof(VisaoEstoqueNormal))]
+    [NotifyPropertyChangedFor(nameof(VisaoSobras))]
+    private VisaoEstoque _visao = VisaoEstoque.Todos;
+
+    public bool VisaoTodos { get => Visao == VisaoEstoque.Todos; set { if (value) Visao = VisaoEstoque.Todos; } }
+    public bool VisaoEstoqueNormal { get => Visao == VisaoEstoque.Normal; set { if (value) Visao = VisaoEstoque.Normal; } }
+    public bool VisaoSobras { get => Visao == VisaoEstoque.Sobras; set { if (value) Visao = VisaoEstoque.Sobras; } }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(TextoSobras))]
+    private int _quantidadeSobras;
+
+    public string TextoSobras => $"Sobras ({QuantidadeSobras})";
+
+    partial void OnVisaoChanged(VisaoEstoque value) => _ = BuscarAsync();
     [ObservableProperty] private Produto? _selecionado;
 
     [ObservableProperty]
@@ -175,6 +199,7 @@ public partial class EstoqueLojaViewModel : ViewModelBase
     [ObservableProperty] private string _categoria = "";
     [ObservableProperty] private string _codigoInterno = "";
     [ObservableProperty] private bool _venderSemBaixa;
+    [ObservableProperty] private bool _sobra;
     [ObservableProperty] private string _margemDesejada = "";
     [ObservableProperty] private string _textoMargem = "";
     [ObservableProperty] private string _estoqueMinimo = "0";
@@ -249,11 +274,19 @@ public partial class EstoqueLojaViewModel : ViewModelBase
         var abaixo = await _estoque.ListarAbaixoDoMinimoAsync();
         if (versao != _versaoBusca) return;
 
+        var sobras = await _produtos.ContarSobrasAsync();
         if (SomenteAbaixoDoMinimo) lista = lista.Where(p => p.EstoqueBaixo).ToList();
+        lista = Visao switch
+        {
+            VisaoEstoque.Normal => lista.Where(p => !p.Sobra).ToList(),
+            VisaoEstoque.Sobras => lista.Where(p => p.Sobra).ToList(),
+            _ => lista
+        };
 
         Produtos.Clear();
         foreach (var p in lista) Produtos.Add(p);
         QuantidadeAbaixoDoMinimo = abaixo.Count;
+        QuantidadeSobras = sobras;
 
         if (IdEditando is int id) Reselecionar(id);
     });
@@ -352,6 +385,18 @@ public partial class EstoqueLojaViewModel : ViewModelBase
         MostrarSucesso("Código de barras gerado. Salve o produto para reservá-lo.");
     });
 
+    /// <summary>
+    /// Abre o cadastro já como sobra da loja. Como no ERP, a sobra nova nasce fora do catálogo online
+    /// (o ajuste "aparece no catálogo" fica desligado ao salvar); dá para ligar depois no Editor do catálogo.
+    /// </summary>
+    [RelayCommand]
+    private void AdicionarSobra()
+    {
+        Novo();
+        Sobra = true;
+        Mensagem = "Nova sobra: continua sendo estoque da loja e vende no PDV; só fica separada na lista de Sobras e fora do catálogo online.";
+    }
+
     [RelayCommand]
     private void Novo()
     {
@@ -371,6 +416,7 @@ public partial class EstoqueLojaViewModel : ViewModelBase
         Categoria = "";
         CodigoInterno = "";
         VenderSemBaixa = false;
+        Sobra = false;
         MargemDesejada = "";
         EstoqueMinimo = "0";
         AplicarPadroes();
@@ -401,6 +447,7 @@ public partial class EstoqueLojaViewModel : ViewModelBase
         else
         {
             var novo = await _produtos.CadastrarAsync(dados, estoqueInicial);
+            if (dados.Sobra) DeixarForaDoCatalogo(novo);
             await BuscarAsync();
             await AbrirProdutoAsync(novo);
             MostrarSucesso("Produto cadastrado. Na aba \"Tamanhos e estoque\" você cadastra a grade de tamanhos.");
@@ -421,6 +468,20 @@ public partial class EstoqueLojaViewModel : ViewModelBase
         MostrarSucesso(estavaAtivo ? "Produto desativado." : "Produto reativado.");
     });
 
+    /// <summary>Sobra nova não aparece no catálogo online: grava o ajuste "visível = não" desse produto.</summary>
+    private void DeixarForaDoCatalogo(Produto produto)
+    {
+        if (_ajustesCatalogo is null) return;
+        try
+        {
+            var id = produto.Guid.ToString("D").ToLowerInvariant();
+            var todos = _ajustesCatalogo.Carregar();
+            todos[id] = (todos.GetValueOrDefault(id) ?? new NexusLS.Core.Vitrine.AjusteProdutoCatalogo()) with { Visivel = false };
+            _ajustesCatalogo.Salvar(todos);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { /* o produto já foi salvo; o ajuste se refaz no Editor do catálogo */ }
+    }
+
     private (DadosProduto dados, int estoqueInicial) LerFormulario()
     {
         if (!Dinheiro.TentarConverter(PrecoVenda, out var venda))
@@ -437,7 +498,7 @@ public partial class EstoqueLojaViewModel : ViewModelBase
         var minimo = LerInteiro(EstoqueMinimo, "Estoque mínimo");
         var inicial = EhNovo ? LerInteiro(EstoqueInicial, "Estoque inicial") : 0;
 
-        return (new DadosProduto(Nome, CodigoBarras, venda, custo, minimo, Referencia, atacado, Categoria, VenderSemBaixa), inicial);
+        return (new DadosProduto(Nome, CodigoBarras, venda, custo, minimo, Referencia, atacado, Categoria, VenderSemBaixa, Sobra), inicial);
     }
 
     private static int LerInteiro(string texto, string campo)
@@ -460,6 +521,7 @@ public partial class EstoqueLojaViewModel : ViewModelBase
         Categoria = produto.Categoria ?? "";
         CodigoInterno = produto.CodigoInterno ?? "";
         VenderSemBaixa = produto.VenderSemBaixa;
+        Sobra = produto.Sobra;
         PrecoVenda = Dinheiro.FormatarParaEdicao(produto.PrecoVendaCentavos);
         PrecoAtacado = produto.PrecoAtacadoCentavos > 0 ? Dinheiro.FormatarParaEdicao(produto.PrecoAtacadoCentavos) : "";
         PrecoCusto = Dinheiro.FormatarParaEdicao(produto.PrecoCustoCentavos);

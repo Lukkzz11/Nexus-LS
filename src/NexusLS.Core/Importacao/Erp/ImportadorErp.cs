@@ -204,6 +204,7 @@ public sealed class ImportadorErp
         p.PrecoAtacadoCentavos = Centavos(c, "precoAtacado");
         p.PrecoCustoCentavos = Centavos(c, "custoUnitario");
         p.Ativo = Booleano(c, "ativo") ?? true;
+        p.Sobra = Booleano(c, "sobra") ?? p.Sobra; // sobra da loja: só a marca da lista, continua estoque normal
 
         var codigo = Texto(c, "codigoBarras");
         if (codigo is not null && (db.Produtos.Local.Any(x => x.CodigoBarras == codigo && x.Guid != p.Guid)

@@ -31,6 +31,7 @@ public class ProdutoService
             CodigoInterno = await ProximoCodigoInternoAsync(db),
             Categoria = Limpar(dados.Categoria),
             VenderSemBaixa = dados.VenderSemBaixa,
+            Sobra = dados.Sobra,
             CodigoBarras = codigo,
             Referencia = referencia,
             PrecoVendaCentavos = dados.PrecoVendaCentavos,
@@ -73,6 +74,7 @@ public class ProdutoService
         produto.Nome = dados.Nome.Trim();
         produto.Categoria = Limpar(dados.Categoria);
         produto.VenderSemBaixa = dados.VenderSemBaixa;
+        produto.Sobra = dados.Sobra;
         produto.CodigoInterno ??= await ProximoCodigoInternoAsync(db); // produtos antigos ganham o código ao serem editados
         produto.CodigoBarras = codigo;
         produto.Referencia = referencia;
@@ -131,6 +133,13 @@ public class ProdutoService
         IQueryable<Produto> consulta = db.Produtos.AsNoTracking().Include(p => p.Tamanhos);
         if (!incluirInativos) consulta = consulta.Where(p => p.Ativo);
         return await consulta.OrderBy(p => p.Nome).ToListAsync();
+    }
+
+    /// <summary>Quantas sobras da loja (produtos ativos marcados como sobra) existem.</summary>
+    public async Task<int> ContarSobrasAsync()
+    {
+        await using var db = await _fabrica.CreateDbContextAsync();
+        return await db.Produtos.AsNoTracking().CountAsync(p => p.Sobra && p.Ativo);
     }
 
     public async Task<Produto?> ObterAsync(int id)

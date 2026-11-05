@@ -120,6 +120,32 @@ public sealed class ImportadorErpTests : IDisposable
     }
 
     [Fact]
+    public async Task Sobra_do_ERP_vira_a_marca_Sobra_e_continua_estoque_normal()
+    {
+        ProdutoNoErp("p1", "Retalho", "2026-10-30T10:00:00Z", ",\"sobra\":true");
+        ProdutoNoErp("p2", "Camiseta", "2026-10-30T10:00:00Z");
+
+        await Importador().ImportarAsync();
+
+        await using var db = _banco.CriarContexto();
+        var produtos = await db.Produtos.ToListAsync();
+        Assert.True(produtos.Single(x => x.Nome == "Retalho").Sobra);
+        Assert.False(produtos.Single(x => x.Nome == "Camiseta").Sobra);
+        Assert.Equal(8, produtos.Single(x => x.Nome == "Retalho").EstoqueAtual);
+
+        // reimportar sem o campo não desmarca; com false, desmarca
+        _agora = _agora.AddHours(1);
+        ProdutoNoErp("p1", "Retalho", "2026-10-31T10:00:00Z");
+        await Importador().ImportarAsync();
+        await using (var db2 = _banco.CriarContexto()) Assert.True((await db2.Produtos.SingleAsync(x => x.Nome == "Retalho")).Sobra);
+        _agora = _agora.AddHours(1);
+        ProdutoNoErp("p1", "Retalho", "2026-11-01T10:00:00Z", ",\"sobra\":false");
+        await Importador().ImportarAsync();
+        await using var db3 = _banco.CriarContexto();
+        Assert.False((await db3.Produtos.SingleAsync(x => x.Nome == "Retalho")).Sobra);
+    }
+
+    [Fact]
     public async Task Produto_alterado_no_ERP_atualiza_o_mesmo_registro()
     {
         ProdutoNoErp("p1", "Camiseta", "2026-10-30T10:00:00Z");

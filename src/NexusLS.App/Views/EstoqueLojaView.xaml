@@ -34,6 +34,9 @@
             <Grid Margin="0,0,0,14">
                 <TextBlock Text="Estoque da loja" Style="{StaticResource TituloTela}" />
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Button Content="Adicionar sobra" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,0"
+                            AutomationProperties.Name="Adicionar sobra" ToolTip="Cadastra uma peça que sobrou: continua sendo estoque e vende no PDV, só fica separada na lista de Sobras."
+                            Command="{Binding AdicionarSobraCommand}" />
                     <Button Content="Exportar CSV" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,0"
                             AutomationProperties.Name="Exportar CSV" ToolTip="Salva o estoque inteiro (uma linha por tamanho) numa planilha CSV para o Excel."
                             Command="{Binding ExportarCsvCommand}" />
@@ -48,12 +51,19 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <TextBox Text="{Binding Busca, UpdateSourceTrigger=PropertyChanged}"
                          ToolTip="Buscar por nome, referência ou código de barras" />
-                <CheckBox Grid.Column="1" Content="Abaixo do mínimo" Margin="16,0,0,0" VerticalAlignment="Center"
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="16,0,0,0" VerticalAlignment="Center">
+                    <RadioButton Content="Todos" GroupName="VisaoEstoque" IsChecked="{Binding VisaoTodos, Mode=TwoWay}" Margin="0,0,8,0" />
+                    <RadioButton Content="Estoque" GroupName="VisaoEstoque" IsChecked="{Binding VisaoEstoqueNormal, Mode=TwoWay}" Margin="0,0,8,0" />
+                    <RadioButton Content="{Binding TextoSobras}" GroupName="VisaoEstoque" IsChecked="{Binding VisaoSobras, Mode=TwoWay}"
+                                 AutomationProperties.Name="Sobras" />
+                </StackPanel>
+                <CheckBox Grid.Column="2" Content="Abaixo do mínimo" Margin="16,0,0,0" VerticalAlignment="Center"
                           IsChecked="{Binding SomenteAbaixoDoMinimo}" />
-                <CheckBox Grid.Column="2" Content="Mostrar inativos" Margin="16,0,0,0" VerticalAlignment="Center"
+                <CheckBox Grid.Column="3" Content="Mostrar inativos" Margin="16,0,0,0" VerticalAlignment="Center"
                           IsChecked="{Binding MostrarInativos}" />
             </Grid>
 
@@ -104,6 +114,8 @@
                                             ElementStyle="{StaticResource ColunaNumero}" />
                         <DataGridTextColumn Header="Situação" Width="0.8*" MinWidth="64"
                                             Binding="{Binding Ativo, Mode=OneWay, Converter={StaticResource BoolTexto}, ConverterParameter='Ativo|Inativo'}" />
+                        <DataGridTextColumn Header="Tipo" Width="0.6*" MinWidth="50"
+                                            Binding="{Binding Sobra, Mode=OneWay, Converter={StaticResource BoolTexto}, ConverterParameter='Sobra|Estoque'}" />
                     </DataGrid.Columns>
                 </DataGrid>
             </Border>
@@ -254,6 +266,9 @@
                                     </StackPanel>
                                 </Grid>
 
+                                <CheckBox Content="Sobra da loja" Margin="0,10,0,0"
+                                          IsChecked="{Binding Sobra}" AutomationProperties.Name="Sobra da loja"
+                                          ToolTip="Peça que sobrou: segue como estoque normal (vende no PDV), só fica separada na lista de Sobras" />
                                 <CheckBox Content="Vender sem baixa de estoque (serviço ou encomenda)" Margin="0,10,0,0"
                                           IsChecked="{Binding VenderSemBaixa}" AutomationProperties.Name="Vender sem baixa"
                                           ToolTip="O PDV não confere nem baixa o estoque deste produto" />
