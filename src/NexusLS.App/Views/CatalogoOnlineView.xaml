@@ -1,12 +1,16 @@
 <UserControl x:Class="NexusLS.App.Views.CatalogoOnlineView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:v="clr-namespace:NexusLS.App.Views">
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel MaxWidth="1000" HorizontalAlignment="Left">
+        <StackPanel Margin="0,0,12,24">
             <TextBlock Text="Catálogo online" Style="{StaticResource TituloTela}" Margin="0,0,0,4" />
             <TextBlock TextWrapping="Wrap" Foreground="{StaticResource CorTextoSuave}" Margin="0,0,0,14"
                        Text="O programa continua funcionando sem internet; os dados ficam neste computador. Quando você clicar em &quot;Atualizar Firestore&quot;, o catálogo (nome, categoria, referência, código de barras, preço de varejo e estoque por tamanho) é publicado no Firebase do seu projeto. Nada é enviado sozinho, e nada é apagado na nuvem." />
+
+            <!-- Os cartões se repartem em duas colunas em tela larga (cada um entra na coluna mais curta) -->
+            <v:GradeDeCartoes LarguraMinima="440" MaximoColunas="2">
 
             <!-- ===== Atualizar ===== -->
             <Border Style="{StaticResource Painel}">
@@ -67,7 +71,7 @@
             </Border>
 
             <!-- ===== Configuração do Firebase ===== -->
-            <Border Style="{StaticResource Painel}" Margin="0,16,0,0">
+            <Border Style="{StaticResource Painel}">
                 <StackPanel IsEnabled="{Binding PodeEditar}">
                     <TextBlock Text="Firebase deste cliente" FontSize="18" FontWeight="SemiBold" />
                     <TextBlock Text="{Binding SituacaoConfiguracao}" TextWrapping="Wrap" Foreground="{StaticResource CorTextoSuave}" Margin="0,4,0,0" />
@@ -98,7 +102,7 @@
             </Border>
 
             <!-- ===== Nuvem operacional (vendas e demais registros; os usuários entram neste projeto) ===== -->
-            <Border Style="{StaticResource Painel}" Margin="0,16,0,0" Visibility="{Binding TemOperacional, Converter={StaticResource BoolVis}}">
+            <Border Style="{StaticResource Painel}" Visibility="{Binding TemOperacional, Converter={StaticResource BoolVis}}">
                 <StackPanel IsEnabled="{Binding PodeEditar}">
                     <TextBlock Text="Nuvem operacional (vendas)" FontSize="18" FontWeight="SemiBold" />
                     <TextBlock Text="{Binding SituacaoOperacional}" TextWrapping="Wrap" Foreground="{StaticResource CorTextoSuave}" Margin="0,4,0,0" />
@@ -116,7 +120,7 @@
             </Border>
 
             <!-- ===== Importar do ERP (só leitura; traz só o que mudou) ===== -->
-            <Border Style="{StaticResource Painel}" Margin="0,16,0,0" Visibility="{Binding TemErp, Converter={StaticResource BoolVis}}">
+            <Border Style="{StaticResource Painel}" Visibility="{Binding TemErp, Converter={StaticResource BoolVis}}">
                 <StackPanel DataContext="{Binding Erp}">
                     <StackPanel IsEnabled="{Binding PodeEditar}">
                         <TextBlock Text="Importar do ERP" FontSize="18" FontWeight="SemiBold" />
@@ -144,7 +148,7 @@
             </Border>
 
             <!-- ===== Histórico ===== -->
-            <Border Style="{StaticResource Painel}" Margin="0,16,0,24">
+            <Border Style="{StaticResource Painel}">
                 <StackPanel>
                     <TextBlock Text="Histórico de atualizações" FontSize="18" FontWeight="SemiBold" />
                     <ListBox ItemsSource="{Binding Historico}" DisplayMemberPath="Texto" MaxHeight="260" Margin="0,8,0,0" />
@@ -162,6 +166,7 @@
                     </TextBlock>
                 </StackPanel>
             </Border>
+            </v:GradeDeCartoes>
         </StackPanel>
     </ScrollViewer>
 </UserControl>

@@ -158,9 +158,9 @@
             </Grid.RowDefinitions>
             <TextBlock Text="Histórico de compras" FontSize="18" FontWeight="SemiBold" Margin="0,48,0,8" />
             <WrapPanel Grid.Row="1" Margin="0,0,0,8">
-                <DatePicker SelectedDateFormat="Short" SelectedDate="{Binding De}" Width="120" VerticalContentAlignment="Center" />
+                <DatePicker SelectedDateFormat="Short" SelectedDate="{Binding De}" Width="150" VerticalContentAlignment="Center" />
                 <TextBlock Text="até" VerticalAlignment="Center" Margin="8,0" />
-                <DatePicker SelectedDateFormat="Short" SelectedDate="{Binding Ate}" Width="120" VerticalContentAlignment="Center" />
+                <DatePicker SelectedDateFormat="Short" SelectedDate="{Binding Ate}" Width="150" VerticalContentAlignment="Center" />
             </WrapPanel>
             <Border Grid.Row="2" Style="{StaticResource Painel}" Padding="0">
                 <DataGrid ItemsSource="{Binding Historico}" SelectedItem="{Binding Selecionada, Mode=TwoWay}"

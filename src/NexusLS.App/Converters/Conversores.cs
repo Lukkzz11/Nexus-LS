@@ -100,3 +100,26 @@ public class ChaveParaPincelConverter : IValueConverter
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
         throw new NotSupportedException();
 }
+
+/// <summary>
+/// Parte o demonstrativo (DRE) em dois trechos para mostrar lado a lado em tela larga: parâmetro "resultado" devolve as
+/// linhas até o primeiro título (receita até o resultado do período); "fora" devolve do primeiro título em diante
+/// (o que não é receita nem despesa e o fluxo de caixa). O segundo valor do MultiBinding é o Count da lista, só para
+/// a tela refazer o trecho quando a lista muda.
+/// </summary>
+public class TrechoDoDreConverter : IMultiValueConverter
+{
+    public object Convert(object[] values, Type targetType, object? parameter, CultureInfo culture)
+    {
+        if (values.Length == 0 || values[0] is not IEnumerable<NexusLS.App.ViewModels.LinhaDre> linhas) return Array.Empty<object>();
+        var lista = linhas.ToList();
+        var corte = lista.FindIndex(l => l.Titulo);
+        if (corte < 0) corte = lista.Count;
+        return string.Equals(parameter as string, "fora", StringComparison.OrdinalIgnoreCase)
+            ? lista.Skip(corte).ToList()
+            : lista.Take(corte).ToList();
+    }
+
+    public object[] ConvertBack(object value, Type[] targetTypes, object? parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}

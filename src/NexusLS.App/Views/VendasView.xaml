@@ -151,14 +151,15 @@
                         </TextBlock.Style>
                     </TextBlock>
 
-                    <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
-                        <Button Content="Reimprimir cupom" Style="{StaticResource BotaoSecundario}"
+                    <!-- WrapPanel: num painel estreito o botão de cancelar desce em vez de ficar cortado -->
+                    <WrapPanel Margin="0,16,0,0">
+                        <Button Content="Reimprimir cupom" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,8"
                                 Command="{Binding ReimprimirCupomCommand}" />
-                        <Button Content="Nota em PDF" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0"
+                        <Button Content="Nota em PDF" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,8"
                                 Command="{Binding NotaEmPdfCommand}" />
-                        <Button Content="Cancelar venda" Style="{StaticResource BotaoPerigo}" Margin="8,0,0,0"
+                        <Button Content="Cancelar venda" Style="{StaticResource BotaoPerigo}" Margin="0,0,0,8"
                                 Command="{Binding CancelarVendaCommand}" />
-                    </StackPanel>
+                    </WrapPanel>
                 </StackPanel>
 
                 <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" />

@@ -8,55 +8,63 @@
         </Style>
     </UserControl.Resources>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <Grid Margin="0,0,12,16">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="16" />
-                <ColumnDefinition Width="360" />
-            </Grid.ColumnDefinitions>
+    <Grid Margin="0,0,0,8">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="16" />
+            <ColumnDefinition Width="360" />
+        </Grid.ColumnDefinitions>
 
-            <!-- Esquerda: lista de contas e transferências -->
-            <StackPanel>
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                    <TextBlock Text="Contas" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" />
-                    <CheckBox Content="Mostrar desativadas" Margin="20,0,0,0" VerticalAlignment="Center" IsChecked="{Binding MostrarDesativadas}" />
-                </StackPanel>
-                <Border Style="{StaticResource Painel}" Padding="0" Margin="0,0,0,18">
-                    <DataGrid ItemsSource="{Binding Contas}" SelectedItem="{Binding Selecionada, Mode=TwoWay}" AutoGenerateColumns="False"
-                              IsReadOnly="True" SelectionMode="Single" CanUserAddRows="False" HeadersVisibility="Column" MaxHeight="220"
-                              GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0" Background="Transparent"
-                              RowHeight="36" AutomationProperties.Name="Lista de contas">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Conta" Binding="{Binding Nome, Mode=OneWay}" Width="2*" MinWidth="150" />
-                            <DataGridTextColumn Header="Tipo" Binding="{Binding Tipo, Mode=OneWay}" Width="90" />
-                            <DataGridTextColumn Header="Saldo inicial" Binding="{Binding SaldoInicial, Mode=OneWay}" Width="1*" MinWidth="100" ElementStyle="{StaticResource ColunaNumero}" />
-                            <DataGridTextColumn Header="Desde" Binding="{Binding Desde, Mode=OneWay}" Width="100" />
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </Border>
-
-                <TextBlock Text="Transferências (últimos 60 dias)" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8" />
-                <Border Style="{StaticResource Painel}" Padding="0">
-                    <DataGrid ItemsSource="{Binding Transferencias}" SelectedItem="{Binding TransferenciaSelecionada, Mode=TwoWay}"
-                              AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" CanUserAddRows="False" HeadersVisibility="Column"
-                              GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0" Background="Transparent"
-                              RowHeight="36" MaxHeight="260" AutomationProperties.Name="Lista de transferências">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Data" Binding="{Binding Data, Mode=OneWay}" Width="100" />
-                            <DataGridTextColumn Header="De → para" Binding="{Binding DeParaTexto, Mode=OneWay}" Width="2*" MinWidth="160" />
-                            <DataGridTextColumn Header="Valor" Binding="{Binding Valor, Mode=OneWay}" Width="1*" MinWidth="100" ElementStyle="{StaticResource ColunaNumero}" />
-                            <DataGridTextColumn Header="Situação" Binding="{Binding Situacao, Mode=OneWay}" Width="100" />
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </Border>
-                <Button Content="Cancelar a transferência selecionada" Style="{StaticResource BotaoSecundario}" Margin="0,10,0,0"
-                        HorizontalAlignment="Left" Command="{Binding CancelarTransferenciaCommand}" />
-                <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" />
+        <!-- Esquerda: lista de contas e transferências (as duas esticam até embaixo) -->
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" MinHeight="120" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" MinHeight="120" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                <TextBlock Text="Contas" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" />
+                <CheckBox Content="Mostrar desativadas" Margin="20,0,0,0" VerticalAlignment="Center" IsChecked="{Binding MostrarDesativadas}" />
             </StackPanel>
+            <Border Grid.Row="1" Style="{StaticResource Painel}" Padding="0" Margin="0,0,0,18">
+                <DataGrid ItemsSource="{Binding Contas}" SelectedItem="{Binding Selecionada, Mode=TwoWay}" AutoGenerateColumns="False"
+                          IsReadOnly="True" SelectionMode="Single" CanUserAddRows="False" HeadersVisibility="Column"
+                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0" Background="Transparent"
+                          RowHeight="36" AutomationProperties.Name="Lista de contas">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Conta" Binding="{Binding Nome, Mode=OneWay}" Width="2*" MinWidth="150" />
+                        <DataGridTextColumn Header="Tipo" Binding="{Binding Tipo, Mode=OneWay}" Width="90" />
+                        <DataGridTextColumn Header="Saldo inicial" Binding="{Binding SaldoInicial, Mode=OneWay}" Width="1*" MinWidth="100" ElementStyle="{StaticResource ColunaNumero}" />
+                        <DataGridTextColumn Header="Desde" Binding="{Binding Desde, Mode=OneWay}" Width="100" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
 
-            <!-- Direita: formulários -->
-            <StackPanel Grid.Column="2">
+            <TextBlock Grid.Row="2" Text="Transferências (últimos 60 dias)" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8" />
+            <Border Grid.Row="3" Style="{StaticResource Painel}" Padding="0">
+                <DataGrid ItemsSource="{Binding Transferencias}" SelectedItem="{Binding TransferenciaSelecionada, Mode=TwoWay}"
+                          AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" CanUserAddRows="False" HeadersVisibility="Column"
+                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0" Background="Transparent"
+                          RowHeight="36" AutomationProperties.Name="Lista de transferências">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Data" Binding="{Binding Data, Mode=OneWay}" Width="100" />
+                        <DataGridTextColumn Header="De → para" Binding="{Binding DeParaTexto, Mode=OneWay}" Width="2*" MinWidth="160" />
+                        <DataGridTextColumn Header="Valor" Binding="{Binding Valor, Mode=OneWay}" Width="1*" MinWidth="100" ElementStyle="{StaticResource ColunaNumero}" />
+                        <DataGridTextColumn Header="Situação" Binding="{Binding Situacao, Mode=OneWay}" Width="100" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+            <Button Grid.Row="4" Content="Cancelar a transferência selecionada" Style="{StaticResource BotaoSecundario}" Margin="0,10,0,0"
+                    HorizontalAlignment="Left" Command="{Binding CancelarTransferenciaCommand}" />
+            <TextBlock Grid.Row="5" Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" />
+        </Grid>
+
+        <!-- Direita: formulários (rolam sozinhos se a tela for baixa) -->
+        <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
                 <Border Style="{StaticResource Painel}" Margin="0,0,0,16">
                     <StackPanel>
                         <TextBlock Text="{Binding TituloFormulario}" FontSize="18" FontWeight="SemiBold" />
@@ -107,6 +115,6 @@
                     </StackPanel>
                 </Border>
             </StackPanel>
-        </Grid>
-    </ScrollViewer>
+        </ScrollViewer>
+    </Grid>
 </UserControl>

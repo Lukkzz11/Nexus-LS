@@ -108,15 +108,32 @@
 
             <TextBlock Grid.Row="2" Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" Margin="0,0,0,8" />
 
-            <ScrollViewer Grid.Row="3" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-                <StackPanel Orientation="Horizontal">
+            <!-- As colunas do quadro repartem a largura toda (mínimo de 212 cada); se não couberem, o quadro rola para o lado -->
+            <ScrollViewer x:Name="RolagemQuadro" Grid.Row="3" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                <Grid MinWidth="{Binding ViewportWidth, ElementName=RolagemQuadro}">
+                    <Grid.ColumnDefinitions>
+                        <!-- 5 etapas do fluxo; a coluna de cancelados só ganha espaço quando aparece -->
+                        <ColumnDefinition Width="5*" />
+                        <ColumnDefinition>
+                            <ColumnDefinition.Style>
+                                <Style TargetType="ColumnDefinition">
+                                    <Setter Property="Width" Value="0" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding MostrarCancelados}" Value="True">
+                                            <Setter Property="Width" Value="*" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ColumnDefinition.Style>
+                        </ColumnDefinition>
+                    </Grid.ColumnDefinitions>
                     <ItemsControl ItemsSource="{Binding Colunas}">
                         <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                            <ItemsPanelTemplate><UniformGrid Rows="1" /></ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border Style="{StaticResource ColunaQuadro}" Width="212">
+                                <Border Style="{StaticResource ColunaQuadro}" MinWidth="212">
                                     <Grid>
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto" />
@@ -132,7 +149,7 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
 
-                    <Border Style="{StaticResource ColunaQuadro}" Width="212" Visibility="{Binding MostrarCancelados, Converter={StaticResource BoolVis}}">
+                    <Border Grid.Column="1" Style="{StaticResource ColunaQuadro}" MinWidth="212" Visibility="{Binding MostrarCancelados, Converter={StaticResource BoolVis}}">
                         <Grid DataContext="{Binding Cancelados}">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
@@ -144,7 +161,7 @@
                             </ScrollViewer>
                         </Grid>
                     </Border>
-                </StackPanel>
+                </Grid>
             </ScrollViewer>
         </Grid>
 

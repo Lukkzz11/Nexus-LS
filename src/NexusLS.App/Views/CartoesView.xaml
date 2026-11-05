@@ -8,52 +8,61 @@
         </Style>
     </UserControl.Resources>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <Grid Margin="0,0,12,16">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="16" />
-                <ColumnDefinition Width="340" />
-            </Grid.ColumnDefinitions>
+    <Grid Margin="0,0,0,8">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="16" />
+            <ColumnDefinition Width="340" />
+        </Grid.ColumnDefinitions>
 
-            <StackPanel>
-                <TextBlock Text="Cartão a liquidar" FontSize="16" FontWeight="SemiBold" />
-                <TextBlock Text="{Binding Resumo}" Margin="0,4,0,8" />
-                <Border Style="{StaticResource Painel}" Padding="0" Margin="0,0,0,18">
-                    <DataGrid ItemsSource="{Binding Aliquidar}" SelectedItem="{Binding Selecionado, Mode=TwoWay}" AutoGenerateColumns="False"
-                              IsReadOnly="True" SelectionMode="Single" CanUserAddRows="False" HeadersVisibility="Column" MaxHeight="300"
-                              GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0" Background="Transparent"
-                              RowHeight="36" AutomationProperties.Name="Vendas no cartão a liquidar">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Venda" Binding="{Binding Venda, Mode=OneWay}" Width="80" />
-                            <DataGridTextColumn Header="Data" Binding="{Binding Data, Mode=OneWay}" Width="100" />
-                            <DataGridTextColumn Header="Forma" Binding="{Binding Forma, Mode=OneWay}" Width="1*" MinWidth="100" />
-                            <DataGridTextColumn Header="Valor" Binding="{Binding Valor, Mode=OneWay}" Width="1*" MinWidth="100" ElementStyle="{StaticResource ColunaNumero}" />
-                            <DataGridTextColumn Header="Previsto para" Binding="{Binding Previsao, Mode=OneWay}" Width="120" />
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </Border>
+        <!-- as duas listas esticam até embaixo (a dos que faltam liquidar fica maior) -->
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="3*" MinHeight="140" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="2*" MinHeight="120" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <TextBlock Text="Cartão a liquidar" FontSize="16" FontWeight="SemiBold" />
+            <TextBlock Grid.Row="1" Text="{Binding Resumo}" Margin="0,4,0,8" />
+            <Border Grid.Row="2" Style="{StaticResource Painel}" Padding="0" Margin="0,0,0,18">
+                <DataGrid ItemsSource="{Binding Aliquidar}" SelectedItem="{Binding Selecionado, Mode=TwoWay}" AutoGenerateColumns="False"
+                          IsReadOnly="True" SelectionMode="Single" CanUserAddRows="False" HeadersVisibility="Column"
+                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0" Background="Transparent"
+                          RowHeight="36" AutomationProperties.Name="Vendas no cartão a liquidar">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Venda" Binding="{Binding Venda, Mode=OneWay}" Width="80" />
+                        <DataGridTextColumn Header="Data" Binding="{Binding Data, Mode=OneWay}" Width="100" />
+                        <DataGridTextColumn Header="Forma" Binding="{Binding Forma, Mode=OneWay}" Width="1*" MinWidth="100" />
+                        <DataGridTextColumn Header="Valor" Binding="{Binding Valor, Mode=OneWay}" Width="1*" MinWidth="100" ElementStyle="{StaticResource ColunaNumero}" />
+                        <DataGridTextColumn Header="Previsto para" Binding="{Binding Previsao, Mode=OneWay}" Width="120" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
 
-                <TextBlock Text="Já liquidados (últimos 60 dias)" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8" />
-                <Border Style="{StaticResource Painel}" Padding="0">
-                    <DataGrid ItemsSource="{Binding Liquidados}" SelectedItem="{Binding LiquidadoSelecionado, Mode=TwoWay}" AutoGenerateColumns="False"
-                              IsReadOnly="True" SelectionMode="Single" CanUserAddRows="False" HeadersVisibility="Column" MaxHeight="260"
-                              GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0" Background="Transparent"
-                              RowHeight="36" AutomationProperties.Name="Vendas no cartão já liquidadas">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Venda" Binding="{Binding Venda, Mode=OneWay}" Width="80" />
-                            <DataGridTextColumn Header="Caiu em" Binding="{Binding Data, Mode=OneWay}" Width="100" />
-                            <DataGridTextColumn Header="Conta" Binding="{Binding Conta, Mode=OneWay}" Width="1*" MinWidth="110" />
-                            <DataGridTextColumn Header="Valor" Binding="{Binding Valor, Mode=OneWay}" Width="1*" MinWidth="100" ElementStyle="{StaticResource ColunaNumero}" />
-                            <DataGridTextColumn Header="Taxa" Binding="{Binding Taxa, Mode=OneWay}" Width="90" ElementStyle="{StaticResource ColunaNumero}" />
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </Border>
-                <Button Content="Estornar a liquidação selecionada" Style="{StaticResource BotaoSecundario}" Margin="0,10,0,0"
-                        HorizontalAlignment="Left" Command="{Binding EstornarCommand}" />
-            </StackPanel>
+            <TextBlock Grid.Row="3" Text="Já liquidados (últimos 60 dias)" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8" />
+            <Border Grid.Row="4" Style="{StaticResource Painel}" Padding="0">
+                <DataGrid ItemsSource="{Binding Liquidados}" SelectedItem="{Binding LiquidadoSelecionado, Mode=TwoWay}" AutoGenerateColumns="False"
+                          IsReadOnly="True" SelectionMode="Single" CanUserAddRows="False" HeadersVisibility="Column"
+                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0" Background="Transparent"
+                          RowHeight="36" AutomationProperties.Name="Vendas no cartão já liquidadas">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Venda" Binding="{Binding Venda, Mode=OneWay}" Width="80" />
+                        <DataGridTextColumn Header="Caiu em" Binding="{Binding Data, Mode=OneWay}" Width="100" />
+                        <DataGridTextColumn Header="Conta" Binding="{Binding Conta, Mode=OneWay}" Width="1*" MinWidth="110" />
+                        <DataGridTextColumn Header="Valor" Binding="{Binding Valor, Mode=OneWay}" Width="1*" MinWidth="100" ElementStyle="{StaticResource ColunaNumero}" />
+                        <DataGridTextColumn Header="Taxa" Binding="{Binding Taxa, Mode=OneWay}" Width="90" ElementStyle="{StaticResource ColunaNumero}" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+            <Button Grid.Row="5" Content="Estornar a liquidação selecionada" Style="{StaticResource BotaoSecundario}" Margin="0,10,0,0"
+                    HorizontalAlignment="Left" Command="{Binding EstornarCommand}" />
+        </Grid>
 
-            <Border Grid.Column="2" Style="{StaticResource Painel}" VerticalAlignment="Top">
+        <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
+            <Border Style="{StaticResource Painel}" VerticalAlignment="Top">
                 <StackPanel>
                     <TextBlock Text="O dinheiro caiu" FontSize="18" FontWeight="SemiBold" />
                     <TextBlock Text="Escolha a venda na lista, confira o dia e a conta e informe a taxa que a operadora descontou (se houver). A taxa vira despesa; o valor inteiro da venda continua sendo receita."
@@ -70,6 +79,6 @@
                     <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" />
                 </StackPanel>
             </Border>
-        </Grid>
-    </ScrollViewer>
+        </ScrollViewer>
+    </Grid>
 </UserControl>

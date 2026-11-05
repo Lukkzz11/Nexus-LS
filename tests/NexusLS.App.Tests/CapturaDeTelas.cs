@@ -364,6 +364,10 @@ internal static class Capturador
 
     internal static void Desenhar(Func<FrameworkElement> criarTela, string caminho, int largura, int altura, Action<FrameworkElement>? ajustar = null)
     {
+        // NEXUSLS_PRINTS_TAMANHO=1900x1000 força o tamanho de todas as capturas (para conferir monitor largo)
+        var tamanho = Environment.GetEnvironmentVariable("NEXUSLS_PRINTS_TAMANHO")?.Split('x');
+        if (tamanho is { Length: 2 } && int.TryParse(tamanho[0], out var l) && int.TryParse(tamanho[1], out var a))
+            (largura, altura) = (l, a);
         Interface.Invoke(() =>
         {
             var janela = new Window

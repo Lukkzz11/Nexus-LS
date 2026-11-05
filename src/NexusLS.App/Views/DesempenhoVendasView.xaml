@@ -1,6 +1,7 @@
 <UserControl x:Class="NexusLS.App.Views.DesempenhoVendasView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:v="clr-namespace:NexusLS.App.Views">
 
     <UserControl.Resources>
         <!-- Barra horizontal: rótulo, barra proporcional e o valor por extenso -->
@@ -92,23 +93,24 @@
         <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
             <StackPanel Margin="0,0,8,0">
                 <!-- Indicadores -->
-                <ItemsControl ItemsSource="{Binding Indicadores}">
+                <!-- os indicadores se repartem na largura toda (5 lado a lado em tela larga) -->
+                <ItemsControl ItemsSource="{Binding Indicadores}" Margin="0,0,0,12">
                     <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                        <ItemsPanelTemplate><v:GradeDeCartoes LarguraMinima="220" MaximoColunas="5" Espaco="12" IgualarAltura="True" /></ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border Style="{StaticResource Painel}" Width="250" Margin="0,0,12,12">
+                            <Border Style="{StaticResource Painel}">
                                 <StackPanel>
                                     <TextBlock Text="{Binding Titulo}" Opacity="0.75" />
                                     <TextBlock Text="{Binding Valor}" FontSize="22" FontWeight="SemiBold" Margin="0,4,0,4" />
                                     <TextBlock Text="{Binding Variacao}" FontSize="12">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
-                                                <Setter Property="Foreground" Value="Gray" />
+                                                <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />
                                                 <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding Subiu}" Value="True"><Setter Property="Foreground" Value="SeaGreen" /></DataTrigger>
-                                                    <DataTrigger Binding="{Binding Caiu}" Value="True"><Setter Property="Foreground" Value="Firebrick" /></DataTrigger>
+                                                    <DataTrigger Binding="{Binding Subiu}" Value="True"><Setter Property="Foreground" Value="{StaticResource CorPositivo}" /></DataTrigger>
+                                                    <DataTrigger Binding="{Binding Caiu}" Value="True"><Setter Property="Foreground" Value="{StaticResource CorNegativo}" /></DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
                                         </TextBlock.Style>

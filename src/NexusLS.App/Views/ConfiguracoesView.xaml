@@ -1,6 +1,7 @@
 <UserControl x:Class="NexusLS.App.Views.ConfiguracoesView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:v="clr-namespace:NexusLS.App.Views">
 
     <UserControl.InputBindings>
         <KeyBinding Key="S" Modifiers="Ctrl" Command="{Binding SalvarCommand}" />
@@ -15,14 +16,9 @@
 
         <TabControl Grid.Row="1" Padding="0">
             <TabItem Header="Loja e cupom">
-                <Grid Margin="0,16,0,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="520" />
-                        <ColumnDefinition Width="24" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <ScrollViewer VerticalScrollBarVisibility="Auto">
-                        <StackPanel>
+                <!-- Em tela larga: dados da loja, impressão e prévia lado a lado; em tela estreita os cartões descem -->
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,16,12,0">
+                    <v:GradeDeCartoes LarguraMinima="380" MaximoColunas="3" Margin="0,0,0,24">
                 <Border Style="{StaticResource Painel}">
                     <StackPanel>
                         <TextBlock Text="Dados da loja (aparecem no cupom)" FontSize="18" FontWeight="SemiBold" />
@@ -72,7 +68,7 @@
                     </StackPanel>
                 </Border>
 
-                <Border Style="{StaticResource Painel}" Margin="0,16,0,24">
+                <Border Style="{StaticResource Painel}">
                     <StackPanel>
                         <TextBlock Text="Impressão do cupom" FontSize="18" FontWeight="SemiBold" />
 
@@ -94,13 +90,17 @@
                         <TextBlock Text="Linhas em branco no fim (para o corte da impressora)" Style="{StaticResource Rotulo}" />
                         <TextBox Text="{Binding CupomLinhasFinais, UpdateSourceTrigger=PropertyChanged}" Width="100" HorizontalAlignment="Left" />
 
-                        <CheckBox Content="Imprimir o cupom sozinho ao finalizar a venda" Margin="0,16,0,0"
-                                  IsChecked="{Binding ImprimirAoFinalizar}" />
-                        <CheckBox Content="Perguntar o tamanho no PDV (desligado: vai direto à quantidade quando só há uma opção)"
-                                  Margin="0,10,0,0" IsChecked="{Binding PerguntarTamanho}" />
+                        <CheckBox Margin="0,16,0,0"
+                                  IsChecked="{Binding ImprimirAoFinalizar}">
+                            <TextBlock Text="Imprimir o cupom sozinho ao finalizar a venda" TextWrapping="Wrap" />
+                        </CheckBox>
+                        <CheckBox Margin="0,10,0,0" IsChecked="{Binding PerguntarTamanho}">
+                            <TextBlock Text="Perguntar o tamanho no PDV (desligado: vai direto à quantidade quando só há uma opção)" TextWrapping="Wrap" />
+                        </CheckBox>
 
-                        <CheckBox Content="Abrir o programa direto no PDV (desligado: abre na tela Início; o PDV fica no F1)"
-                                  Margin="0,10,0,0" IsChecked="{Binding AbrirNoPdv}" />
+                        <CheckBox Margin="0,10,0,0" IsChecked="{Binding AbrirNoPdv}">
+                            <TextBlock Text="Abrir o programa direto no PDV (desligado: abre na tela Início; o PDV fica no F1)" TextWrapping="Wrap" />
+                        </CheckBox>
 
                         <StackPanel Orientation="Horizontal" Margin="0,20,0,0">
                             <Button Content="Salvar (Ctrl+S)" Style="{StaticResource BotaoPrimario}"
@@ -112,25 +112,23 @@
                         <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" />
                     </StackPanel>
                 </Border>
-                        </StackPanel>
-                    </ScrollViewer>
-                    <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
-        <StackPanel Grid.Column="2">
-            <TextBlock Text="Prévia do cupom" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,10" />
-            <Border Background="{StaticResource CorPainel}" BorderBrush="{StaticResource CorBorda}" BorderThickness="1" CornerRadius="4"
-                    Padding="20" HorizontalAlignment="Left">
-                <TextBlock Text="{Binding Previa}" FontFamily="Consolas" FontSize="14"
-                           Foreground="{StaticResource CorTexto}" />
-            </Border>
-            <TextBlock Text="Esta é uma venda de exemplo. O cupom real tem os itens e totais da venda."
-                       Foreground="{StaticResource CorTextoSuave}" FontSize="13" Margin="0,10,0,0" TextWrapping="Wrap" />
-        </StackPanel>
-                    </ScrollViewer>
-                </Grid>
+
+                <StackPanel>
+                    <TextBlock Text="Prévia do cupom" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,10" />
+                    <Border Background="{StaticResource CorPainel}" BorderBrush="{StaticResource CorBorda}" BorderThickness="1" CornerRadius="4"
+                            Padding="20" HorizontalAlignment="Left">
+                        <TextBlock Text="{Binding Previa}" FontFamily="Consolas" FontSize="14"
+                                   Foreground="{StaticResource CorTexto}" />
+                    </Border>
+                    <TextBlock Text="Esta é uma venda de exemplo. O cupom real tem os itens e totais da venda."
+                               Foreground="{StaticResource CorTextoSuave}" FontSize="13" Margin="0,10,0,0" TextWrapping="Wrap" />
+                </StackPanel>
+                    </v:GradeDeCartoes>
+                </ScrollViewer>
             </TabItem>
             <TabItem Header="Vendas e aparência">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,16,12,0">
-                    <StackPanel MaxWidth="560" HorizontalAlignment="Left">
+                    <v:GradeDeCartoes LarguraMinima="380" MaximoColunas="2" Margin="0,0,0,24">
 
                 <Border Style="{StaticResource Painel}">
                     <StackPanel>
@@ -143,7 +141,7 @@
                     </StackPanel>
                 </Border>
 
-                <Border Style="{StaticResource Painel}" Margin="0,16,0,24">
+                <Border Style="{StaticResource Painel}">
                     <StackPanel>
                         <TextBlock Text="Vendas" FontSize="18" FontWeight="SemiBold" />
                         <TextBlock Text="Desconto sugerido por peça na Venda Cliente (R$)" Style="{StaticResource Rotulo}" />
@@ -170,44 +168,50 @@
                     </StackPanel>
                 </Border>
 
-                    </StackPanel>
+                    </v:GradeDeCartoes>
                 </ScrollViewer>
             </TabItem>
             <TabItem Header="Parâmetros">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,16,12,0">
-                    <StackPanel MaxWidth="560" HorizontalAlignment="Left">
-                        <Border Style="{StaticResource Painel}">
-                            <StackPanel>
-                                <TextBlock Text="Parâmetros da loja" FontSize="18" FontWeight="SemiBold" />
-                                <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
-                                           Text="Valores que o programa já sugere no dia a dia. Você sempre pode mudar na hora." />
+                    <Border Style="{StaticResource Painel}" Margin="0,0,0,24" VerticalAlignment="Top">
+                        <StackPanel>
+                            <TextBlock Text="Parâmetros da loja" FontSize="18" FontWeight="SemiBold" />
+                            <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
+                                       Text="Valores que o programa já sugere no dia a dia. Você sempre pode mudar na hora." />
 
-                                <TextBlock Text="Troco inicial padrão na abertura do caixa (R$)" Style="{StaticResource Rotulo}" />
-                                <TextBox Text="{Binding FundoTrocoPadrao, UpdateSourceTrigger=PropertyChanged}" Width="160" HorizontalAlignment="Left"
-                                         AutomationProperties.Name="Troco inicial padrão" />
+                            <!-- os três parâmetros lado a lado em tela larga, um embaixo do outro em tela estreita -->
+                            <v:GradeDeCartoes LarguraMinima="300" MaximoColunas="3" Espaco="24">
+                                <StackPanel>
+                                    <TextBlock Text="Troco inicial padrão na abertura do caixa (R$)" Style="{StaticResource Rotulo}" TextWrapping="Wrap" />
+                                    <TextBox Text="{Binding FundoTrocoPadrao, UpdateSourceTrigger=PropertyChanged}" Width="160" HorizontalAlignment="Left"
+                                             AutomationProperties.Name="Troco inicial padrão" />
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="Estoque mínimo sugerido ao cadastrar um produto" Style="{StaticResource Rotulo}" TextWrapping="Wrap" />
+                                    <TextBox Text="{Binding EstoqueMinimoPadrao, UpdateSourceTrigger=PropertyChanged}" Width="160" HorizontalAlignment="Left"
+                                             AutomationProperties.Name="Estoque mínimo padrão" />
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="Margem desejada sugerida no cadastro do produto (%)" Style="{StaticResource Rotulo}" TextWrapping="Wrap" />
+                                    <TextBox Text="{Binding MargemPadrao, UpdateSourceTrigger=PropertyChanged}" Width="160" HorizontalAlignment="Left"
+                                             AutomationProperties.Name="Margem padrão" />
+                                    <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
+                                               Text="Zero deixa o campo em branco." />
+                                </StackPanel>
+                            </v:GradeDeCartoes>
 
-                                <TextBlock Text="Estoque mínimo sugerido ao cadastrar um produto" Style="{StaticResource Rotulo}" />
-                                <TextBox Text="{Binding EstoqueMinimoPadrao, UpdateSourceTrigger=PropertyChanged}" Width="160" HorizontalAlignment="Left"
-                                         AutomationProperties.Name="Estoque mínimo padrão" />
-
-                                <TextBlock Text="Margem desejada sugerida no cadastro do produto (%)" Style="{StaticResource Rotulo}" />
-                                <TextBox Text="{Binding MargemPadrao, UpdateSourceTrigger=PropertyChanged}" Width="160" HorizontalAlignment="Left"
-                                         AutomationProperties.Name="Margem padrão" />
-                                <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
-                                           Text="Zero deixa o campo em branco." />
-
-                                <Button Content="Salvar (Ctrl+S)" Style="{StaticResource BotaoPrimario}" Margin="0,18,0,0" HorizontalAlignment="Left"
-                                        Command="{Binding SalvarCommand}" />
-                                <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" />
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
+                            <Button Content="Salvar (Ctrl+S)" Style="{StaticResource BotaoPrimario}" Margin="0,18,0,0" HorizontalAlignment="Left"
+                                    Command="{Binding SalvarCommand}" />
+                            <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" />
+                        </StackPanel>
+                    </Border>
                 </ScrollViewer>
             </TabItem>
             <TabItem Header="Backup">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,16,12,0">
-                    <StackPanel MaxWidth="560" HorizontalAlignment="Left">
-                <Border Style="{StaticResource Painel}" Margin="0,0,0,24"
+                    <!-- backup local e Google Drive lado a lado em tela larga -->
+                    <v:GradeDeCartoes LarguraMinima="420" MaximoColunas="2" Margin="0,0,0,24">
+                <Border Style="{StaticResource Painel}"
                         Visibility="{Binding TemBackup, Converter={StaticResource BoolVis}}">
                     <StackPanel>
                         <TextBlock Text="Backup dos dados" FontSize="18" FontWeight="SemiBold" />
@@ -264,7 +268,7 @@
                     </StackPanel>
                 </Border>
                     
-                        <Border Style="{StaticResource Painel}" Margin="0,0,0,24" Visibility="{Binding TemGoogle, Converter={StaticResource BoolVis}}">
+                        <Border Style="{StaticResource Painel}" Visibility="{Binding TemGoogle, Converter={StaticResource BoolVis}}">
                             <StackPanel IsEnabled="{Binding GoogleOcupado, Converter={StaticResource BoolInverso}}">
                                 <TextBlock Text="Google Drive" FontSize="18" FontWeight="SemiBold" />
                                 <TextBlock Text="{Binding GoogleSituacao}" Foreground="{StaticResource CorTextoSuave}" Margin="0,4,0,0" />
@@ -298,14 +302,15 @@
                                 </TextBlock>
                             </StackPanel>
                         </Border>
-                    </StackPanel>
+                    </v:GradeDeCartoes>
                 </ScrollViewer>
             </TabItem>
             <TabItem Header="Sistema">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,16,12,0">
-                    <StackPanel MaxWidth="560" HorizontalAlignment="Left">
+                    <!-- os cartões do sistema se repartem em até 3 colunas -->
+                    <v:GradeDeCartoes LarguraMinima="400" MaximoColunas="3" Margin="0,0,0,24">
 
-                <Border Style="{StaticResource Painel}" Margin="0,0,0,16">
+                <Border Style="{StaticResource Painel}">
                     <StackPanel>
                         <TextBlock Text="Este computador" FontSize="18" FontWeight="SemiBold" />
                         <TextBlock Text="Pasta dos dados" Style="{StaticResource Rotulo}" />
@@ -319,7 +324,7 @@
                     </StackPanel>
                 </Border>
 
-                <Border Style="{StaticResource Painel}" Margin="0,0,0,16"
+                <Border Style="{StaticResource Painel}"
                         Visibility="{Binding TemAtualizacao, Converter={StaticResource BoolVis}}">
                     <StackPanel DataContext="{Binding Atualizacao}">
                         <TextBlock Text="Atualizações" FontSize="18" FontWeight="SemiBold" />
@@ -343,7 +348,7 @@
                     </StackPanel>
                 </Border>
 
-                <Border Style="{StaticResource Painel}" Margin="0,0,0,16">
+                <Border Style="{StaticResource Painel}">
                     <StackPanel>
                         <TextBlock Text="Atalhos do teclado" FontSize="18" FontWeight="SemiBold" />
                         <ItemsControl ItemsSource="{Binding Atalhos}" Margin="0,8,0,0">
@@ -363,7 +368,7 @@
                     </StackPanel>
                 </Border>
 
-                <Border Style="{StaticResource Painel}" Margin="0,0,0,24"
+                <Border Style="{StaticResource Painel}"
                         Visibility="{Binding TemLimparDados, Converter={StaticResource BoolVis}}">
                     <StackPanel DataContext="{Binding LimparDados}">
                         <TextBlock Text="Apagar dados" FontSize="18" FontWeight="SemiBold" />
@@ -400,7 +405,7 @@
                         </TextBlock>
                     </StackPanel>
                 </Border>
-                    </StackPanel>
+                    </v:GradeDeCartoes>
                 </ScrollViewer>
             </TabItem>
         </TabControl>

@@ -8,68 +8,75 @@
         </Style>
     </UserControl.Resources>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <Grid Margin="0,0,12,16">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="16" />
-                <ColumnDefinition Width="360" />
-            </Grid.ColumnDefinitions>
+    <Grid Margin="0,0,0,8">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="16" />
+            <ColumnDefinition Width="360" />
+        </Grid.ColumnDefinitions>
 
-            <StackPanel>
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="Cheques recebidos" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" />
-                    <CheckBox Content="Mostrar também compensados, devolvidos e cancelados" Margin="20,0,0,0" VerticalAlignment="Center"
-                              IsChecked="{Binding MostrarTodos}" />
-                </StackPanel>
-                <TextBlock Text="{Binding Resumo}" Margin="0,4,0,8" />
-                <Border Style="{StaticResource Painel}" Padding="0">
-                    <DataGrid ItemsSource="{Binding Cheques}" SelectedItem="{Binding Selecionado, Mode=TwoWay}" AutoGenerateColumns="False"
-                              IsReadOnly="True" SelectionMode="Single" CanUserAddRows="False" HeadersVisibility="Column" MaxHeight="420"
-                              GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0" Background="Transparent"
-                              RowHeight="36" ScrollViewer.HorizontalScrollBarVisibility="Disabled" AutomationProperties.Name="Lista de cheques">
-                        <DataGrid.RowStyle>
-                        <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}" />
-                    </DataGrid.RowStyle>
-                    <DataGrid.Columns>
-                            <DataGridTextColumn Header="Bom para" Binding="{Binding BomPara, Mode=OneWay}" Width="100" />
-                            <DataGridTextColumn Header="Emitente" Binding="{Binding Emitente, Mode=OneWay}" Width="2*" MinWidth="120" />
-                            <DataGridTextColumn Header="Número" Binding="{Binding Numero, Mode=OneWay}" Width="90" />
-                            <DataGridTextColumn Header="Origem" Binding="{Binding Origem, Mode=OneWay}" Width="1.4*" MinWidth="110" />
-                            <DataGridTextColumn Header="Valor" Binding="{Binding Valor, Mode=OneWay}" Width="1*" MinWidth="100" ElementStyle="{StaticResource ColunaNumero}" />
-                            <DataGridTextColumn Header="Situação" Binding="{Binding Situacao, Mode=OneWay}" Width="120" />
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </Border>
-
-                <Border Style="{StaticResource Painel}" Margin="0,16,0,0">
-                    <StackPanel>
-                        <TextBlock Text="Cheque selecionado" FontSize="16" FontWeight="SemiBold" />
-                        <Grid Margin="0,8,0,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" /><ColumnDefinition Width="12" /><ColumnDefinition Width="170" />
-                            </Grid.ColumnDefinitions>
-                            <StackPanel>
-                                <TextBlock Text="Compensou em" Style="{StaticResource Rotulo}" Margin="0,0,0,4" />
-                                <ComboBox ItemsSource="{Binding Contas}" SelectedItem="{Binding ContaCompensacao}" DisplayMemberPath="Nome" Padding="8,7"
-                                          AutomationProperties.Name="Conta onde o cheque compensou" />
-                            </StackPanel>
-                            <StackPanel Grid.Column="2">
-                                <TextBlock Text="No dia" Style="{StaticResource Rotulo}" Margin="0,0,0,4" />
-                                <DatePicker SelectedDateFormat="Short" SelectedDate="{Binding DataCompensacao}" VerticalContentAlignment="Center" />
-                            </StackPanel>
-                        </Grid>
-                        <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
-                            <Button Content="Compensou" Style="{StaticResource BotaoPrimario}" Command="{Binding CompensarCommand}" />
-                            <Button Content="Devolvido pelo banco" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0" Command="{Binding DevolverCommand}" />
-                            <Button Content="Cancelar cheque" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0" Command="{Binding CancelarCommand}" />
-                        </StackPanel>
-                        <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" />
-                    </StackPanel>
-                </Border>
+        <!-- a lista estica até embaixo; o cartão do cheque selecionado fica logo abaixo dela -->
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" MinHeight="160" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Cheques recebidos" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" />
+                <CheckBox Content="Mostrar também compensados, devolvidos e cancelados" Margin="20,0,0,0" VerticalAlignment="Center"
+                          IsChecked="{Binding MostrarTodos}" />
             </StackPanel>
+            <TextBlock Grid.Row="1" Text="{Binding Resumo}" Margin="0,4,0,8" />
+            <Border Grid.Row="2" Style="{StaticResource Painel}" Padding="0">
+                <DataGrid ItemsSource="{Binding Cheques}" SelectedItem="{Binding Selecionado, Mode=TwoWay}" AutoGenerateColumns="False"
+                          IsReadOnly="True" SelectionMode="Single" CanUserAddRows="False" HeadersVisibility="Column"
+                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0" Background="Transparent"
+                          RowHeight="36" ScrollViewer.HorizontalScrollBarVisibility="Disabled" AutomationProperties.Name="Lista de cheques">
+                    <DataGrid.RowStyle>
+                    <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}" />
+                </DataGrid.RowStyle>
+                <DataGrid.Columns>
+                        <DataGridTextColumn Header="Bom para" Binding="{Binding BomPara, Mode=OneWay}" Width="100" />
+                        <DataGridTextColumn Header="Emitente" Binding="{Binding Emitente, Mode=OneWay}" Width="2*" MinWidth="120" />
+                        <DataGridTextColumn Header="Número" Binding="{Binding Numero, Mode=OneWay}" Width="90" />
+                        <DataGridTextColumn Header="Origem" Binding="{Binding Origem, Mode=OneWay}" Width="1.4*" MinWidth="110" />
+                        <DataGridTextColumn Header="Valor" Binding="{Binding Valor, Mode=OneWay}" Width="1*" MinWidth="100" ElementStyle="{StaticResource ColunaNumero}" />
+                        <DataGridTextColumn Header="Situação" Binding="{Binding Situacao, Mode=OneWay}" Width="120" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
 
-            <Border Grid.Column="2" Style="{StaticResource Painel}" VerticalAlignment="Top">
+            <Border Grid.Row="3" Style="{StaticResource Painel}" Margin="0,16,0,0">
+                <StackPanel>
+                    <TextBlock Text="Cheque selecionado" FontSize="16" FontWeight="SemiBold" />
+                    <Grid Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" /><ColumnDefinition Width="12" /><ColumnDefinition Width="170" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="Compensou em" Style="{StaticResource Rotulo}" Margin="0,0,0,4" />
+                            <ComboBox ItemsSource="{Binding Contas}" SelectedItem="{Binding ContaCompensacao}" DisplayMemberPath="Nome" Padding="8,7"
+                                      AutomationProperties.Name="Conta onde o cheque compensou" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="No dia" Style="{StaticResource Rotulo}" Margin="0,0,0,4" />
+                            <DatePicker SelectedDateFormat="Short" SelectedDate="{Binding DataCompensacao}" VerticalContentAlignment="Center" />
+                        </StackPanel>
+                    </Grid>
+                    <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                        <Button Content="Compensou" Style="{StaticResource BotaoPrimario}" Command="{Binding CompensarCommand}" />
+                        <Button Content="Devolvido pelo banco" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0" Command="{Binding DevolverCommand}" />
+                        <Button Content="Cancelar cheque" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0" Command="{Binding CancelarCommand}" />
+                    </StackPanel>
+                    <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" />
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
+            <Border Style="{StaticResource Painel}" VerticalAlignment="Top">
                 <StackPanel>
                     <TextBlock Text="{Binding TituloFormulario}" FontSize="18" FontWeight="SemiBold" />
                     <TextBlock Text="Cheque de venda ou de pagamento de cliente nasce pendente sozinho: aqui você completa número, banco e data. O valor não muda."
@@ -92,6 +99,6 @@
                     </StackPanel>
                 </StackPanel>
             </Border>
-        </Grid>
-    </ScrollViewer>
+        </ScrollViewer>
+    </Grid>
 </UserControl>
