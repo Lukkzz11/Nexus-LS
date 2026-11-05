@@ -50,11 +50,11 @@ public partial class MaisVendidosViewModel : ViewModelBase
             throw new RegraDeNegocioException("Escolha as duas datas do período.");
 
         List<ProdutoMaisVendido> lista;
-        RelatorioVendas vendas;
+        ParticipacoesVendas part;
         try
         {
             lista = await _relatorio.MaisVendidosAsync(de, ate, PorTamanho);
-            vendas = await _relatorio.VendasPorPeriodoAsync(de, ate);
+            part = await _relatorio.ParticipacoesAsync(de, ate);
         }
         catch (RegraDeNegocioException)
         {
@@ -70,19 +70,21 @@ public partial class MaisVendidosViewModel : ViewModelBase
         Ranking.Clear();
         foreach (var p in lista) Ranking.Add(p);
 
-        Preencher(PizzaProdutos, lista.GroupBy(p => p.ProdutoId).Select(g => (g.OrderBy(p => p.Posicao).First().Nome, g.Sum(p => p.FaturamentoCentavos))));
-        Preencher(PizzaCategorias, (vendas.PorCategoria ?? Array.Empty<ResumoCategoria>()).Select(c => (c.Categoria, c.FaturamentoCentavos)));
-        Preencher(PizzaFormas, vendas.PorForma.Select(f => (SelecaoPagamento.Nome(f.Forma), f.TotalCentavos)));
+        // As três pizzas usam a mesma base (itens líquidos, desconto da venda rateado) e fecham com o faturamento do cabeçalho.
+        Preencher(PizzaProdutos, part.Produtos);
+        Preencher(PizzaCategorias, part.Categorias);
+        Preencher(PizzaFormas, part.Formas);
         TemPizzas = PizzaProdutos.Count > 0;
 
         Mensagem = "";
         Resumo = lista.Count == 0
             ? "Nenhuma venda neste período."
             : $"{lista.Count} {(PorTamanho ? "linha(s)" : "produto(s)")} · {lista.Sum(p => p.Quantidade)} unidade(s) · " +
-              $"Faturamento {Dinheiro.Formatar(lista.Sum(p => p.FaturamentoCentavos))}";
+              $"Faturamento {Dinheiro.Formatar(part.TotalLiquidoCentavos)}" +
+              (part.DescontosCentavos > 0 ? $" (já abatidos {Dinheiro.Formatar(part.DescontosCentavos)} de desconto)" : "");
     });
 
-    private static void Preencher(ObservableCollection<FatiaDesenhada> destino, IEnumerable<(string Rotulo, long Valor)> itens)
+    private static void Preencher(ObservableCollection<FatiaDesenhada> destino, IEnumerable<(string Rotulo, long ValorCentavos)> itens)
     {
         destino.Clear();
         foreach (var f in PizzaGrafico.Desenhar(Participacao.Fatias(itens))) destino.Add(f);

@@ -1,19 +1,21 @@
 ﻿<UserControl x:Class="NexusLS.App.Views.MaisVendidosView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:conv="clr-namespace:NexusLS.App.Converters">
 
     <UserControl.Resources>
+        <conv:ChaveParaPincelConverter x:Key="Pincel" />
         <Style x:Key="ColunaNumero" TargetType="TextBlock">
             <Setter Property="HorizontalAlignment" Value="Right" />
         </Style>
 
         <!-- Uma pizza: o desenho (fatias em Path) e a legenda com cor, valor e percentual -->
         <DataTemplate x:Key="FatiaDesenho">
-            <Path Data="{Binding Caminho}" Fill="{Binding Cor}" Stroke="White" StrokeThickness="1" ToolTip="{Binding Legenda}" />
+            <Path Data="{Binding Caminho}" Fill="{Binding ChaveCor, Converter={StaticResource Pincel}}" Stroke="White" StrokeThickness="1" ToolTip="{Binding Legenda}" />
         </DataTemplate>
         <DataTemplate x:Key="FatiaLegenda">
             <StackPanel Orientation="Horizontal" Margin="0,2">
-                <Border Width="12" Height="12" CornerRadius="2" Background="{Binding Cor}" Margin="0,0,8,0" VerticalAlignment="Center" />
+                <Border Width="12" Height="12" CornerRadius="2" Background="{Binding ChaveCor, Converter={StaticResource Pincel}}" Margin="0,0,8,0" VerticalAlignment="Center" />
                 <TextBlock Text="{Binding Legenda}" TextTrimming="CharacterEllipsis" FontSize="12" VerticalAlignment="Center" />
             </StackPanel>
         </DataTemplate>
@@ -86,7 +88,7 @@
             <Border Style="{StaticResource Painel}" Margin="0,0,8,0">
                 <StackPanel>
                     <TextBlock Text="Produtos no faturamento" FontWeight="SemiBold" />
-                    <TextBlock Text="Os 6 que mais faturaram; o resto vira Outros." FontSize="11" Opacity="0.7" Margin="0,0,0,6" />
+                    <TextBlock Text="Itens líquidos de desconto; os 6 maiores, o resto vira Outros." FontSize="11" Opacity="0.7" Margin="0,0,0,6" />
                     <Viewbox Height="130" Margin="0,0,0,6"><ItemsControl ItemsSource="{Binding PizzaProdutos}" ItemTemplate="{StaticResource FatiaDesenho}" Width="200" Height="200"><ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas /></ItemsPanelTemplate></ItemsControl.ItemsPanel></ItemsControl></Viewbox>
                     <ItemsControl ItemsSource="{Binding PizzaProdutos}" ItemTemplate="{StaticResource FatiaLegenda}" />
                 </StackPanel>
@@ -102,7 +104,7 @@
             <Border Grid.Column="2" Style="{StaticResource Painel}" Margin="8,0,0,0">
                 <StackPanel>
                     <TextBlock Text="Por forma de pagamento" FontWeight="SemiBold" />
-                    <TextBlock Text="Como os clientes pagaram (total das vendas)." FontSize="11" Opacity="0.7" Margin="0,0,0,6" />
+                    <TextBlock Text="Como pagaram (mesma base, sem acréscimo do cartão)." FontSize="11" Opacity="0.7" Margin="0,0,0,6" />
                     <Viewbox Height="130" Margin="0,0,0,6"><ItemsControl ItemsSource="{Binding PizzaFormas}" ItemTemplate="{StaticResource FatiaDesenho}" Width="200" Height="200"><ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas /></ItemsPanelTemplate></ItemsControl.ItemsPanel></ItemsControl></Viewbox>
                     <ItemsControl ItemsSource="{Binding PizzaFormas}" ItemTemplate="{StaticResource FatiaLegenda}" />
                 </StackPanel>

@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using NexusLS.Core.Data;
 using NexusLS.Core.Models;
 
@@ -40,6 +40,16 @@ public record RelatorioVendas(
 {
     /// <summary>Total vendido (já com desconto) menos o custo das mercadorias. Não desconta taxas, impostos nem despesas.</summary>
     public long LucroBrutoCentavos => TotalCentavos - CustoTotalCentavos;
+}
+
+/// <summary>Valores líquidos por produto, categoria e forma de pagamento (cada lista soma <see cref="TotalLiquidoCentavos"/>).</summary>
+public record ParticipacoesVendas(
+    IReadOnlyList<(string Rotulo, long ValorCentavos)> Produtos,
+    IReadOnlyList<(string Rotulo, long ValorCentavos)> Categorias,
+    IReadOnlyList<(string Rotulo, long ValorCentavos)> Formas,
+    long ItensBrutoCentavos, long DescontosCentavos)
+{
+    public long TotalLiquidoCentavos => ItensBrutoCentavos - DescontosCentavos;
 }
 
 public class RelatorioService
@@ -138,6 +148,46 @@ public class RelatorioService
             total, validas.Sum(v => v.DescontoCentavos), ticket,
             ResumoPorForma(vendas), porDia,
             linhasCusto.Sum(l => l.Custo), estimado, porCategoria);
+    }
+
+    /// <summary>
+    /// Base das três pizzas do Mais vendidos: o faturamento LÍQUIDO dos itens (preço × quantidade, com o desconto da venda
+    /// rateado). O acréscimo do cartão parcelado não entra (não é faturamento de produto). Vendas canceladas ficam de fora.
+    /// As três listas somam o mesmo total.
+    /// </summary>
+    public async Task<ParticipacoesVendas> ParticipacoesAsync(DateTime de, DateTime ate)
+    {
+        var (inicio, fim) = Periodo(de, ate);
+        await using var db = await _fabrica.CreateDbContextAsync();
+        var vendas = await db.Vendas.AsNoTracking().Include(v => v.Itens)
+            .Where(v => !v.Cancelada && v.DataHora >= inicio && v.DataHora < fim)
+            .OrderBy(v => v.Id).ToListAsync();
+        var categorias = await db.Produtos.AsNoTracking().Select(p => new { p.Id, p.Categoria }).ToDictionaryAsync(p => p.Id, p => p.Categoria);
+
+        var produtos = new Dictionary<int, (string Nome, long Valor)>();
+        var porCategoria = new Dictionary<string, long>();
+        var porForma = new Dictionary<FormaPagamento, long>();
+        long bruto = 0, descontos = 0;
+        foreach (var v in vendas)
+        {
+            var itens = v.Itens.OrderBy(i => i.Id).ToList();
+            var liquidos = Participacao.LiquidarItens(itens.Select(i => i.TotalCentavos).ToList(), v.DescontoCentavos);
+            bruto += itens.Sum(i => i.TotalCentavos);
+            descontos += itens.Sum(i => i.TotalCentavos) - liquidos.Sum();
+            for (var k = 0; k < itens.Count; k++)
+            {
+                var item = itens[k];
+                produtos[item.ProdutoId] = (item.NomeProduto, produtos.GetValueOrDefault(item.ProdutoId).Valor + liquidos[k]);
+                var categoria = categorias.GetValueOrDefault(item.ProdutoId) is { Length: > 0 } c ? c : SemCategoria;
+                porCategoria[categoria] = porCategoria.GetValueOrDefault(categoria) + liquidos[k];
+                porForma[v.FormaPagamento] = porForma.GetValueOrDefault(v.FormaPagamento) + liquidos[k];
+            }
+        }
+        return new ParticipacoesVendas(
+            produtos.Values.Select(p => (p.Nome, p.Valor)).ToList(),
+            porCategoria.Select(c => (c.Key, c.Value)).ToList(),
+            porForma.Select(f => (SelecaoPagamento.Nome(f.Key), f.Value)).ToList(),
+            bruto, descontos);
     }
 
     public const string SemCategoria = "Sem categoria";

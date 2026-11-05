@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Windows.Data;
 using NexusLS.Core.Models;
 using NexusLS.Core.Services;
@@ -84,6 +84,18 @@ public class BoolParaTextoConverter : IValueConverter
         var partes = (parameter as string ?? "Sim|Não").Split('|');
         return value is true ? partes[0] : partes[1];
     }
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}
+
+/// <summary>Nome de um pincel de Tokens.xaml (ex.: "CorSerie1") para o pincel de verdade; cinza se a chave não existir.</summary>
+public class ChaveParaPincelConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        value is string chave && System.Windows.Application.Current?.TryFindResource(chave) is System.Windows.Media.Brush pincel
+            ? pincel
+            : System.Windows.Media.Brushes.Gray;
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
         throw new NotSupportedException();

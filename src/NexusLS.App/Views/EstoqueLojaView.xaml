@@ -134,7 +134,7 @@
                                             Binding="{Binding DataHora, Mode=OneWay, StringFormat='dd/MM/yyyy HH:mm'}" />
                         <DataGridTextColumn Header="Tipo" Width="96"
                                             Binding="{Binding Tipo, Mode=OneWay, Converter={StaticResource TipoMov}}" />
-                        <DataGridTextColumn Header="Tam." Width="100" Binding="{Binding Tamanho, Mode=OneWay}" />
+                        <DataGridTextColumn Header="Tam." Width="125" Binding="{Binding Tamanho, Mode=OneWay}" />
                         <DataGridTextColumn Header="Qtd." Width="52" ElementStyle="{StaticResource ColunaNumero}"
                                             Binding="{Binding Quantidade, Mode=OneWay, StringFormat='{}{0:+#;-#;0}'}" />
                         <DataGridTextColumn Header="Motivo" Binding="{Binding Motivo, Mode=OneWay}" Width="*" MinWidth="80" />

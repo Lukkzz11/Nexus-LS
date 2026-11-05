@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using NexusLS.App.ViewModels;
 using NexusLS.Core.Models;
 using NexusLS.Core.Services;
@@ -124,7 +124,8 @@ public sealed class SobrasEPizzasTests : IDisposable
         var desenho = PizzaGrafico.Desenhar(fatias);
 
         Assert.Equal(7, desenho.Count);
-        Assert.Equal(PizzaGrafico.CorOutros, desenho[^1].Cor);
+        Assert.Equal(PizzaGrafico.CorOutros, desenho[^1].ChaveCor);
+        Assert.Equal("CorSerie1", desenho[0].ChaveCor);
         Assert.All(desenho, d => Assert.StartsWith("M 100,100 L", d.Caminho));
         Assert.Contains("P8 · R$", desenho[0].Legenda);
 
@@ -151,6 +152,29 @@ public sealed class SobrasEPizzasTests : IDisposable
         Assert.Equal(new[] { "Roupas", "Acessórios" }, vm.PizzaCategorias.Select(f => f.Rotulo));
         Assert.Equal(2, vm.PizzaFormas.Count);
         Assert.Contains("71,4%", vm.PizzaProdutos[0].Legenda);
+    }
+
+    [Fact]
+    public async Task As_tres_pizzas_fecham_com_o_cabecalho_mesmo_com_desconto_e_credito_parcelado()
+    {
+        var bone = (await _produtos.CadastrarAsync(new DadosProduto("Boné", null, 2000, 800, 0, Categoria: "Acessórios"), 50)).Id;
+        var camiseta = (await _produtos.CadastrarAsync(new DadosProduto("Camiseta", null, 5000, 2000, 0, Categoria: "Roupas"), 50)).Id;
+        var vendas = new VendaService(_banco.Fabrica);
+        // R$ 70,00 em itens com R$ 10,00 de desconto, no Pix
+        await vendas.FinalizarAsync(new PedidoVenda(new[] { new ItemCarrinho(camiseta, 1, null), new ItemCarrinho(bone, 1, null) }, 1000, FormaPagamento.Pix, null));
+        // R$ 100,00 em itens no crédito em 3x (a venda ganha acréscimo, que não é faturamento de produto)
+        var credito = await vendas.FinalizarAsync(new PedidoVenda(new[] { new ItemCarrinho(camiseta, 2, null) }, 0, FormaPagamento.CartaoCredito, null, Parcelas: 3));
+        Assert.True(credito.TotalCentavos > 10000, "o crédito parcelado deveria ter acréscimo");
+
+        var vm = new MaisVendidosViewModel(new RelatorioService(_banco.Fabrica));
+        await AteAsync(() => vm.PizzaFormas.Count == 2, "pizzas");
+
+        long Soma(IEnumerable<FatiaDesenhada> f) => f.Sum(x => long.Parse(x.Legenda.Split('·')[1].Replace("R$", "").Replace(".", "").Replace(",", "").Replace(" ", "").Trim()));
+        Assert.Equal(16000, Soma(vm.PizzaProdutos));              // 70,00 - 10,00 de desconto + 100,00
+        Assert.Equal(16000, Soma(vm.PizzaCategorias));
+        Assert.Equal(16000, Soma(vm.PizzaFormas));
+        Assert.Contains("Faturamento R$ 160,00", vm.Resumo);
+        Assert.Contains("10,00", vm.Resumo);                      // aviso do desconto já abatido
     }
 
     [Fact]

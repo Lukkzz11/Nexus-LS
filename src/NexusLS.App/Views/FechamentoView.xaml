@@ -105,8 +105,21 @@
                     <TextBlock Text="Relatório do caixa por período" FontWeight="SemiBold" />
                     <TextBlock Text="PDF com turnos, vendas por forma de pagamento, sangrias, reforços, despesas e diferenças. Vendas canceladas não entram."
                                TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource CorTextoSuave}" Margin="0,2,0,8" />
-                    <DatePicker SelectedDateFormat="Short" SelectedDate="{Binding RelatorioDe}" AutomationProperties.Name="Relatório de" Margin="0,0,0,6" />
-                    <DatePicker SelectedDateFormat="Short" SelectedDate="{Binding RelatorioAte}" AutomationProperties.Name="Relatório até" Margin="0,0,0,8" />
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="10" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="De" Style="{StaticResource Rotulo}" />
+                            <DatePicker SelectedDateFormat="Short" SelectedDate="{Binding RelatorioDe}" AutomationProperties.Name="Relatório de" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Até" Style="{StaticResource Rotulo}" />
+                            <DatePicker SelectedDateFormat="Short" SelectedDate="{Binding RelatorioAte}" AutomationProperties.Name="Relatório até" />
+                        </StackPanel>
+                    </Grid>
                     <Button Content="Gerar PDF" Style="{StaticResource BotaoSecundario}" HorizontalAlignment="Left"
                             AutomationProperties.Name="Gerar PDF do caixa" Command="{Binding GerarRelatorioPdfCommand}" />
                 </StackPanel>

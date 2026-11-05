@@ -1,4 +1,4 @@
-namespace NexusLS.Core.Services;
+﻿namespace NexusLS.Core.Services;
 
 /// <summary>Uma fatia de gráfico de pizza: o rótulo, o valor em centavos e a parte do total (0 a 1).</summary>
 public record FatiaPizza(string Rotulo, long ValorCentavos, double Fracao)
@@ -32,5 +32,23 @@ public static class Participacao
         if (resto > 0) fatias.Add((RotuloOutros, resto));
 
         return fatias.Select(f => new FatiaPizza(f.Rotulo, f.Valor, (double)f.Valor / total)).ToList();
+    }
+
+    /// <summary>
+    /// Desconto da venda rateado entre os itens, proporcional ao valor de cada um (o resto dos centavos vai para o maior item),
+    /// para a soma dos itens líquidos ser exatamente (soma dos itens − desconto). Devolve o valor líquido de cada item.
+    /// </summary>
+    public static long[] LiquidarItens(IReadOnlyList<long> totaisCentavos, long descontoCentavos)
+    {
+        var liquidos = totaisCentavos.ToArray();
+        var soma = totaisCentavos.Sum();
+        if (descontoCentavos <= 0 || soma <= 0 || liquidos.Length == 0) return liquidos;
+
+        var desconto = Math.Min(descontoCentavos, soma);
+        var partes = totaisCentavos.Select(t => desconto * t / soma).ToArray();   // arredonda para baixo
+        var maior = Array.IndexOf(totaisCentavos.ToArray(), totaisCentavos.Max());
+        partes[maior] += desconto - partes.Sum();
+        for (var i = 0; i < liquidos.Length; i++) liquidos[i] -= partes[i];
+        return liquidos;
     }
 }

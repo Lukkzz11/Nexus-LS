@@ -1,4 +1,4 @@
-using NexusLS.Core.Services;
+﻿using NexusLS.Core.Services;
 
 namespace NexusLS.Tests;
 
@@ -34,6 +34,21 @@ public class ParticipacaoTests
         Assert.Equal(new[] { "Camisetas", "Bonés" }, fatias.Select(f => f.Rotulo));
         Assert.Equal(4000, fatias[0].ValorCentavos);
         Assert.DoesNotContain(fatias, f => f.Rotulo == "Outros");
+    }
+
+    [Fact]
+    public void Desconto_e_rateado_pelos_itens_e_a_soma_fecha_exata()
+    {
+        var liquidos = Participacao.LiquidarItens(new long[] { 5000, 2000, 3000 }, 1000);
+        Assert.Equal(9000, liquidos.Sum());
+        Assert.Equal(new long[] { 4500, 1800, 2700 }, liquidos);
+
+        // centavos que sobram do arredondamento vão para o maior item
+        var estranho = Participacao.LiquidarItens(new long[] { 3333, 3333, 3334 }, 100);
+        Assert.Equal(9900, estranho.Sum());
+
+        Assert.Equal(new long[] { 100, 200 }, Participacao.LiquidarItens(new long[] { 100, 200 }, 0));
+        Assert.Equal(new long[] { 0, 0 }, Participacao.LiquidarItens(new long[] { 100, 200 }, 99999));   // desconto não passa do total
     }
 
     [Fact]
