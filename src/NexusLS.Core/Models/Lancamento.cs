@@ -41,6 +41,9 @@ public class Lancamento : EntidadeSincronizavel
     /// <summary>Compra de mercadoria que gerou esta conta a pagar (nulo se foi lançada à mão).</summary>
     public int? CompraId { get; set; }
 
+    /// <summary>Como conta no resultado (despesa/receita comum, ou só movimento de saldo). Compra de mercadoria é sempre Padrão.</summary>
+    public ClassificacaoLancamento Classificacao { get; set; } = ClassificacaoLancamento.Padrao;
+
     public string? Observacao { get; set; }
     public DateTime CriadoEm { get; set; }
     public string? Operador { get; set; }
@@ -48,6 +51,20 @@ public class Lancamento : EntidadeSincronizavel
     public bool Cancelado { get; set; }
     public string? MotivoCancelamento { get; set; }
     public DateTime? CanceladoEm { get; set; }
+}
+
+/// <summary>
+/// Como o lançamento conta no resultado. "Padrão" é o comum (despesa da operação, ou receita adicional); os demais mexem
+/// no saldo mas NÃO são despesa nem receita (regra do ERP: aporte, retirada do proprietário, outras entradas/saídas).
+/// Os números ficam gravados no banco: nunca reaproveitar nem trocar um número existente.
+/// </summary>
+public enum ClassificacaoLancamento
+{
+    Padrao = 0,
+    OutraEntrada = 1,          // reembolso, empréstimo, transferência recebida: entra no saldo, não é receita
+    Aporte = 2,                // dinheiro colocado pelo dono: entra no saldo, não é receita
+    RetiradaProprietario = 3,  // dinheiro que o dono tirou: sai do saldo, não é despesa
+    OutraSaida = 4             // pagamento de empréstimo, transferência enviada: sai do saldo, não é despesa
 }
 
 public enum SituacaoLancamento { Aberto, Atrasado, Pago, Cancelado }

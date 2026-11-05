@@ -14,7 +14,8 @@ public record DadosLancamento(
     string? Observacao = null,
     int Parcelas = 1,
     bool JaPago = false,
-    FormaPagamento? Forma = null);
+    FormaPagamento? Forma = null,
+    ClassificacaoLancamento Classificacao = ClassificacaoLancamento.Padrao);
 
 public record FiltroLancamentos(
     DateTime De, DateTime Ate,
@@ -31,9 +32,15 @@ public record ResumoFinanceiro(
     long ReceitasRecebidasCentavos, long DespesasPagasCentavos,
     long AReceberCentavos, long APagarCentavos,
     int QuantidadeAtrasados, long AtrasadosCentavos,
-    IReadOnlyList<ResumoCategoriaFinanceira> DespesasPorCategoria)
+    IReadOnlyList<ResumoCategoriaFinanceira> DespesasPorCategoria,
+    long OutrasEntradasCentavos = 0, long AportesCentavos = 0,
+    long RetiradasProprietarioCentavos = 0, long OutrasSaidasCentavos = 0)
 {
     public long LucroBrutoCentavos => VendasCentavos - CustoMercadoriasCentavos;
+
+    /// <summary>Entradas (outras entradas + aportes) e saídas (retiradas + outras) que mexem no saldo mas ficam FORA do resultado.</summary>
+    public long EntradasForaDoResultadoCentavos => OutrasEntradasCentavos + AportesCentavos;
+    public long SaidasForaDoResultadoCentavos => RetiradasProprietarioCentavos + OutrasSaidasCentavos;
 
     /// <summary>Lucro bruto das vendas + outras receitas recebidas − despesas pagas no período.</summary>
     public long ResultadoCentavos => LucroBrutoCentavos + ReceitasRecebidasCentavos - DespesasPagasCentavos;
@@ -48,6 +55,30 @@ public static class RegrasFinanceiras
     };
 
     public static readonly IReadOnlyList<string> CategoriasReceita = new[] { "Serviços", "Aluguel recebido", "Outras receitas" };
+
+    public static IReadOnlyList<ClassificacaoLancamento> ClassificacoesDe(TipoLancamento tipo) => tipo == TipoLancamento.Receita
+        ? new[] { ClassificacaoLancamento.Padrao, ClassificacaoLancamento.OutraEntrada, ClassificacaoLancamento.Aporte }
+        : new[] { ClassificacaoLancamento.Padrao, ClassificacaoLancamento.RetiradaProprietario, ClassificacaoLancamento.OutraSaida };
+
+    public static string NomeClassificacao(TipoLancamento tipo, ClassificacaoLancamento c) => c switch
+    {
+        ClassificacaoLancamento.Padrao => tipo == TipoLancamento.Receita ? "Receita adicional (conta no resultado)" : "Despesa (conta no resultado)",
+        ClassificacaoLancamento.OutraEntrada => "Outra entrada (não é faturamento)",
+        ClassificacaoLancamento.Aporte => "Aporte do proprietário",
+        ClassificacaoLancamento.RetiradaProprietario => "Retirada do proprietário",
+        _ => "Outra saída (não é despesa)"
+    };
+
+    public static string AjudaClassificacao(TipoLancamento tipo, ClassificacaoLancamento c) => c switch
+    {
+        ClassificacaoLancamento.Padrao => tipo == TipoLancamento.Receita
+            ? "Serviço ou receita da loja que não passou pelo PDV. Entra no resultado."
+            : "Gasto da operação: aluguel, energia, salários, frete... reduz o lucro.",
+        ClassificacaoLancamento.OutraEntrada => "Reembolso, empréstimo, transferência recebida... entra no saldo, mas não é receita nem lucro.",
+        ClassificacaoLancamento.Aporte => "Dinheiro colocado pelo dono. Entra no saldo, não é receita.",
+        ClassificacaoLancamento.RetiradaProprietario => "Dinheiro que o dono tirou. Sai do saldo, mas não é despesa da loja.",
+        _ => "Pagamento de empréstimo, transferência enviada... sai do saldo sem entrar como despesa."
+    };
 
     public static SituacaoLancamento Situacao(Lancamento l, DateTime hoje) =>
         l.Cancelado ? SituacaoLancamento.Cancelado
@@ -96,6 +127,7 @@ public class FinanceiroService
     public static List<Lancamento> Montar(DadosLancamento dados, DateTime agora, string? operador = null, int? compraId = null)
     {
         Validar(dados.Descricao, dados.ValorCentavos);
+        ValidarClassificacao(dados.Tipo, dados.Classificacao, compraId is not null);
         if (dados.Parcelas is < 1 or > 60) throw new RegraDeNegocioException("O número de parcelas deve ficar entre 1 e 60.");
         if (dados.JaPago && dados.Parcelas > 1)
             throw new RegraDeNegocioException("Um lançamento parcelado não pode ser marcado como já pago: pague as parcelas uma a uma.");
@@ -116,6 +148,7 @@ public class FinanceiroService
                 Categoria = Limpar(dados.Categoria),
                 Contraparte = Limpar(dados.Contraparte),
                 Observacao = Limpar(dados.Observacao),
+                Classificacao = dados.Classificacao,
                 ValorCentavos = valores[i],
                 Vencimento = dados.Vencimento.Date.AddMonths(i),
                 PagoEm = dados.JaPago ? agora : null,
@@ -132,11 +165,12 @@ public class FinanceiroService
     }
 
     public async Task EditarAsync(int id, string descricao, long valorCentavos, DateTime vencimento,
-        string? categoria, string? contraparte, string? observacao)
+        string? categoria, string? contraparte, string? observacao, ClassificacaoLancamento? classificacao = null)
     {
         Validar(descricao, valorCentavos);
         await using var db = await _fabrica.CreateDbContextAsync();
         var l = await ObterAsync(db, id);
+        if (classificacao is { } nova) ValidarClassificacao(l.Tipo, nova, l.CompraId is not null);
         if (l.Cancelado) throw new RegraDeNegocioException("Lançamento cancelado não pode ser editado.");
         if (l.PagoEm is not null) throw new RegraDeNegocioException("Lançamento já pago não pode ser editado. Estorne o pagamento primeiro.");
 
@@ -146,6 +180,7 @@ public class FinanceiroService
         l.Categoria = Limpar(categoria);
         l.Contraparte = Limpar(contraparte);
         l.Observacao = Limpar(observacao);
+        if (classificacao is { } c) l.Classificacao = c;
         await db.SaveChangesAsync();
     }
 
@@ -228,13 +263,16 @@ public class FinanceiroService
         // Conta paga de uma COMPRA de mercadoria não é despesa do período: o custo dela já entra no lucro bruto quando a peça
         // é vendida. Contar as duas coisas descontaria o custo duas vezes no resultado.
         var pagosNoPeriodo = todos.Where(l => l.PagoEm >= inicio && l.PagoEm < fim && l.CompraId is null).ToList();
+        // Só a classificação "padrão" é despesa/receita do resultado; aporte, retirada e afins movem o saldo e ficam de fora.
+        var resultado = pagosNoPeriodo.Where(l => l.Classificacao == ClassificacaoLancamento.Padrao).ToList();
+        long Soma(ClassificacaoLancamento c) => pagosNoPeriodo.Where(l => l.Classificacao == c).Sum(l => l.ValorCentavos);
         var abertos = todos.Where(l => l.PagoEm is null).ToList();
         var atrasados = abertos.Where(l => l.Vencimento.Date < hoje.Date).ToList();
 
         // "A pagar / a receber": o que está em aberto e vence até o fim do período (inclui o atrasado de antes).
         var abertosAteOFim = abertos.Where(l => l.Vencimento < fim).ToList();
 
-        var porCategoria = pagosNoPeriodo.Where(l => l.Tipo == TipoLancamento.Despesa)
+        var porCategoria = resultado.Where(l => l.Tipo == TipoLancamento.Despesa)
             .GroupBy(l => l.Categoria ?? "Sem categoria")
             .Select(g => new ResumoCategoriaFinanceira(g.Key, g.Sum(l => l.ValorCentavos)))
             .OrderByDescending(c => c.TotalCentavos).ToList();
@@ -242,12 +280,22 @@ public class FinanceiroService
         return new ResumoFinanceiro(
             de.Date, ate.Date,
             vendas.TotalCentavos, vendas.CustoTotalCentavos,
-            pagosNoPeriodo.Where(l => l.Tipo == TipoLancamento.Receita).Sum(l => l.ValorCentavos),
-            pagosNoPeriodo.Where(l => l.Tipo == TipoLancamento.Despesa).Sum(l => l.ValorCentavos),
+            resultado.Where(l => l.Tipo == TipoLancamento.Receita).Sum(l => l.ValorCentavos),
+            resultado.Where(l => l.Tipo == TipoLancamento.Despesa).Sum(l => l.ValorCentavos),
             abertosAteOFim.Where(l => l.Tipo == TipoLancamento.Receita).Sum(l => l.ValorCentavos),
             abertosAteOFim.Where(l => l.Tipo == TipoLancamento.Despesa).Sum(l => l.ValorCentavos),
             atrasados.Count, atrasados.Sum(l => l.ValorCentavos),
-            porCategoria);
+            porCategoria,
+            Soma(ClassificacaoLancamento.OutraEntrada), Soma(ClassificacaoLancamento.Aporte),
+            Soma(ClassificacaoLancamento.RetiradaProprietario), Soma(ClassificacaoLancamento.OutraSaida));
+    }
+
+    private static void ValidarClassificacao(TipoLancamento tipo, ClassificacaoLancamento classificacao, bool deCompra)
+    {
+        if (!RegrasFinanceiras.ClassificacoesDe(tipo).Contains(classificacao))
+            throw new RegraDeNegocioException("Essa classificação não vale para este tipo de lançamento.");
+        if (deCompra && classificacao != ClassificacaoLancamento.Padrao)
+            throw new RegraDeNegocioException("Conta de compra de mercadoria não pode ter classificação especial.");
     }
 
     private static async Task<Lancamento> ObterAsync(PdvDbContext db, int id) =>

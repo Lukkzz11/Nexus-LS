@@ -26,7 +26,11 @@ public enum ClasseFin
     Retirada = 7,             // sangria: tirou da gaveta, não é despesa
     Reforco = 8,              // colocou na gaveta, não é receita
     Devolucao = 9,
-    Transferencia = 10
+    Transferencia = 10,
+    OutraEntrada = 11,        // entra no saldo, não é receita (reembolso, empréstimo...)
+    Aporte = 12,              // dono colocou dinheiro: não é receita
+    RetiradaProprietario = 13,// dono tirou dinheiro: não é despesa
+    OutraSaida = 14           // sai do saldo, não é despesa (pagamento de empréstimo...)
 }
 
 /// <summary>Uma conta onde o dinheiro fica: a gaveta do caixa, o cofre ou uma conta de banco.</summary>
@@ -86,7 +90,9 @@ public record PeriodoFin(
     long EntradasRealizadasCentavos, long SaidasRealizadasCentavos,
     long ReceitaBrutaCentavos, long DevolucoesCentavos, long CustoMercadoriasCentavos,
     long OutrasReceitasCentavos, long DespesasOperacionaisCentavos,
-    IReadOnlyDictionary<string, long> DespesasPorCategoria)
+    IReadOnlyDictionary<string, long> DespesasPorCategoria,
+    long AportesCentavos = 0, long OutrasEntradasCentavos = 0,
+    long RetiradasProprietarioCentavos = 0, long OutrasSaidasCentavos = 0)
 {
     public long FluxoCaixaCentavos => EntradasRealizadasCentavos - SaidasRealizadasCentavos;
     public long ReceitaLiquidaCentavos => ReceitaBrutaCentavos - DevolucoesCentavos;

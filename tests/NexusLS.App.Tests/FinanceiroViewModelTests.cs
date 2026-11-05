@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using NexusLS.App.ViewModels;
 using NexusLS.Core.Models;
 using NexusLS.Core.Services;
@@ -192,5 +192,97 @@ public sealed class FinanceiroViewModelTests : IDisposable
         Assert.Contains("Aluguel", texto);
         Assert.Contains("A pagar", texto);
         Assert.Contains("1000,00", texto);
+    }
+
+    // ---------- Fase 2.5: classificações e categorias ----------
+
+    private async Task<FinanceiroViewModel> CriarComCategoriasAsync()
+    {
+        var vm = new FinanceiroViewModel(_servico, () => _agora, new CategoriaFinanceiraService(_banco.Fabrica, () => _agora));
+        await vm.Carregamento;
+        return vm;
+    }
+
+    [Fact]
+    public async Task Classificacoes_oferecidas_acompanham_o_tipo_escolhido()
+    {
+        var vm = await CriarAsync();
+
+        Assert.Equal(new[] { ClassificacaoLancamento.Padrao, ClassificacaoLancamento.RetiradaProprietario, ClassificacaoLancamento.OutraSaida },
+            vm.Classificacoes.Select(c => c.Valor));
+
+        vm.FormEhDespesa = false;
+
+        Assert.Equal(new[] { ClassificacaoLancamento.Padrao, ClassificacaoLancamento.OutraEntrada, ClassificacaoLancamento.Aporte },
+            vm.Classificacoes.Select(c => c.Valor));
+        Assert.Equal(ClassificacaoLancamento.Padrao, vm.FormClassificacao.Valor);
+    }
+
+    [Fact]
+    public async Task Aporte_lancado_pela_tela_fica_fora_do_resultado_e_aparece_nas_entradas_fora_dele()
+    {
+        var vm = await CriarAsync();
+        vm.NovoCommand.Execute(null);
+        vm.FormEhDespesa = false;
+        vm.FormDescricao = "Dinheiro do dono";
+        vm.FormValor = "1.000,00";
+        vm.FormVencimento = new DateTime(2026, 10, 10);
+        vm.FormJaPago = true;
+        vm.FormClassificacao = vm.Classificacoes.Single(c => c.Valor == ClassificacaoLancamento.Aporte);
+
+        await vm.SalvarCommand.ExecuteAsync(null);
+
+        Assert.Equal(Core.Services.Dinheiro.Formatar(0), vm.ReceitasTexto);
+        Assert.Equal(Core.Services.Dinheiro.Formatar(0), vm.ResultadoTexto);
+        Assert.True(vm.TemForaDoResultado);
+        Assert.Contains(Core.Services.Dinheiro.Formatar(100000), vm.EntradasForaTexto);
+        Assert.Contains("Aporte do proprietário", vm.Linhas.Single().Detalhe);
+    }
+
+    [Fact]
+    public async Task Editar_traz_a_classificacao_do_lancamento_para_o_formulario()
+    {
+        var vm = await CriarAsync();
+        vm.NovoCommand.Execute(null);
+        vm.FormDescricao = "Retirada do mês";
+        vm.FormValor = "300,00";
+        vm.FormVencimento = new DateTime(2026, 10, 25);
+        vm.FormClassificacao = vm.Classificacoes.Single(c => c.Valor == ClassificacaoLancamento.RetiradaProprietario);
+        await vm.SalvarCommand.ExecuteAsync(null);
+
+        vm.Selecionada = vm.Linhas.Single();
+        vm.EditarSelecionadaCommand.Execute(null);
+
+        Assert.Equal(ClassificacaoLancamento.RetiradaProprietario, vm.FormClassificacao.Valor);
+    }
+
+    [Fact]
+    public async Task Categoria_nova_entra_na_lista_do_formulario_e_desativada_sai()
+    {
+        var vm = await CriarComCategoriasAsync();
+        Assert.Contains("Aluguel", vm.Categorias);
+
+        vm.NovaCategoria = "Contador";
+        await vm.AdicionarCategoriaCommand.ExecuteAsync(null);
+        Assert.Contains("Contador", vm.Categorias);
+        Assert.Equal("", vm.NovaCategoria);
+
+        var linha = vm.CategoriasGerenciadas.Single(c => c.Nome == "Contador");
+        await vm.AlternarCategoriaCommand.ExecuteAsync(linha);
+
+        Assert.DoesNotContain("Contador", vm.Categorias);
+        Assert.False(vm.CategoriasGerenciadas.Single(c => c.Nome == "Contador").Ativa);
+    }
+
+    [Fact]
+    public async Task Categoria_repetida_mostra_o_aviso_e_nao_duplica()
+    {
+        var vm = await CriarComCategoriasAsync();
+        vm.NovaCategoria = "aluguel";
+
+        await vm.AdicionarCategoriaCommand.ExecuteAsync(null);
+
+        Assert.Contains("já existe", vm.Mensagem, StringComparison.OrdinalIgnoreCase);
+        Assert.Single(vm.CategoriasGerenciadas, c => c.Nome == "Aluguel" && c.TipoTexto == "A pagar");
     }
 }

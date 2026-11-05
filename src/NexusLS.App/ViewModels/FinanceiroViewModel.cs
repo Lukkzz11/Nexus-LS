@@ -12,6 +12,16 @@ public record OpcaoFormaFinanceira(FormaPagamento Forma, string Nome);
 
 public record OpcaoFiltro<T>(T? Valor, string Nome) where T : struct;
 
+/// <summary>Como o lançamento conta no resultado, com o texto de ajuda para o formulário.</summary>
+public record OpcaoClassificacao(ClassificacaoLancamento Valor, string Nome, string Ajuda);
+
+/// <summary>Uma categoria na lista de configuração.</summary>
+public record LinhaCategoriaFinanceira(int Id, string Nome, string TipoTexto, bool Ativa)
+{
+    public string SituacaoTexto => Ativa ? "Em uso" : "Desativada";
+    public string TextoAlternar => Ativa ? "Desativar" : "Reativar";
+}
+
 /// <summary>Uma linha da lista de contas, com os textos prontos.</summary>
 public record LinhaLancamento(Lancamento Lancamento, SituacaoLancamento Situacao)
 {
@@ -20,7 +30,9 @@ public record LinhaLancamento(Lancamento Lancamento, SituacaoLancamento Situacao
     public int Id => Lancamento.Id;
     public string Vencimento => Lancamento.Vencimento.ToString("dd/MM/yyyy", PtBr);
     public string Descricao => Lancamento.Descricao;
-    public string Detalhe => string.Join(" · ", new[] { Lancamento.Categoria, Lancamento.Contraparte }.Where(t => !string.IsNullOrEmpty(t)));
+    public string Detalhe => string.Join(" · ", new[] { Lancamento.Categoria, Lancamento.Contraparte, ClassificacaoTexto }.Where(t => !string.IsNullOrEmpty(t)));
+    private string? ClassificacaoTexto => Lancamento.Classificacao == ClassificacaoLancamento.Padrao
+        ? null : RegrasFinanceiras.NomeClassificacao(Lancamento.Tipo, Lancamento.Classificacao);
     public string TipoTexto => Lancamento.Tipo == TipoLancamento.Despesa ? "A pagar" : "A receber";
     public string ValorTexto => (Lancamento.Tipo == TipoLancamento.Despesa ? "−" : "+") + Dinheiro.Formatar(Lancamento.ValorCentavos);
     public string SituacaoTexto => Situacao switch
@@ -40,14 +52,18 @@ public record LinhaLancamento(Lancamento Lancamento, SituacaoLancamento Situacao
 public partial class FinanceiroViewModel : ViewModelBase
 {
     private readonly FinanceiroService _financeiro;
+    private readonly CategoriaFinanceiraService? _categoriasServico;
     private readonly Func<DateTime> _agora;
+    private IReadOnlyList<string> _categoriasDespesa = RegrasFinanceiras.CategoriasDespesa;
+    private IReadOnlyList<string> _categoriasReceita = RegrasFinanceiras.CategoriasReceita;
     private int _versao;
     private bool _definindoPeriodo;
     private IReadOnlyList<Lancamento> _ultimaLista = Array.Empty<Lancamento>();
 
-    public FinanceiroViewModel(FinanceiroService financeiro, Func<DateTime>? agora = null)
+    public FinanceiroViewModel(FinanceiroService financeiro, Func<DateTime>? agora = null, CategoriaFinanceiraService? categorias = null)
     {
         _financeiro = financeiro;
+        _categoriasServico = categorias;
         _agora = agora ?? (() => DateTime.Now);
         var hoje = _agora().Date;
         _de = new DateTime(hoje.Year, hoje.Month, 1);
@@ -57,6 +73,7 @@ public partial class FinanceiroViewModel : ViewModelBase
         _pagarForma = Formas[0];
         _filtroTipo = FiltrosTipo[0];
         _filtroSituacao = FiltrosSituacao[0];
+        _formClassificacao = OpcoesClassificacao(true)[0];
         Carregamento = CarregarAsync();
     }
 
@@ -85,7 +102,21 @@ public partial class FinanceiroViewModel : ViewModelBase
     public ObservableCollection<LinhaLancamento> Linhas { get; } = new();
     public ObservableCollection<string> DespesasPorCategoria { get; } = new();
 
-    public IReadOnlyList<string> Categorias => FormEhDespesa ? RegrasFinanceiras.CategoriasDespesa : RegrasFinanceiras.CategoriasReceita;
+    public IReadOnlyList<string> Categorias => FormEhDespesa ? _categoriasDespesa : _categoriasReceita;
+
+    /// <summary>As classificações que valem para o tipo escolhido (a primeira é a comum, que conta no resultado).</summary>
+    public IReadOnlyList<OpcaoClassificacao> Classificacoes => OpcoesClassificacao(FormEhDespesa);
+
+    private static IReadOnlyList<OpcaoClassificacao> OpcoesClassificacao(bool despesa)
+    {
+        var tipo = despesa ? TipoLancamento.Despesa : TipoLancamento.Receita;
+        return RegrasFinanceiras.ClassificacoesDe(tipo)
+            .Select(c => new OpcaoClassificacao(c, RegrasFinanceiras.NomeClassificacao(tipo, c), RegrasFinanceiras.AjudaClassificacao(tipo, c))).ToList();
+    }
+
+    public ObservableCollection<LinhaCategoriaFinanceira> CategoriasGerenciadas { get; } = new();
+    [ObservableProperty] private string _novaCategoria = "";
+    [ObservableProperty] private bool _novaCategoriaEhDespesa = true;
 
     // ----- Período e filtros -----
     [ObservableProperty] private DateTime? _de;
@@ -110,13 +141,19 @@ public partial class FinanceiroViewModel : ViewModelBase
     [ObservableProperty] private bool _resultadoNegativo;
     [ObservableProperty] private string _aPagarTexto = "";
     [ObservableProperty] private string _aReceberTexto = "";
+    [ObservableProperty] private string _entradasForaTexto = "";
+    [ObservableProperty] private string _saidasForaTexto = "";
+    [ObservableProperty] private bool _temForaDoResultado;
     [ObservableProperty] private string _atrasadosTexto = "";
     [ObservableProperty] private bool _temAtrasados;
 
     // ----- Formulário -----
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Categorias))]
+    [NotifyPropertyChangedFor(nameof(Classificacoes))]
     private bool _formEhDespesa = true;
+    [ObservableProperty] private OpcaoClassificacao _formClassificacao;
+    partial void OnFormEhDespesaChanged(bool value) => FormClassificacao = OpcoesClassificacao(value)[0];
     [ObservableProperty] private string _formDescricao = "";
     [ObservableProperty] private string _formCategoria = "";
     [ObservableProperty] private string _formContraparte = "";
@@ -185,6 +222,7 @@ public partial class FinanceiroViewModel : ViewModelBase
 
         var lista = await _financeiro.ListarAsync(new FiltroLancamentos(de, ate, FiltroTipo?.Valor, FiltroSituacao?.Valor, Busca));
         var resumo = await _financeiro.ResumoAsync(de, ate);
+        if (_categoriasServico is not null) await CarregarCategoriasAsync();
         if (versao != _versao) return; // chegou uma consulta mais nova: esta resposta já é velha
 
         var hoje = _agora();
@@ -202,12 +240,46 @@ public partial class FinanceiroViewModel : ViewModelBase
         ResultadoNegativo = resumo.ResultadoCentavos < 0;
         APagarTexto = Dinheiro.Formatar(resumo.APagarCentavos);
         AReceberTexto = Dinheiro.Formatar(resumo.AReceberCentavos);
+        TemForaDoResultado = resumo.EntradasForaDoResultadoCentavos + resumo.SaidasForaDoResultadoCentavos > 0;
+        EntradasForaTexto = $"Entradas fora do resultado (aportes e outras): {Dinheiro.Formatar(resumo.EntradasForaDoResultadoCentavos)}";
+        SaidasForaTexto = $"Saídas fora do resultado (retiradas e outras): {Dinheiro.Formatar(resumo.SaidasForaDoResultadoCentavos)}";
         TemAtrasados = resumo.QuantidadeAtrasados > 0;
         AtrasadosTexto = TemAtrasados
             ? $"{resumo.QuantidadeAtrasados} conta(s) atrasada(s): {Dinheiro.Formatar(resumo.AtrasadosCentavos)}"
             : "Nenhuma conta atrasada";
         DespesasPorCategoria.Clear();
         foreach (var c in resumo.DespesasPorCategoria) DespesasPorCategoria.Add($"{c.Categoria}: {Dinheiro.Formatar(c.TotalCentavos)}");
+    });
+
+    // ================= categorias =================
+
+    private async Task CarregarCategoriasAsync()
+    {
+        var todas = await _categoriasServico!.ListarAsync(incluirInativas: true);
+        _categoriasDespesa = todas.Where(c => c.Tipo == TipoLancamento.Despesa && c.Ativa).Select(c => c.Nome).ToList();
+        _categoriasReceita = todas.Where(c => c.Tipo == TipoLancamento.Receita && c.Ativa).Select(c => c.Nome).ToList();
+        CategoriasGerenciadas.Clear();
+        foreach (var c in todas)
+            CategoriasGerenciadas.Add(new LinhaCategoriaFinanceira(c.Id, c.Nome, c.Tipo == TipoLancamento.Despesa ? "A pagar" : "A receber", c.Ativa));
+        OnPropertyChanged(nameof(Categorias));
+    }
+
+    [RelayCommand]
+    private Task AdicionarCategoriaAsync() => ExecutarAsync(async () =>
+    {
+        if (_categoriasServico is null) return;
+        await _categoriasServico.CriarAsync(NovaCategoriaEhDespesa ? TipoLancamento.Despesa : TipoLancamento.Receita, NovaCategoria);
+        NovaCategoria = "";
+        await CarregarCategoriasAsync();
+        MostrarSucesso("Categoria salva.");
+    });
+
+    [RelayCommand]
+    private Task AlternarCategoriaAsync(LinhaCategoriaFinanceira? linha) => ExecutarAsync(async () =>
+    {
+        if (_categoriasServico is null || linha is null) return;
+        await _categoriasServico.DefinirAtivaAsync(linha.Id, !linha.Ativa);
+        await CarregarCategoriasAsync();
     });
 
     // ================= formulário =================
@@ -219,6 +291,7 @@ public partial class FinanceiroViewModel : ViewModelBase
         FormDescricao = FormCategoria = FormContraparte = FormValor = FormObservacao = "";
         FormParcelas = "1";
         FormJaPago = false;
+        FormClassificacao = Classificacoes[0];
         FormVencimento = _agora().Date;
         Mensagem = "";
     }
@@ -230,6 +303,7 @@ public partial class FinanceiroViewModel : ViewModelBase
         var l = s.Lancamento;
         EditandoId = l.Id;
         FormEhDespesa = l.Tipo == TipoLancamento.Despesa;
+        FormClassificacao = Classificacoes.First(c => c.Valor == l.Classificacao);
         FormDescricao = l.Descricao;
         FormCategoria = l.Categoria ?? "";
         FormContraparte = l.Contraparte ?? "";
@@ -252,7 +326,7 @@ public partial class FinanceiroViewModel : ViewModelBase
         string sucesso;
         if (EditandoId is int id)
         {
-            await _financeiro.EditarAsync(id, FormDescricao, valor, vencimento, FormCategoria, FormContraparte, FormObservacao);
+            await _financeiro.EditarAsync(id, FormDescricao, valor, vencimento, FormCategoria, FormContraparte, FormObservacao, FormClassificacao.Valor);
             sucesso = "Lançamento atualizado.";
         }
         else
@@ -260,7 +334,7 @@ public partial class FinanceiroViewModel : ViewModelBase
             if (!int.TryParse(FormParcelas, out var parcelas)) throw new RegraDeNegocioException("Informe quantas parcelas (1 para à vista).");
             var criados = await _financeiro.CriarAsync(new DadosLancamento(
                 FormEhDespesa ? TipoLancamento.Despesa : TipoLancamento.Receita, FormDescricao, valor, vencimento,
-                FormCategoria, FormContraparte, FormObservacao, parcelas, FormJaPago, FormForma.Forma));
+                FormCategoria, FormContraparte, FormObservacao, parcelas, FormJaPago, FormForma.Forma, FormClassificacao.Valor));
             sucesso = criados.Count > 1 ? $"{criados.Count} parcelas lançadas." : "Lançamento salvo.";
         }
         Novo();

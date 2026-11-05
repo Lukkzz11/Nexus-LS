@@ -28,6 +28,7 @@ public sealed class ContainerDeServicos
     public ProducaoService Producao { get; }
     public AgendaService Agenda { get; }
     public FinanceiroService Financeiro { get; }
+    public CategoriaFinanceiraService CategoriasFinanceiras { get; }
     public FornecedorService Fornecedores { get; }
     public CompraService Compras { get; }
     public PedidoService Pedidos { get; }
@@ -80,6 +81,7 @@ public sealed class ContainerDeServicos
         Producao = new(fabrica, Produtos);
         Agenda = new(fabrica);
         Financeiro = new(fabrica);
+        CategoriasFinanceiras = new(fabrica);
         Fornecedores = new(fabrica);
         Compras = new(fabrica);
         Pedidos = new(fabrica);

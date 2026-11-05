@@ -26,6 +26,25 @@ public class PosicaoFinanceiraService
         _agora = agora ?? (() => DateTime.Now);
     }
 
+    /// <summary>Como o lançamento do Financeiro entra no motor: compra de mercadoria e classificações especiais não são despesa/receita.</summary>
+    internal static ClasseFin ClasseDoLancamento(Lancamento l)
+    {
+        if (l.Tipo == TipoLancamento.Receita)
+            return l.Classificacao switch
+            {
+                ClassificacaoLancamento.Aporte => ClasseFin.Aporte,
+                ClassificacaoLancamento.OutraEntrada => ClasseFin.OutraEntrada,
+                _ => ClasseFin.ReceitaOutra
+            };
+        if (l.CompraId is not null) return ClasseFin.CompraEstoque;
+        return l.Classificacao switch
+        {
+            ClassificacaoLancamento.RetiradaProprietario => ClasseFin.RetiradaProprietario,
+            ClassificacaoLancamento.OutraSaida => ClasseFin.OutraSaida,
+            _ => ClasseFin.Despesa
+        };
+    }
+
     public async Task<PosicaoFinanceira> CalcularAsync(DateTime de, DateTime ate)
     {
         await new ContaFinanceiraService(_fabrica, _agora).GarantirContaPadraoAsync();
@@ -138,7 +157,7 @@ public class PosicaoFinanceiraService
         foreach (var l in lancamentos)
         {
             var entrada = l.Tipo == TipoLancamento.Receita;
-            var classe = entrada ? ClasseFin.ReceitaOutra : l.CompraId is not null ? ClasseFin.CompraEstoque : ClasseFin.Despesa;
+            var classe = ClasseDoLancamento(l);
             var sentido = entrada ? SentidoFin.Entrada : SentidoFin.Saida;
             if (l.PagoEm is DateTime pago)
                 lancs.Add(new($"lanc:{l.Id}", OrigemFin.Lancamento, classe, sentido, SituacaoFin.Realizado, l.ValorCentavos, pago,

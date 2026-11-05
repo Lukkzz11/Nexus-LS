@@ -49,6 +49,43 @@ namespace NexusLS.Core.Migrations
                     b.ToTable("Atividades");
                 });
 
+            modelBuilder.Entity("NexusLS.Core.Models.CategoriaFinanceira", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("Ativa")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("AtualizadoEm")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CriadaEm")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("Guid")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Tipo")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Guid")
+                        .IsUnique();
+
+                    b.HasIndex("Tipo", "Nome")
+                        .IsUnique();
+
+                    b.ToTable("CategoriasFinanceiras");
+                });
+
             modelBuilder.Entity("NexusLS.Core.Models.ChequeRecebido", b =>
                 {
                     b.Property<int>("Id")
@@ -821,6 +858,9 @@ namespace NexusLS.Core.Migrations
                     b.Property<string>("Categoria")
                         .HasMaxLength(60)
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("Classificacao")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int?>("CompraId")
                         .HasColumnType("INTEGER");

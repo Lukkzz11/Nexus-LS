@@ -28,6 +28,7 @@ public class PdvDbContext : DbContext
     public DbSet<ImportacaoErpItem> ImportacaoErp => Set<ImportacaoErpItem>();
     public DbSet<ImportacaoErpCursor> ImportacaoErpCursores => Set<ImportacaoErpCursor>();
     public DbSet<Lancamento> Lancamentos => Set<Lancamento>();
+    public DbSet<CategoriaFinanceira> CategoriasFinanceiras => Set<CategoriaFinanceira>();
     public DbSet<Fornecedor> Fornecedores => Set<Fornecedor>();
     public DbSet<Compromisso> Compromissos => Set<Compromisso>();
     public DbSet<MateriaPrima> MateriasPrimas => Set<MateriaPrima>();
@@ -327,6 +328,12 @@ public class PdvDbContext : DbContext
             e.HasIndex(l => l.PagoEm);
             e.HasIndex(l => l.GrupoId);
             e.HasIndex(l => l.CompraId);
+        });
+
+        modelBuilder.Entity<CategoriaFinanceira>(e =>
+        {
+            e.Property(c => c.Nome).IsRequired().HasMaxLength(60);
+            e.HasIndex(c => new { c.Tipo, c.Nome }).IsUnique();
         });
 
         modelBuilder.Entity<TurnoCaixa>(e =>

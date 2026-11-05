@@ -12,6 +12,7 @@ namespace NexusLS.Core.Financeiro;
 ///  - Venda a prazo é receita na data da venda; o recebimento depois só aumenta o saldo (não é receita de novo).
 ///  - Compra de mercadoria é saída de dinheiro, mas não é despesa: o custo entra no resultado quando a peça é vendida.
 ///  - Retirada (sangria) e reforço de caixa não são despesa nem receita.
+///  - Aporte, outra entrada, retirada do proprietário e outra saída movem o saldo mas ficam FORA do resultado.
 ///  - Lançamento sem conta não entra em nenhum saldo; vira aviso, para ser corrigido.
 /// </summary>
 public static class MotorFinanceiro
@@ -110,7 +111,11 @@ public static class MotorFinanceiro
             realizados.Where(l => l.Sentido == SentidoFin.Entrada && l.Classe == ClasseFin.ReceitaOutra).Sum(l => l.ValorCentavos),
             despesas.Sum(l => l.ValorCentavos),
             despesas.GroupBy(l => l.Classe == ClasseFin.TarifaCartao ? "Taxas de cartão" : l.Categoria ?? "Sem categoria")
-                .ToDictionary(g => g.Key, g => g.Sum(l => l.ValorCentavos)));
+                .ToDictionary(g => g.Key, g => g.Sum(l => l.ValorCentavos)),
+            realizados.Where(l => l.Classe == ClasseFin.Aporte).Sum(l => l.ValorCentavos),
+            realizados.Where(l => l.Classe == ClasseFin.OutraEntrada).Sum(l => l.ValorCentavos),
+            realizados.Where(l => l.Classe == ClasseFin.RetiradaProprietario).Sum(l => l.ValorCentavos),
+            realizados.Where(l => l.Classe == ClasseFin.OutraSaida).Sum(l => l.ValorCentavos));
 
         return new PosicaoFinanceira(hoje, porConta, dinheiroFisico, bancos, aReceber, aPagar, emCompensacao, projecao, periodo, avisos);
     }

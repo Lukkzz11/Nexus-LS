@@ -112,6 +112,10 @@
                             </TextBlock.Style>
                         </TextBlock>
                     </WrapPanel>
+                    <WrapPanel Margin="0,8,0,0" Visibility="{Binding TemForaDoResultado, Converter={StaticResource BoolVis}}">
+                        <TextBlock Text="{Binding EntradasForaTexto}" FontSize="13" Foreground="{StaticResource CorTextoSuave}" Margin="0,0,24,0" />
+                        <TextBlock Text="{Binding SaidasForaTexto}" FontSize="13" Foreground="{StaticResource CorTextoSuave}" />
+                    </WrapPanel>
                     <ItemsControl ItemsSource="{Binding DespesasPorCategoria}" Margin="0,8,0,0">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
@@ -208,6 +212,11 @@
                         </StackPanel>
                     </Grid>
 
+                    <TextBlock Text="Como conta no resultado" Style="{StaticResource Rotulo}" />
+                    <ComboBox ItemsSource="{Binding Classificacoes}" DisplayMemberPath="Nome" SelectedItem="{Binding FormClassificacao}"
+                              AutomationProperties.Name="Classificação do lançamento" />
+                    <TextBlock Text="{Binding FormClassificacao.Ajuda}" Style="{StaticResource RotuloResumo}" TextWrapping="Wrap" Margin="0,4,0,0" />
+
                     <TextBlock Text="Categoria" Style="{StaticResource Rotulo}" />
                     <ComboBox IsEditable="True" ItemsSource="{Binding Categorias}" Text="{Binding FormCategoria, UpdateSourceTrigger=PropertyChanged}"
                               AutomationProperties.Name="Categoria" />
@@ -232,6 +241,41 @@
                         <Button Content="Novo (Ctrl+N)" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0" Command="{Binding NovoCommand}" />
                     </StackPanel>
                     <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" />
+
+                    <Expander Header="Categorias" Margin="0,16,0,0">
+                        <StackPanel Margin="0,8,0,0">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Content="A pagar" GroupName="TipoCategoria" IsChecked="{Binding NovaCategoriaEhDespesa}" Margin="0,0,16,0" />
+                                <RadioButton Content="A receber" GroupName="TipoCategoria" />
+                            </StackPanel>
+                            <Grid Margin="0,6,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox Text="{Binding NovaCategoria, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Nome da nova categoria" />
+                                <Button Grid.Column="1" Content="Adicionar" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0" Command="{Binding AdicionarCategoriaCommand}" />
+                            </Grid>
+                            <ItemsControl ItemsSource="{Binding CategoriasGerenciadas}" Margin="0,8,0,0">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,2">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock VerticalAlignment="Center" TextTrimming="CharacterEllipsis">
+                                                <Run Text="{Binding Nome, Mode=OneWay}" /><Run Text=" · " Foreground="{StaticResource CorTextoSuave}" /><Run Text="{Binding TipoTexto, Mode=OneWay}" Foreground="{StaticResource CorTextoSuave}" /><Run Text=" · " Foreground="{StaticResource CorTextoSuave}" /><Run Text="{Binding SituacaoTexto, Mode=OneWay}" Foreground="{StaticResource CorTextoSuave}" />
+                                            </TextBlock>
+                                            <Button Grid.Column="1" Content="{Binding TextoAlternar}" Style="{StaticResource BotaoFantasma}" Padding="8,2"
+                                                    Command="{Binding DataContext.AlternarCategoriaCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Expander>
                 </StackPanel>
             </ScrollViewer>
         </Border>
