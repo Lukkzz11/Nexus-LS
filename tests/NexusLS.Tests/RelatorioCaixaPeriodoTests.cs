@@ -174,4 +174,13 @@ public class RelatorioCaixaPeriodoTests : IDisposable
         await using var depois = _banco.CriarContexto();
         Assert.Equal((vendasAntes, movAntes, fechAntes), (depois.Vendas.Count(), depois.MovimentosCaixa.Count(), depois.FechamentosCaixa.Count()));
     }
+
+    [Fact]
+    public void Pdf_converte_travessao_e_aspas_curvas_para_windows_1252_em_vez_de_interrogacao()
+    {
+        var pdf = NotaPdf.Gerar(new[] { "Loja " + char.ConvertFromUtf32(0x2014) + " Moda " + char.ConvertFromUtf32(0x201C) + "X" + char.ConvertFromUtf32(0x201D) });
+        var texto = Encoding.Latin1.GetString(pdf);
+        Assert.Contains("(Loja " + (char)0x97 + " Moda " + (char)0x93 + "X" + (char)0x94 + ")", texto);
+        Assert.DoesNotContain("Loja ? Moda", texto);
+    }
 }

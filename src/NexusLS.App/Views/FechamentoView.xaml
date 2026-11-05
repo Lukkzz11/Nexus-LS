@@ -96,11 +96,23 @@
         <Grid Grid.Column="2">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
             </Grid.RowDefinitions>
-            <TextBlock Text="Histórico" FontSize="18" FontWeight="SemiBold" Margin="0,48,0,10" />
-            <TextBlock Grid.Row="1" Text="Nenhum fechamento feito ainda." Foreground="{StaticResource CorTextoSuave}">
+            <Border Grid.Row="0" Style="{StaticResource Painel}" Margin="0,48,0,0"
+                    Visibility="{Binding TemRelatorioPeriodo, Converter={StaticResource BoolVis}}">
+                <StackPanel>
+                    <TextBlock Text="Relatório do caixa por período" FontWeight="SemiBold" />
+                    <TextBlock Text="PDF com turnos, vendas por forma de pagamento, sangrias, reforços, despesas e diferenças. Vendas canceladas não entram."
+                               TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource CorTextoSuave}" Margin="0,2,0,8" />
+                    <DatePicker SelectedDateFormat="Short" SelectedDate="{Binding RelatorioDe}" AutomationProperties.Name="Relatório de" Margin="0,0,0,6" />
+                    <DatePicker SelectedDateFormat="Short" SelectedDate="{Binding RelatorioAte}" AutomationProperties.Name="Relatório até" Margin="0,0,0,8" />
+                    <Button Content="Gerar PDF" Style="{StaticResource BotaoSecundario}" HorizontalAlignment="Left"
+                            AutomationProperties.Name="Gerar PDF do caixa" Command="{Binding GerarRelatorioPdfCommand}" />
+                </StackPanel>
+            </Border>
+            <TextBlock Grid.Row="1" Text="Histórico" FontSize="18" FontWeight="SemiBold" Margin="0,24,0,10" />
+            <TextBlock Grid.Row="2" Text="Nenhum fechamento feito ainda." Foreground="{StaticResource CorTextoSuave}">
                 <TextBlock.Style>
                     <Style TargetType="TextBlock">
                         <Setter Property="Visibility" Value="Collapsed" />
@@ -112,7 +124,7 @@
                     </Style>
                 </TextBlock.Style>
             </TextBlock>
-            <ListBox x:Name="ListaHistorico" Grid.Row="1" ItemsSource="{Binding Historico}" BorderThickness="0"
+            <ListBox x:Name="ListaHistorico" Grid.Row="2" ItemsSource="{Binding Historico}" BorderThickness="0"
                      Background="Transparent" AutomationProperties.Name="Histórico de fechamentos">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
@@ -128,18 +140,6 @@
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
-            <Border Grid.Row="2" Style="{StaticResource Painel}" Margin="0,10,0,0"
-                    Visibility="{Binding TemRelatorioPeriodo, Converter={StaticResource BoolVis}}">
-                <StackPanel>
-                    <TextBlock Text="Relatório do caixa por período" FontWeight="SemiBold" />
-                    <TextBlock Text="PDF com turnos, vendas por forma de pagamento, sangrias, reforços, despesas e diferenças. Vendas canceladas não entram."
-                               TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource CorTextoSuave}" Margin="0,2,0,8" />
-                    <DatePicker SelectedDateFormat="Short" SelectedDate="{Binding RelatorioDe}" AutomationProperties.Name="Relatório de" Margin="0,0,0,6" />
-                    <DatePicker SelectedDateFormat="Short" SelectedDate="{Binding RelatorioAte}" AutomationProperties.Name="Relatório até" Margin="0,0,0,8" />
-                    <Button Content="Gerar PDF" Style="{StaticResource BotaoSecundario}" HorizontalAlignment="Left"
-                            AutomationProperties.Name="Gerar PDF do caixa" Command="{Binding GerarRelatorioPdfCommand}" />
-                </StackPanel>
-            </Border>
         </Grid>
     </Grid>
 </UserControl>

@@ -102,8 +102,8 @@
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Código" Binding="{Binding CodigoBarras, Mode=OneWay}" Width="1*" MinWidth="62" />
                         <DataGridTextColumn Header="Ref." Binding="{Binding Referencia, Mode=OneWay}" Width="0.6*" MinWidth="46" />
-                        <DataGridTextColumn Header="Categoria" Binding="{Binding Categoria, Mode=OneWay}" Width="0.9*" MinWidth="72" />
-                        <DataGridTextColumn Header="Produto" Binding="{Binding Nome, Mode=OneWay}" Width="4*" MinWidth="170" />
+                        <DataGridTextColumn Header="Categoria" Binding="{Binding Categoria, Mode=OneWay}" Width="0.9*" MinWidth="80" />
+                        <DataGridTextColumn Header="Produto" Binding="{Binding Nome, Mode=OneWay}" Width="4*" MinWidth="150" />
                         <DataGridTextColumn Header="Varejo" Width="1*" MinWidth="68" ElementStyle="{StaticResource ColunaNumero}"
                                             Binding="{Binding PrecoVendaCentavos, Mode=OneWay, Converter={StaticResource Centavos}}" />
                         <DataGridTextColumn Header="Atacado" Width="1*" MinWidth="72" ElementStyle="{StaticResource ColunaNumero}"
@@ -114,8 +114,8 @@
                                             ElementStyle="{StaticResource ColunaNumero}" />
                         <DataGridTextColumn Header="Situação" Width="0.8*" MinWidth="64"
                                             Binding="{Binding Ativo, Mode=OneWay, Converter={StaticResource BoolTexto}, ConverterParameter='Ativo|Inativo'}" />
-                        <DataGridTextColumn Header="Tipo" Width="0.6*" MinWidth="50"
-                                            Binding="{Binding Sobra, Mode=OneWay, Converter={StaticResource BoolTexto}, ConverterParameter='Sobra|Estoque'}" />
+                        <DataGridTextColumn Header="Tipo" Width="0.6*" MinWidth="58"
+                                            Binding="{Binding Sobra, Mode=OneWay, Converter={StaticResource BoolTexto}, ConverterParameter='Sobra|'}" />
                     </DataGrid.Columns>
                 </DataGrid>
             </Border>

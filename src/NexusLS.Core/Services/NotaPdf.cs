@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text;
 
 namespace NexusLS.Core.Services;
@@ -53,6 +53,13 @@ public static class NotaPdf
         return saida.ToArray();
     }
 
+    /// <summary>Símbolos comuns que o Windows-1252 tem entre 0x80 e 0x9F (travessão, aspas curvas, marcador, euro).</summary>
+    private static readonly Dictionary<char, char> Windows1252 = new()
+    {
+        ['\u2013'] = '\u0096', ['\u2014'] = '\u0097', ['\u2018'] = '\u0091', ['\u2019'] = '\u0092',
+        ['\u201C'] = '\u0093', ['\u201D'] = '\u0094', ['\u2022'] = '\u0095', ['\u20AC'] = '\u0080', ['\u2026'] = '\u0085'
+    };
+
     private static byte[] Texto(string s) => Encoding.Latin1.GetBytes(s);
 
     private static byte[] Concat(params byte[][] partes) => partes.SelectMany(p => p).ToArray();
@@ -64,6 +71,7 @@ public static class NotaPdf
         foreach (var c in linha)
         {
             if (c is '\\' or '(' or ')') sb.Append('\\').Append(c);
+            else if (Windows1252.TryGetValue(c, out var byteAnsi)) sb.Append(byteAnsi);
             else if (c > 255) sb.Append('?');
             else sb.Append(c);
         }
