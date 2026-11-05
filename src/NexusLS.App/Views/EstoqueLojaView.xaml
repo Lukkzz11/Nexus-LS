@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="NexusLS.App.Views.EstoqueLojaView"
+<UserControl x:Class="NexusLS.App.Views.EstoqueLojaView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
@@ -34,6 +34,9 @@
             <Grid Margin="0,0,0,14">
                 <TextBlock Text="Estoque da loja" Style="{StaticResource TituloTela}" />
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Button Content="Vender sem baixa (Todos)" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,0"
+                            AutomationProperties.Name="Marcar todos para vender sem baixa" ToolTip="Ativa a opção 'Vender sem baixa' em todos os produtos cadastrados de uma só vez."
+                            Command="{Binding AtivarVenderSemBaixaEmTodosCommand}" />
                     <Button Content="Adicionar sobra" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,0"
                             AutomationProperties.Name="Adicionar sobra" ToolTip="Cadastra uma peça que sobrou: continua sendo estoque e vende no PDV, só fica separada na lista de Sobras."
                             Command="{Binding AdicionarSobraCommand}" />

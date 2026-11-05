@@ -107,14 +107,23 @@ public partial class PdvView : UserControl
                 Focar(AlvoFoco.Busca);
                 e.Handled = true;
                 return;
+            case Key.F8:
+                vm.AlternarTabelaCommand.Execute(null);
+                e.Handled = true;
+                return;
             // Espaço com a busca VAZIA troca varejo/atacado. Com texto digitado, o espaço é só um espaço (ex.: "camiseta azul").
             case Key.Space when vm.Etapa == EtapaPdv.Busca && vm.Busca.Length == 0 && CaixaBusca.IsKeyboardFocused:
                 e.Handled = vm.ProcessarTecla(ComandoTecla.Espaco);
                 return;
             // O F10 é uma "tecla de sistema" no Windows (ativa o menu da janela): o WPF não o entrega como
             // tecla normal, e um KeyBinding no XAML não funcionaria. Por isso é tratado aqui.
+            case Key.F10:
             case Key.System when e.SystemKey == Key.F10:
                 e.Handled = vm.ProcessarTecla(ComandoTecla.F10);
+                return;
+            case Key.Delete when vm.Etapa == EtapaPdv.Busca && vm.ItemSelecionado is not null:
+                vm.RemoverSelecionadoCommand.Execute(null);
+                e.Handled = true;
                 return;
         }
 

@@ -21,6 +21,9 @@ public record FormatoEtiqueta(
     public static readonly FormatoEtiqueta Bobina40x25 = new(
         "Bobina 40 × 25 mm (uma por vez)", 40, 25, 1, 1, 40, 25, 0, 0, 0, 0);
 
+    public static readonly FormatoEtiqueta Bobina60x40 = new(
+        "Bobina 60 × 40 mm (uma por vez)", 60, 40, 1, 1, 60, 40, 0, 0, 0, 0);
+
     /// <summary>Folha A4 adesiva comum (modelo Avery L7160 e equivalentes): 3 colunas × 7 linhas.</summary>
     public static readonly FormatoEtiqueta FolhaA4Tres_por_Sete = new(
         "Folha A4 · 3 × 7 (63,5 × 38,1 mm)", 210, 297, 3, 7, 63.5, 38.1, 7.2, 15.15, 2.5, 0);

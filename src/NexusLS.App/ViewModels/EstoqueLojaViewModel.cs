@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -91,6 +91,8 @@ public partial class EstoqueLojaViewModel : ViewModelBase
     public Func<string?> EscolherArquivoParaAbrir { get; set; } = () => null;
     /// <summary>Mostra o resumo e pergunta se pode importar (a View preenche com uma caixa de mensagem).</summary>
     public Func<string, bool> ConfirmarImportacao { get; set; } = _ => true;
+    /// <summary>Caixa de confirmação de ações em lote.</summary>
+    public Func<string, bool> Confirmar { get; set; } = _ => true;
     /// <summary>Mostra o relatório final (a View preenche).</summary>
     public Action<string> InformarImportacao { get; set; } = _ => { };
 
@@ -396,6 +398,21 @@ public partial class EstoqueLojaViewModel : ViewModelBase
         Sobra = true;
         Mensagem = "Nova sobra: continua sendo estoque da loja e vende no PDV; só fica separada na lista de Sobras e fora do catálogo online.";
     }
+
+    /// <summary>
+    /// Marca todos os produtos ativos da loja para 'Vender sem baixa' de uma só vez.
+    /// </summary>
+    [RelayCommand]
+    private Task AtivarVenderSemBaixaEmTodosAsync() => ExecutarAsync(async () =>
+    {
+        if (!Confirmar("Deseja marcar TODOS os produtos da loja como 'Vender sem baixa de estoque'?\n\nIsso permite que todos os itens sejam vendidos no PDV sem exigir saldo físico de estoque."))
+            return;
+
+        var alterados = await _produtos.MarcarTodosVenderSemBaixaAsync(true);
+        await BuscarAsync();
+        if (IdEditando is int id) await AtualizarDetalhesAsync(id);
+        MostrarSucesso($"{alterados} produto(s) marcado(s) para vender sem baixa de estoque.");
+    });
 
     [RelayCommand]
     private void Novo()

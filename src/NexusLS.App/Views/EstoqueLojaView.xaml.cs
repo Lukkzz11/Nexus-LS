@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Controls;
 using NexusLS.App.ViewModels;
 
@@ -38,6 +38,8 @@ public partial class EstoqueLojaView : UserControl
             };
             vm.ConfirmarImportacao = texto =>
                 MessageBox.Show(Window.GetWindow(this), texto, "Importar produtos", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
+            vm.Confirmar = texto =>
+                MessageBox.Show(Window.GetWindow(this), texto, "Estoque da loja", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
             vm.InformarImportacao = texto =>
                 MessageBox.Show(Window.GetWindow(this), texto, "Importar produtos", MessageBoxButton.OK, MessageBoxImage.Information);
         };

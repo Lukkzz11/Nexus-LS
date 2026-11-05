@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="NexusLS.App.Views.PdvView"
+<UserControl x:Class="NexusLS.App.Views.PdvView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:NexusLS.App.ViewModels">
@@ -224,7 +224,7 @@
 
                 <TextBlock Grid.Row="5" Margin="0,10,0,0" FontSize="13" Foreground="{StaticResource CorTextoSuave}"
                            TextWrapping="Wrap"
-                           Text="F2 Buscar · Enter escolhe o produto · Enter com a busca vazia fecha a venda (ou F10) · Espaço com a busca vazia troca Varejo/Atacado · Del remove o item · Esc fecha a janela atual" />
+                           Text="F2 Buscar · Enter Escolhe Produto · F10 / Enter vazio Fecha Venda · F8 ou Espaço Troca Varejo/Atacado · Del Remove Item · Esc Fecha Janela" />
             </Grid>
 
             <!-- ===== Resumo da venda ===== -->

@@ -23,6 +23,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\NexusLS.Core\NexusLS.Core.csproj" />
     <ProjectReference Include="..\..\src\NexusLS.App\NexusLS.App.csproj" />
+    <ProjectReference Include="..\..\src\NexusLS.BarTender\NexusLS.BarTender.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using NexusLS.Core.Data;
 using NexusLS.Core.Models;
 
@@ -95,6 +95,15 @@ public class ProdutoService
             ?? throw new RegraDeNegocioException("Produto não encontrado.");
         produto.PrecoVendaCentavos = precoVendaCentavos;
         await db.SaveChangesAsync();
+    }
+
+    /// <summary>Marca ou desmarca a opção 'Vender sem baixa' de todos os produtos ativos de uma só vez.</summary>
+    public async Task<int> MarcarTodosVenderSemBaixaAsync(bool venderSemBaixa = true)
+    {
+        await using var db = await _fabrica.CreateDbContextAsync();
+        var total = await db.Produtos.Where(p => p.Ativo)
+            .ExecuteUpdateAsync(s => s.SetProperty(p => p.VenderSemBaixa, venderSemBaixa));
+        return total;
     }
 
     /// <summary>Desativar não apaga: o produto some do PDV, mas o histórico de vendas continua intacto.</summary>
