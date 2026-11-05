@@ -23,13 +23,15 @@ public partial class EstoqueLojaViewModel : ViewModelBase
     private bool _silenciar; // true enquanto a seleção da lista é refeita pelo programa (não pelo operador)
 
     private readonly FotoProdutoService? _fotos;
+    private readonly Func<DateTime> _hoje;
 
     private readonly ConfiguracaoService? _configuracao;
     private int _estoqueMinimoPadrao;
     private int _margemPadrao;
 
-    public EstoqueLojaViewModel(ProdutoService produtos, EstoqueService estoque, FotoProdutoService? fotos = null, ConfiguracaoService? configuracao = null)
+    public EstoqueLojaViewModel(ProdutoService produtos, EstoqueService estoque, FotoProdutoService? fotos = null, ConfiguracaoService? configuracao = null, Func<DateTime>? relogio = null)
     {
+        _hoje = relogio ?? (() => DateTime.Today);
         _fotos = fotos;
         _configuracao = configuracao;
         _produtos = produtos;
@@ -59,6 +61,25 @@ public partial class EstoqueLojaViewModel : ViewModelBase
         EstoqueMinimo = _estoqueMinimoPadrao.ToString(CultureInfo.InvariantCulture);
         MargemDesejada = _margemPadrao > 0 ? _margemPadrao.ToString(CultureInfo.InvariantCulture) : "";
     }
+
+    // ----- Exportar o estoque em CSV -----
+    /// <summary>A tela define a caixa "Salvar como" do Windows (nulo = cancelou).</summary>
+    public Func<string, string?> EscolherArquivoParaSalvar { get; set; } = _ => null;
+
+    /// <summary>Gera o CSV do estoque inteiro (uma linha por tamanho; inclui desativados, marcados na coluna Situação).</summary>
+    [RelayCommand]
+    private Task ExportarCsvAsync() => ExecutarAsync(async () =>
+    {
+        var lista = await _produtos.ListarComTamanhosAsync(incluirInativos: true);
+        if (lista.Count == 0)
+            throw new RegraDeNegocioException("Não há produtos no estoque para exportar.");
+
+        var caminho = EscolherArquivoParaSalvar($"estoque-{_hoje():yyyy-MM-dd}.csv");
+        if (caminho is null) return;
+
+        ExportadorCsv.Salvar(caminho, ExportadorCsv.Estoque(lista));
+        MostrarSucesso($"Estoque exportado: {lista.Count} produto(s). Arquivo salvo: {caminho}");
+    });
 
     // ----- Importar produtos de um arquivo CSV -----
     /// <summary>Abre a caixa "Abrir arquivo" do Windows (a View preenche). Devolve o caminho ou nulo se cancelou.</summary>

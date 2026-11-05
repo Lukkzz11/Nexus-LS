@@ -1,4 +1,4 @@
-<UserControl x:Class="NexusLS.App.Views.EstoqueLojaView"
+﻿<UserControl x:Class="NexusLS.App.Views.EstoqueLojaView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
@@ -33,9 +33,14 @@
 
             <Grid Margin="0,0,0,14">
                 <TextBlock Text="Estoque da loja" Style="{StaticResource TituloTela}" />
-                <Button Content="Importar CSV" Style="{StaticResource BotaoSecundario}" HorizontalAlignment="Right" VerticalAlignment="Center"
-                        AutomationProperties.Name="Importar CSV" ToolTip="Cadastra vários produtos de uma planilha (CSV). Produtos que já existem não são alterados."
-                        IsEnabled="{Binding PodeImportar}" Command="{Binding ImportarCsvCommand}" />
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Button Content="Exportar CSV" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,0"
+                            AutomationProperties.Name="Exportar CSV" ToolTip="Salva o estoque inteiro (uma linha por tamanho) numa planilha CSV para o Excel."
+                            Command="{Binding ExportarCsvCommand}" />
+                    <Button Content="Importar CSV" Style="{StaticResource BotaoSecundario}"
+                            AutomationProperties.Name="Importar CSV" ToolTip="Cadastra vários produtos de uma planilha (CSV). Produtos que já existem não são alterados."
+                            IsEnabled="{Binding PodeImportar}" Command="{Binding ImportarCsvCommand}" />
+                </StackPanel>
             </Grid>
 
             <Grid Grid.Row="1" Margin="0,0,0,10">

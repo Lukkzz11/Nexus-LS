@@ -101,3 +101,54 @@ public sealed class ImportarCsvTests : IDisposable
         Assert.Contains("Meia", relatorio);                    // já existia
     }
 }
+
+/// <summary>O botão "Exportar CSV" da tela Estoque da loja.</summary>
+public sealed class ExportarEstoqueTelaTests : IDisposable
+{
+    private readonly BancoDeTeste _banco = new();
+    private readonly string _pasta = Path.Combine(Path.GetTempPath(), "nexusls-exp-" + Guid.NewGuid().ToString("N"));
+    private readonly ProdutoService _produtos;
+    private readonly EstoqueLojaViewModel _vm;
+
+    public ExportarEstoqueTelaTests()
+    {
+        Directory.CreateDirectory(_pasta);
+        _produtos = new ProdutoService(_banco.Fabrica);
+        _vm = new EstoqueLojaViewModel(_produtos, new EstoqueService(_banco.Fabrica), relogio: () => new DateTime(2026, 11, 4, 9, 0, 0));
+    }
+
+    public void Dispose()
+    {
+        _banco.Dispose();
+        try { Directory.Delete(_pasta, true); } catch (IOException) { }
+    }
+
+    [Fact]
+    public async Task Exporta_o_estoque_no_arquivo_escolhido_com_nome_sugerido_pela_data()
+    {
+        await _produtos.CadastrarAsync(new DadosProduto("Meia", null, 1000, 500, 1), 3);
+        var caminho = Path.Combine(_pasta, "saida.csv");
+        string? sugerido = null;
+        _vm.EscolherArquivoParaSalvar = nome => { sugerido = nome; return caminho; };
+
+        await _vm.ExportarCsvCommand.ExecuteAsync(null);
+
+        Assert.Equal("estoque-2026-11-04.csv", sugerido);
+        Assert.False(_vm.MensagemEhErro);
+        Assert.Contains("Meia", File.ReadAllText(caminho));
+    }
+
+    [Fact]
+    public async Task Cancelar_a_caixa_nao_grava_nada_e_sem_produtos_avisa()
+    {
+        _vm.EscolherArquivoParaSalvar = _ => throw new InvalidOperationException("não deveria abrir a caixa");
+        await _vm.ExportarCsvCommand.ExecuteAsync(null);
+        Assert.True(_vm.MensagemEhErro);
+        Assert.Contains("Não há produtos", _vm.Mensagem);
+
+        await _produtos.CadastrarAsync(new DadosProduto("Meia", null, 1000, 500, 1), 3);
+        _vm.EscolherArquivoParaSalvar = _ => null;
+        await _vm.ExportarCsvCommand.ExecuteAsync(null);
+        Assert.Empty(Directory.GetFiles(_pasta));
+    }
+}

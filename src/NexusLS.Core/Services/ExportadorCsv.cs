@@ -108,6 +108,33 @@ public static class ExportadorCsv
         return csv.ToString();
     }
 
+    /// <summary>
+    /// Estoque da loja: uma linha por tamanho de cada produto (produto sem grade sai numa linha só, com o estoque total).
+    /// Preços e custo vão como valor com vírgula, sem R$. A coluna "Situação" marca os desativados e os abaixo do mínimo.
+    /// </summary>
+    public static string Estoque(IEnumerable<Produto> produtos)
+    {
+        var csv = new StringBuilder();
+        Linha(csv, "Produto", "Referência", "Categoria", "Código de barras", "Código interno", "Tamanho", "Estoque", "Estoque mínimo",
+            "Preço de varejo", "Preço de atacado", "Preço de custo", "Situação");
+
+        foreach (var p in produtos.OrderBy(p => p.Nome, StringComparer.CurrentCultureIgnoreCase).ThenBy(p => p.Id))
+        {
+            var situacao = !p.Ativo ? "Desativado" : p.EstoqueBaixo ? "Abaixo do mínimo" : "Normal";
+            var tamanhos = p.Tamanhos.OrderBy(t => t.Id).ToList();
+            var linhas = tamanhos.Count > 0
+                ? tamanhos.Select(t => (t.EhSemTamanho ? "" : t.Tamanho, t.Estoque))
+                : new[] { ("", p.EstoqueAtual) };
+
+            foreach (var (tamanho, estoque) in linhas)
+                Linha(csv, p.Nome, p.Referencia ?? "", p.Categoria ?? "", p.CodigoBarras ?? "", p.CodigoInterno ?? "", tamanho,
+                    estoque.ToString(CultureInfo.InvariantCulture), p.EstoqueMinimo.ToString(CultureInfo.InvariantCulture),
+                    Valor(p.PrecoVendaCentavos), p.PrecoAtacadoCentavos > 0 ? Valor(p.PrecoAtacadoCentavos) : "",
+                    Valor(p.PrecoCustoCentavos), situacao);
+        }
+        return csv.ToString();
+    }
+
     public static string MaisVendidos(IEnumerable<ProdutoMaisVendido> ranking, bool porTamanho)
     {
         var csv = new StringBuilder();

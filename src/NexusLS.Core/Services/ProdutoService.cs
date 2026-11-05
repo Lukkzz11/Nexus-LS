@@ -124,6 +124,15 @@ public class ProdutoService
         return await consulta.OrderBy(p => p.Nome).ToListAsync();
     }
 
+    /// <summary>Todos os produtos com a grade de tamanhos carregada, para exportar o estoque.</summary>
+    public async Task<List<Produto>> ListarComTamanhosAsync(bool incluirInativos = true)
+    {
+        await using var db = await _fabrica.CreateDbContextAsync();
+        IQueryable<Produto> consulta = db.Produtos.AsNoTracking().Include(p => p.Tamanhos);
+        if (!incluirInativos) consulta = consulta.Where(p => p.Ativo);
+        return await consulta.OrderBy(p => p.Nome).ToListAsync();
+    }
+
     public async Task<Produto?> ObterAsync(int id)
     {
         await using var db = await _fabrica.CreateDbContextAsync();
