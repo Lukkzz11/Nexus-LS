@@ -22,7 +22,10 @@ public enum TipoAtividade
     ContaAlterada = 17,
     LancamentoCorrigido = 18,
     LancamentoRetirado = 19,
-    TituloAPrazoEditado = 20
+    TituloAPrazoEditado = 20,
+    ChequeEmitido = 21,
+    ChequeEmitidoCompensado = 22,
+    ChequeEmitidoCancelado = 23
 }
 
 /// <summary>

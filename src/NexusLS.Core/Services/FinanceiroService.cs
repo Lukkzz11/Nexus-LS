@@ -188,6 +188,7 @@ public class FinanceiroService
         if (classificacao is { } nova) ValidarClassificacao(l.Tipo, nova, l.CompraId is not null);
         if (l.Cancelado) throw new RegraDeNegocioException("Lançamento cancelado não pode ser editado.");
         if (l.PagoEm is not null) throw new RegraDeNegocioException("Lançamento já pago não pode ser editado. Estorne o pagamento primeiro.");
+        await ExigirSemChequePendenteAsync(db, l.Id);
 
         l.Descricao = descricao.Trim();
         l.ValorCentavos = valorCentavos;
@@ -206,6 +207,7 @@ public class FinanceiroService
         var l = await ObterAsync(db, id);
         if (l.Cancelado) throw new RegraDeNegocioException("Lançamento cancelado não pode ser pago.");
         if (l.PagoEm is not null) throw new RegraDeNegocioException("Esse lançamento já está pago.");
+        await ExigirSemChequePendenteAsync(db, l.Id);
 
         var data = quando ?? _agora();
         if (data.Date > _agora().Date) throw new RegraDeNegocioException("A data do pagamento não pode ser no futuro.");
@@ -219,6 +221,8 @@ public class FinanceiroService
         await using var db = await _fabrica.CreateDbContextAsync();
         var l = await ObterAsync(db, id);
         if (l.PagoEm is null) throw new RegraDeNegocioException("Esse lançamento não está pago.");
+        if (await db.ChequesEmitidos.AnyAsync(c => c.LancamentoId == l.Id && c.Situacao == SituacaoChequeEmitido.Compensado))
+            throw new RegraDeNegocioException("Essa conta foi paga por um cheque emitido que compensou. Para desfazer, corrija ou retire a conta (fica o histórico).");
         l.PagoEm = null;
         l.FormaPagamento = null;
         AtividadeService.Registrar(db, TipoAtividade.PagamentoEstornado,
@@ -233,6 +237,7 @@ public class FinanceiroService
         var l = await ObterAsync(db, id);
         if (l.Cancelado) throw new RegraDeNegocioException("Esse lançamento já está cancelado.");
         if (l.PagoEm is not null) throw new RegraDeNegocioException("Lançamento pago não pode ser cancelado. Estorne o pagamento primeiro.");
+        await ExigirSemChequePendenteAsync(db, l.Id);
         l.Cancelado = true;
         l.MotivoCancelamento = motivo.Trim();
         l.CanceladoEm = _agora();
@@ -253,6 +258,7 @@ public class FinanceiroService
         await using var db = await _fabrica.CreateDbContextAsync();
         var l = await ObterAsync(db, id);
         ValidarCorrigivel(l);
+        await ExigirSemChequePendenteAsync(db, l.Id);
 
         var agora = _agora();
         l.Cancelado = true;
@@ -276,6 +282,7 @@ public class FinanceiroService
         await using var db = await _fabrica.CreateDbContextAsync();
         var original = await ObterAsync(db, id);
         ValidarCorrigivel(original);
+        await ExigirSemChequePendenteAsync(db, original.Id);
         var classificacao = dados.Classificacao ?? original.Classificacao;
         ValidarClassificacao(original.Tipo, classificacao, false);
 
@@ -332,6 +339,13 @@ public class FinanceiroService
         if (texto.Length < 3) throw new RegraDeNegocioException($"Informe o motivo {de} (pelo menos 3 letras).");
         if (texto.Length > 150) throw new RegraDeNegocioException("O motivo pode ter no máximo 150 caracteres.");
         return texto;
+    }
+
+    /// <summary>Conta com cheque emitido pendente não muda até o cheque ser compensado ou cancelado.</summary>
+    private static async Task ExigirSemChequePendenteAsync(PdvDbContext db, int lancamentoId)
+    {
+        if (await db.ChequesEmitidos.AnyAsync(c => c.LancamentoId == lancamentoId && c.Situacao == SituacaoChequeEmitido.Pendente))
+            throw new RegraDeNegocioException("Essa conta tem um cheque emitido pendente. Compense ou cancele o cheque (em Contas e saldos > Cheques emitidos) antes.");
     }
 
     private static void ValidarCorrigivel(Lancamento l)

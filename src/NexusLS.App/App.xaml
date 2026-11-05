@@ -93,6 +93,9 @@
     <DataTemplate DataType="{x:Type vm:ChequesViewModel}">
         <views:ChequesView />
     </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:ChequesEmitidosViewModel}">
+        <views:ChequesEmitidosView />
+    </DataTemplate>
     <DataTemplate DataType="{x:Type vm:AtividadesViewModel}">
         <views:AtividadesView />
     </DataTemplate>

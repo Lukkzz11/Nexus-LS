@@ -51,6 +51,9 @@ public class AtividadeService
         TipoAtividade.LancamentoCorrigido => "Lançamento corrigido",
         TipoAtividade.LancamentoRetirado => "Lançamento retirado",
         TipoAtividade.TituloAPrazoEditado => "Título a prazo editado",
+        TipoAtividade.ChequeEmitido => "Cheque emitido",
+        TipoAtividade.ChequeEmitidoCompensado => "Cheque emitido compensado",
+        TipoAtividade.ChequeEmitidoCancelado => "Cheque emitido cancelado",
         _ => tipo.ToString()
     };
 

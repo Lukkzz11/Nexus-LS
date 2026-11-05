@@ -65,6 +65,58 @@ public sealed class ContasESaldosViewModelTests : IDisposable
     }
 
     [Fact]
+    public async Task Cheque_emitido_pela_tela_fica_em_compensacao_e_ao_compensar_baixa_o_saldo()
+    {
+        var banco = await _contas.CriarAsync(new DadosConta("Banco A", TipoContaFin.Banco, 100000, Agora.Date.AddDays(-5), Padrao: true));
+        var fin = new FinanceiroService(_banco.Fabrica, () => Agora);
+        var conta = (await fin.CriarAsync(new DadosLancamento(TipoLancamento.Despesa, "Tecidos", 30000, Agora.Date.AddDays(5), "Fornecedores", "Malhas Ltda")))[0];
+        var vm = new ContasESaldosViewModel(_posicao, _contas, _cartoes, _cheques, () => Agora, new ChequeEmitidoService(_banco.Fabrica, () => Agora));
+        await EsperarTudoAsync(vm);
+        var emitidos = vm.ChequesEmitidos!;
+        await emitidos.Carregamento;
+        Assert.True(vm.TemChequesEmitidos);
+
+        // sem escolher a conta a pagar, mostra erro
+        await emitidos.EmitirCommand.ExecuteAsync(null);
+        Assert.True(emitidos.MensagemEhErro);
+
+        emitidos.FormConta = emitidos.ContasAPagar.Single(o => o.Conta.Id == conta.Id);
+        Assert.Equal("Malhas Ltda", emitidos.FormFavorecido);
+        emitidos.FormNumero = "000123";
+        await emitidos.EmitirCommand.ExecuteAsync(null);
+        Assert.False(emitidos.MensagemEhErro, emitidos.Mensagem);
+        var linha = Assert.Single(emitidos.Cheques);
+        Assert.Equal("Pode compensar", linha.Situacao);
+        Assert.Empty(emitidos.ContasAPagar);                         // a conta já tem cheque pendente
+
+        await vm.Saldos.Carregamento;
+        await vm.Saldos.CarregarAsync();
+        Assert.Equal(Dinheiro.Formatar(100000), vm.Saldos.SaldoDisponivelTexto);
+        Assert.Contains("Cheques emitidos", vm.Saldos.EmCompensacaoDetalhe);
+
+        emitidos.Selecionado = emitidos.Cheques.Single();
+        emitidos.DataCompensacao = Agora.Date;
+        await emitidos.CompensarCommand.ExecuteAsync(null);
+        Assert.False(emitidos.MensagemEhErro, emitidos.Mensagem);
+        await vm.Saldos.CarregarAsync();
+        Assert.Equal(Dinheiro.Formatar(70000), vm.Saldos.SaldoDisponivelTexto);
+
+        // cancelar pede o motivo
+        var outra = (await fin.CriarAsync(new DadosLancamento(TipoLancamento.Despesa, "Aviamentos", 5000, Agora.Date.AddDays(5))))[0];
+        await emitidos.CarregarCommand.ExecuteAsync(null);
+        emitidos.FormConta = emitidos.ContasAPagar.Single(o => o.Conta.Id == outra.Id);
+        await emitidos.EmitirCommand.ExecuteAsync(null);
+        emitidos.Selecionado = emitidos.Cheques.Single(c => c.Situacao == "Pode compensar");
+        emitidos.PedirMotivo = _ => null;
+        await emitidos.CancelarCommand.ExecuteAsync(null);
+        Assert.Contains(emitidos.Cheques, c => c.Situacao == "Pode compensar");
+        emitidos.PedirMotivo = _ => "emitido por engano";
+        await emitidos.CancelarCommand.ExecuteAsync(null);
+        Assert.DoesNotContain(emitidos.Cheques, c => c.Situacao == "Pode compensar");
+        Assert.Contains(emitidos.ContasAPagar, o => o.Conta.Id == outra.Id);
+    }
+
+    [Fact]
     public async Task Periodo_invertido_mostra_erro_em_vez_de_numeros_errados()
     {
         var vm = Criar();

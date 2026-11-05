@@ -40,6 +40,7 @@ public sealed class ContainerDeServicos
     public ContaFinanceiraService ContasFinanceiras { get; }
     public LiquidacaoCartaoService Cartoes { get; }
     public ChequeService Cheques { get; }
+    public ChequeEmitidoService ChequesEmitidos { get; }
     public PosicaoFinanceiraService Posicao { get; }
     public CupomService Cupons { get; }
     public NexusLS.Core.Backup.GestorBackup Backup { get; }
@@ -96,6 +97,7 @@ public sealed class ContainerDeServicos
         ContasFinanceiras = new(fabrica);
         Cartoes = new(fabrica);
         Cheques = new(fabrica);
+        ChequesEmitidos = new(fabrica);
         Posicao = new(fabrica);
         Cupons = new(fabrica, Configuracao, new ImpressoraWindows());
         Backup = new(

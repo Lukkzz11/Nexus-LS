@@ -135,6 +135,73 @@ namespace NexusLS.Core.Migrations
                     b.ToTable("CategoriasFinanceiras");
                 });
 
+            modelBuilder.Entity("NexusLS.Core.Models.ChequeEmitido", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("AtualizadoEm")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Banco")
+                        .HasMaxLength(60)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("BomPara")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("CompensadoEm")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ContaId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CriadoEm")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Favorecido")
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("Guid")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("LancamentoId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("MotivoCancelamento")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Numero")
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Operador")
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Situacao")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("ValorCentavos")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BomPara");
+
+                    b.HasIndex("ContaId");
+
+                    b.HasIndex("Guid")
+                        .IsUnique();
+
+                    b.HasIndex("LancamentoId");
+
+                    b.ToTable("ChequesEmitidos");
+                });
+
             modelBuilder.Entity("NexusLS.Core.Models.ChequeRecebido", b =>
                 {
                     b.Property<int>("Id")
@@ -1817,6 +1884,21 @@ namespace NexusLS.Core.Migrations
                     b.HasOne("NexusLS.Core.Models.Venda", null)
                         .WithMany()
                         .HasForeignKey("VendaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("NexusLS.Core.Models.ChequeEmitido", b =>
+                {
+                    b.HasOne("NexusLS.Core.Models.ContaFinanceira", null)
+                        .WithMany()
+                        .HasForeignKey("ContaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("NexusLS.Core.Models.Lancamento", null)
+                        .WithMany()
+                        .HasForeignKey("LancamentoId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

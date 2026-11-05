@@ -79,7 +79,11 @@ public record PendenciasFin(long EmDiaCentavos, long VencidoCentavos, long EmCom
     public long TotalCentavos => EmDiaCentavos + VencidoCentavos + EmCompensacaoCentavos;
 }
 
-public record EmCompensacaoFin(long ChequesCentavos, long CartoesCentavos)
+/// <summary>
+/// O que ainda não caiu. <c>ChequesCentavos</c> e <c>CartoesCentavos</c> são ENTRADAS (cheques recebidos, cartões a
+/// liquidar); <c>ChequesEmitidosCentavos</c> é SAÍDA (cheque que a loja emitiu e o banco ainda não pagou) e não entra no Total.
+/// </summary>
+public record EmCompensacaoFin(long ChequesCentavos, long CartoesCentavos, long ChequesEmitidosCentavos = 0)
 {
     public long TotalCentavos => ChequesCentavos + CartoesCentavos;
 }

@@ -38,6 +38,7 @@ public static class NomesEntidade
     public const string TransferenciaConta = "transferenciaconta";
     public const string LiquidacaoCartao = "liquidacaocartao";
     public const string ChequeRecebido = "chequerecebido";
+    public const string ChequeEmitido = "chequeemitido";
     public const string CategoriaFinanceira = "categoriafinanceira";
     public const string AjusteTituloPrazo = "ajustetituloprazo";
     public const string MateriaPrima = "materiaprima";

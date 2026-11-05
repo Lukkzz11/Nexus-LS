@@ -90,7 +90,8 @@ public partial class SaldosViewModel : ViewModelBase
         APagarTexto = Dinheiro.Formatar(p.APagar.TotalCentavos);
         APagarDetalhe = Detalhe(p.APagar);
         EmCompensacaoTexto = Dinheiro.Formatar(p.EmCompensacao.TotalCentavos);
-        EmCompensacaoDetalhe = $"Cheques {Dinheiro.Formatar(p.EmCompensacao.ChequesCentavos)} · Cartões {Dinheiro.Formatar(p.EmCompensacao.CartoesCentavos)}";
+        EmCompensacaoDetalhe = $"Cheques {Dinheiro.Formatar(p.EmCompensacao.ChequesCentavos)} · Cartões {Dinheiro.Formatar(p.EmCompensacao.CartoesCentavos)}" +
+            (p.EmCompensacao.ChequesEmitidosCentavos > 0 ? $" · Cheques emitidos (a sair) {Dinheiro.Formatar(p.EmCompensacao.ChequesEmitidosCentavos)}" : "");
 
         Projecao7Texto = Dinheiro.Formatar(p.Projecao.PorDias[7]);
         Projecao30Texto = Dinheiro.Formatar(p.Projecao.PorDias[30]);

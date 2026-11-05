@@ -82,7 +82,8 @@ public static class MotorFinanceiro
         var compensando = lancamentos.Where(l => l.Situacao == SituacaoFin.EmCompensacao && l.Sentido == SentidoFin.Entrada).ToList();
         var emCompensacao = new EmCompensacaoFin(
             compensando.Where(l => l.Origem == OrigemFin.Cheque).Sum(l => l.ValorCentavos),
-            compensando.Where(l => l.Origem != OrigemFin.Cheque).Sum(l => l.ValorCentavos));
+            compensando.Where(l => l.Origem != OrigemFin.Cheque).Sum(l => l.ValorCentavos),
+            lancamentos.Where(l => l.Situacao == SituacaoFin.EmCompensacao && l.Sentido == SentidoFin.Saida).Sum(l => l.ValorCentavos));
 
         // 4. Projeção = disponível + o que vai entrar − o que vai sair, até cada data limite.
         var disponivel = dinheiroFisico + bancos;

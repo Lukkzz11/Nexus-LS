@@ -23,6 +23,9 @@
             <TabItem Header="Cheques">
                 <ContentPresenter Content="{Binding Cheques}" />
             </TabItem>
+            <TabItem Header="Cheques emitidos" Visibility="{Binding TemChequesEmitidos, Converter={StaticResource BoolVis}}">
+                <ContentPresenter Content="{Binding ChequesEmitidos}" />
+            </TabItem>
         </TabControl>
     </Grid>
 </UserControl>

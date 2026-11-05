@@ -155,6 +155,9 @@ public class PosicaoFinanceiraService
 
         // ---- contas a pagar e a receber (Financeiro) ----
         var lancamentos = await db.Lancamentos.AsNoTracking().Where(l => !l.Cancelado).ToListAsync();
+        // conta a pagar com cheque emitido pendente: o dinheiro ainda não saiu da conta, então é saída "em compensação"
+        var chequesEmitidos = (await db.ChequesEmitidos.AsNoTracking().Where(c => c.Situacao == SituacaoChequeEmitido.Pendente).ToListAsync())
+            .GroupBy(c => c.LancamentoId).ToDictionary(g => g.Key, g => g.First());
         foreach (var l in lancamentos)
         {
             var entrada = l.Tipo == TipoLancamento.Receita;
@@ -163,6 +166,10 @@ public class PosicaoFinanceiraService
             if (l.PagoEm is DateTime pago)
                 lancs.Add(new($"lanc:{l.Id}", OrigemFin.Lancamento, classe, sentido, SituacaoFin.Realizado, l.ValorCentavos, pago,
                     ContaId: l.ContaId ?? ContaDaForma(l.FormaPagamento), Descricao: l.Descricao, Categoria: l.Categoria ?? (l.CompraId is not null ? "Fornecedores" : null)));
+            else if (chequesEmitidos.TryGetValue(l.Id, out var chq))
+                lancs.Add(new($"lanc:{l.Id}", OrigemFin.Lancamento, classe, sentido, SituacaoFin.EmCompensacao, l.ValorCentavos, chq.CriadoEm,
+                    DataPrevista: chq.BomPara, Descricao: $"{l.Descricao} (cheque{(string.IsNullOrWhiteSpace(chq.Numero) ? "" : " " + chq.Numero)})",
+                    Categoria: l.Categoria));
             else
                 lancs.Add(new($"lanc:{l.Id}", OrigemFin.Lancamento, classe, sentido, SituacaoFin.Previsto, l.ValorCentavos, l.Vencimento,
                     Descricao: l.Descricao, Categoria: l.Categoria));

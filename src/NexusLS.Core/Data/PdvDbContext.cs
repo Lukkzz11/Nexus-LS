@@ -47,6 +47,7 @@ public class PdvDbContext : DbContext
     public DbSet<TransferenciaConta> Transferencias => Set<TransferenciaConta>();
     public DbSet<LiquidacaoCartao> LiquidacoesCartao => Set<LiquidacaoCartao>();
     public DbSet<ChequeRecebido> ChequesRecebidos => Set<ChequeRecebido>();
+    public DbSet<ChequeEmitido> ChequesEmitidos => Set<ChequeEmitido>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -84,6 +85,19 @@ public class PdvDbContext : DbContext
             e.Property(c => c.Operador).HasMaxLength(80);
             e.HasIndex(c => c.BomPara);
             e.HasIndex(c => c.VendaId);
+        });
+
+        modelBuilder.Entity<ChequeEmitido>(e =>
+        {
+            e.Property(c => c.Numero).HasMaxLength(30);
+            e.Property(c => c.Banco).HasMaxLength(60);
+            e.Property(c => c.Favorecido).HasMaxLength(120);
+            e.Property(c => c.MotivoCancelamento).HasMaxLength(200);
+            e.Property(c => c.Operador).HasMaxLength(80);
+            e.HasOne<Lancamento>().WithMany().HasForeignKey(c => c.LancamentoId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<ContaFinanceira>().WithMany().HasForeignKey(c => c.ContaId).OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(c => c.LancamentoId);
+            e.HasIndex(c => c.BomPara);
         });
 
         modelBuilder.Entity<Atividade>(e =>
