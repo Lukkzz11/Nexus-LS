@@ -72,7 +72,7 @@ public sealed class CapturaInicio : IDisposable
             new[] { new ItemCarrinho(shorts, 2) },
             new[] { new ItemCarrinho(bone, 2) },
         };
-        var vendasPorDia = new[] { 6, 4, 7, 5, 9, 14, 6 }; // 13/10 (ter) até 19/10 (seg, hoje)
+        var vendasPorDia = new[] { 5, 4, 6, 7, 14, 3, 6 }; // 13/10 (ter) até 19/10 (seg, hoje)
         for (var d = 0; d < vendasPorDia.Length; d++)
         {
             var dia = _agora.Date.AddDays(d - 6);

@@ -5,24 +5,20 @@ using System.Windows.Controls.Primitives;
 namespace NexusLS.App.Views;
 
 /// <summary>
-/// Só arranjo visual (nenhuma regra): a tela Início ocupa a largura e a altura inteiras. Conforme a largura,
-/// os quatro painéis ficam lado a lado (tela larga) ou em duas linhas (tela estreita), e os atalhos ganham
-/// tantas colunas quantas couberem, em linhas equilibradas.
+/// Só arranjo visual (nenhuma regra): a tela Início ocupa a largura e a altura inteiras. A área principal estica até
+/// o fim da janela (abaixo de uma altura mínima a página rola em vez de espremer os painéis), e os atalhos ganham tantas
+/// colunas quantas couberem, em linhas equilibradas; em tela estreita viram ladrilhos compactos (ícone em cima do nome).
 /// </summary>
 public partial class InicioView : UserControl
 {
-    /// <summary>Acima desta largura os quatro painéis cabem numa linha só.</summary>
-    private const double LarguraLarga = 1200;
+    /// <summary>Altura mínima da tela: abaixo dela, a página rola.</summary>
+    private const double AlturaMinima = 900;
 
-    /// <summary>Altura mínima da tela: abaixo dela, a página rola em vez de espremer os painéis.</summary>
-    private const double AlturaMinimaLarga = 680;
-    private const double AlturaMinimaEstreita = 1000;
-
-    /// <summary>Largura mínima de um atalho (ícone + nome + dica sem cortar).</summary>
-    private const double LarguraMinimaAtalho = 210;
+    /// <summary>Largura mínima de um atalho largo (ícone + nome + dica sem cortar) e de um compacto.</summary>
+    private const double LarguraAtalhoLargo = 200;
+    private const double LarguraAtalhoCompacto = 112;
 
     private UniformGrid? _gradeAtalhos;
-    private bool? _larga;
 
     public InicioView()
     {
@@ -39,58 +35,22 @@ public partial class InicioView : UserControl
 
     private void Arranjar()
     {
-        var largura = Rolagem.ActualWidth;
-        var altura = Rolagem.ActualHeight;
-        if (largura <= 0 || altura <= 0) return;
-
-        var larga = largura >= LarguraLarga;
-        Conteudo.Height = Math.Max(altura, larga ? AlturaMinimaLarga : AlturaMinimaEstreita);
-        if (larga != _larga)
-        {
-            _larga = larga;
-            var colunas = AreaPrincipal.ColumnDefinitions;
-            var linhas = AreaPrincipal.RowDefinitions;
-            if (larga)
-            {
-                Colunas(colunas, 4, 3, 4, 3);
-                linhas[0].Height = new GridLength(1, GridUnitType.Star);
-                linhas[1].Height = new GridLength(0);
-                Posicionar(PainelSemana, 0, 0);
-                Posicionar(PainelMaisVendidos, 0, 1);
-                Posicionar(PainelAtencao, 0, 2);
-                Posicionar(ColunaLateral, 0, 3);
-            }
-            else
-            {
-                Colunas(colunas, 1, 1, 0, 0);
-                linhas[0].Height = new GridLength(1, GridUnitType.Star);
-                linhas[1].Height = new GridLength(1, GridUnitType.Star);
-                Posicionar(PainelSemana, 0, 0);
-                Posicionar(PainelAtencao, 0, 1);
-                Posicionar(PainelMaisVendidos, 1, 0);
-                Posicionar(ColunaLateral, 1, 1);
-            }
-        }
+        if (Rolagem.ActualHeight <= 0) return;
+        Conteudo.Height = Math.Max(Rolagem.ActualHeight, AlturaMinima);
         AjustarAtalhos();
     }
 
-    private static void Colunas(ColumnDefinitionCollection colunas, params double[] pesos)
-    {
-        for (var i = 0; i < colunas.Count; i++) colunas[i].Width = new GridLength(pesos[i], GridUnitType.Star);
-    }
-
-    private static void Posicionar(UIElement painel, int linha, int coluna)
-    {
-        Grid.SetRow(painel, linha);
-        Grid.SetColumn(painel, coluna);
-    }
-
-    /// <summary>Quantas colunas couberem; se precisar de mais de uma linha, as linhas ficam com o mesmo número de atalhos.</summary>
+    /// <summary>Uma linha só sempre que couber; se não couber, linhas com o mesmo número de atalhos.</summary>
     private void AjustarAtalhos()
     {
-        if (_gradeAtalhos is null || Rolagem.ActualWidth <= 0) return;
+        var largura = Rolagem.ActualWidth;
+        if (_gradeAtalhos is null || largura <= 0) return;
         var total = Math.Max(1, Atalhos.Items.Count);
-        var cabem = Math.Max(1, (int)(Rolagem.ActualWidth / LarguraMinimaAtalho));
+        var largo = largura / total >= LarguraAtalhoLargo;
+        var modelo = (DataTemplate)Resources[largo ? "AtalhoLargo" : "AtalhoCompacto"];
+        if (!ReferenceEquals(Atalhos.ItemTemplate, modelo)) Atalhos.ItemTemplate = modelo;
+
+        var cabem = Math.Max(1, (int)(largura / (largo ? LarguraAtalhoLargo : LarguraAtalhoCompacto)));
         var linhas = (int)Math.Ceiling(total / (double)Math.Min(cabem, total));
         _gradeAtalhos.Columns = (int)Math.Ceiling(total / (double)linhas);
     }

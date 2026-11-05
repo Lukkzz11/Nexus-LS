@@ -92,6 +92,37 @@
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="FontWeight" Value="Normal" />
         </Style>
+        <!-- Atalho largo: ícone à esquerda, nome e dica. -->
+        <DataTemplate x:Key="AtalhoLargo">
+            <Button Style="{StaticResource BotaoAtalho}" Command="{Binding Abrir}" AutomationProperties.Name="{Binding Nome}" ToolTip="{Binding Dica}">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                    <Border Background="{StaticResource CorSelecaoSuave}" CornerRadius="{StaticResource RaioMedio}" Width="40" Height="40" Margin="0,0,12,0">
+                        <ui:SymbolIcon Symbol="{Binding Icone}" FontSize="22" Foreground="{StaticResource CorPrimaria}"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Nome}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{Binding Dica}" FontSize="{StaticResource TamPequeno}" Foreground="{StaticResource CorTextoSuave}"
+                                   TextTrimming="CharacterEllipsis" Margin="0,1,0,0" />
+                    </StackPanel>
+                </Grid>
+            </Button>
+        </DataTemplate>
+
+        <!-- Atalho compacto (tela estreita): ícone em cima e o nome embaixo; a dica fica no ToolTip. -->
+        <DataTemplate x:Key="AtalhoCompacto">
+            <Button Style="{StaticResource BotaoAtalho}" Padding="8,10" Command="{Binding Abrir}" AutomationProperties.Name="{Binding Nome}" ToolTip="{Binding Dica}">
+                <StackPanel HorizontalAlignment="Center">
+                    <Border Background="{StaticResource CorSelecaoSuave}" CornerRadius="{StaticResource RaioMedio}" Width="34" Height="34" HorizontalAlignment="Center">
+                        <ui:SymbolIcon Symbol="{Binding Icone}" FontSize="20" Foreground="{StaticResource CorPrimaria}"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <TextBlock Text="{Binding Nome}" FontWeight="SemiBold" FontSize="{StaticResource TamRotulo}" TextTrimming="CharacterEllipsis"
+                               HorizontalAlignment="Center" Margin="0,6,0,0" />
+                </StackPanel>
+            </Button>
+        </DataTemplate>
     </UserControl.Resources>
 
     <ScrollViewer x:Name="Rolagem" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
@@ -199,18 +230,14 @@
                 </Border>
             </Grid>
 
-            <!-- Área principal: estica na altura. As posições dos quatro painéis são definidas no código conforme a largura. -->
+            <!-- Área principal: estica na altura. Coluna 1: semana em barras. Coluna 2: atenção e contas a pagar.
+                 Coluna 3: mais vendidos e agenda. O painel de cima de cada coluna tem a altura do conteúdo; o de baixo fica com o resto. -->
             <Grid x:Name="AreaPrincipal" Grid.Row="3" Margin="0,0,-16,0">
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="5*" />
                     <ColumnDefinition Width="4*" />
-                    <ColumnDefinition Width="3*" />
                     <ColumnDefinition Width="4*" />
-                    <ColumnDefinition Width="3*" />
                 </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="0" />
-                </Grid.RowDefinitions>
 
                 <!-- Últimos 7 dias em barras -->
                 <Border x:Name="PainelSemana" Style="{StaticResource Cartao}">
@@ -271,176 +298,87 @@
                     </Grid>
                 </Border>
 
-                <!-- Mais vendidos da semana -->
-                <Border x:Name="PainelMaisVendidos" Grid.Column="1" Style="{StaticResource Cartao}">
-                    <Grid>
-                        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-                        <StackPanel>
-                            <TextBlock Text="Mais vendidos da semana" Style="{StaticResource TituloSecao}" />
-                            <TextBlock Text="por peças, nos últimos 7 dias" Style="{StaticResource TextoApoio}" Margin="0,2,0,0" />
-                        </StackPanel>
 
-                        <ScrollViewer Grid.Row="1" Margin="0,14,0,0" VerticalScrollBarVisibility="Auto">
-                            <ItemsControl ItemsSource="{Binding MaisVendidosSemana}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Grid Margin="0,0,0,14">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto" />
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="Auto" />
-                                            </Grid.ColumnDefinitions>
-                                            <Border Width="26" Height="26" CornerRadius="13" Background="{StaticResource CorSelecaoSuave}"
-                                                    VerticalAlignment="Center" Margin="0,0,12,0">
-                                                <TextBlock Text="{Binding Posicao}" FontSize="{StaticResource TamPequeno}" FontWeight="SemiBold"
-                                                           Foreground="{StaticResource CorPrimaria}" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                            </Border>
-                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding Nome}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding Nome}" />
-                                                <Grid Height="6" Margin="0,6,0,0">
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="{Binding Cheio}" />
-                                                        <ColumnDefinition Width="{Binding Vazio}" />
-                                                    </Grid.ColumnDefinitions>
-                                                    <Border Grid.ColumnSpan="2" Background="{StaticResource CorLinhaGrade}" CornerRadius="3" />
-                                                    <Border Background="{StaticResource CorSerie1}" CornerRadius="3" />
-                                                </Grid>
-                                            </StackPanel>
-                                            <StackPanel Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding PecasTexto}" FontWeight="SemiBold" HorizontalAlignment="Right" />
-                                                <TextBlock Text="{Binding ValorTexto}" Style="{StaticResource TextoApoio}" HorizontalAlignment="Right" />
-                                            </StackPanel>
-                                        </Grid>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </ScrollViewer>
-                        <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center"
-                                    Visibility="{Binding MaisVendidosVazio, Converter={StaticResource BoolVis}}">
-                            <ui:SymbolIcon Symbol="Tag24" FontSize="28" Foreground="{StaticResource CorBordaForte}" HorizontalAlignment="Center" />
-                            <TextBlock Text="Nenhuma peça vendida nos últimos 7 dias." Style="{StaticResource TextoApoio}"
-                                       TextAlignment="Center" Margin="0,8,0,0" />
-                        </StackPanel>
-
-                        <Button Grid.Row="2" Content="Ver o ranking completo" Style="{StaticResource LinkPainel}"
-                                Command="{Binding AbrirMaisVendidosCommand}"
-                                Visibility="{Binding PodeVerMaisVendidos, Converter={StaticResource BoolVis}}" />
-                    </Grid>
-                </Border>
-
-                <!-- Precisa de atenção -->
-                <Border x:Name="PainelAtencao" Grid.Column="2" Style="{StaticResource Cartao}">
-                    <Grid>
-                        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
-                        <Grid>
-                            <TextBlock Text="Precisa de atenção" Style="{StaticResource TituloSecao}" VerticalAlignment="Center" />
-                            <Border HorizontalAlignment="Right" Background="{StaticResource CorCabecalho}" CornerRadius="{StaticResource RaioMedio}"
-                                    Padding="10,3" Visibility="{Binding TudoEmDia, Converter={StaticResource BoolVis}}">
-                                <StackPanel Orientation="Horizontal">
-                                    <ui:SymbolIcon Symbol="CheckmarkCircle24" FontSize="16" Foreground="{StaticResource CorPositivo}" Margin="0,0,6,0" />
-                                    <TextBlock Text="Tudo em dia" Foreground="{StaticResource CorPositivo}" FontWeight="SemiBold" VerticalAlignment="Center" />
-                                </StackPanel>
-                            </Border>
-                        </Grid>
-
-                        <ScrollViewer Grid.Row="1" Margin="0,14,0,0" VerticalScrollBarVisibility="Auto">
-                            <StackPanel>
-                                <Border Style="{StaticResource ItemAtencao}" Tag="{Binding EstoqueBaixoAlerta}">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                        <Ellipse Style="{StaticResource PontoSituacao}" Tag="{Binding EstoqueBaixoAlerta}" VerticalAlignment="Top" Margin="0,26,12,0" />
-                                        <StackPanel Grid.Column="1">
-                                            <TextBlock Text="Estoque" Style="{StaticResource RotuloAtencao}" />
-                                            <TextBlock Text="{Binding EstoqueBaixoTexto}" Style="{StaticResource ValorAtencao}" />
-                                            <ItemsControl ItemsSource="{Binding EstoquesBaixos}" Margin="0,4,0,0"
-                                                          Visibility="{Binding EstoqueBaixoAlerta, Converter={StaticResource BoolVis}}">
-                                                <ItemsControl.ItemTemplate>
-                                                    <DataTemplate><TextBlock Text="{Binding}" Style="{StaticResource TextoApoio}" Margin="0,2" /></DataTemplate>
-                                                </ItemsControl.ItemTemplate>
-                                            </ItemsControl>
-                                        </StackPanel>
-                                        <Button Grid.Column="2" Style="{StaticResource BotaoIcone}" VerticalAlignment="Center" Margin="8,0,0,0"
-                                                ToolTip="Ver estoque" AutomationProperties.Name="Ver estoque" Command="{Binding AbrirEstoqueCommand}">
-                                            <ui:SymbolIcon Symbol="ChevronRight24" FontSize="18" />
-                                        </Button>
-                                    </Grid>
-                                </Border>
-
-                                <Border Style="{StaticResource ItemAtencao}" Tag="{Binding DividaAlerta}">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                        <Ellipse Style="{StaticResource PontoSituacao}" Tag="{Binding DividaAlerta}" VerticalAlignment="Top" Margin="0,26,12,0" />
-                                        <StackPanel Grid.Column="1">
-                                            <TextBlock Text="Clientes devendo (a prazo)" Style="{StaticResource RotuloAtencao}" />
-                                            <TextBlock Text="{Binding DividaTexto}" Style="{StaticResource ValorAtencao}" />
-                                            <TextBlock Text="{Binding DividaDetalhe}" Style="{StaticResource TextoApoio}" Margin="0,2,0,0" />
-                                        </StackPanel>
-                                        <Button Grid.Column="2" Style="{StaticResource BotaoIcone}" VerticalAlignment="Center" Margin="8,0,0,0"
-                                                ToolTip="Ver clientes" AutomationProperties.Name="Ver clientes" Command="{Binding AbrirClientesCommand}">
-                                            <ui:SymbolIcon Symbol="ChevronRight24" FontSize="18" />
-                                        </Button>
-                                    </Grid>
-                                </Border>
-
-                                <Border Style="{StaticResource ItemAtencao}" Tag="{Binding BackupAlerta}"
-                                        Visibility="{Binding TemBackup, Converter={StaticResource BoolVis}}">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                        <Ellipse Style="{StaticResource PontoSituacao}" Tag="{Binding BackupAlerta}" VerticalAlignment="Top" Margin="0,26,12,0" />
-                                        <StackPanel Grid.Column="1">
-                                            <TextBlock Text="Backup dos dados" Style="{StaticResource RotuloAtencao}" />
-                                            <TextBlock Text="{Binding BackupTexto}" Style="{StaticResource ValorAtencao}" AutomationProperties.Name="Situação do backup" />
-                                            <TextBlock Text="{Binding BackupDetalhe}" Style="{StaticResource TextoApoio}" Margin="0,2,0,0" />
-                                        </StackPanel>
-                                        <Button Grid.Column="2" Style="{StaticResource BotaoIcone}" VerticalAlignment="Center" Margin="8,0,0,0"
-                                                ToolTip="Configurações" AutomationProperties.Name="Configurações" Command="{Binding AbrirConfiguracoesCommand}">
-                                            <ui:SymbolIcon Symbol="ChevronRight24" FontSize="18" />
-                                        </Button>
-                                    </Grid>
-                                </Border>
-                            </StackPanel>
-                        </ScrollViewer>
-                    </Grid>
-                </Border>
-
-                <!-- Coluna lateral: agenda de hoje e contas a pagar (dividem a altura; a que não se aplica some) -->
-                <UniformGrid x:Name="ColunaLateral" Grid.Column="3" Columns="1">
-                    <Border Style="{StaticResource Cartao}" Visibility="{Binding TemAgenda, Converter={StaticResource BoolVis}}">
+                <Grid Grid.Column="1">
+                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                    <!-- Precisa de atenção -->
+                    <Border x:Name="PainelAtencao" Style="{StaticResource Cartao}">
                         <Grid>
                             <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
                             <Grid>
-                                <TextBlock Text="Agenda de hoje" Style="{StaticResource TituloSecao}" VerticalAlignment="Center" />
-                                <Button Content="Abrir agenda" Style="{StaticResource LinkPainel}" Command="{Binding AbrirAgendaCommand}" />
+                                <TextBlock Text="Precisa de atenção" Style="{StaticResource TituloSecao}" VerticalAlignment="Center" />
+                                <Border HorizontalAlignment="Right" Background="{StaticResource CorCabecalho}" CornerRadius="{StaticResource RaioMedio}"
+                                        Padding="10,3" Visibility="{Binding TudoEmDia, Converter={StaticResource BoolVis}}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <ui:SymbolIcon Symbol="CheckmarkCircle24" FontSize="16" Foreground="{StaticResource CorPositivo}" Margin="0,0,6,0" />
+                                        <TextBlock Text="Tudo em dia" Foreground="{StaticResource CorPositivo}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Border>
                             </Grid>
-                            <ScrollViewer Grid.Row="1" Margin="0,10,0,0" VerticalScrollBarVisibility="Auto">
-                                <ItemsControl ItemsSource="{Binding AgendaLinhas}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border BorderBrush="{StaticResource CorLinhaGrade}" BorderThickness="0,0,0,1" Padding="0,8">
-                                                <Grid>
-                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" MinWidth="64" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                                                    <TextBlock x:Name="Hora" Text="{Binding Hora}" FontWeight="SemiBold" Foreground="{StaticResource CorPrimaria}" Margin="0,0,12,0" />
-                                                    <TextBlock Grid.Column="1" Text="{Binding Titulo}" TextWrapping="Wrap" />
-                                                </Grid>
-                                            </Border>
-                                            <DataTemplate.Triggers>
-                                                <DataTrigger Binding="{Binding JaPassou}" Value="True">
-                                                    <Setter TargetName="Hora" Property="Foreground" Value="{StaticResource CorAtencaoTexto}" />
-                                                </DataTrigger>
-                                            </DataTemplate.Triggers>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
+
+                            <ScrollViewer Grid.Row="1" Margin="0,14,0,0" VerticalScrollBarVisibility="Auto">
+                                <StackPanel>
+                                    <Border Style="{StaticResource ItemAtencao}" Tag="{Binding EstoqueBaixoAlerta}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                            <Ellipse Style="{StaticResource PontoSituacao}" Tag="{Binding EstoqueBaixoAlerta}" VerticalAlignment="Top" Margin="0,26,12,0" />
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Text="Estoque" Style="{StaticResource RotuloAtencao}" />
+                                                <TextBlock Text="{Binding EstoqueBaixoTexto}" Style="{StaticResource ValorAtencao}" />
+                                                <ItemsControl ItemsSource="{Binding EstoquesBaixos}" Margin="0,4,0,0"
+                                                              Visibility="{Binding EstoqueBaixoAlerta, Converter={StaticResource BoolVis}}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate><TextBlock Text="{Binding}" Style="{StaticResource TextoApoio}" Margin="0,2" /></DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                            <Button Grid.Column="2" Style="{StaticResource BotaoIcone}" VerticalAlignment="Center" Margin="8,0,0,0"
+                                                    ToolTip="Ver estoque" AutomationProperties.Name="Ver estoque" Command="{Binding AbrirEstoqueCommand}">
+                                                <ui:SymbolIcon Symbol="ChevronRight24" FontSize="18" />
+                                            </Button>
+                                        </Grid>
+                                    </Border>
+
+                                    <Border Style="{StaticResource ItemAtencao}" Tag="{Binding DividaAlerta}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                            <Ellipse Style="{StaticResource PontoSituacao}" Tag="{Binding DividaAlerta}" VerticalAlignment="Top" Margin="0,26,12,0" />
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Text="Clientes devendo (a prazo)" Style="{StaticResource RotuloAtencao}" />
+                                                <TextBlock Text="{Binding DividaTexto}" Style="{StaticResource ValorAtencao}" />
+                                                <TextBlock Text="{Binding DividaDetalhe}" Style="{StaticResource TextoApoio}" Margin="0,2,0,0" />
+                                            </StackPanel>
+                                            <Button Grid.Column="2" Style="{StaticResource BotaoIcone}" VerticalAlignment="Center" Margin="8,0,0,0"
+                                                    ToolTip="Ver clientes" AutomationProperties.Name="Ver clientes" Command="{Binding AbrirClientesCommand}">
+                                                <ui:SymbolIcon Symbol="ChevronRight24" FontSize="18" />
+                                            </Button>
+                                        </Grid>
+                                    </Border>
+
+                                    <Border Style="{StaticResource ItemAtencao}" Tag="{Binding BackupAlerta}"
+                                            Visibility="{Binding TemBackup, Converter={StaticResource BoolVis}}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                            <Ellipse Style="{StaticResource PontoSituacao}" Tag="{Binding BackupAlerta}" VerticalAlignment="Top" Margin="0,26,12,0" />
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Text="Backup dos dados" Style="{StaticResource RotuloAtencao}" />
+                                                <TextBlock Text="{Binding BackupTexto}" Style="{StaticResource ValorAtencao}" AutomationProperties.Name="Situação do backup" />
+                                                <TextBlock Text="{Binding BackupDetalhe}" Style="{StaticResource TextoApoio}" Margin="0,2,0,0" />
+                                            </StackPanel>
+                                            <Button Grid.Column="2" Style="{StaticResource BotaoIcone}" VerticalAlignment="Center" Margin="8,0,0,0"
+                                                    ToolTip="Configurações" AutomationProperties.Name="Configurações" Command="{Binding AbrirConfiguracoesCommand}">
+                                                <ui:SymbolIcon Symbol="ChevronRight24" FontSize="18" />
+                                            </Button>
+                                        </Grid>
+                                    </Border>
+                                </StackPanel>
                             </ScrollViewer>
-                            <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center"
-                                        Visibility="{Binding AgendaVazia, Converter={StaticResource BoolVis}}">
-                                <ui:SymbolIcon Symbol="CalendarLtr24" FontSize="28" Foreground="{StaticResource CorBordaForte}" HorizontalAlignment="Center" />
-                                <TextBlock Text="Nenhum compromisso para hoje." Style="{StaticResource TextoApoio}" TextAlignment="Center" Margin="0,8,0,0" />
-                            </StackPanel>
                         </Grid>
                     </Border>
 
-                    <Border Style="{StaticResource Cartao}" Visibility="{Binding PodeVerFinanceiro, Converter={StaticResource BoolVis}}">
+
+                    <!-- Contas a pagar (só para quem pode abrir o Financeiro) -->
+                    <Border Grid.Row="1" Style="{StaticResource Cartao}" Visibility="{Binding PodeVerFinanceiro, Converter={StaticResource BoolVis}}">
                         <Grid>
                             <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
                             <Grid>
@@ -480,33 +418,115 @@
                             </StackPanel>
                         </Grid>
                     </Border>
-                </UniformGrid>
+                </Grid>
+
+                <Grid Grid.Column="2">
+                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                    <!-- Mais vendidos da semana -->
+                    <Border x:Name="PainelMaisVendidos" Style="{StaticResource Cartao}">
+                        <Grid>
+                            <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="Mais vendidos da semana" Style="{StaticResource TituloSecao}" />
+                                <TextBlock Text="por peças, nos últimos 7 dias" Style="{StaticResource TextoApoio}" Margin="0,2,0,0" />
+                            </StackPanel>
+
+                            <ScrollViewer Grid.Row="1" Margin="0,14,0,0" VerticalScrollBarVisibility="Auto">
+                                <ItemsControl ItemsSource="{Binding MaisVendidosSemana}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="0,0,0,14">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <Border Width="26" Height="26" CornerRadius="13" Background="{StaticResource CorSelecaoSuave}"
+                                                        VerticalAlignment="Center" Margin="0,0,12,0">
+                                                    <TextBlock Text="{Binding Posicao}" FontSize="{StaticResource TamPequeno}" FontWeight="SemiBold"
+                                                               Foreground="{StaticResource CorPrimaria}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                </Border>
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Nome}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding Nome}" />
+                                                    <Grid Height="6" Margin="0,6,0,0">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="{Binding Cheio}" />
+                                                            <ColumnDefinition Width="{Binding Vazio}" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <Border Grid.ColumnSpan="2" Background="{StaticResource CorLinhaGrade}" CornerRadius="3" />
+                                                        <Border Background="{StaticResource CorSerie1}" CornerRadius="3" />
+                                                    </Grid>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding PecasTexto}" FontWeight="SemiBold" HorizontalAlignment="Right" />
+                                                    <TextBlock Text="{Binding ValorTexto}" Style="{StaticResource TextoApoio}" HorizontalAlignment="Right" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                            <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center"
+                                        Visibility="{Binding MaisVendidosVazio, Converter={StaticResource BoolVis}}">
+                                <ui:SymbolIcon Symbol="Tag24" FontSize="28" Foreground="{StaticResource CorBordaForte}" HorizontalAlignment="Center" />
+                                <TextBlock Text="Nenhuma peça vendida nos últimos 7 dias." Style="{StaticResource TextoApoio}"
+                                           TextAlignment="Center" Margin="0,8,0,0" />
+                            </StackPanel>
+
+                            <Button Grid.Row="2" Content="Ver o ranking completo" Style="{StaticResource LinkPainel}"
+                                    Command="{Binding AbrirMaisVendidosCommand}"
+                                    Visibility="{Binding PodeVerMaisVendidos, Converter={StaticResource BoolVis}}" />
+                        </Grid>
+                    </Border>
+
+
+                    <!-- Agenda de hoje -->
+                    <Border Grid.Row="1" Style="{StaticResource Cartao}" Visibility="{Binding TemAgenda, Converter={StaticResource BoolVis}}">
+                        <Grid>
+                            <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                            <Grid>
+                                <TextBlock Text="Agenda de hoje" Style="{StaticResource TituloSecao}" VerticalAlignment="Center" />
+                                <Button Content="Abrir agenda" Style="{StaticResource LinkPainel}" Command="{Binding AbrirAgendaCommand}" />
+                            </Grid>
+                            <ScrollViewer Grid.Row="1" Margin="0,10,0,0" VerticalScrollBarVisibility="Auto">
+                                <ItemsControl ItemsSource="{Binding AgendaLinhas}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border BorderBrush="{StaticResource CorLinhaGrade}" BorderThickness="0,0,0,1" Padding="0,8">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" MinWidth="64" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                                    <TextBlock x:Name="Hora" Text="{Binding Hora}" FontWeight="SemiBold" Foreground="{StaticResource CorPrimaria}" Margin="0,0,12,0" />
+                                                    <TextBlock Grid.Column="1" Text="{Binding Titulo}" TextWrapping="Wrap" />
+                                                </Grid>
+                                            </Border>
+                                            <DataTemplate.Triggers>
+                                                <DataTrigger Binding="{Binding JaPassou}" Value="True">
+                                                    <Setter TargetName="Hora" Property="Foreground" Value="{StaticResource CorAtencaoTexto}" />
+                                                </DataTrigger>
+                                            </DataTemplate.Triggers>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                            <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center"
+                                        Visibility="{Binding AgendaVazia, Converter={StaticResource BoolVis}}">
+                                <ui:SymbolIcon Symbol="CalendarLtr24" FontSize="28" Foreground="{StaticResource CorBordaForte}" HorizontalAlignment="Center" />
+                                <TextBlock Text="Nenhum compromisso para hoje." Style="{StaticResource TextoApoio}" TextAlignment="Center" Margin="0,8,0,0" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                </Grid>
             </Grid>
+
 
             <!-- Atalhos: grade que preenche a largura (colunas calculadas pela largura) -->
             <TextBlock Grid.Row="4" Text="Ir para" Style="{StaticResource TituloSecao}" Margin="0,4,0,10" />
-            <ItemsControl x:Name="Atalhos" Grid.Row="5" ItemsSource="{Binding Atalhos}" Margin="0,0,-12,-12">
+            <ItemsControl x:Name="Atalhos" Grid.Row="5" ItemsSource="{Binding Atalhos}" Margin="0,0,-12,-12"
+                          ItemTemplate="{StaticResource AtalhoLargo}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate><UniformGrid Loaded="GradeAtalhos_Loaded" /></ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <Button Style="{StaticResource BotaoAtalho}" Command="{Binding Abrir}" AutomationProperties.Name="{Binding Nome}" ToolTip="{Binding Dica}">
-                            <Grid>
-                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                                <Border Background="{StaticResource CorSelecaoSuave}" CornerRadius="{StaticResource RaioMedio}" Width="40" Height="40" Margin="0,0,12,0">
-                                    <ui:SymbolIcon Symbol="{Binding Icone}" FontSize="22" Foreground="{StaticResource CorPrimaria}"
-                                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                </Border>
-                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding Nome}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-                                    <TextBlock Text="{Binding Dica}" FontSize="{StaticResource TamPequeno}" Foreground="{StaticResource CorTextoSuave}"
-                                               TextTrimming="CharacterEllipsis" Margin="0,1,0,0" />
-                                </StackPanel>
-                            </Grid>
-                        </Button>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
             </ItemsControl>
         </Grid>
     </ScrollViewer>
