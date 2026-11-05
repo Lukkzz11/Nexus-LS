@@ -1,3 +1,4 @@
+using NexusLS.Core.Financeiro;
 using NexusLS.Core.Models;
 using NexusLS.Core.Services;
 using NexusLS.Tests.Infra;
@@ -148,5 +149,90 @@ public sealed class InicioServiceTests : IDisposable
 
         Assert.Equal(0, r.ClientesComDivida);
         Assert.Equal(0, r.DividaTotalCentavos);
+    }
+    [Fact]
+    public async Task Ultimos_sete_dias_vem_dia_a_dia_com_zeros_e_sem_canceladas()
+    {
+        _agora = new DateTime(2026, 10, 12, 10, 0, 0);
+        await VenderAsync(5);                                   // fora: 7 dias atrás
+        _agora = new DateTime(2026, 10, 13, 10, 0, 0);
+        await VenderAsync(2);                                   // 40,00, primeiro dia da janela
+        _agora = new DateTime(2026, 10, 19, 9, 0, 0);
+        await VenderAsync(3);                                   // 60,00 hoje
+        var cancelada = await VenderAsync(10);
+        await _vendas.CancelarAsync(cancelada.Id, "Teste");
+        _agora = new DateTime(2026, 10, 19, 14, 0, 0);
+
+        var r = await _inicio.ObterAsync();
+
+        Assert.Equal(7, r.UltimosDias.Count);
+        Assert.Equal(new DateTime(2026, 10, 13), r.UltimosDias[0].Dia);
+        Assert.Equal((1, 4000L), (r.UltimosDias[0].Vendas, r.UltimosDias[0].TotalCentavos));
+        Assert.Equal(new DateTime(2026, 10, 19), r.UltimosDias[^1].Dia);
+        Assert.Equal((1, 6000L), (r.UltimosDias[^1].Vendas, r.UltimosDias[^1].TotalCentavos));
+        Assert.All(r.UltimosDias.Skip(1).Take(5), d => Assert.Equal(0, d.TotalCentavos));
+        Assert.Equal(3, r.PecasHoje);                           // a cancelada não conta
+    }
+
+    [Fact]
+    public async Task Mais_vendidos_da_semana_por_pecas_com_desconto_rateado_e_sem_canceladas()
+    {
+        var bone = await ProdutoAsync();                                                                  // 20,00
+        var camisa = (await _produtos.CadastrarAsync(new DadosProduto("Camisa", null, 5000, 2000, 1), 100)).Id; // 50,00
+        await _vendas.FinalizarAsync(new PedidoVenda(
+            new[] { new ItemCarrinho(bone, 3), new ItemCarrinho(camisa, 1) }, 1000, FormaPagamento.Pix)); // 110,00 - 10,00
+        var cancelada = await _vendas.FinalizarAsync(new PedidoVenda(new[] { new ItemCarrinho(camisa, 10) }, 0, FormaPagamento.Pix));
+        await _vendas.CancelarAsync(cancelada.Id, "Teste");
+        _agora = new DateTime(2026, 10, 10, 10, 0, 0);
+        await _vendas.FinalizarAsync(new PedidoVenda(new[] { new ItemCarrinho(camisa, 20) }, 0, FormaPagamento.Pix)); // fora da semana
+        _agora = new DateTime(2026, 10, 19, 14, 0, 0);
+
+        var r = await _inicio.ObterAsync();
+
+        Assert.Equal(new[] { ("Boné", 3), ("Camisa", 1) }, r.MaisVendidosSemana.Select(p => (p.Nome, p.Quantidade)));
+        Assert.Equal(10000, r.MaisVendidosSemana.Sum(p => p.TotalLiquidoCentavos)); // o desconto sai do valor dos itens
+        Assert.True(r.MaisVendidosSemana[0].TotalLiquidoCentavos < 6000);
+    }
+
+    [Fact]
+    public async Task Contas_a_pagar_mostram_atrasadas_e_as_dos_proximos_sete_dias()
+    {
+        var fin = new FinanceiroService(_banco.Fabrica, () => _agora);
+        async Task<Lancamento> Conta(string nome, long valor, DateTime venc, TipoLancamento tipo = TipoLancamento.Despesa, bool pago = false) =>
+            (await fin.CriarAsync(new DadosLancamento(tipo, nome, valor, venc, "Fornecedores", "Malharia Sol", JaPago: pago, Forma: pago ? FormaPagamento.Pix : null)))[0];
+
+        await Conta("Luz", 38000, new DateTime(2026, 10, 15));                // atrasada
+        await Conta("Aluguel", 150000, new DateTime(2026, 10, 26));           // último dia da janela
+        await Conta("Internet", 12000, new DateTime(2026, 10, 27));           // fora: depois da janela
+        await Conta("Serviço", 25000, new DateTime(2026, 10, 20), TipoLancamento.Receita); // a receber não entra
+        await Conta("Paga", 5000, new DateTime(2026, 10, 18), pago: true);
+        var cancelada = await Conta("Cancelada", 7000, new DateTime(2026, 10, 20));
+        await fin.CancelarAsync(cancelada.Id, "Lançada errado");
+        var comCheque = await Conta("Fornecedor", 30000, new DateTime(2026, 10, 21));
+        var banco = await new ContaFinanceiraService(_banco.Fabrica, () => _agora)
+            .CriarAsync(new DadosConta("Banco A", TipoContaFin.Banco, 100000, new DateTime(2026, 10, 1), Padrao: true));
+        await new ChequeEmitidoService(_banco.Fabrica, () => _agora)
+            .EmitirAsync(new DadosChequeEmitido(comCheque.Id, banco.Id, new DateTime(2026, 10, 28), "000123"));
+
+        var r = await _inicio.ObterAsync();
+
+        Assert.Equal(new[] { "Luz", "Aluguel" }, r.ContasAPagar.Select(c => c.Descricao));
+        Assert.True(r.ContasAPagar[0].Atrasada);
+        Assert.False(r.ContasAPagar[1].Atrasada);
+        Assert.Equal(2, r.ContasAPagarQuantidade);
+        Assert.Equal(188000, r.ContasAPagarTotalCentavos);
+        Assert.Equal(38000, r.ContasAtrasadasCentavos);
+    }
+
+    [Fact]
+    public async Task Banco_vazio_tem_sete_dias_zerados_e_listas_vazias()
+    {
+        var r = await _inicio.ObterAsync();
+
+        Assert.Equal(7, r.UltimosDias.Count);
+        Assert.All(r.UltimosDias, d => Assert.Equal(0, d.TotalCentavos));
+        Assert.Empty(r.MaisVendidosSemana);
+        Assert.Empty(r.ContasAPagar);
+        Assert.Equal(0, r.PecasHoje);
     }
 }
