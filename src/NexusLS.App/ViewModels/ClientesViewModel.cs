@@ -13,7 +13,7 @@ public record LinhaTitulo(int VendaId, string Data, string Vencimento, string To
     string Ajuste = "", long TotalCentavos = 0, DateTime? VencimentoData = null)
 {
     /// <summary>O resto da linha depois do número da venda; só mostra o ajuste quando existe.</summary>
-    public string Detalhe => $" {Total} · {Situacao} · vence {Vencimento} · falta {Saldo}" + (string.IsNullOrEmpty(Ajuste) ? "" : $" · {Ajuste}");
+    public string Detalhe => $" {Total} · {Situacao}\nvence {Vencimento} · falta {Saldo}" + (string.IsNullOrEmpty(Ajuste) ? "" : $"\n{Ajuste}");   // linhas próprias: "R$" nunca fica longe do valor
 }
 
 /// <summary>Cadastro de clientes (nome, documento, telefone, limite de crédito, observação) com o histórico de compras e a dívida a prazo de cada um.</summary>
@@ -242,7 +242,7 @@ public partial class ClientesViewModel : ViewModelBase
         ResumoDivida = conta.Titulos.Count == 0
             ? "Sem vendas a prazo."
             : $"Deve {Dinheiro.Formatar(conta.SaldoDevedorCentavos)} · Já pagou {Dinheiro.Formatar(conta.TotalPagoCentavos)}"
-              + (vencido > 0 ? $" · VENCIDO: {Dinheiro.Formatar(vencido)}" : "");
+              + (vencido > 0 ? $"\nVENCIDO: {Dinheiro.Formatar(vencido)}" : "");
     }
 
     /// <summary>Muda o valor devido e/ou o vencimento do título escolhido. A dívida é recalculada por FIFO; a venda não é alterada.</summary>

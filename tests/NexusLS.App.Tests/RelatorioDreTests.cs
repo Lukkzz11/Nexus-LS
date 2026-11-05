@@ -56,6 +56,25 @@ public sealed class RelatorioDreTests : IDisposable
     }
 
     [Fact]
+    public async Task Cartao_de_lucro_bruto_e_o_do_DRE_inclusive_com_abatimento_em_titulo()
+    {
+        var produtos = new ProdutoService(_banco.Fabrica);
+        var bone = await produtos.CadastrarAsync(new DadosProduto("Boné", null, 2000, 800, 0), 10);
+        var maria = await new ClienteService(_banco.Fabrica).CadastrarAsync(new DadosCliente("Maria"));
+        var venda = await new VendaService(_banco.Fabrica).FinalizarAsync(
+            new PedidoVenda(new[] { new ItemCarrinho(bone.Id, 2) }, 0, FormaPagamento.APrazo, ClienteId: maria.Id));   // 40,00
+        await new TituloPrazoService(_banco.Fabrica).EditarAsync(venda.Id, 3000, null, "desconto combinado");           // -10,00
+
+        var vm = await AbrirAsync();
+        await AteAsync(() => vm.Dre.Count > 0, "montar o DRE");
+
+        var lucroDre = vm.Dre.First(l => l.Rotulo.StartsWith("= Lucro bruto")).Valor;
+        Assert.Equal(Dinheiro.Formatar(3000 - 1600), lucroDre);       // 30,00 - 16,00 de custo
+        Assert.Equal(lucroDre, vm.LucroTexto);                        // o cartão do topo mostra o MESMO número
+        Assert.Contains("abatimentos", vm.AvisoLucro);
+    }
+
+    [Fact]
     public async Task Resultado_negativo_e_marcado_em_vermelho_e_a_despesa_aparece_por_categoria()
     {
         await new FinanceiroService(_banco.Fabrica).CriarAsync(new DadosLancamento(

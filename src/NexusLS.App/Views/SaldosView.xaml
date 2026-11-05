@@ -70,6 +70,10 @@
                         <TextBlock Text="{Binding EmCompensacaoTexto}" Style="{StaticResource NumeroGrande}" AutomationProperties.Name="Em compensação" />
                         <TextBlock Text="{Binding EmCompensacaoDetalhe}" Style="{StaticResource Detalhe}" MaxWidth="280" />
                         <TextBlock Text="Já está no a receber; ainda não é saldo." Style="{StaticResource Detalhe}" />
+                        <StackPanel Visibility="{Binding TemEmitidos, Converter={StaticResource BoolVis}}" Margin="0,6,0,0">
+                            <TextBlock Text="{Binding EmitidosTexto}" Style="{StaticResource Detalhe}" MaxWidth="280" />
+                            <TextBlock Text="Já saiu do talão; ainda não saiu do saldo." Style="{StaticResource Detalhe}" />
+                        </StackPanel>
                     </StackPanel>
                 </Border>
             </WrapPanel>

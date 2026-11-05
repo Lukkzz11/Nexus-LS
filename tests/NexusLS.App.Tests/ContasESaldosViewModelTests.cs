@@ -92,7 +92,8 @@ public sealed class ContasESaldosViewModelTests : IDisposable
         await vm.Saldos.Carregamento;
         await vm.Saldos.CarregarAsync();
         Assert.Equal(Dinheiro.Formatar(100000), vm.Saldos.SaldoDisponivelTexto);
-        Assert.Contains("Cheques emitidos", vm.Saldos.EmCompensacaoDetalhe);
+        Assert.Contains("Cheques emitidos", vm.Saldos.EmitidosTexto);
+        Assert.True(vm.Saldos.TemEmitidos);
 
         emitidos.Selecionado = emitidos.Cheques.Single();
         emitidos.DataCompensacao = Agora.Date;

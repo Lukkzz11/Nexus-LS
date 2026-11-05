@@ -124,6 +124,12 @@ public partial class RelatoriosViewModel : ViewModelBase
     private void MontarDre(DemonstrativoFinanceiro d)
     {
         static string R(long c) => Dinheiro.Formatar(c);
+
+        // O cartão do topo usa a MESMA fonte do DRE (o motor, já com abatimentos/acréscimos em título), para a tela nunca mostrar dois lucros.
+        LucroTexto = R(d.LucroBrutoCentavos);
+        if (d.AjustesTitulosCentavos != 0)
+            AvisoLucro = (AvisoLucro.Length == 0 ? "" : AvisoLucro + " ") +
+                         $"O lucro bruto inclui {R(d.AjustesTitulosCentavos)} de abatimentos/acréscimos em títulos a prazo (a aba Vendas mostra o lucro só das vendas).";
         Dre.Clear();
         void L(string rotulo, long valor, bool destaque = false, bool recuo = false) =>
             Dre.Add(new LinhaDre(rotulo, R(valor), destaque, recuo, destaque && valor < 0));
