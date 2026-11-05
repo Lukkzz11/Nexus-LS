@@ -24,9 +24,39 @@ public partial class FechamentoViewModel : ViewModelBase
     private readonly CaixaService _caixa;
 
     private readonly ConfiguracaoService? _configuracao;
+    private readonly RelatorioCaixaPeriodoService? _relatorioPeriodo;
 
-    public FechamentoViewModel(CaixaService caixa, ConfiguracaoService? configuracao = null)
+    // ----- Relatório do Caixa por período (PDF) -----
+    /// <summary>A tela define a caixa "Salvar como" do Windows (nulo = cancelou).</summary>
+    public Func<string, string?> EscolherArquivoParaSalvar { get; set; } = _ => null;
+
+    [ObservableProperty] private DateTime? _relatorioDe;
+    [ObservableProperty] private DateTime? _relatorioAte;
+    public bool TemRelatorioPeriodo => _relatorioPeriodo is not null;
+
+    [RelayCommand]
+    private Task GerarRelatorioPdfAsync() => ExecutarAsync(async () =>
     {
+        if (_relatorioPeriodo is null) return;
+        if (RelatorioDe is not DateTime de || RelatorioAte is not DateTime ate)
+            throw new RegraDeNegocioException("Escolha as duas datas do período.");
+
+        var relatorio = await _relatorioPeriodo.GerarAsync(de, ate);
+        var caminho = EscolherArquivoParaSalvar(RelatorioCaixaPdf.NomeDoArquivo(relatorio));
+        if (caminho is null) return;
+
+        var loja = _configuracao is null ? "Nexus LS" : (await _configuracao.ObterAsync()).NomeLoja;
+        await System.IO.File.WriteAllBytesAsync(caminho, RelatorioCaixaPdf.Gerar(relatorio, loja));
+        MostrarSucesso($"Relatório salvo: {caminho}");
+    });
+
+    public FechamentoViewModel(CaixaService caixa, ConfiguracaoService? configuracao = null,
+        RelatorioCaixaPeriodoService? relatorioPeriodo = null, DateTime? hoje = null)
+    {
+        _relatorioPeriodo = relatorioPeriodo;
+        var dia = (hoje ?? DateTime.Today).Date;
+        _relatorioDe = new DateTime(dia.Year, dia.Month, 1);
+        _relatorioAte = dia;
         _caixa = caixa;
         _configuracao = configuracao;
         _movimentoSelecionado = OpcoesMovimento[0];

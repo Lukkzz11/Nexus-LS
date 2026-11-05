@@ -162,3 +162,56 @@ public sealed class SobrasEPizzasTests : IDisposable
         Assert.Empty(vm.PizzaFormas);
     }
 }
+
+/// <summary>O painel "Relatório do caixa por período (PDF)" da tela Fechamento.</summary>
+public sealed class RelatorioCaixaTelaTests : IDisposable
+{
+    private readonly BancoDeTeste _banco = new();
+    private readonly string _pasta = Path.Combine(Path.GetTempPath(), "nexusls-relcx-" + Guid.NewGuid().ToString("N"));
+    private readonly DateTime _hoje = new(2026, 10, 20);
+
+    public RelatorioCaixaTelaTests() => Directory.CreateDirectory(_pasta);
+
+    public void Dispose()
+    {
+        _banco.Dispose();
+        try { Directory.Delete(_pasta, true); } catch (IOException) { }
+    }
+
+    private FechamentoViewModel Nova(bool comRelatorio = true) => new(new CaixaService(_banco.Fabrica), new ConfiguracaoService(_banco.Fabrica),
+        comRelatorio ? new RelatorioCaixaPeriodoService(_banco.Fabrica, () => _hoje.AddHours(10)) : null, _hoje);
+
+    [Fact]
+    public async Task Gera_o_pdf_no_arquivo_escolhido_com_periodo_padrao_do_mes()
+    {
+        var vm = Nova();
+        Assert.True(vm.TemRelatorioPeriodo);
+        Assert.Equal(new DateTime(2026, 10, 1), vm.RelatorioDe);
+        Assert.Equal(_hoje, vm.RelatorioAte);
+        var caminho = Path.Combine(_pasta, "saida.pdf");
+        string? sugerido = null;
+        vm.EscolherArquivoParaSalvar = nome => { sugerido = nome; return caminho; };
+
+        await vm.GerarRelatorioPdfCommand.ExecuteAsync(null);
+
+        Assert.Equal("caixa_2026-10-01_a_2026-10-20.pdf", sugerido);
+        Assert.False(vm.MensagemEhErro);
+        Assert.StartsWith("%PDF-1.4", System.Text.Encoding.Latin1.GetString(File.ReadAllBytes(caminho), 0, 8));
+    }
+
+    [Fact]
+    public async Task Periodo_invalido_mostra_o_erro_e_cancelar_a_caixa_nao_grava()
+    {
+        var vm = Nova();
+        vm.EscolherArquivoParaSalvar = _ => null;
+        await vm.GerarRelatorioPdfCommand.ExecuteAsync(null);
+        Assert.Empty(Directory.GetFiles(_pasta));
+
+        vm.RelatorioAte = _hoje.AddDays(5);
+        await vm.GerarRelatorioPdfCommand.ExecuteAsync(null);
+        Assert.True(vm.MensagemEhErro);
+        Assert.Contains("futuro", vm.Mensagem);
+
+        Assert.False(Nova(comRelatorio: false).TemRelatorioPeriodo);
+    }
+}

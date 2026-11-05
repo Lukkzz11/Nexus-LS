@@ -1,4 +1,4 @@
-<UserControl x:Class="NexusLS.App.Views.FechamentoView"
+﻿<UserControl x:Class="NexusLS.App.Views.FechamentoView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
@@ -97,6 +97,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
             <TextBlock Text="Histórico" FontSize="18" FontWeight="SemiBold" Margin="0,48,0,10" />
             <TextBlock Grid.Row="1" Text="Nenhum fechamento feito ainda." Foreground="{StaticResource CorTextoSuave}">
@@ -127,6 +128,18 @@
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
+            <Border Grid.Row="2" Style="{StaticResource Painel}" Margin="0,10,0,0"
+                    Visibility="{Binding TemRelatorioPeriodo, Converter={StaticResource BoolVis}}">
+                <StackPanel>
+                    <TextBlock Text="Relatório do caixa por período" FontWeight="SemiBold" />
+                    <TextBlock Text="PDF com turnos, vendas por forma de pagamento, sangrias, reforços, despesas e diferenças. Vendas canceladas não entram."
+                               TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource CorTextoSuave}" Margin="0,2,0,8" />
+                    <DatePicker SelectedDateFormat="Short" SelectedDate="{Binding RelatorioDe}" AutomationProperties.Name="Relatório de" Margin="0,0,0,6" />
+                    <DatePicker SelectedDateFormat="Short" SelectedDate="{Binding RelatorioAte}" AutomationProperties.Name="Relatório até" Margin="0,0,0,8" />
+                    <Button Content="Gerar PDF" Style="{StaticResource BotaoSecundario}" HorizontalAlignment="Left"
+                            AutomationProperties.Name="Gerar PDF do caixa" Command="{Binding GerarRelatorioPdfCommand}" />
+                </StackPanel>
+            </Border>
         </Grid>
     </Grid>
 </UserControl>
