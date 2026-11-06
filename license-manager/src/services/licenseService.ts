@@ -28,6 +28,11 @@ import {
 // Utilitários de Hash e Geração de Chave
 const CHAVE_ALFABETO = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
+/** Firestore recusa campos undefined: tira-os antes de gravar. */
+function semIndefinidos<T extends Record<string, any>>(o: T): T {
+  return Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined)) as T;
+}
+
 export function normalizarChave(chave: string): string {
   return chave.trim().toUpperCase().replace(/[^A-Z0-9-]/g, "");
 }
@@ -140,7 +145,7 @@ export async function criarCliente(dados: Omit<Cliente, "id" | "totalLicencas" |
     criadoPor: currentUser,
   };
 
-  await setDoc(doc(db, "clientes", id), novoCliente);
+  await setDoc(doc(db, "clientes", id), semIndefinidos(novoCliente));
 
   await registrarAuditoriaLocal({
     tipoAcao: "CRIACAO_CLIENTE",
@@ -155,10 +160,10 @@ export async function criarCliente(dados: Omit<Cliente, "id" | "totalLicencas" |
 
 export async function atualizarCliente(id: string, dados: Partial<Cliente>): Promise<void> {
   const currentUser = auth.currentUser?.email || "Admin";
-  await updateDoc(doc(db, "clientes", id), {
+  await updateDoc(doc(db, "clientes", id), semIndefinidos({
     ...dados,
     atualizadoEm: serverTimestamp(),
-  });
+  }));
 
   await registrarAuditoriaLocal({
     tipoAcao: "EDICAO_CLIENTE",
