@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using NexusLS.Core.Data;
 using NexusLS.Core.Models;
 
@@ -138,6 +138,10 @@ public static class DesempenhoVendas
 
     public static List<GrupoProduto> MaisVendidos(IEnumerable<Linha> linhas, int limite = 10) => PorProduto(linhas)
         .OrderByDescending(p => p.Pecas).ThenByDescending(p => p.ValorCentavos).ThenBy(p => p.Nome).Take(limite).ToList();
+
+    /// <summary>Os que mais faturaram (valor líquido das linhas), do maior para o menor.</summary>
+    public static List<GrupoProduto> MaisFaturaram(IEnumerable<Linha> linhas, int limite = 10) => PorProduto(linhas)
+        .OrderByDescending(p => p.ValorCentavos).ThenByDescending(p => p.Pecas).ThenBy(p => p.Nome).Take(limite).ToList();
 
     /// <summary>Entre os que venderam, os de menor saída.</summary>
     public static List<GrupoProduto> MenosVendidos(IEnumerable<Linha> linhas, int limite = 10) => PorProduto(linhas)

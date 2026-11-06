@@ -51,6 +51,19 @@ public class ConfiguracaoLoja
     public bool CupomMostrarEndereco { get; set; } = true;
     public bool CupomMostrarTelefone { get; set; } = true;
     public bool CupomMostrarPix { get; set; }
+    /// <summary>Cidade e UF no cabeçalho (separado do endereço, como no ERP PDV Life).</summary>
+    public bool CupomMostrarCidade { get; set; } = true;
+    /// <summary>Inscrição estadual no cabeçalho (separada do CNPJ).</summary>
+    public bool CupomMostrarInscricao { get; set; } = true;
+    public bool CupomMostrarEmail { get; set; }
+    public bool CupomMostrarOperador { get; set; } = true;
+    public bool CupomMostrarCliente { get; set; } = true;
+    /// <summary>Forma de pagamento, recebido e troco.</summary>
+    public bool CupomMostrarPagamento { get; set; } = true;
+    /// <summary>Linha "Impresso pelo Nexus LS" no rodapé.</summary>
+    public bool CupomMostrarAssinatura { get; set; }
+    /// <summary>Mensagem logo abaixo dos dados da loja, antes do "CUPOM NÃO FISCAL" (opcional, até 200 letras).</summary>
+    public string? CupomMensagemCabecalho { get; set; }
     /// <summary>Linhas em branco depois do cupom, para o corte da impressora não pegar o texto (0 a 15).</summary>
     public int CupomLinhasFinais { get; set; } = 1;
 

@@ -68,8 +68,12 @@ public class CupomService
     }
 
     /// <summary>Cupom de teste com uma venda de exemplo, usando os dados do formulário (mesmo antes de salvar).</summary>
-    public Task ImprimirTesteAsync(ConfiguracaoLoja loja) =>
-        _impressora.ImprimirAsync(MontadorCupom.Montar(MontadorCupom.VendaDeExemplo(), loja), loja);
+    public Task ImprimirTesteAsync(ConfiguracaoLoja loja)
+    {
+        var venda = MontadorCupom.VendaDeExemplo();
+        venda.Operador = loja.NomeOperador;
+        return _impressora.ImprimirAsync(MontadorCupom.Montar(venda, loja), loja);
+    }
 
     private async Task<(string texto, ConfiguracaoLoja loja)> GerarAsync(int vendaId)
     {

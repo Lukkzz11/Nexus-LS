@@ -190,6 +190,21 @@ public class RelatorioService
             bruto, descontos);
     }
 
+    /// <summary>
+    /// Dados dos gráficos de Relatórios entre duas datas (as duas incluídas), com o período anterior do mesmo tamanho para
+    /// comparar. Mesma base do Desempenho: itens líquidos (desconto e acréscimo rateados), canceladas fora; a soma de cada
+    /// gráfico é o "Total vendido" de <see cref="VendasPorPeriodoAsync"/>.
+    /// </summary>
+    public async Task<GraficosRelatorio> GraficosAsync(DateTime de, DateTime ate)
+    {
+        var (inicio, fim) = Periodo(de, ate);
+        var periodo = new DesempenhoVendas.Intervalo(inicio, fim.AddDays(-1));
+        var servico = new DesempenhoService(_fabrica);
+        var doPeriodo = await servico.LinhasAsync(periodo);
+        var doAnterior = await servico.LinhasAsync(DesempenhoVendas.Anterior(periodo));
+        return GraficosRelatorio.Montar(doPeriodo, doAnterior, periodo);
+    }
+
     public const string SemCategoria = "Sem categoria";
 
     /// <summary>Total por forma de pagamento, na ordem de sempre (dinheiro, Pix, débito...). Só formas que tiveram venda.</summary>

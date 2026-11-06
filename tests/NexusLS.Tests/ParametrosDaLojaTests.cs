@@ -1,4 +1,4 @@
-using NexusLS.Core.Models;
+﻿using NexusLS.Core.Models;
 using NexusLS.Core.Services;
 using NexusLS.Tests.Infra;
 
@@ -28,6 +28,7 @@ public sealed class ParametrosDaLojaTests : IDisposable
         var loja = Loja();
         loja.CupomMostrarRazaoSocial = false; loja.CupomMostrarDocumento = false; loja.CupomMostrarEndereco = false;
         loja.CupomMostrarTelefone = false; loja.CupomMostrarPix = true;
+        loja.CupomMostrarInscricao = false; loja.CupomMostrarCidade = false; // no ERP cada linha tem a sua opção
         var enxuto = MontadorCupom.Montar(venda, loja);
         Assert.DoesNotContain("LTDA", enxuto);
         Assert.DoesNotContain("CNPJ", enxuto);

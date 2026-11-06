@@ -29,13 +29,22 @@ public record DadosLoja(
     int CupomLinhasFinais = 1,
     long FundoTrocoPadraoCentavos = 0,
     int EstoqueMinimoPadrao = 0,
-    int MargemPadraoPercentual = 0);
+    int MargemPadraoPercentual = 0,
+    bool CupomMostrarCidade = true,
+    bool CupomMostrarInscricao = true,
+    bool CupomMostrarEmail = false,
+    bool CupomMostrarOperador = true,
+    bool CupomMostrarCliente = true,
+    bool CupomMostrarPagamento = true,
+    bool CupomMostrarAssinatura = false,
+    string? CupomMensagemCabecalho = null);
 
 /// <summary>Dados da loja e do cupom. Só existe uma configuração; ela é criada na primeira leitura.</summary>
 public class ConfiguracaoService
 {
     public const int LarguraMinima = 24;
     public const int LarguraMaxima = 80;
+    public const int MensagemCabecalhoMaxima = 200;
 
     private readonly IDbContextFactory<PdvDbContext> _fabrica;
 
@@ -61,6 +70,8 @@ public class ConfiguracaoService
             throw new RegraDeNegocioException($"A largura do cupom deve ficar entre {LarguraMinima} e {LarguraMaxima} caracteres.");
         if (dados.CupomLinhasFinais is < 0 or > 15)
             throw new RegraDeNegocioException("As linhas em branco no fim do cupom devem ficar entre 0 e 15.");
+        if ((dados.CupomMensagemCabecalho?.Length ?? 0) > MensagemCabecalhoMaxima)
+            throw new RegraDeNegocioException($"A mensagem do cabeçalho do cupom aceita até {MensagemCabecalhoMaxima} letras.");
         if (dados.FundoTrocoPadraoCentavos < 0)
             throw new RegraDeNegocioException("O troco inicial padrão não pode ser negativo.");
         if (dados.EstoqueMinimoPadrao < 0)
@@ -95,6 +106,14 @@ public class ConfiguracaoService
         config.CupomMostrarTelefone = dados.CupomMostrarTelefone;
         config.CupomMostrarPix = dados.CupomMostrarPix;
         config.CupomLinhasFinais = dados.CupomLinhasFinais;
+        config.CupomMostrarCidade = dados.CupomMostrarCidade;
+        config.CupomMostrarInscricao = dados.CupomMostrarInscricao;
+        config.CupomMostrarEmail = dados.CupomMostrarEmail;
+        config.CupomMostrarOperador = dados.CupomMostrarOperador;
+        config.CupomMostrarCliente = dados.CupomMostrarCliente;
+        config.CupomMostrarPagamento = dados.CupomMostrarPagamento;
+        config.CupomMostrarAssinatura = dados.CupomMostrarAssinatura;
+        config.CupomMensagemCabecalho = Limpar(dados.CupomMensagemCabecalho);
         config.FundoTrocoPadraoCentavos = dados.FundoTrocoPadraoCentavos;
         config.EstoqueMinimoPadrao = dados.EstoqueMinimoPadrao;
         config.MargemPadraoPercentual = dados.MargemPadraoPercentual;

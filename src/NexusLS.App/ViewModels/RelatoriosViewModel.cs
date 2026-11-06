@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NexusLS.Core.Financeiro;
@@ -113,6 +113,10 @@ public partial class RelatoriosViewModel : ViewModelBase
         Vendas.Clear();
         foreach (var v in relatorio.Vendas.Reverse()) Vendas.Add(v); // mais recentes primeiro
 
+        var graficos = await _relatorio.GraficosAsync(de, ate);
+        if (versao != _versao) return;
+        MontarGraficos(graficos);
+
         if (_demonstrativo is not null)
         {
             var dre = await _demonstrativo.MontarAsync(de, ate);
@@ -173,6 +177,7 @@ public partial class RelatoriosViewModel : ViewModelBase
         Vendas.Clear();
         Dre.Clear();
         DreAvisos = "";
+        LimparGraficos();
     }
 
     // Atalhos de período

@@ -15,25 +15,33 @@ public static class MontadorCupom
         var linhas = new List<string>();
         var traco = new string('-', largura);
 
-        // Cabeçalho da loja
+        // Cabeçalho da loja, na mesma ordem do ERP PDV Life: nome, razão social, endereço, cidade, CNPJ, IE, telefone, e-mail, mensagem
         linhas.AddRange(Centralizar(loja.NomeLoja, largura));
         if (loja.CupomMostrarRazaoSocial && !string.IsNullOrWhiteSpace(loja.RazaoSocial)) linhas.AddRange(Centralizar(loja.RazaoSocial, largura));
-        if (loja.CupomMostrarDocumento && !string.IsNullOrWhiteSpace(loja.Documento)) linhas.AddRange(Centralizar($"CNPJ/CPF: {loja.Documento}", largura));
-        if (loja.CupomMostrarDocumento && !string.IsNullOrWhiteSpace(loja.InscricaoEstadual)) linhas.AddRange(Centralizar($"IE: {loja.InscricaoEstadual}", largura));
         if (loja.CupomMostrarEndereco && !string.IsNullOrWhiteSpace(loja.Endereco)) linhas.AddRange(Centralizar(loja.Endereco, largura));
-        if (loja.CupomMostrarEndereco && !string.IsNullOrWhiteSpace(loja.CidadeUf)) linhas.AddRange(Centralizar(loja.CidadeUf, largura));
-        if (loja.CupomMostrarTelefone && !string.IsNullOrWhiteSpace(loja.Telefone)) linhas.AddRange(Centralizar($"Tel: {loja.Telefone}", largura));
+        if (loja.CupomMostrarCidade && !string.IsNullOrWhiteSpace(loja.CidadeUf)) linhas.AddRange(Centralizar(loja.CidadeUf, largura));
+        if (loja.CupomMostrarDocumento && !string.IsNullOrWhiteSpace(loja.Documento)) linhas.AddRange(Centralizar($"CNPJ/CPF: {loja.Documento}", largura));
+        if (loja.CupomMostrarInscricao && !string.IsNullOrWhiteSpace(loja.InscricaoEstadual)) linhas.AddRange(Centralizar($"IE: {loja.InscricaoEstadual}", largura));
+        if (loja.CupomMostrarTelefone && !string.IsNullOrWhiteSpace(loja.Telefone)) linhas.AddRange(Centralizar($"WhatsApp / Tel: {loja.Telefone}", largura));
+        if (loja.CupomMostrarEmail && !string.IsNullOrWhiteSpace(loja.Email)) linhas.AddRange(Centralizar(loja.Email, largura));
+        if (!string.IsNullOrWhiteSpace(loja.CupomMensagemCabecalho))
+            foreach (var parte in Paragrafos(loja.CupomMensagemCabecalho))
+                linhas.AddRange(Centralizar(parte, largura));
 
-        linhas.Add(traco);
         linhas.AddRange(Centralizar("CUPOM NÃO FISCAL", largura));
         if (venda.Cancelada) linhas.AddRange(Centralizar("*** VENDA CANCELADA ***", largura));
+        linhas.Add(traco);
 
-        linhas.Add(DuasPontas($"Venda nº {venda.Id}", venda.DataHora.ToString("dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture), largura));
-        if (venda.Cliente is not null) linhas.AddRange(Quebrar($"Cliente: {venda.Cliente.Nome}", largura));
+        // Dados da venda
+        linhas.Add($"Venda nº {venda.Id}");
+        linhas.Add($"Data/Hora: {venda.DataHora.ToString("dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture)}");
+        if (loja.CupomMostrarOperador && !string.IsNullOrWhiteSpace(venda.Operador)) linhas.AddRange(Quebrar($"Operador: {venda.Operador}", largura));
+        if (loja.CupomMostrarCliente && venda.Cliente is not null) linhas.AddRange(Quebrar($"Cliente: {venda.Cliente.Nome}", largura));
         if (venda.TabelaPreco == TabelaPreco.Atacado) linhas.Add("Tabela: Atacado");
         linhas.Add(traco);
 
         // Itens: nome (e tamanho) numa linha, "qtd x unitário ........ total" na seguinte
+        linhas.Add("ITENS DA VENDA");
         foreach (var item in venda.Itens)
         {
             var nome = item.Tamanho == Tamanhos.SemTamanho ? item.NomeProduto : $"{item.NomeProduto} ({item.Tamanho})";
@@ -43,38 +51,42 @@ public static class MontadorCupom
         linhas.Add(traco);
 
         // Totais
-        linhas.Add(DuasPontas("Subtotal", Reais(venda.SubtotalCentavos), largura));
+        linhas.Add(DuasPontas("Subtotal:", Reais(venda.SubtotalCentavos), largura));
         if (venda.DescontoCentavos > 0)
-            linhas.Add(DuasPontas("Desconto", "-" + Reais(venda.DescontoCentavos), largura));
+            linhas.Add(DuasPontas("Desconto:", "-" + Reais(venda.DescontoCentavos), largura));
         if (venda.AcrescimoCentavos > 0)
-            linhas.Add(DuasPontas("Acréscimo crédito", "+" + Reais(venda.AcrescimoCentavos), largura));
-        linhas.Add(DuasPontas("TOTAL", Reais(venda.TotalCentavos), largura));
-        linhas.Add(traco);
+            linhas.Add(DuasPontas("Acréscimo crédito:", "+" + Reais(venda.AcrescimoCentavos), largura));
+        linhas.Add(DuasPontas("TOTAL A PAGAR:", Reais(venda.TotalCentavos), largura));
 
         // Pagamento
-        var forma = SelecaoPagamento.Nome(venda.FormaPagamento);
-        if (venda.FormaPagamento == FormaPagamento.CartaoCredito && venda.Parcelas > 1)
-            forma += $" {venda.Parcelas}x";
-        linhas.Add(DuasPontas("Pagamento", forma, largura));
-        if (venda.FormaPagamento == FormaPagamento.Dinheiro && venda.ValorRecebidoCentavos is long recebido)
-        {
-            linhas.Add(DuasPontas("Recebido", Reais(recebido), largura));
-            linhas.Add(DuasPontas("Troco", Reais(venda.TrocoCentavos), largura));
-        }
-        if (venda.FormaPagamento == FormaPagamento.CartaoCredito && venda.Parcelas > 1)
-            linhas.Add(DuasPontas($"{venda.Parcelas}x de", Reais(PrimeiraParcela(venda.TotalCentavos, venda.Parcelas)), largura));
-
-        // Rodapé
-        if (!string.IsNullOrWhiteSpace(loja.MensagemCupom))
+        if (loja.CupomMostrarPagamento)
         {
             linhas.Add(traco);
-            linhas.AddRange(Centralizar(loja.MensagemCupom, largura));
+            var forma = SelecaoPagamento.Nome(venda.FormaPagamento);
+            if (venda.FormaPagamento == FormaPagamento.CartaoCredito && venda.Parcelas > 1)
+                forma += $" {venda.Parcelas}x";
+            linhas.Add(DuasPontas("Pagamento:", forma, largura));
+            if (venda.FormaPagamento == FormaPagamento.Dinheiro && venda.ValorRecebidoCentavos is long recebido)
+            {
+                linhas.Add(DuasPontas("Recebido:", Reais(recebido), largura));
+                linhas.Add(DuasPontas("TROCO:", Reais(venda.TrocoCentavos), largura));
+            }
+            if (venda.FormaPagamento == FormaPagamento.CartaoCredito && venda.Parcelas > 1)
+                linhas.Add(DuasPontas($"{venda.Parcelas}x de", Reais(PrimeiraParcela(venda.TotalCentavos, venda.Parcelas)), largura));
         }
+
+        // Rodapé
+        var temRodape = !string.IsNullOrWhiteSpace(loja.MensagemCupom)
+                        || (loja.CupomMostrarPix && !string.IsNullOrWhiteSpace(loja.ChavePix))
+                        || loja.CupomMostrarAssinatura;
+        if (temRodape) linhas.Add(traco);
+        if (!string.IsNullOrWhiteSpace(loja.MensagemCupom))
+            foreach (var parte in Paragrafos(loja.MensagemCupom))
+                linhas.AddRange(Centralizar(parte, largura));
         if (loja.CupomMostrarPix && !string.IsNullOrWhiteSpace(loja.ChavePix))
-        {
-            if (string.IsNullOrWhiteSpace(loja.MensagemCupom)) linhas.Add(traco);
             linhas.AddRange(Centralizar($"Pix: {loja.ChavePix}", largura));
-        }
+        if (loja.CupomMostrarAssinatura)
+            linhas.AddRange(Centralizar("Impresso pelo Nexus LS", largura));
 
         for (var i = 0; i < Math.Clamp(loja.CupomLinhasFinais, 0, 15); i++) linhas.Add("");
         return string.Join("\n", linhas);
@@ -121,6 +133,8 @@ public static class MontadorCupom
     {
         Id = 123,
         DataHora = DateTime.Now,
+        Operador = "Caixa",
+        Cliente = new Cliente { Nome = "Consumidor Final" },
         FormaPagamento = FormaPagamento.Dinheiro,
         SubtotalCentavos = 15980,
         DescontoCentavos = 1000,
@@ -136,6 +150,9 @@ public static class MontadorCupom
 
     /// <summary>Valor de cada parcela. A primeira leva a sobra dos centavos, para a soma fechar exatamente no total.</summary>
     private static long PrimeiraParcela(long total, int parcelas) => total / parcelas + total % parcelas;
+
+    /// <summary>Divide um texto digitado em várias linhas (Enter) nos seus parágrafos.</summary>
+    private static string[] Paragrafos(string texto) => texto.ReplaceLineEndings(Environment.NewLine).Split(Environment.NewLine);
 
     private static string Reais(long centavos) => Dinheiro.Formatar(centavos).Replace(' ', ' ');
 

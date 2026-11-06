@@ -4,14 +4,14 @@ using NexusLS.Core.Services;
 namespace NexusLS.App.ViewModels;
 
 /// <summary>Uma fatia pronta para a tela: o desenho (texto de Path), a cor e a legenda.</summary>
-/// <param name="ChaveCor">Nome do pincel em Resources/Tokens.xaml (CorSerie1..CorSerie6, CorSerieOutros).</param>
+/// <param name="ChaveCor">Nome do pincel em Resources/Tokens.xaml (CorSerie1..CorSerie7, CorSerieOutros).</param>
 public record FatiaDesenhada(string Rotulo, string Legenda, string Caminho, string ChaveCor);
 
 /// <summary>Monta o desenho de uma pizza (só texto, sem janela). Raio 100, centro em (100,100).</summary>
 public static class PizzaGrafico
 {
     public const double Raio = 100;
-    private static readonly string[] Cores = { "CorSerie1", "CorSerie2", "CorSerie3", "CorSerie4", "CorSerie5", "CorSerie6" };
+    private static readonly string[] Cores = { "CorSerie1", "CorSerie2", "CorSerie3", "CorSerie4", "CorSerie5", "CorSerie6", "CorSerie7" };
     public const string CorOutros = "CorSerieOutros";
 
     public static List<FatiaDesenhada> Desenhar(IReadOnlyList<FatiaPizza> fatias)

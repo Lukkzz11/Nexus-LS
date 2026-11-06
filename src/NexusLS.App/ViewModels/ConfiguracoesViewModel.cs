@@ -68,6 +68,14 @@ public partial class ConfiguracoesViewModel : ViewModelBase
     [ObservableProperty] private bool _cupomMostrarEndereco = true;
     [ObservableProperty] private bool _cupomMostrarTelefone = true;
     [ObservableProperty] private bool _cupomMostrarPix;
+    [ObservableProperty] private bool _cupomMostrarCidade = true;
+    [ObservableProperty] private bool _cupomMostrarInscricao = true;
+    [ObservableProperty] private bool _cupomMostrarEmail;
+    [ObservableProperty] private bool _cupomMostrarOperador = true;
+    [ObservableProperty] private bool _cupomMostrarCliente = true;
+    [ObservableProperty] private bool _cupomMostrarPagamento = true;
+    [ObservableProperty] private bool _cupomMostrarAssinatura;
+    [ObservableProperty] private string _cupomMensagemCabecalho = "";
     [ObservableProperty] private string _cupomLinhasFinais = "1";
     // Parâmetros de operação
     [ObservableProperty] private string _fundoTrocoPadrao = "";
@@ -88,6 +96,16 @@ public partial class ConfiguracoesViewModel : ViewModelBase
     partial void OnCupomMostrarEnderecoChanged(bool value) => AtualizarPrevia();
     partial void OnCupomMostrarTelefoneChanged(bool value) => AtualizarPrevia();
     partial void OnCupomMostrarPixChanged(bool value) => AtualizarPrevia();
+    partial void OnCupomMostrarCidadeChanged(bool value) => AtualizarPrevia();
+    partial void OnCupomMostrarInscricaoChanged(bool value) => AtualizarPrevia();
+    partial void OnCupomMostrarEmailChanged(bool value) => AtualizarPrevia();
+    partial void OnCupomMostrarOperadorChanged(bool value) => AtualizarPrevia();
+    partial void OnCupomMostrarClienteChanged(bool value) => AtualizarPrevia();
+    partial void OnCupomMostrarPagamentoChanged(bool value) => AtualizarPrevia();
+    partial void OnCupomMostrarAssinaturaChanged(bool value) => AtualizarPrevia();
+    partial void OnCupomMensagemCabecalhoChanged(string value) => AtualizarPrevia();
+    partial void OnEmailChanged(string value) => AtualizarPrevia();
+    partial void OnNomeOperadorChanged(string value) => AtualizarPrevia();
     partial void OnCupomLinhasFinaisChanged(string value) => AtualizarPrevia();
     partial void OnLarguraSelecionadaChanged(OpcaoLargura value) => AtualizarPrevia();
 
@@ -114,6 +132,14 @@ public partial class ConfiguracoesViewModel : ViewModelBase
         CupomMostrarEndereco = c.CupomMostrarEndereco;
         CupomMostrarTelefone = c.CupomMostrarTelefone;
         CupomMostrarPix = c.CupomMostrarPix;
+        CupomMostrarCidade = c.CupomMostrarCidade;
+        CupomMostrarInscricao = c.CupomMostrarInscricao;
+        CupomMostrarEmail = c.CupomMostrarEmail;
+        CupomMostrarOperador = c.CupomMostrarOperador;
+        CupomMostrarCliente = c.CupomMostrarCliente;
+        CupomMostrarPagamento = c.CupomMostrarPagamento;
+        CupomMostrarAssinatura = c.CupomMostrarAssinatura;
+        CupomMensagemCabecalho = c.CupomMensagemCabecalho ?? "";
         CupomLinhasFinais = c.CupomLinhasFinais.ToString();
         FundoTrocoPadrao = c.FundoTrocoPadraoCentavos > 0 ? Dinheiro.FormatarParaEdicao(c.FundoTrocoPadraoCentavos) : "";
         EstoqueMinimoPadrao = c.EstoqueMinimoPadrao.ToString();
@@ -159,7 +185,9 @@ public partial class ConfiguracoesViewModel : ViewModelBase
         NumeroInteiro(CupomLinhasFinais, "As linhas em branco no fim do cupom"),
         DinheiroOuZero(FundoTrocoPadrao),
         NumeroInteiro(EstoqueMinimoPadrao, "O estoque mínimo padrão"),
-        NumeroInteiro(MargemPadrao, "A margem padrão"));
+        NumeroInteiro(MargemPadrao, "A margem padrão"),
+        CupomMostrarCidade, CupomMostrarInscricao, CupomMostrarEmail, CupomMostrarOperador, CupomMostrarCliente,
+        CupomMostrarPagamento, CupomMostrarAssinatura, CupomMensagemCabecalho);
 
     private static int NumeroInteiro(string texto, string campo) =>
         int.TryParse(string.IsNullOrWhiteSpace(texto) ? "0" : texto.Trim(), out var n)
@@ -187,6 +215,16 @@ public partial class ConfiguracoesViewModel : ViewModelBase
             ImprimirCupomAoFinalizar = d.ImprimirCupomAoFinalizar,
             RazaoSocial = Vazio(d.RazaoSocial),
             InscricaoEstadual = Vazio(d.InscricaoEstadual),
+            Email = Vazio(d.Email),
+            NomeOperador = string.IsNullOrWhiteSpace(d.NomeOperador) ? "Caixa" : d.NomeOperador.Trim(),
+            CupomMostrarCidade = d.CupomMostrarCidade,
+            CupomMostrarInscricao = d.CupomMostrarInscricao,
+            CupomMostrarEmail = d.CupomMostrarEmail,
+            CupomMostrarOperador = d.CupomMostrarOperador,
+            CupomMostrarCliente = d.CupomMostrarCliente,
+            CupomMostrarPagamento = d.CupomMostrarPagamento,
+            CupomMostrarAssinatura = d.CupomMostrarAssinatura,
+            CupomMensagemCabecalho = Vazio(d.CupomMensagemCabecalho),
             CidadeUf = Vazio(d.CidadeUf),
             ChavePix = Vazio(d.ChavePix),
             CupomMostrarRazaoSocial = d.CupomMostrarRazaoSocial,
@@ -200,8 +238,16 @@ public partial class ConfiguracoesViewModel : ViewModelBase
 
     private void AtualizarPrevia()
     {
-        try { Previa = MontadorCupom.Montar(MontadorCupom.VendaDeExemplo(), ConfigDoFormulario()); }
+        try { Previa = MontadorCupom.Montar(VendaDePrevia(), ConfigDoFormulario()); }
         catch (RegraDeNegocioException) { /* campo numérico ainda incompleto: mantém a prévia anterior */ }
+    }
+
+    /// <summary>A venda de exemplo, com o nome do operador que está no formulário.</summary>
+    private Venda VendaDePrevia()
+    {
+        var venda = MontadorCupom.VendaDeExemplo();
+        venda.Operador = string.IsNullOrWhiteSpace(NomeOperador) ? "Caixa" : NomeOperador.Trim();
+        return venda;
     }
 
     private static string? Vazio(string? texto) => string.IsNullOrWhiteSpace(texto) ? null : texto.Trim();

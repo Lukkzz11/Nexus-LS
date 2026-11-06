@@ -1,4 +1,4 @@
-using NexusLS.Core.Models;
+﻿using NexusLS.Core.Models;
 using NexusLS.Core.Services;
 using NexusLS.Tests.Infra;
 
@@ -46,7 +46,7 @@ public class MontadorCupomTests
         Assert.Contains("Loja do Zé", cupom);
         Assert.Contains("CNPJ/CPF: 12.345.678/0001-90", cupom);
         Assert.Contains("Rua das Flores, 123 - Centro", cupom);
-        Assert.Contains("Tel: (11) 3333-4444", cupom);
+        Assert.Contains("WhatsApp / Tel: (11) 3333-4444", cupom);
         Assert.Contains("CUPOM NÃO FISCAL", cupom);
         Assert.Contains("Venda nº 7", cupom);
         Assert.Contains("18/10/2026 14:35", cupom);
@@ -123,13 +123,13 @@ public class MontadorCupomTests
         var dinheiro = MontadorCupom.Montar(Venda(), Loja());
         Assert.Contains("Recebido", dinheiro);
         Assert.Contains("R$ 150,00", dinheiro);
-        Assert.Contains("Troco", dinheiro);
+        Assert.Contains("TROCO", dinheiro);
         Assert.Contains("R$ 30,20", dinheiro);
 
         var pix = MontadorCupom.Montar(Venda(v => { v.FormaPagamento = FormaPagamento.Pix; v.ValorRecebidoCentavos = null; v.TrocoCentavos = 0; }), Loja());
         Assert.Contains("Pix", pix);
         Assert.DoesNotContain("Recebido", pix);
-        Assert.DoesNotContain("Troco", pix);
+        Assert.DoesNotContain("TROCO", pix);
     }
 
     [Fact]
@@ -180,7 +180,8 @@ public class MontadorCupomTests
         Assert.DoesNotContain("CNPJ", cupom);
         Assert.DoesNotContain("Tel:", cupom);
         Assert.Contains("Minha Loja", Linhas(cupom)[0]);
-        Assert.StartsWith("-", Linhas(cupom)[1]); // logo abaixo do nome já vem o traço, sem linhas em branco
+        Assert.Contains("CUPOM NÃO FISCAL", Linhas(cupom)[1]); // logo abaixo do nome vem o selo, sem linhas em branco
+        Assert.StartsWith("-", Linhas(cupom)[2]);
     }
 
     [Fact]
