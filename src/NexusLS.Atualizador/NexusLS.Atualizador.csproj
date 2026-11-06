@@ -17,4 +17,9 @@
     <AssemblyTitle>Atualizador e Ativador Nexus LS</AssemblyTitle>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Resource Include="nexus.ico" />
+    <Resource Include="Assets\emblema.png" />
+    <Resource Include="Assets\emblema-branco.png" />
+  </ItemGroup>
 </Project>
