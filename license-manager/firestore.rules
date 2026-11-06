@@ -1,0 +1,65 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper: verifica se o usuário autenticado é administrador autorizado
+    function ehAdmin() {
+      return request.auth != null && (
+        request.auth.token.admin == true ||
+        request.auth.token.email.lower() in [
+          'nexuslsatulizador@gmail.com',
+          'jarbasantonio201@gmail.com'
+        ] ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.token.email.lower()))
+      );
+    }
+
+    // 1. Coleção de Administradores
+    match /admins/{email} {
+      allow read, write: if ehAdmin();
+    }
+
+    // 2. Clientes e Empresas cadastradas
+    match /clientes/{clienteId} {
+      allow read, write: if ehAdmin();
+    }
+
+    // 3. Licenças comerciais
+    match /licencas/{chave} {
+      allow read, write: if ehAdmin();
+      allow get: if true;
+      allow list: if ehAdmin();
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['maquina'])
+                    && (!('maquina' in resource.data) || resource.data.maquina == '');
+    }
+
+    // 4. Dispositivos e computadores vinculados
+    match /dispositivos/{dispositivoId} {
+      allow read, write: if ehAdmin();
+    }
+
+    // 5. Histórico e auditoria (imutável)
+    match /historico_auditoria/{auditId} {
+      allow read: if ehAdmin();
+      allow create: if ehAdmin();
+      allow update, delete: if false;
+    }
+
+    // Regras legadas para o catálogo
+    match /produtos/{produtoId} {
+      allow read: if true;
+      allow write: if ehAdmin();
+    }
+
+    match /meta/{docId} {
+      allow read: if true;
+      allow write: if ehAdmin();
+    }
+
+    // Bloqueia qualquer outro documento não mapeado
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

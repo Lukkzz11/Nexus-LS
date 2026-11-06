@@ -54,7 +54,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private readonly ServicoLicencaNuvem _licenca = new(new FonteLicencaFirestore(new HttpClient { Timeout = TimeSpan.FromSeconds(15) }), ServicoLicencaNuvem.CaminhoPadrao());
+    private readonly ServicoLicencaNuvem _licenca = new(new FonteLicencaComReserva(new FonteLicencaCloudFunction(new HttpClient { Timeout = TimeSpan.FromSeconds(15) }), new FonteLicencaFirestore(new HttpClient { Timeout = TimeSpan.FromSeconds(15) })), ServicoLicencaNuvem.CaminhoPadrao());
 
     private async void CarregarStatusLicenca()
     {

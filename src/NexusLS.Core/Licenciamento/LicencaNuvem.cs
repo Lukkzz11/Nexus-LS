@@ -111,6 +111,135 @@ public class FonteLicencaFirestore : IFonteLicenca
     }
 }
 
+/// <summary>
+/// Valida a licença com o Nexus LS License Manager através da Cloud Function centralizada do Firebase (projeto nexus-ls).
+/// A Cloud Function valida a chave, calcula o vencimento no servidor, gerencia o limite de computadores e registra o dispositivo.
+/// </summary>
+public class FonteLicencaCloudFunction : IFonteLicenca
+{
+    public const string EndpointPadrao = "https://southamerica-east1-nexus-ls.cloudfunctions.net/validateLicense";
+
+    private readonly HttpClient _http;
+    private readonly string _endpoint;
+    private readonly Func<string> _obterCodigoMaquina;
+
+    public FonteLicencaCloudFunction(HttpClient http, string endpoint = EndpointPadrao, Func<string>? obterCodigoMaquina = null)
+    {
+        _http = http;
+        _endpoint = endpoint;
+        _obterCodigoMaquina = obterCodigoMaquina ?? Services.LicencaService.CodigoDaMaquina;
+    }
+
+    public async Task<DocumentoLicenca?> ObterAsync(string chave, CancellationToken ct = default)
+    {
+        var maquina = _obterCodigoMaquina();
+        var payload = JsonSerializer.Serialize(new
+        {
+            chave = chave.Trim(),
+            dispositivoId = maquina,
+            nomeDispositivo = Environment.MachineName,
+            sistema = "NexusLS"
+        });
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, _endpoint)
+        {
+            Content = new StringContent(payload, Encoding.UTF8, "application/json")
+        };
+
+        HttpResponseMessage r;
+        try
+        {
+            r = await _http.SendAsync(request, ct).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        {
+            throw new FalhaDeConexaoLicencaException("Sem conexão com o servidor de licenças do Nexus LS.", ex);
+        }
+
+        using (r)
+        {
+            var corpo = await r.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+            // A função ainda não publicada responde 404 em HTML: isso não é "licença inexistente".
+            if (!corpo.TrimStart().StartsWith("{"))
+                throw new FalhaDeConexaoLicencaException("Servidor de licenças indisponível (função não publicada).");
+
+            try
+            {
+                using var doc = JsonDocument.Parse(corpo);
+                var root = doc.RootElement;
+                var autorizado = root.TryGetProperty("autorizado", out var aut) && aut.GetBoolean();
+                var situacao = root.TryGetProperty("situacao", out var sit) ? sit.GetString() ?? "" : "";
+                var cliente = root.TryGetProperty("cliente", out var c) ? c.GetString() ?? "" : "";
+                var vencimento = root.TryGetProperty("dataVencimento", out var v) ? v.GetString() : null;
+                var dispAutorizado = root.TryGetProperty("dispositivoAutorizado", out var da) ? da.GetString() : maquina;
+
+                if (situacao == "NAO_ENCONTRADA") return null;
+
+                // Vencida: quem decide é a data (mostra "venceu em ..."), não o bloqueio.
+                if (situacao == "VENCIDA" && vencimento is not null)
+                    return new DocumentoLicenca(cliente, vencimento, Ativa: true, Maquina: dispAutorizado ?? maquina, Plano: null);
+
+                if (situacao == "BLOQUEADA" || situacao == "CANCELADA")
+                {
+                    return new DocumentoLicenca(cliente, vencimento, Ativa: false, Maquina: maquina, Plano: null);
+                }
+
+                if (situacao == "LIMITE_ATINGIDO")
+                {
+                    return new DocumentoLicenca(cliente, vencimento, Ativa: true, Maquina: "OUTRO_COMPUTADOR", Plano: null);
+                }
+
+                return new DocumentoLicenca(cliente, vencimento, Ativa: autorizado, Maquina: dispAutorizado ?? maquina, Plano: null);
+            }
+            catch (JsonException)
+            {
+                throw new FalhaDeConexaoLicencaException("Resposta incompreensível do servidor de licenças.");
+            }
+        }
+    }
+
+    public Task RegistrarMaquinaAsync(string chave, string maquina, CancellationToken ct = default)
+    {
+        // Na Cloud Function, o registro do computador é realizado atomicamente durante a validação.
+        return Task.CompletedTask;
+    }
+}
+
+/// <summary>
+/// Tenta a Cloud Function do License Manager e, se ela estiver fora do ar ou ainda não publicada,
+/// lê o documento direto no Firestore (o site grava também cliente/validade/ativa/maquina).
+/// </summary>
+public class FonteLicencaComReserva : IFonteLicenca
+{
+    private readonly IFonteLicenca _principal;
+    private readonly IFonteLicenca _reserva;
+    private bool _usouReserva;
+
+    public FonteLicencaComReserva(IFonteLicenca principal, IFonteLicenca reserva)
+    {
+        _principal = principal;
+        _reserva = reserva;
+    }
+
+    public async Task<DocumentoLicenca?> ObterAsync(string chave, CancellationToken ct = default)
+    {
+        try
+        {
+            var d = await _principal.ObterAsync(chave, ct).ConfigureAwait(false);
+            _usouReserva = false;
+            return d;
+        }
+        catch (FalhaDeConexaoLicencaException)
+        {
+            _usouReserva = true;
+            return await _reserva.ObterAsync(chave, ct).ConfigureAwait(false);
+        }
+    }
+
+    public Task RegistrarMaquinaAsync(string chave, string maquina, CancellationToken ct = default)
+        => (_usouReserva ? _reserva : _principal).RegistrarMaquinaAsync(chave, maquina, ct);
+}
+
 /// <summary>Guarda a última licença validada, para o programa e o atualizador mostrarem sem internet.</summary>
 public class LicencaNuvemSalva
 {
@@ -153,7 +282,7 @@ public class ServicoLicencaNuvem
     /// <summary>Primeira ativação (ou troca de chave): lê no Firebase, prende ao computador se ainda estiver livre e salva.</summary>
     public async Task<ResultadoLicencaNuvem> AtivarAsync(string chave, CancellationToken ct = default)
     {
-        chave = (chave ?? "").Trim();
+        chave = (chave ?? "").Trim().ToUpperInvariant();
         if (!PadraoChave.IsMatch(chave))
             return new(EstadoLicencaNuvem.ChaveInvalida, chave, "", null, null, "Chave inválida: use de 6 a 64 letras, números ou hífens.");
         try

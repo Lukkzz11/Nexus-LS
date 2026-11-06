@@ -1,4 +1,4 @@
-using NexusLS.Core.Licenciamento;
+﻿using NexusLS.Core.Licenciamento;
 using Xunit;
 
 namespace NexusLS.Tests;
@@ -104,4 +104,26 @@ public class LicencaNuvemTests : IDisposable
         Assert.Equal(new DateTime(2027, 3, 10), v);
         Assert.True(d.Ativa);
     }
+
+    [Fact]
+    public async Task Chave_digitada_em_minusculas_vale_como_maiuscula()
+    {
+        var f = new FonteFalsa { Doc = new("Loja Sol", "2027-05-01", true, "*", null) };
+        var r = await Novo(f).AtivarAsync(" nexus-abcd-2345-wxyz ");
+        Assert.Equal("NEXUS-ABCD-2345-WXYZ", r.Chave);
+    }
+
+    [Fact]
+    public async Task Funcao_fora_do_ar_cai_para_o_firestore_e_registra_la()
+    {
+        var principal = new FonteFalsa { SemInternet = true };
+        var reserva = new FonteFalsa { Doc = new("Loja Sol", "2027-05-01", true, "", null) };
+        var s = Novo2(new FonteLicencaComReserva(principal, reserva));
+        var r = await s.AtivarAsync("ABC-123456");
+        Assert.Equal(EstadoLicencaNuvem.Valida, r.Estado);
+        Assert.Equal("MAQ1", reserva.Registrada);
+        Assert.Null(principal.Registrada);
+    }
+
+    private ServicoLicencaNuvem Novo2(IFonteLicenca f) => new(f, Path.Combine(_pasta, "l2.json"), () => _agora, () => "MAQ1");
 }
