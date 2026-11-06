@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { initializeFirestore, getFirestore } from "firebase/firestore";
 import { getFunctions } from "firebase/functions";
 
 export const firebaseConfig = {
@@ -16,7 +16,7 @@ export const firebaseConfig = {
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+export const db = getApps().length > 1 ? getFirestore(app) : initializeFirestore(app, { ignoreUndefinedProperties: true });
 export const functions = getFunctions(app, "southamerica-east1");
 
 export default app;
