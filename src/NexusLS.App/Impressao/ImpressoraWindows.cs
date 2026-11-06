@@ -1,4 +1,4 @@
-using System.Printing;
+﻿using System.Printing;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -75,7 +75,7 @@ public class ImpressoraWindows : IImpressoraCupom
             if (i < linhas.Length - 1) paragrafo.Inlines.Add(new LineBreak());
         }
 
-        var documento = new FlowDocument(paragrafo)
+        var documento = new FlowDocument
         {
             FontFamily = new FontFamily("Consolas"),
             FontSize = fonte,
@@ -84,6 +84,20 @@ public class ImpressoraWindows : IImpressoraCupom
             ColumnWidth = largura,
             PageHeight = altura
         };
+        // Logo no topo, centralizado e em tons de cinza (como o ERP). Vai pelo driver do Windows, junto com o texto.
+        if (loja.CupomMostrarLogo && LogoCupom.EmCinza(loja.LogoCupom) is { } logo)
+        {
+            var largLogo = Math.Min(logo.PixelWidth, (largura - 2 * margem) * 0.7);
+            documento.Blocks.Add(new BlockUIContainer(new System.Windows.Controls.Image
+            {
+                Source = logo,
+                Width = largLogo,
+                Stretch = Stretch.Uniform,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(0, 0, 0, 4)
+            }));
+        }
+        documento.Blocks.Add(paragrafo);
 
         dialogo.PrintDocument(((IDocumentPaginatorSource)documento).DocumentPaginator, "Cupom Nexus LS");
     }

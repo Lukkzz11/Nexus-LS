@@ -148,15 +148,46 @@ public sealed class CapturaCupomRelatorios : IDisposable
             Capturador.Desenhar(() => new RelatoriosView { DataContext = vm }, Path.Combine(saida, $"relatorios-vazio-{l}x{a}.png"), l, a);
     }
 
+    /// <summary>Logo inventado (ondas pretas num fundo transparente) só para a captura.</summary>
+    private static byte[] LogoDeExemplo()
+    {
+        byte[]? png = null;
+        Capturador.Rodar(() =>
+        {
+            var desenho = new System.Windows.Media.DrawingVisual();
+            using (var g = desenho.RenderOpen())
+            {
+                var pena = new System.Windows.Media.Pen(System.Windows.Media.Brushes.Black, 9);
+                for (var i = 0; i < 3; i++)
+                {
+                    var figura = new System.Windows.Media.PathGeometry();
+                    var f = new System.Windows.Media.PathFigure { StartPoint = new Point(10, 70 - i * 18) };
+                    f.Segments.Add(new System.Windows.Media.BezierSegment(new Point(60, 0 + i * 6), new Point(170, 10 + i * 6), new Point(230, 60 - i * 8), true));
+                    figura.Figures.Add(f);
+                    g.DrawGeometry(null, pena, figura);
+                }
+            }
+            var bmp = new System.Windows.Media.Imaging.RenderTargetBitmap(240, 90, 96, 96, System.Windows.Media.PixelFormats.Pbgra32);
+            bmp.Render(desenho);
+            var enc = new System.Windows.Media.Imaging.PngBitmapEncoder();
+            enc.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bmp));
+            using var ms = new MemoryStream();
+            enc.Save(ms);
+            png = ms.ToArray();
+        });
+        return png!;
+    }
+
     private async Task<ConfiguracoesViewModel> CriarConfiguracoesAsync(bool comDados)
     {
         var config = new ConfiguracaoService(_banco.Fabrica);
         if (comDados)
-            await config.SalvarAsync(new DadosLoja("Casa Nexus Moda", "12.345.678/0001-90", "Rua das Flores, 123 - Centro", "(81) 99999-1234",
+            await config.SalvarAsync(new DadosLoja("Casa Nexus Moda", "12.345.678/0001-90", "Galeria da Moda Lado B", "(81) 99999-1234",
                 "Obrigado pela preferência!\nTrocas em até 7 dias com a etiqueta.", NomeOperador: "Ana", RazaoSocial: "Casa Nexus Confecções LTDA",
                 InscricaoEstadual: "123.456.789", Email: "contato@casanexus.com.br", CidadeUf: "Caruaru - PE", ChavePix: "12.345.678/0001-90",
                 CupomMostrarPix: true, CupomMostrarEmail: true, CupomMostrarAssinatura: true,
-                CupomMensagemCabecalho: "Moda praia e fitness"));
+                CupomMensagemCabecalho: "Moda praia e fitness", Segmento: "Confecção e varejo de moda praia", EnderecoNumero: "100",
+                Bairro: "Feira de Caruaru", Cep: "55038-000", LogoCupom: LogoDeExemplo(), LogoAlterado: true));
         ConfiguracoesViewModel? vm = null;
         Capturador.Rodar(() => vm = new ConfiguracoesViewModel(config, new CupomService(_banco.Fabrica, config, new ImpressoraDeMentira())));
         await AteAsync(() => !comDados || vm!.NomeLoja.StartsWith("Casa"));

@@ -479,6 +479,12 @@ namespace NexusLS.Core.Migrations
                     b.Property<bool>("AbrirNoPdv")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("Bairro")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Cep")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("ChavePix")
                         .HasColumnType("TEXT");
 
@@ -512,6 +518,9 @@ namespace NexusLS.Core.Migrations
                     b.Property<bool>("CupomMostrarInscricao")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("CupomMostrarLogo")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("CupomMostrarOperador")
                         .HasColumnType("INTEGER");
 
@@ -538,6 +547,9 @@ namespace NexusLS.Core.Migrations
                         .HasMaxLength(250)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("EnderecoNumero")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("EstoqueMinimoPadrao")
                         .HasColumnType("INTEGER");
 
@@ -556,6 +568,9 @@ namespace NexusLS.Core.Migrations
 
                     b.Property<int>("LarguraCupom")
                         .HasColumnType("INTEGER");
+
+                    b.Property<byte[]>("LogoCupom")
+                        .HasColumnType("BLOB");
 
                     b.Property<int>("MargemPadraoPercentual")
                         .HasColumnType("INTEGER");
@@ -578,6 +593,9 @@ namespace NexusLS.Core.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("RazaoSocial")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Segmento")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Telefone")

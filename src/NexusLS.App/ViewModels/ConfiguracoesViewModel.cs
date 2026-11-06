@@ -55,6 +55,63 @@ public partial class ConfiguracoesViewModel : ViewModelBase
     [ObservableProperty] private bool _perguntarTamanho = true;
     [ObservableProperty] private bool _abrirNoPdv;
     [ObservableProperty] private string _previa = "";
+    [ObservableProperty] private string _segmento = "";
+    [ObservableProperty] private string _enderecoNumero = "";
+    [ObservableProperty] private string _bairro = "";
+    [ObservableProperty] private string _cep = "";
+    [ObservableProperty] private bool _cupomMostrarLogo = true;
+    [ObservableProperty] private System.Windows.Media.ImageSource? _logoPrevia;
+    [ObservableProperty] private bool _temLogo;
+
+    private byte[]? _logoBytes;
+    private bool _logoAlterado;
+
+    /// <summary>Escolhe o arquivo do logo (o programa abre a caixa de arquivos; os testes trocam por um caminho fixo).</summary>
+    public Func<string?> EscolherArquivoLogo { get; set; } = EscolherArquivoPadrao;
+
+    private static string? EscolherArquivoPadrao()
+    {
+        var dialogo = new Microsoft.Win32.OpenFileDialog { Title = "Escolher o logo do cupom", Filter = "Imagens|*.png;*.jpg;*.jpeg;*.bmp|Todos os arquivos|*.*" };
+        return dialogo.ShowDialog() == true ? dialogo.FileName : null;
+    }
+
+    /// <summary>Define o logo a partir dos bytes de uma imagem qualquer (a imagem é reduzida e convertida em PNG).</summary>
+    public void DefinirLogo(byte[]? arquivo)
+    {
+        _logoBytes = arquivo is { Length: > 0 } ? LogoCupom.Preparar(arquivo) : null;
+        _logoAlterado = true;
+        AtualizarLogo();
+        AtualizarPrevia();
+    }
+
+    private void AtualizarLogo()
+    {
+        TemLogo = _logoBytes is not null;
+        LogoPrevia = CupomMostrarLogo ? LogoCupom.EmCinza(_logoBytes) : null;
+    }
+
+    [RelayCommand]
+    private Task EnviarLogoAsync() => ExecutarAsync(() =>
+    {
+        var caminho = EscolherArquivoLogo();
+        if (string.IsNullOrWhiteSpace(caminho)) return Task.CompletedTask;
+        DefinirLogo(System.IO.File.ReadAllBytes(caminho));
+        MostrarSucesso("Logo carregado. Clique em Salvar para guardar.");
+        return Task.CompletedTask;
+    });
+
+    [RelayCommand]
+    private void RemoverLogo()
+    {
+        DefinirLogo(null);
+        MostrarSucesso("Logo removido. Clique em Salvar para guardar.");
+    }
+
+    partial void OnCupomMostrarLogoChanged(bool value) { AtualizarLogo(); AtualizarPrevia(); }
+    partial void OnSegmentoChanged(string value) => AtualizarPrevia();
+    partial void OnEnderecoNumeroChanged(string value) => AtualizarPrevia();
+    partial void OnBairroChanged(string value) => AtualizarPrevia();
+    partial void OnCepChanged(string value) => AtualizarPrevia();
 
     // Empresa
     [ObservableProperty] private string _razaoSocial = "";
@@ -126,6 +183,14 @@ public partial class ConfiguracoesViewModel : ViewModelBase
         InscricaoEstadual = c.InscricaoEstadual ?? "";
         Email = c.Email ?? "";
         CidadeUf = c.CidadeUf ?? "";
+        Segmento = c.Segmento ?? "";
+        EnderecoNumero = c.EnderecoNumero ?? "";
+        Bairro = c.Bairro ?? "";
+        Cep = c.Cep ?? "";
+        CupomMostrarLogo = c.CupomMostrarLogo;
+        _logoBytes = c.LogoCupom;
+        _logoAlterado = false;
+        AtualizarLogo();
         ChavePix = c.ChavePix ?? "";
         CupomMostrarRazaoSocial = c.CupomMostrarRazaoSocial;
         CupomMostrarDocumento = c.CupomMostrarDocumento;
@@ -165,6 +230,7 @@ public partial class ConfiguracoesViewModel : ViewModelBase
     private Task SalvarAsync() => ExecutarAsync(async () =>
     {
         await _configuracao.SalvarAsync(DadosDoFormulario());
+        _logoAlterado = false;
         MostrarSucesso("Configurações salvas.");
     });
 
@@ -187,7 +253,8 @@ public partial class ConfiguracoesViewModel : ViewModelBase
         NumeroInteiro(EstoqueMinimoPadrao, "O estoque mínimo padrão"),
         NumeroInteiro(MargemPadrao, "A margem padrão"),
         CupomMostrarCidade, CupomMostrarInscricao, CupomMostrarEmail, CupomMostrarOperador, CupomMostrarCliente,
-        CupomMostrarPagamento, CupomMostrarAssinatura, CupomMensagemCabecalho);
+        CupomMostrarPagamento, CupomMostrarAssinatura, CupomMensagemCabecalho,
+        Segmento, EnderecoNumero, Bairro, Cep, CupomMostrarLogo, _logoBytes, _logoAlterado);
 
     private static int NumeroInteiro(string texto, string campo) =>
         int.TryParse(string.IsNullOrWhiteSpace(texto) ? "0" : texto.Trim(), out var n)
@@ -232,7 +299,13 @@ public partial class ConfiguracoesViewModel : ViewModelBase
             CupomMostrarEndereco = d.CupomMostrarEndereco,
             CupomMostrarTelefone = d.CupomMostrarTelefone,
             CupomMostrarPix = d.CupomMostrarPix,
-            CupomLinhasFinais = d.CupomLinhasFinais
+            CupomLinhasFinais = d.CupomLinhasFinais,
+            Segmento = Vazio(d.Segmento),
+            EnderecoNumero = Vazio(d.EnderecoNumero),
+            Bairro = Vazio(d.Bairro),
+            Cep = Vazio(d.Cep),
+            CupomMostrarLogo = d.CupomMostrarLogo,
+            LogoCupom = _logoBytes
         };
     }
 

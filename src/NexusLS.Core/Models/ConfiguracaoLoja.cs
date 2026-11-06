@@ -1,4 +1,4 @@
-namespace NexusLS.Core.Models;
+﻿namespace NexusLS.Core.Models;
 
 /// <summary>Dados da loja e do cupom. Existe uma única linha (Id = 1).</summary>
 public class ConfiguracaoLoja
@@ -42,6 +42,14 @@ public class ConfiguracaoLoja
     public string? Email { get; set; }
     /// <summary>Cidade e UF, ex.: Caruaru - PE.</summary>
     public string? CidadeUf { get; set; }
+    /// <summary>Segmento de atuação (ex.: Confecção e varejo de moda surf). Só cadastro; não sai no cupom.</summary>
+    public string? Segmento { get; set; }
+    /// <summary>Número do endereço (o logradouro fica em <see cref="Endereco"/>).</summary>
+    public string? EnderecoNumero { get; set; }
+    public string? Bairro { get; set; }
+    public string? Cep { get; set; }
+    /// <summary>Logo impresso no topo do cupom: imagem PNG já reduzida pela tela (até 300 KB). Nulo = sem logo.</summary>
+    public byte[]? LogoCupom { get; set; }
     /// <summary>Chave Pix da loja. Pode sair no rodapé do cupom.</summary>
     public string? ChavePix { get; set; }
 
@@ -56,6 +64,8 @@ public class ConfiguracaoLoja
     /// <summary>Inscrição estadual no cabeçalho (separada do CNPJ).</summary>
     public bool CupomMostrarInscricao { get; set; } = true;
     public bool CupomMostrarEmail { get; set; }
+    /// <summary>Logo no topo do cupom (só aparece se houver logo enviado).</summary>
+    public bool CupomMostrarLogo { get; set; } = true;
     public bool CupomMostrarOperador { get; set; } = true;
     public bool CupomMostrarCliente { get; set; } = true;
     /// <summary>Forma de pagamento, recebido e troco.</summary>

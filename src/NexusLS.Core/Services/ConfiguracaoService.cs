@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using NexusLS.Core.Data;
 using NexusLS.Core.Models;
 
@@ -37,7 +37,14 @@ public record DadosLoja(
     bool CupomMostrarCliente = true,
     bool CupomMostrarPagamento = true,
     bool CupomMostrarAssinatura = false,
-    string? CupomMensagemCabecalho = null);
+    string? CupomMensagemCabecalho = null,
+    string? Segmento = null,
+    string? EnderecoNumero = null,
+    string? Bairro = null,
+    string? Cep = null,
+    bool CupomMostrarLogo = true,
+    byte[]? LogoCupom = null,
+    bool LogoAlterado = false);
 
 /// <summary>Dados da loja e do cupom. Só existe uma configuração; ela é criada na primeira leitura.</summary>
 public class ConfiguracaoService
@@ -45,6 +52,7 @@ public class ConfiguracaoService
     public const int LarguraMinima = 24;
     public const int LarguraMaxima = 80;
     public const int MensagemCabecalhoMaxima = 200;
+    public const int LogoMaximoBytes = 300 * 1024;
 
     private readonly IDbContextFactory<PdvDbContext> _fabrica;
 
@@ -80,6 +88,13 @@ public class ConfiguracaoService
             throw new RegraDeNegocioException("A margem padrão deve ficar entre 0% e 99%.");
         if (!string.IsNullOrWhiteSpace(dados.Email) && !dados.Email.Contains('@'))
             throw new RegraDeNegocioException("O e-mail da loja parece errado (falta o @).");
+
+        if (dados.LogoAlterado && dados.LogoCupom is { Length: > 0 } logo)
+        {
+            if (logo.Length > LogoMaximoBytes) throw new RegraDeNegocioException("O logo é grande demais (máximo 300 KB). Escolha uma imagem menor.");
+            if (!(logo.Length > 8 && logo[0] == 0x89 && logo[1] == 0x50 && logo[2] == 0x4E && logo[3] == 0x47))
+                throw new RegraDeNegocioException("O logo precisa ser uma imagem PNG (a tela converte sozinha ao enviar).");
+        }
 
         await ObterAsync(); // garante que a linha existe
         await using var db = await _fabrica.CreateDbContextAsync();
@@ -117,6 +132,12 @@ public class ConfiguracaoService
         config.FundoTrocoPadraoCentavos = dados.FundoTrocoPadraoCentavos;
         config.EstoqueMinimoPadrao = dados.EstoqueMinimoPadrao;
         config.MargemPadraoPercentual = dados.MargemPadraoPercentual;
+        config.Segmento = Limpar(dados.Segmento);
+        config.EnderecoNumero = Limpar(dados.EnderecoNumero);
+        config.Bairro = Limpar(dados.Bairro);
+        config.Cep = Limpar(dados.Cep);
+        config.CupomMostrarLogo = dados.CupomMostrarLogo;
+        if (dados.LogoAlterado) config.LogoCupom = dados.LogoCupom is { Length: > 0 } ? dados.LogoCupom : null;
         config.NomeOperador = string.IsNullOrWhiteSpace(dados.NomeOperador) ? "Caixa" : dados.NomeOperador.Trim();
 
         await db.SaveChangesAsync();

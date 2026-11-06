@@ -43,15 +43,15 @@ public class MontadorCupomTests
     {
         var cupom = MontadorCupom.Montar(Venda(), Loja());
 
-        Assert.Contains("Loja do Zé", cupom);
+        Assert.Contains("LOJA DO ZÉ", cupom);
         Assert.Contains("CNPJ/CPF: 12.345.678/0001-90", cupom);
         Assert.Contains("Rua das Flores, 123 - Centro", cupom);
         Assert.Contains("WhatsApp / Tel: (11) 3333-4444", cupom);
         Assert.Contains("CUPOM NÃO FISCAL", cupom);
-        Assert.Contains("Venda nº 7", cupom);
+        Assert.Contains("Venda / Pedido: #7", cupom);
         Assert.Contains("18/10/2026 14:35", cupom);
         Assert.Contains("Camiseta (M)", cupom);
-        Assert.Contains("2 x R$ 59,90", cupom);
+        Assert.Contains("2x R$ 59,90", cupom);
         Assert.Contains("R$ 119,80", cupom);
         Assert.Contains("TOTAL", cupom);
         Assert.Contains("Obrigado pela preferência!", cupom);
@@ -113,7 +113,7 @@ public class MontadorCupomTests
         var comDesconto = Venda(v => { v.DescontoCentavos = 1000; v.TotalCentavos = 10980; v.TrocoCentavos = 4020; });
         var cupom = MontadorCupom.Montar(comDesconto, Loja());
         Assert.Contains("Desconto", cupom);
-        Assert.Contains("-R$ 10,00", cupom);
+        Assert.Contains("- R$ 10,00", cupom);
         Assert.Contains("R$ 109,80", cupom);
     }
 
@@ -127,7 +127,7 @@ public class MontadorCupomTests
         Assert.Contains("R$ 30,20", dinheiro);
 
         var pix = MontadorCupom.Montar(Venda(v => { v.FormaPagamento = FormaPagamento.Pix; v.ValorRecebidoCentavos = null; v.TrocoCentavos = 0; }), Loja());
-        Assert.Contains("Pix", pix);
+        Assert.Contains("PIX", pix);
         Assert.DoesNotContain("Recebido", pix);
         Assert.DoesNotContain("TROCO", pix);
     }
@@ -143,7 +143,7 @@ public class MontadorCupomTests
 
         var cupom = MontadorCupom.Montar(venda, Loja());
 
-        Assert.Contains("Cartão crédito 3x", cupom);
+        Assert.Contains("CARTÃO CRÉDITO 3x", cupom);
         Assert.Contains("3x de", cupom);
         Assert.Contains("R$ 33,34", cupom); // 100,00 / 3: a primeira parcela leva a sobra do centavo
     }
@@ -160,7 +160,7 @@ public class MontadorCupomTests
         var cupom = MontadorCupom.Montar(venda, Loja());
 
         Assert.Contains("Cliente: Maria Souza", cupom);
-        Assert.Contains("A prazo", cupom);
+        Assert.Contains("A PRAZO", cupom);
     }
 
     [Fact]
@@ -179,7 +179,7 @@ public class MontadorCupomTests
 
         Assert.DoesNotContain("CNPJ", cupom);
         Assert.DoesNotContain("Tel:", cupom);
-        Assert.Contains("Minha Loja", Linhas(cupom)[0]);
+        Assert.Contains("MINHA LOJA", Linhas(cupom)[0]);
         Assert.Contains("CUPOM NÃO FISCAL", Linhas(cupom)[1]); // logo abaixo do nome vem o selo, sem linhas em branco
         Assert.StartsWith("-", Linhas(cupom)[2]);
     }
@@ -241,7 +241,7 @@ public class CupomServiceTests
 
         var texto = await cupons.GerarTextoAsync(vendaId);
 
-        Assert.Contains("Loja Teste", texto);
+        Assert.Contains("LOJA TESTE", texto);
         Assert.Contains("Boné", texto);
         Assert.Contains("Cliente: Maria", texto);
         Assert.Contains("Volte sempre!", texto);
@@ -256,7 +256,7 @@ public class CupomServiceTests
         await cupons.ImprimirAsync(vendaId);
 
         var impresso = Assert.Single(impressora.Impressos);
-        Assert.Contains($"Venda nº {vendaId}", impresso.texto);
+        Assert.Contains($"Venda / Pedido: #{vendaId}", impresso.texto);
         Assert.Equal("Loja Teste", impresso.loja.NomeLoja);
     }
 
@@ -299,7 +299,7 @@ public class CupomServiceTests
         await cupons.ImprimirTesteAsync(new ConfiguracaoLoja { NomeLoja = "Outro Nome", LarguraCupom = 32 });
 
         var impresso = Assert.Single(impressora.Impressos);
-        Assert.Contains("Outro Nome", impresso.texto);
+        Assert.Contains("OUTRO NOME", impresso.texto);
         Assert.Equal("Loja Teste", (await config.ObterAsync()).NomeLoja); // o salvo não mudou
     }
 }

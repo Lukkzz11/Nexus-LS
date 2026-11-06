@@ -16,9 +16,10 @@ public static class MontadorCupom
         var traco = new string('-', largura);
 
         // Cabeçalho da loja, na mesma ordem do ERP PDV Life: nome, razão social, endereço, cidade, CNPJ, IE, telefone, e-mail, mensagem
-        linhas.AddRange(Centralizar(loja.NomeLoja, largura));
+        linhas.AddRange(Centralizar(loja.NomeLoja.ToUpper(new CultureInfo("pt-BR")), largura));
         if (loja.CupomMostrarRazaoSocial && !string.IsNullOrWhiteSpace(loja.RazaoSocial)) linhas.AddRange(Centralizar(loja.RazaoSocial, largura));
-        if (loja.CupomMostrarEndereco && !string.IsNullOrWhiteSpace(loja.Endereco)) linhas.AddRange(Centralizar(loja.Endereco, largura));
+        var enderecoCompleto = EnderecoCompleto(loja);
+        if (loja.CupomMostrarEndereco && enderecoCompleto.Length > 0) linhas.AddRange(Centralizar(enderecoCompleto, largura));
         if (loja.CupomMostrarCidade && !string.IsNullOrWhiteSpace(loja.CidadeUf)) linhas.AddRange(Centralizar(loja.CidadeUf, largura));
         if (loja.CupomMostrarDocumento && !string.IsNullOrWhiteSpace(loja.Documento)) linhas.AddRange(Centralizar($"CNPJ/CPF: {loja.Documento}", largura));
         if (loja.CupomMostrarInscricao && !string.IsNullOrWhiteSpace(loja.InscricaoEstadual)) linhas.AddRange(Centralizar($"IE: {loja.InscricaoEstadual}", largura));
@@ -33,7 +34,7 @@ public static class MontadorCupom
         linhas.Add(traco);
 
         // Dados da venda
-        linhas.Add($"Venda nº {venda.Id}");
+        linhas.Add($"Venda / Pedido: #{venda.Id}");
         linhas.Add($"Data/Hora: {venda.DataHora.ToString("dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture)}");
         if (loja.CupomMostrarOperador && !string.IsNullOrWhiteSpace(venda.Operador)) linhas.AddRange(Quebrar($"Operador: {venda.Operador}", largura));
         if (loja.CupomMostrarCliente && venda.Cliente is not null) linhas.AddRange(Quebrar($"Cliente: {venda.Cliente.Nome}", largura));
@@ -46,14 +47,14 @@ public static class MontadorCupom
         {
             var nome = item.Tamanho == Tamanhos.SemTamanho ? item.NomeProduto : $"{item.NomeProduto} ({item.Tamanho})";
             linhas.AddRange(Quebrar(nome, largura));
-            linhas.Add(DuasPontas($"  {item.Quantidade} x {Reais(item.PrecoUnitarioCentavos)}", Reais(item.TotalCentavos), largura));
+            linhas.Add(DuasPontas($"{item.Quantidade}x {Reais(item.PrecoUnitarioCentavos)}", Reais(item.TotalCentavos), largura));
         }
         linhas.Add(traco);
 
         // Totais
         linhas.Add(DuasPontas("Subtotal:", Reais(venda.SubtotalCentavos), largura));
         if (venda.DescontoCentavos > 0)
-            linhas.Add(DuasPontas("Desconto:", "-" + Reais(venda.DescontoCentavos), largura));
+            linhas.Add(DuasPontas("Desconto:", "- " + Reais(venda.DescontoCentavos), largura));
         if (venda.AcrescimoCentavos > 0)
             linhas.Add(DuasPontas("Acréscimo crédito:", "+" + Reais(venda.AcrescimoCentavos), largura));
         linhas.Add(DuasPontas("TOTAL A PAGAR:", Reais(venda.TotalCentavos), largura));
@@ -62,11 +63,11 @@ public static class MontadorCupom
         if (loja.CupomMostrarPagamento)
         {
             linhas.Add(traco);
-            var forma = SelecaoPagamento.Nome(venda.FormaPagamento);
+            var forma = SelecaoPagamento.Nome(venda.FormaPagamento).ToUpper(new CultureInfo("pt-BR"));
             if (venda.FormaPagamento == FormaPagamento.CartaoCredito && venda.Parcelas > 1)
                 forma += $" {venda.Parcelas}x";
-            linhas.Add(DuasPontas("Pagamento:", forma, largura));
-            if (venda.FormaPagamento == FormaPagamento.Dinheiro && venda.ValorRecebidoCentavos is long recebido)
+            linhas.AddRange(Quebrar($"Forma de Pagamento: {forma}", largura));
+            if (venda.FormaPagamento == FormaPagamento.Dinheiro && venda.ValorRecebidoCentavos is long recebido && venda.TrocoCentavos > 0)
             {
                 linhas.Add(DuasPontas("Recebido:", Reais(recebido), largura));
                 linhas.Add(DuasPontas("TROCO:", Reais(venda.TrocoCentavos), largura));
@@ -76,13 +77,10 @@ public static class MontadorCupom
         }
 
         // Rodapé
-        var temRodape = !string.IsNullOrWhiteSpace(loja.MensagemCupom)
-                        || (loja.CupomMostrarPix && !string.IsNullOrWhiteSpace(loja.ChavePix))
-                        || loja.CupomMostrarAssinatura;
-        if (temRodape) linhas.Add(traco);
-        if (!string.IsNullOrWhiteSpace(loja.MensagemCupom))
-            foreach (var parte in Paragrafos(loja.MensagemCupom))
-                linhas.AddRange(Centralizar(parte, largura));
+        // Como no ERP: sempre há um traço e uma mensagem de agradecimento (a da loja, ou a padrão)
+        linhas.Add(traco);
+        foreach (var parte in Paragrafos(string.IsNullOrWhiteSpace(loja.MensagemCupom) ? MensagemPadrao : loja.MensagemCupom))
+            linhas.AddRange(Centralizar(parte, largura));
         if (loja.CupomMostrarPix && !string.IsNullOrWhiteSpace(loja.ChavePix))
             linhas.AddRange(Centralizar($"Pix: {loja.ChavePix}", largura));
         if (loja.CupomMostrarAssinatura)
@@ -90,6 +88,20 @@ public static class MontadorCupom
 
         for (var i = 0; i < Math.Clamp(loja.CupomLinhasFinais, 0, 15); i++) linhas.Add("");
         return string.Join("\n", linhas);
+    }
+
+    /// <summary>Mensagem de rodapé quando a loja não escreve a sua (a mesma do ERP PDV Life).</summary>
+    public const string MensagemPadrao = "OBRIGADO PELA PREFERÊNCIA! VOLTE SEMPRE!";
+
+    /// <summary>Endereço numa linha só, como no ERP: "Logradouro, número - Bairro".</summary>
+    public static string EnderecoCompleto(ConfiguracaoLoja loja)
+    {
+        var rua = (loja.Endereco ?? "").Trim();
+        var numero = (loja.EnderecoNumero ?? "").Trim();
+        var bairro = (loja.Bairro ?? "").Trim();
+        var texto = numero.Length > 0 ? (rua.Length > 0 ? $"{rua}, {numero}" : numero) : rua;
+        if (bairro.Length > 0) texto = texto.Length > 0 ? $"{texto} - {bairro}" : bairro;
+        return texto;
     }
 
     /// <summary>

@@ -620,7 +620,7 @@ public sealed class FluxoPdvTeclado : IDisposable
 
         var cupom = Assert.Single(_impressora.Impressos);
         Assert.Contains("CUPOM NÃO FISCAL", cupom);
-        Assert.Contains("Venda nº 1", cupom);
+        Assert.Contains("Venda / Pedido: #1", cupom);
         Assert.Contains("Boné", cupom);
         Assert.Contains("Cupom enviado", _vm.Mensagem);
     }
@@ -677,7 +677,7 @@ public sealed class FluxoPdvTeclado : IDisposable
         await FinalizarVendaDeUmBoneAsync();
 
         var cupom = Assert.Single(_impressora.Impressos);
-        Assert.Contains("Casa Nexus", cupom);
+        Assert.Contains("CASA NEXUS", cupom);
         Assert.Contains("12.345.678/0001-90", cupom);
         Assert.Contains("Volte sempre!", cupom);
     }

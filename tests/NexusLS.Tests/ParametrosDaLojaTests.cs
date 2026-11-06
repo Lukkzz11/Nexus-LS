@@ -36,7 +36,7 @@ public sealed class ParametrosDaLojaTests : IDisposable
         Assert.DoesNotContain("Rua A", enxuto);
         Assert.DoesNotContain("Tel:", enxuto);
         Assert.Contains("Pix: pix@life.com", enxuto);
-        Assert.Contains("Life Surf", enxuto);                        // o nome fantasia sempre sai
+        Assert.Contains("LIFE SURF", enxuto);                        // o nome fantasia sempre sai
     }
 
     [Fact]

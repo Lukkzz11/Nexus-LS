@@ -270,6 +270,9 @@ internal static class Capturador
         {
             var app = new NexusLS.App.App();
             app.ShutdownMode = ShutdownMode.OnExplicitShutdown; // fechar a janela de uma captura não pode encerrar o Application
+            // O Application abre a MainWindow sozinho (StartupUri) e, no host de teste, o ícone do pacote não é achado:
+            // sem isto a exceção derrubava o processo de teste inteiro. A janela principal não é usada nas capturas.
+            app.DispatcherUnhandledException += (_, e) => e.Handled = true;
             app.InitializeComponent(); // carrega estilos, conversores e modelos de tela do App.xaml
             dispatcher = Dispatcher.CurrentDispatcher;
             pronto.Set();
@@ -284,6 +287,9 @@ internal static class Capturador
 
     /// <summary>Roda na thread da interface, como no programa de verdade (os ViewModels só mexem nas listas ali).</summary>
     public static void Rodar(Action acao) => Interface.Invoke(acao);
+
+    /// <summary>Como <see cref="Rodar"/>, para comandos assíncronos (espera terminar).</summary>
+    public static Task RodarAsync(Func<Task> acao) => Interface.InvokeAsync(acao).Task.Unwrap();
 
     public static void Salvar(PdvViewModel vm, string caminho, int largura = 1400, int altura = 820) =>
         Desenhar(() => new PdvView { DataContext = vm }, caminho, largura, altura);

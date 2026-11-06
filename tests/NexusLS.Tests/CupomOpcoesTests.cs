@@ -47,8 +47,8 @@ public sealed class CupomOpcoesTests : IDisposable
 
         var ordem = new[]
         {
-            "Casa Nexus", "Confecções LTDA", "Rua das Flores", "Caruaru - PE", "CNPJ/CPF:", "IE: 123456789", "WhatsApp / Tel:", "contato@casanexus",
-            "Moda praia", "CUPOM NÃO FISCAL", "Venda nº 9", "Data/Hora: 20/10/2026 14:35", "Operador: Ana", "Cliente: Maria Souza",
+            "CASA NEXUS", "Confecções LTDA", "Rua das Flores", "Caruaru - PE", "CNPJ/CPF:", "IE: 123456789", "WhatsApp / Tel:", "contato@casanexus",
+            "Moda praia", "CUPOM NÃO FISCAL", "Venda / Pedido: #9", "Data/Hora: 20/10/2026 14:35", "Operador: Ana", "Cliente: Maria Souza",
             "ITENS DA VENDA", "Camiseta (M)", "Subtotal:", "Desconto:", "TOTAL A PAGAR:", "Pagamento:", "Recebido:", "TROCO:",
             "Obrigado pela preferência!", "Pix: pix@casa.com", "Impresso pelo Nexus LS"
         };
