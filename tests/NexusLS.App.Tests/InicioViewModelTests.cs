@@ -117,7 +117,7 @@ public sealed class InicioViewModelTests : IDisposable
 
         Assert.Equal(new[]
         {
-            ItemMenu.Pdv, ItemMenu.Caixa, ItemMenu.Fechamento, ItemMenu.EstoqueDaLoja, ItemMenu.Clientes,
+            ItemMenu.Pdv, ItemMenu.Caixa, ItemMenu.Caixa, ItemMenu.EstoqueDaLoja, ItemMenu.Clientes,
             ItemMenu.Relatorios, ItemMenu.Etiquetas, ItemMenu.MaisVendidos, ItemMenu.Configuracoes
         }, _aberturas);
     }

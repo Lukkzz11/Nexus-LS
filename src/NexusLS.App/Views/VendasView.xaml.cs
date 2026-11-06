@@ -18,6 +18,7 @@ public partial class VendasView : UserControl
                         MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
                 vm.PedirCancelamento = PedirMotivo;
                 vm.EscolherArquivoParaSalvar = SalvarComo;
+                if (vm.Fechamento is { } fechamento) fechamento.Confirmar = vm.Confirmar;
             }
         };
     }

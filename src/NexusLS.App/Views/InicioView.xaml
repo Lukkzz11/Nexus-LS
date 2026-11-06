@@ -221,8 +221,8 @@
                                        AutomationProperties.Name="Situação do caixa" />
                         </StackPanel>
                         <StackPanel Grid.Row="2" Orientation="Horizontal">
-                            <Button Content="Fechamento" Style="{StaticResource BotaoSecundario}" Padding="12,4"
-                                    AutomationProperties.Name="Fechamento do caixa" Command="{Binding AbrirFechamentoCommand}" />
+                            <Button Content="Fechar caixa" Style="{StaticResource BotaoSecundario}" Padding="12,4"
+                                    AutomationProperties.Name="Fechar o caixa" Command="{Binding AbrirFechamentoCommand}" />
                             <Button Content="Caixa do dia" Style="{StaticResource BotaoFantasma}" Padding="12,4" Margin="6,0,0,0"
                                     Command="{Binding AbrirCaixaCommand}" />
                         </StackPanel>

@@ -41,6 +41,7 @@ public partial class PdvView : UserControl
                 MessageBox.Show(Window.GetWindow(this), mensagem, "Nexus LS",
                     MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
             vm.FocoSolicitado += AoPedirFoco;
+            _ = vm.AtualizarCaixaAsync();
         }
         Focar(AlvoFoco.Busca);
     }

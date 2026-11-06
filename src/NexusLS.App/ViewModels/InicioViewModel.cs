@@ -319,7 +319,7 @@ public partial class InicioViewModel : ViewModelBase
     // Atalhos: cada um só pede ao menu principal para abrir a tela.
     [RelayCommand] private void AbrirPdv() => _abrir(ItemMenu.Pdv);
     [RelayCommand] private void AbrirCaixa() => _abrir(ItemMenu.Caixa);
-    [RelayCommand] private void AbrirFechamento() => _abrir(ItemMenu.Fechamento);
+    [RelayCommand] private void AbrirFechamento() => _abrir(ItemMenu.Caixa);
     [RelayCommand] private void AbrirMaisVendidos() => _abrir(ItemMenu.MaisVendidos);
     [RelayCommand] private void AbrirEstoque() => _abrir(ItemMenu.EstoqueDaLoja);
     [RelayCommand] private void AbrirEtiquetas() => _abrir(ItemMenu.Etiquetas);

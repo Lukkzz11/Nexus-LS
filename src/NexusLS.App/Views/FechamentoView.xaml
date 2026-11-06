@@ -1,6 +1,7 @@
 ﻿<UserControl x:Class="NexusLS.App.Views.FechamentoView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:v="clr-namespace:NexusLS.App.Views">
 
     <Grid>
         <Grid.ColumnDefinitions>
@@ -11,12 +12,9 @@
 
         <!-- ===== Abrir / movimentar / conferir ===== -->
         <ScrollViewer VerticalScrollBarVisibility="Auto">
-            <StackPanel>
-                <TextBlock Text="Fechamento de caixa" Style="{StaticResource TituloTela}" Margin="0,0,0,14" />
+            <v:GradeDeCartoes LarguraMinima="440" MaximoColunas="2" Margin="0,0,16,0">
 
-                <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" Margin="0,0,0,10" />
-
-                <!-- Sem caixa aberto -->
+                                <!-- Sem caixa aberto -->
                 <Border Style="{StaticResource Painel}" Visibility="{Binding PodeAbrir, Converter={StaticResource BoolVis}}">
                     <StackPanel>
                         <TextBlock Text="Abrir o caixa" FontSize="18" FontWeight="SemiBold" />
@@ -44,7 +42,7 @@
                 </Border>
 
                 <!-- Sangria, reforço, despesa, entrada -->
-                <Border Style="{StaticResource Painel}" Margin="0,16,0,0"
+                <Border Style="{StaticResource Painel}"
                         Visibility="{Binding TurnoAberto, Converter={StaticResource BoolVis}}">
                     <StackPanel>
                         <TextBlock Text="Movimentar o caixa" FontSize="18" FontWeight="SemiBold" />
@@ -63,11 +61,11 @@
                 </Border>
 
                 <!-- Conferência / fechamento -->
-                <Border Style="{StaticResource Painel}" Margin="0,16,0,16"
+                <Border Style="{StaticResource Painel}"
                         Visibility="{Binding PodeConferir, Converter={StaticResource BoolVis}}">
                     <StackPanel>
                         <TextBlock Text="Conferir e fechar" FontSize="18" FontWeight="SemiBold" />
-                        <TextBlock Text="Conte o que há de verdade e digite abaixo (vazio = zero)." Foreground="{StaticResource CorTextoSuave}" />
+                        <TextBlock Text="Conte o que há de verdade e digite abaixo. Campo vazio = confere com o esperado." Foreground="{StaticResource CorTextoSuave}" />
 
                         <TextBlock Text="Dinheiro na gaveta" Style="{StaticResource Rotulo}" />
                         <TextBox Width="200" HorizontalAlignment="Left" AutomationProperties.Name="Dinheiro conferido"
@@ -86,10 +84,11 @@
                                  Text="{Binding Observacao, UpdateSourceTrigger=PropertyChanged}" />
 
                         <Button Content="Fechar caixa" Style="{StaticResource BotaoPrimario}" Margin="0,16,0,0"
-                                HorizontalAlignment="Left" Command="{Binding FecharCommand}" />
+                                HorizontalAlignment="Left" Command="{Binding FecharRapidoCommand}"
+                                ToolTip="Mostra o resumo e pede a confirmação" />
                     </StackPanel>
                 </Border>
-            </StackPanel>
+            </v:GradeDeCartoes>
         </ScrollViewer>
 
         <!-- ===== Histórico ===== -->
@@ -99,7 +98,7 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
-            <Border Grid.Row="0" Style="{StaticResource Painel}" Margin="0,48,0,0"
+            <Border Grid.Row="0" Style="{StaticResource Painel}" Margin="0,0,0,0"
                     Visibility="{Binding TemRelatorioPeriodo, Converter={StaticResource BoolVis}}">
                 <StackPanel>
                     <TextBlock Text="Relatório do caixa por período" FontWeight="SemiBold" />

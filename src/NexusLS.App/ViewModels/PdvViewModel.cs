@@ -29,6 +29,7 @@ public partial class PdvViewModel : ViewModelBase, IEditorCarrinho
     private readonly RascunhoService _rascunho;
     private readonly ClienteService _clientes;
     private readonly CupomService _cupons;
+    private readonly CaixaService? _caixa;
     private int _ultimaVendaId;
 
     private Carrinho _carrinho = new();
@@ -57,9 +58,10 @@ public partial class PdvViewModel : ViewModelBase, IEditorCarrinho
     /// segurada) pule a confirmação da venda sem o operador ver. Os testes passam zero.
     /// </param>
     public PdvViewModel(ProdutoService produtos, VendaService vendas, RascunhoService rascunho, ClienteService clientes,
-        CupomService cupons, TimeSpan? tempoMinimoSucesso = null, ConfiguracaoService? configuracao = null)
+        CupomService cupons, TimeSpan? tempoMinimoSucesso = null, ConfiguracaoService? configuracao = null, CaixaService? caixa = null)
     {
         _configuracao = configuracao;
+        _caixa = caixa;
         _tempoMinimoSucesso = tempoMinimoSucesso ?? TimeSpan.FromMilliseconds(400);
         _produtos = produtos;
         _vendas = vendas;
@@ -110,7 +112,30 @@ public partial class PdvViewModel : ViewModelBase, IEditorCarrinho
     [ObservableProperty] private Produto? _resultadoSelecionado;
     [ObservableProperty] private ItemCarrinhoViewModel? _itemSelecionado;
 
+    // ----- Situação do caixa (só informa: o Nexus não trava a venda com o caixa fechado) -----
+    [ObservableProperty] private string _caixaTexto = "";
+    [ObservableProperty] private bool _caixaAberto = true;
+    public bool TemCaixa => _caixa is not null;
+
+    /// <summary>Relê se há caixa aberto (a tela chama ao aparecer; o PDV vive o programa todo).</summary>
+    public async Task AtualizarCaixaAsync()
+    {
+        if (_caixa is null) return;
+        try
+        {
+            var aberto = await _caixa.ObterAbertoAsync();
+            CaixaAberto = aberto is not null;
+            CaixaTexto = aberto is null ? "Caixa fechado" : $"Caixa aberto desde {aberto.DataAbertura:dd/MM HH:mm}";
+        }
+        catch (Exception)
+        {
+            CaixaTexto = "";   // a faixa é só informativa: nunca atrapalha a venda
+        }
+    }
+
     public bool TemResultados => Resultados.Count > 0;
+    /// <summary>"Enter para finalizar": aparece na busca vazia quando já há itens (como no ERP).</summary>
+    public bool DicaFinalizar => Busca.Length == 0 && !_carrinho.Vazio;
     public bool CarrinhoVazio => _carrinho.Vazio;
     public string TabelaTexto => _carrinho.Tabela == TabelaPreco.Atacado ? "ATACADO" : "VAREJO";
     public bool EhAtacado => _carrinho.Tabela == TabelaPreco.Atacado;
@@ -156,6 +181,7 @@ public partial class PdvViewModel : ViewModelBase, IEditorCarrinho
 
     partial void OnBuscaChanged(string value)
     {
+        OnPropertyChanged(nameof(DicaFinalizar));
         _desceu = false;
         _ = AtualizarResultadosAsync(value);
     }
@@ -264,6 +290,7 @@ public partial class PdvViewModel : ViewModelBase, IEditorCarrinho
         foreach (var item in Itens) item.Atualizar();
 
         OnPropertyChanged(nameof(CarrinhoVazio));
+        OnPropertyChanged(nameof(DicaFinalizar));
         OnPropertyChanged(nameof(SubtotalTexto));
         OnPropertyChanged(nameof(ResumoItensTexto));
         SalvarRascunho();

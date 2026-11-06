@@ -86,12 +86,6 @@
                             <TextBlock Text="Caixa" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
-                    <Button Tag="Fechamento" Visibility="{Binding VerCaixa, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Fechamento de caixa" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaFechamentoCommand}">
-                        <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="Money24" Style="{StaticResource IconeDoMenu}" />
-                            <TextBlock Text="Fechamento" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
                     <Button Tag="Pedidos" Visibility="{Binding VerPdv, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Pedidos" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaPedidosCommand}">
                         <StackPanel Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="TaskListSquareLtr24" Style="{StaticResource IconeDoMenu}" />

@@ -10,6 +10,9 @@ namespace NexusLS.App.ViewModels;
 /// <summary>As respostas do cancelamento: o motivo e se os itens voltam ao estoque.</summary>
 public record DadosCancelamento(string Motivo, bool DevolverEstoque);
 
+/// <summary>Uma forma de pagamento no relatório do dia, com os textos prontos.</summary>
+public record LinhaFormaDoDia(string Forma, string Total, int Vendas);
+
 public partial class VendasViewModel : ViewModelBase
 {
     private readonly VendaService _vendas;
@@ -17,11 +20,16 @@ public partial class VendasViewModel : ViewModelBase
     private readonly CaixaService? _caixa;
     private int _versao;
 
-    public VendasViewModel(VendaService vendas, CupomService cupons, CaixaService? caixa = null)
+    /// <summary>
+    /// O Caixa reúne o dia (vendas, formas de pagamento) e o fechamento. O <paramref name="fechamento"/> é opcional
+    /// para que os testes e as capturas continuem montando só a lista de vendas.
+    /// </summary>
+    public VendasViewModel(VendaService vendas, CupomService cupons, CaixaService? caixa = null, FechamentoViewModel? fechamento = null)
     {
         _vendas = vendas;
         _cupons = cupons;
         _caixa = caixa;
+        Fechamento = fechamento;
         _data = DateTime.Today; // campo direto: não dispara o carregamento duas vezes
         _ = CarregarAsync();
     }
@@ -42,6 +50,18 @@ public partial class VendasViewModel : ViewModelBase
     public Func<string, string?> EscolherArquivoParaSalvar { get; set; } = _ => null;
 
     public ObservableCollection<Venda> Vendas { get; } = new();
+
+    /// <summary>Abrir, movimentar, conferir e fechar o caixa (dentro da mesma tela). Nulo = só a lista de vendas.</summary>
+    public FechamentoViewModel? Fechamento { get; }
+    public bool TemFechamento => Fechamento is not null;
+
+    /// <summary>Quanto entrou em cada forma de pagamento no dia mostrado (cartões do relatório do dia).</summary>
+    public ObservableCollection<LinhaFormaDoDia> FormasDoDia { get; } = new();
+
+    [ObservableProperty] private string _totalDiaTexto = "R$ 0,00";
+    [ObservableProperty] private string _quantidadeVendasTexto = "0";
+    [ObservableProperty] private string _ticketMedioTexto = "R$ 0,00";
+    [ObservableProperty] private string _canceladasTexto = "";
 
     [ObservableProperty] private DateTime? _data;
 
@@ -92,6 +112,15 @@ public partial class VendasViewModel : ViewModelBase
         // Quanto entrou em cada forma de pagamento (útil para fechar o caixa: o dinheiro tem que bater com a gaveta).
         ResumoFormas = string.Join("   ·   ", RelatorioService.ResumoPorForma(lista)
             .Select(r => $"{SelecaoPagamento.Nome(r.Forma)}: {Dinheiro.Formatar(r.TotalCentavos)} ({r.Vendas})"));
+
+        var totalValido = VendaService.TotalValido(lista);
+        TotalDiaTexto = Dinheiro.Formatar(totalValido);
+        QuantidadeVendasTexto = validas.ToString();
+        TicketMedioTexto = Dinheiro.Formatar(validas == 0 ? 0 : totalValido / validas);
+        CanceladasTexto = canceladas == 0 ? "" : $"{canceladas} cancelada(s), não somadas";
+        FormasDoDia.Clear();
+        foreach (var r in RelatorioService.ResumoPorForma(lista))
+            FormasDoDia.Add(new LinhaFormaDoDia(SelecaoPagamento.Nome(r.Forma), Dinheiro.Formatar(r.TotalCentavos), r.Vendas));
 
         if (idSelecionado is int id) Selecionada = Vendas.FirstOrDefault(v => v.Id == id);
     });
@@ -154,6 +183,7 @@ public partial class VendasViewModel : ViewModelBase
 
         await _vendas.CancelarAsync(venda.Id, dados.Motivo, dados.DevolverEstoque);
         await CarregarAsync();
+        if (Fechamento is not null) await Fechamento.AtualizarCommand.ExecuteAsync(null);   // o esperado do caixa muda com o cancelamento
         MostrarSucesso($"Venda #{venda.Id} cancelada" + (dados.DevolverEstoque ? " e estoque devolvido." : "; o estoque não foi alterado."));
     });
 }

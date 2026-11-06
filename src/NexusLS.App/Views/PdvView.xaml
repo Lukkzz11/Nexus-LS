@@ -34,6 +34,35 @@
             <Setter Property="Foreground" Value="{StaticResource CorTexto}" />
         </Style>
 
+        <!-- "Tecla" do guia de atalhos (como o ERP: F2, F8, Esc...) -->
+        <Style x:Key="Tecla" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource CorSelecaoSuave}" />
+            <Setter Property="BorderBrush" Value="{StaticResource CorBorda}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="{StaticResource RaioPequeno}" />
+            <Setter Property="Padding" Value="7,2" />
+            <Setter Property="MinWidth" Value="38" />
+            <Setter Property="Margin" Value="0,0,8,0" />
+        </Style>
+        <Style x:Key="TextoTecla" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Consolas" />
+            <Setter Property="FontSize" Value="{StaticResource TamRotulo}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="{StaticResource CorTexto}" />
+        </Style>
+        <Style x:Key="PontoCaixaPdv" TargetType="Ellipse">
+            <Setter Property="Width" Value="9" />
+            <Setter Property="Height" Value="9" />
+            <Setter Property="Margin" Value="0,0,7,0" />
+            <Setter Property="Fill" Value="{StaticResource CorPositivo}" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding CaixaAberto}" Value="False">
+                    <Setter Property="Fill" Value="{StaticResource CorAtencaoTexto}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
         <Style x:Key="DicaModal" TargetType="TextBlock">
             <Setter Property="FontSize" Value="13" />
             <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />
@@ -63,19 +92,54 @@
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <TextBlock Text="PDV" Style="{StaticResource TituloTela}" Margin="0,0,0,10" />
+                <Grid Margin="0,0,0,10">
+                    <TextBlock Text="PDV" Style="{StaticResource TituloTela}" />
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                Visibility="{Binding TemCaixa, Converter={StaticResource BoolVis}}">
+                        <Ellipse Style="{StaticResource PontoCaixaPdv}" />
+                        <TextBlock Text="{Binding CaixaTexto}" FontWeight="SemiBold" Foreground="{StaticResource CorTextoSuave}"
+                                   AutomationProperties.Name="Situação do caixa" />
+                    </StackPanel>
+                </Grid>
 
                 <TextBlock Grid.Row="1" Text="Buscar produto (F2): nome, referência ou código de barras · Enter escolhe"
                            Foreground="{StaticResource CorTextoSuave}" FontSize="13" Margin="0,0,0,4" />
 
-                <TextBox Grid.Row="2" x:Name="CaixaBusca" FontSize="28" Padding="12,10"
-                         Text="{Binding Busca, UpdateSourceTrigger=PropertyChanged}" />
+                <Grid Grid.Row="2">
+                    <TextBox x:Name="CaixaBusca" FontSize="28" Padding="12,10"
+                             Text="{Binding Busca, UpdateSourceTrigger=PropertyChanged}" />
+                    <!-- Como no ERP: busca vazia com itens no carrinho lembra que Enter finaliza -->
+                    <TextBlock Text="Enter para finalizar  ↵" FontWeight="SemiBold" FontSize="14" IsHitTestVisible="False"
+                               HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,16,0"
+                               Foreground="{StaticResource CorPrimaria}"
+                               Visibility="{Binding DicaFinalizar, Converter={StaticResource BoolVis}}" />
+                </Grid>
 
                 <!-- Resultados ao vivo: ↑ ↓ destacam; Enter usa o destacado (se você desceu) -->
                 <Border Grid.Row="3" Style="{StaticResource Painel}" Padding="0" Margin="0,6,0,0"
                         Visibility="{Binding TemResultados, Converter={StaticResource BoolVis}}">
                     <ListBox ItemsSource="{Binding Resultados}" SelectedItem="{Binding ResultadoSelecionado}"
-                             MaxHeight="230" BorderThickness="0" FontSize="20" Focusable="False">
+                             MaxHeight="300" BorderThickness="0" FontSize="20" Focusable="False">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="ListBoxItem">
+                                            <Border x:Name="borda" Background="Transparent" Padding="12,6"
+                                                    BorderBrush="{StaticResource CorLinhaGrade}" BorderThickness="0,0,0,1">
+                                                <ContentPresenter />
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsSelected" Value="True">
+                                                    <Setter TargetName="borda" Property="Background" Value="{StaticResource CorSelecao}" />
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <Grid>
@@ -84,8 +148,13 @@
                                         <ColumnDefinition Width="130" />
                                         <ColumnDefinition Width="120" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="{Binding Nome}" />
-                                    <TextBlock Grid.Column="1" HorizontalAlignment="Right"
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Nome}" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock FontSize="{StaticResource TamPequeno}" Foreground="{StaticResource CorTextoSuave}">
+                                            <Run Text="Ref: " /><Run Text="{Binding Referencia, Mode=OneWay, TargetNullValue='sem ref.'}" /><Run Text="   " /><Run Text="{Binding CodigoBarras, Mode=OneWay}" FontFamily="Consolas" />
+                                        </TextBlock>
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center"
                                                Text="{Binding PrecoVendaCentavos, Converter={StaticResource Centavos}}" />
                                     <TextBlock Grid.Column="2" HorizontalAlignment="Right"
                                                Foreground="{StaticResource CorTextoSuave}"
@@ -222,13 +291,18 @@
                     </Grid>
                 </Border>
 
-                <TextBlock Grid.Row="5" Margin="0,10,0,0" FontSize="13" Foreground="{StaticResource CorTextoSuave}"
-                           TextWrapping="Wrap"
-                           Text="F2 Buscar · Enter Escolhe Produto · F10 / Enter vazio Fecha Venda · F8 ou Espaço Troca Varejo/Atacado · Del Remove Item · Esc Fecha Janela" />
+                <WrapPanel Grid.Row="5" Margin="0,12,0,0" TextElement.FontSize="13" TextElement.Foreground="{StaticResource CorTextoSuave}">
+                    <StackPanel Orientation="Horizontal" Margin="0,0,16,4"><Border Style="{StaticResource Tecla}"><TextBlock Text="F2" Style="{StaticResource TextoTecla}" /></Border><TextBlock Text="Buscar" VerticalAlignment="Center" /></StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,16,4"><Border Style="{StaticResource Tecla}"><TextBlock Text="Enter" Style="{StaticResource TextoTecla}" /></Border><TextBlock Text="Escolhe o produto · busca vazia fecha a venda" VerticalAlignment="Center" /></StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,16,4"><Border Style="{StaticResource Tecla}"><TextBlock Text="F10" Style="{StaticResource TextoTecla}" /></Border><TextBlock Text="Fecha a venda" VerticalAlignment="Center" /></StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,16,4"><Border Style="{StaticResource Tecla}"><TextBlock Text="F8 / Espaço" Style="{StaticResource TextoTecla}" /></Border><TextBlock Text="Varejo/Atacado" VerticalAlignment="Center" /></StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,16,4"><Border Style="{StaticResource Tecla}"><TextBlock Text="Del" Style="{StaticResource TextoTecla}" /></Border><TextBlock Text="Remove o item" VerticalAlignment="Center" /></StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4"><Border Style="{StaticResource Tecla}"><TextBlock Text="Esc" Style="{StaticResource TextoTecla}" /></Border><TextBlock Text="Fecha a janela" VerticalAlignment="Center" /></StackPanel>
+                </WrapPanel>
             </Grid>
 
             <!-- ===== Resumo da venda ===== -->
-            <Border Grid.Column="2" Style="{StaticResource Painel}" VerticalAlignment="Top">
+            <Border Grid.Column="2" Style="{StaticResource Painel}" VerticalAlignment="Stretch">
                 <StackPanel>
                     <!-- Venda Cliente: quem está comprando e quanto já deve -->
                     <Border Visibility="{Binding EmModoCliente, Converter={StaticResource BoolVis}}" Background="{StaticResource CorAtencaoFundo}"

@@ -75,6 +75,7 @@ public partial class FechamentoViewModel : ViewModelBase
     public ObservableCollection<LinhaFechamento> Historico { get; } = new();
 
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(PodeConferir))] [NotifyPropertyChangedFor(nameof(PodeAbrir))]
+    [NotifyPropertyChangedFor(nameof(SituacaoTexto))]
     private bool _turnoAberto;
 
     /// <summary>Turno que está sendo conferido: o aberto, ou um fechado cuja conferência será refeita.</summary>
@@ -98,6 +99,14 @@ public partial class FechamentoViewModel : ViewModelBase
     [ObservableProperty] private string _observacao = "";
 
     private ResumoTurno? _resumo;
+
+    /// <summary>A tela define como perguntar "confirma?" (assim o ViewModel não depende de MessageBox). Nos testes, responde sim.</summary>
+    public Func<string, bool> Confirmar { get; set; } = _ => true;
+
+    /// <summary>Texto curto da situação do caixa, para o cabeçalho do Caixa.</summary>
+    public string SituacaoTexto => !TurnoAberto || _resumo is null
+        ? "Caixa fechado"
+        : $"Caixa nº {_resumo.Turno.Id} aberto desde {_resumo.Turno.DataAbertura:dd/MM HH:mm}";
 
     public bool PodeAbrir => !TurnoAberto;
     public bool PodeConferir => TurnoEmConferencia is not null;
@@ -153,6 +162,7 @@ public partial class FechamentoViewModel : ViewModelBase
     private async Task CarregarResumoAsync()
     {
         _resumo = null;
+        OnPropertyChanged(nameof(SituacaoTexto));
         Lancamentos.Clear();
         if (TurnoEmConferencia is not int id)
         {
@@ -163,6 +173,7 @@ public partial class FechamentoViewModel : ViewModelBase
         }
 
         var r = _resumo = await _caixa.ResumoAsync(id);
+        OnPropertyChanged(nameof(SituacaoTexto));
         Cabecalho = r.Turno.Aberto
             ? $"Caixa nº {r.Turno.Id} aberto em {r.Turno.DataAbertura:dd/MM/yyyy HH:mm} · troco inicial {Dinheiro.Formatar(r.Turno.TrocoInicialCentavos)}"
             : $"Caixa nº {r.Turno.Id} · {r.Turno.DataAbertura:dd/MM HH:mm} a {r.Turno.DataFechamento:dd/MM HH:mm} (conferindo de novo)";
@@ -235,6 +246,65 @@ public partial class FechamentoViewModel : ViewModelBase
             ? $"Caixa nº {id} conferido, sem diferença (versão {f.Versao})."
             : $"Caixa nº {id} conferido com diferença de {Dinheiro.Formatar(f.DiferencaTotalCentavos)} (versão {f.Versao}).");
     });
+
+    /// <summary>
+    /// O botão "Fechar caixa" do Caixa: um clique. Mostra o resumo do dia e pede a confirmação. O que foi contado nos
+    /// campos de conferência vale; o campo que ficou vazio é dado como "confere com o esperado". As regras de sempre
+    /// continuam no serviço: fechamento imutável, diferença exige observação, trilha na mesma transação.
+    /// </summary>
+    [RelayCommand]
+    private Task FecharRapidoAsync() => ExecutarAsync(async () =>
+    {
+        if (TurnoEmConferencia is not int id || _resumo is not { } r)
+        {
+            MostrarErro("Não há caixa aberto para fechar.");
+            return;
+        }
+
+        var dinheiro = Contado(ConferidoDinheiroTexto, "dinheiro", r.EsperadoDinheiroCentavos);
+        var cartao = Contado(ConferidoCartaoTexto, "cartão", r.EsperadoCartaoCentavos);
+        var pix = Contado(ConferidoPixTexto, "Pix", r.EsperadoPixCentavos);
+
+        if ((Diferente(r, dinheiro, cartao, pix) || Refazendo) && Observacao.Trim().Length < 3)
+        {
+            MostrarErro(Refazendo
+                ? "Escreva a observação da conferência refeita antes de fechar."
+                : "Há diferença no caixa. Escreva a observação (aba Conferência) antes de fechar.");
+            return;
+        }
+
+        var resumo = $"Fechar o caixa nº {id}?{Environment.NewLine}{Environment.NewLine}"
+                     + $"{ResumoVendas}{Environment.NewLine}"
+                     + $"Dinheiro: {Dinheiro.Formatar(dinheiro)} (esperado {Dinheiro.Formatar(r.EsperadoDinheiroCentavos)}){Environment.NewLine}"
+                     + $"Cartão: {Dinheiro.Formatar(cartao)} (esperado {Dinheiro.Formatar(r.EsperadoCartaoCentavos)}){Environment.NewLine}"
+                     + $"Pix: {Dinheiro.Formatar(pix)} (esperado {Dinheiro.Formatar(r.EsperadoPixCentavos)})";
+        var diferenca = Diferenca(r, dinheiro, cartao, pix);
+        if (Diferente(r, dinheiro, cartao, pix))
+            resumo += $"{Environment.NewLine}{Environment.NewLine}Diferença de {Dinheiro.Formatar(diferenca)}, registrada com a observação: {Observacao.Trim()}";
+        else
+            resumo += $"{Environment.NewLine}{Environment.NewLine}Sem diferença. Os campos vazios foram dados como \"confere\".";
+
+        if (!Confirmar(resumo)) return;
+
+        var f = await _caixa.FecharAsync(id, new ConferenciaCaixa(dinheiro, cartao, pix, Observacao));
+
+        ConferidoDinheiroTexto = ConferidoCartaoTexto = ConferidoPixTexto = Observacao = "";
+        TurnoEmConferencia = null;
+        await AtualizarAsync();
+        MostrarSucesso(f.DiferencaTotalCentavos == 0
+            ? $"Caixa nº {id} fechado, sem diferença."
+            : $"Caixa nº {id} fechado com diferença de {Dinheiro.Formatar(f.DiferencaTotalCentavos)}.");
+    });
+
+    private static bool Diferente(ResumoTurno r, long dinheiro, long cartao, long pix) =>
+        dinheiro != r.EsperadoDinheiroCentavos || cartao != r.EsperadoCartaoCentavos || pix != r.EsperadoPixCentavos;
+
+    private static long Diferenca(ResumoTurno r, long dinheiro, long cartao, long pix) =>
+        (dinheiro - r.EsperadoDinheiroCentavos) + (cartao - r.EsperadoCartaoCentavos) + (pix - r.EsperadoPixCentavos);
+
+    /// <summary>Campo vazio = confere com o esperado (só no fechamento rápido).</summary>
+    private static long Contado(string texto, string meio, long esperado) =>
+        string.IsNullOrWhiteSpace(texto) ? esperado : Valor(texto, meio);
 
     /// <summary>Vazio conta como zero (por exemplo, não houve venda no cartão).</summary>
     private static long Valor(string texto, string meio)

@@ -9,6 +9,9 @@ public partial class FechamentoView : UserControl
         InitializeComponent();
         DataContextChanged += (_, e) =>
         {
+            if (e.NewValue is NexusLS.App.ViewModels.FechamentoViewModel vmFechamento)
+                vmFechamento.Confirmar = mensagem => System.Windows.MessageBox.Show(System.Windows.Window.GetWindow(this), mensagem, "Nexus LS",
+                    System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question) == System.Windows.MessageBoxResult.Yes;
             if (e.NewValue is NexusLS.App.ViewModels.FechamentoViewModel vm)
                 vm.EscolherArquivoParaSalvar = nome =>
                 {
