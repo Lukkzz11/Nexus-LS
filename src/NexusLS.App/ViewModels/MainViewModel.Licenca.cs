@@ -45,7 +45,15 @@ public partial class MainViewModel
         AtualizarLicenca();
     }
 
-    public void AtualizarLicenca() => LicencaTexto = _licenca.Avaliar().Mensagem;
+    public void AtualizarLicenca()
+{
+    LicencaTexto = _licenca.Avaliar().Mensagem;
+    // Licença ativada pelo atualizador (Firebase): quando existe, é a que vale na tela.
+    var nuvem = new NexusLS.Core.Licenciamento.ServicoLicencaNuvem(
+        new NexusLS.Core.Licenciamento.FonteLicencaFirestore(new System.Net.Http.HttpClient()),
+        NexusLS.Core.Licenciamento.ServicoLicencaNuvem.CaminhoPadrao()).AvaliarLocal();
+    if (nuvem.Estado != NexusLS.Core.Licenciamento.EstadoLicencaNuvem.NaoEncontrada) LicencaTexto = nuvem.Mensagem;
+}
 
     [RelayCommand]
     private void AtivarLicenca()

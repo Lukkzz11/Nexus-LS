@@ -215,6 +215,7 @@
                     <StackPanel Margin="18,18,14,0">
                         <TextBlock Text="Versão" Style="{StaticResource SecaoMenu}" Margin="0,0,0,2" />
                         <TextBlock Text="{Binding VersaoTexto}" TextWrapping="Wrap" FontSize="13" AutomationProperties.Name="Versão do programa" />
+                        <TextBlock Text="{Binding LicencaTexto}" TextWrapping="Wrap" FontSize="12" Opacity="0.8" Margin="0,2,0,0" AutomationProperties.Name="Situação da licença" />
                         <Button Content="Atualizador" Style="{StaticResource BotaoSecundario}" Margin="0,8,0,0" Padding="12,6" FontSize="13"
                                 HorizontalAlignment="Left" Command="{Binding AbrirAtualizadorCommand}"
                                 ToolTip="Abrir o utilitário de atualização" />

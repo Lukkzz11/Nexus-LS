@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Net.Http;
@@ -8,13 +8,13 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using Microsoft.Win32;
 using NexusLS.Core.Atualizacao;
+using NexusLS.Core.Licenciamento;
 using NexusLS.Core.Services;
 
 namespace NexusLS.Atualizador;
 
 public partial class MainWindow : Window
 {
-    private string? _chavePrivada;
     private InfoVersao? _versaoDisponivel;
     private AtualizadorService? _atualizador;
 
@@ -27,10 +27,8 @@ public partial class MainWindow : Window
     private void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
         CarregarCodigoMaquina();
-        CarregarChavePrivada();
         CarregarStatusLicenca();
         CarregarStatusVersao();
-        TxtValidade.Text = DateTime.Today.AddYears(1).ToString("yyyy-MM-dd");
 
         // Processar argumentos de linha de comando se houver
         var args = Environment.GetCommandLineArgs();
@@ -56,71 +54,40 @@ public partial class MainWindow : Window
         }
     }
 
-    private void CarregarChavePrivada()
+    private readonly ServicoLicencaNuvem _licenca = new(new FonteLicencaFirestore(new HttpClient { Timeout = TimeSpan.FromSeconds(15) }), ServicoLicencaNuvem.CaminhoPadrao());
+
+    private async void CarregarStatusLicenca()
     {
-        var caminhoPadrao = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-            "NexusLS_chaves", "licenca-privada.txt");
-
-        if (File.Exists(caminhoPadrao))
-        {
-            try
-            {
-                _chavePrivada = File.ReadAllText(caminhoPadrao).Trim();
-                TxtChaveStatus.Text = $"Chave mestra carregada com sucesso ({caminhoPadrao})";
-                TxtChaveStatus.Foreground = (SolidColorBrush)FindResource("CorPositivo");
-                BrdChaveStatus.BorderBrush = (SolidColorBrush)FindResource("CorPositivo");
-                BrdChaveStatus.Background = new SolidColorBrush(Color.FromArgb(25, 21, 128, 61));
-                return;
-            }
-            catch (Exception ex)
-            {
-                TxtChaveStatus.Text = $"Erro ao ler chave em {caminhoPadrao}: {ex.Message}";
-            }
-        }
-        else
-        {
-            TxtChaveStatus.Text = $"Chave mestra não encontrada em {caminhoPadrao}. Você ainda pode instalar licenças geradas.";
-        }
-
-        TxtChaveStatus.Foreground = (SolidColorBrush)FindResource("CorAviso");
-        BrdChaveStatus.BorderBrush = (SolidColorBrush)FindResource("CorAtencaoBorda");
-        BrdChaveStatus.Background = (SolidColorBrush)FindResource("CorAvisoFundo");
+        MostrarLicenca(_licenca.AvaliarLocal());
+        try { MostrarLicenca(await _licenca.VerificarAsync()); }
+        catch (Exception ex) { TxtLicencaDetalhe.Text = ex.Message; }
     }
 
-    private void CarregarStatusLicenca()
+    private void MostrarLicenca(ResultadoLicencaNuvem r)
     {
-        try
+        TxtLicencaStatus.Text = r.Estado switch
         {
-            var licencaService = new LicencaService(LicencaService.CaminhoPadrao());
-            var res = licencaService.Avaliar();
-
-            TxtLicencaStatus.Text = res.Estado switch
-            {
-                EstadoLicenca.Valida => "Válida",
-                EstadoLicenca.Vencendo => "Vencendo em breve",
-                EstadoLicenca.Vencida => "Vencida",
-                EstadoLicenca.SemLicenca => "Sem licença (avaliação)",
-                EstadoLicenca.OutraMaquina => "Outro computador",
-                _ => "Inválida"
-            };
-
-            TxtLicencaStatus.Foreground = res.Estado switch
-            {
-                EstadoLicenca.Valida => (SolidColorBrush)FindResource("CorPositivo"),
-                EstadoLicenca.Vencendo => (SolidColorBrush)FindResource("CorAviso"),
-                EstadoLicenca.SemLicenca => (SolidColorBrush)FindResource("CorTextoSuave"),
-                _ => (SolidColorBrush)FindResource("CorPerigo")
-            };
-
-            TxtLicencaDetalhe.Text = res.Mensagem;
-        }
-        catch (Exception ex)
+            EstadoLicencaNuvem.Valida => "Válida",
+            EstadoLicencaNuvem.Vencendo => "Vencendo em breve",
+            EstadoLicencaNuvem.Vencida => "Vencida",
+            EstadoLicencaNuvem.Bloqueada => "Bloqueada",
+            EstadoLicencaNuvem.OutraMaquina => "Outro computador",
+            EstadoLicencaNuvem.SemConexao => "Sem conexão",
+            EstadoLicencaNuvem.NaoEncontrada => "Sem licença",
+            _ => "Inválida"
+        };
+        TxtLicencaStatus.Foreground = r.Estado switch
         {
-            TxtLicencaStatus.Text = "Erro ao avaliar";
-            TxtLicencaDetalhe.Text = ex.Message;
-        }
+            EstadoLicencaNuvem.Valida => (SolidColorBrush)FindResource("CorPositivo"),
+            EstadoLicencaNuvem.Vencendo or EstadoLicencaNuvem.SemConexao => (SolidColorBrush)FindResource("CorAviso"),
+            EstadoLicencaNuvem.NaoEncontrada => (SolidColorBrush)FindResource("CorTextoSuave"),
+            _ => (SolidColorBrush)FindResource("CorPerigo")
+        };
+        TxtLicencaDetalhe.Text = r.Mensagem;
+        TxtLicencaCliente.Text = string.IsNullOrEmpty(r.Cliente) ? "—" : r.Cliente;
+        TxtLicencaValidade.Text = r.Validade is { } v ? $"{v:dd/MM/yyyy}" + (r.DiasRestantes is { } d ? $"  ({d} dia(s))" : "") : "—";
     }
+
 
     private void CarregarStatusVersao()
     {
@@ -161,153 +128,35 @@ public partial class MainWindow : Window
 
     // --- ABA LICENÇA ---
 
-    private void BtnAdicionarDias_Click(object sender, RoutedEventArgs e)
-    {
-        if (sender is Button btn && int.TryParse(btn.Tag?.ToString(), out var dias))
-        {
-            TxtValidade.Text = DateTime.Today.AddDays(dias).ToString("yyyy-MM-dd");
-        }
-    }
+    // --- ABA LICENÇA (Firebase: projeto nexus-ls, coleção "licencas") ---
 
-    private void BtnPreencherMaquina_Click(object sender, RoutedEventArgs e)
+    private async void BtnAtivarChave_Click(object sender, RoutedEventArgs e)
     {
-        TxtMaquina.Text = LicencaService.CodigoDaMaquina();
-    }
-
-    private void BtnGerarEAtivar_Click(object sender, RoutedEventArgs e)
-    {
+        BtnAtivarChave.IsEnabled = false;
+        TxtStatusGeral.Text = "Consultando a licença no Firebase...";
         try
         {
-            var json = GerarLicencaJson();
-            if (json is null) return;
-
-            var caminhoDestino = LicencaService.CaminhoPadrao();
-            Directory.CreateDirectory(Path.GetDirectoryName(caminhoDestino)!);
-            File.WriteAllText(caminhoDestino, json);
-
-            CarregarStatusLicenca();
-            TxtStatusGeral.Text = "Licença gerada e instalada com sucesso em: " + caminhoDestino;
-            MessageBox.Show(this, "Licença ativada com sucesso!\n\n" + TxtLicencaDetalhe.Text,
-                "Licença Ativada", MessageBoxButton.OK, MessageBoxImage.Information);
+            var r = await _licenca.AtivarAsync(TxtChaveLicenca.Text);
+            MostrarLicenca(r);
+            TxtResultadoLicenca.Text = r.Mensagem;
+            TxtResultadoLicenca.Foreground = r.Ativa ? (SolidColorBrush)FindResource("CorPositivo") : (SolidColorBrush)FindResource("CorPerigo");
+            TxtStatusGeral.Text = r.Ativa ? "Licença ativada." : "Licença não ativada.";
         }
-        catch (Exception ex)
+        finally
         {
-            TxtStatusGeral.Text = "Erro ao ativar licença: " + ex.Message;
-            MessageBox.Show(this, "Erro ao gerar/ativar licença:\n" + ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
-        }
-    }
-
-    private void BtnSalvarArquivo_Click(object sender, RoutedEventArgs e)
-    {
-        try
-        {
-            var json = GerarLicencaJson();
-            if (json is null) return;
-
-            var clienteFormatado = new string(TxtCliente.Text.Where(char.IsLetterOrDigit).ToArray());
-            var sfd = new SaveFileDialog
-            {
-                Filter = "Arquivo de Licença (*.json)|*.json",
-                FileName = $"licenca-{clienteFormatado}-{TxtValidade.Text.Trim()}.json",
-                Title = "Salvar Arquivo de Licença"
-            };
-
-            if (sfd.ShowDialog(this) == true)
-            {
-                File.WriteAllText(sfd.FileName, json);
-                TxtStatusGeral.Text = "Licença salva em: " + sfd.FileName;
-                MessageBox.Show(this, $"Licença salva com sucesso em:\n{sfd.FileName}", "Licença Salva",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-        }
-        catch (Exception ex)
-        {
-            TxtStatusGeral.Text = "Erro ao salvar arquivo de licença: " + ex.Message;
-            MessageBox.Show(this, "Erro:\n" + ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
-        }
-    }
-
-    private string? GerarLicencaJson()
-    {
-        var chave = _chavePrivada;
-        if (string.IsNullOrWhiteSpace(chave))
-        {
-            MessageBox.Show(this,
-                "A chave privada mestra não foi encontrada em %USERPROFILE%\\NexusLS_chaves\\licenca-privada.txt.\n" +
-                "Somente o fornecedor pode gerar novas licenças.",
-                "Chave Mestra Não Encontrada", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return null;
-        }
-
-        var cliente = TxtCliente.Text.Trim();
-        if (string.IsNullOrWhiteSpace(cliente))
-        {
-            MessageBox.Show(this, "Informe o nome do cliente.", "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return null;
-        }
-
-        if (!DateTime.TryParseExact(TxtValidade.Text.Trim(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var validade))
-        {
-            MessageBox.Show(this, "Informe uma data de validade válida no formato AAAA-MM-DD.", "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return null;
-        }
-
-        var maquina = string.IsNullOrWhiteSpace(TxtMaquina.Text) ? "*" : TxtMaquina.Text.Trim();
-        return GeradorLicenca.Gerar(chave, cliente, validade, maquina);
-    }
-
-    private void BtnInstalarArquivo_Click(object sender, RoutedEventArgs e)
-    {
-        var ofd = new OpenFileDialog
-        {
-            Filter = "Arquivo de Licença (*.json)|*.json|Todos os arquivos (*.*)|*.*",
-            Title = "Selecionar Arquivo de Licença do Nexus LS"
-        };
-
-        if (ofd.ShowDialog(this) == true)
-        {
-            try
-            {
-                var s = new LicencaService(LicencaService.CaminhoPadrao());
-                var res = s.Instalar(ofd.FileName);
-                CarregarStatusLicenca();
-                TxtStatusGeral.Text = "Licença instalada: " + res.Mensagem;
-                MessageBox.Show(this, "Licença instalada com sucesso!\n\n" + res.Mensagem,
-                    "Licença Instalada", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-            catch (Exception ex)
-            {
-                TxtStatusGeral.Text = "Erro ao instalar licença: " + ex.Message;
-                MessageBox.Show(this, "Não foi possível instalar esta licença:\n" + ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            BtnAtivarChave.IsEnabled = true;
         }
     }
 
     private void BtnRemoverLicenca_Click(object sender, RoutedEventArgs e)
     {
-        var caminho = LicencaService.CaminhoPadrao();
-        if (!File.Exists(caminho))
-        {
-            MessageBox.Show(this, "Nenhuma licença instalada.", "Aviso", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
-
-        if (MessageBox.Show(this, "Deseja remover a licença instalada deste computador? O programa voltará ao modo de avaliação.",
-            "Confirmar Remoção", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
-        {
-            try
-            {
-                File.Delete(caminho);
-                CarregarStatusLicenca();
-                TxtStatusGeral.Text = "Licença removida com sucesso.";
-                MessageBox.Show(this, "Licença removida.", "Concluído", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(this, "Erro ao remover licença: " + ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
+        if (MessageBox.Show(this, "Remover a licença deste computador? Você poderá ativá-la de novo com a chave.",
+            "Confirmar remoção", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
+        _licenca.Remover();
+        MostrarLicenca(_licenca.AvaliarLocal());
+        TxtResultadoLicenca.Text = "Licença removida deste computador.";
     }
+
 
     // --- ABA ATUALIZAÇÃO ---
 
@@ -535,11 +384,6 @@ public partial class MainWindow : Window
     private void BtnAbrirReleases_Click(object sender, RoutedEventArgs e)
     {
         AbrirUrl("https://github.com/Lukkzz11/Nexus-LS---Update/releases");
-    }
-
-    private void BtnAbrirFirebaseApp_Click(object sender, RoutedEventArgs e)
-    {
-        AbrirUrl("https://nexus-ls.firebaseapp.com");
     }
 
     private void AbrirUrl(string url)
