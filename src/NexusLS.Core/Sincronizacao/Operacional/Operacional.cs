@@ -25,6 +25,7 @@ public class ConfiguracaoOperacional
 
     public void Validar()
     {
+        NexusLS.Core.Importacao.Erp.GuardaErp.ExigirNaoSerOErp(ProjectId);
         if (!System.Text.RegularExpressions.Regex.IsMatch(ProjectId.Trim(), "^[a-z][a-z0-9\\-]{4,29}$"))
             throw new RegraDeNegocioException("O id do projeto Firebase operacional deve ter de 5 a 30 letras minúsculas, números ou hífens.");
         if (string.IsNullOrWhiteSpace(ApiKey))

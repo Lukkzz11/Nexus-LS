@@ -177,7 +177,7 @@ function produtosVisiveis(produtos) {
   return produtos.filter((p) => p.ativo !== false && p.ativoNoCatalogo !== false && p.ocultoNoCatalogo !== true);
 }
 
-export default function VitrineEditor({ tenantId, vitrineSalva, produtos, categorias, empresa }) {
+export default function VitrineEditor({ tenantId, vitrineSalva, produtos, categorias, empresa, painelPedido = null, aoSalvar }) {
   const inicial = useMemo(() => sanitizarVitrine(vitrineSalva), [vitrineSalva]);
   const [salvo, setSalvo] = useState(inicial);
   const historico = useHistorico(inicial);
@@ -327,6 +327,7 @@ export default function VitrineEditor({ tenantId, vitrineSalva, produtos, catego
       // Só agora (com o novo layout gravado) apaga do Storage o que ficou de fora
       await limparImagensSemUso(imagensDe(gravado));
       setSalvo(gravado);
+      aoSalvar?.(gravado);
       historico.reiniciar(gravado);
       setPublicadoEm(new Date());
       toast.success("Vitrine publicada! O catálogo online já mostra as mudanças.");
@@ -376,6 +377,14 @@ export default function VitrineEditor({ tenantId, vitrineSalva, produtos, catego
     setPainel(id);
     setVista(id === "pdf" ? "pdf" : "online");
   };
+
+  // A aba "Mercadorias" pede para abrir um painel (ex.: "loja")
+  useEffect(() => {
+    if (painelPedido?.id) {
+      setPainel(painelPedido.id);
+      setVista(painelPedido.id === "pdf" ? "pdf" : "online");
+    }
+  }, [painelPedido]);
 
   // Atalhos: Ctrl+Z desfaz, Ctrl+Y (ou Ctrl+Shift+Z) refaz. Não interfere ao digitar em campos de texto.
   useEffect(() => {

@@ -60,4 +60,25 @@ public sealed class ContaErp
     }
 
     public IFonteErp CriarFonte() => new FirestoreErpFonte(_http, _config.Carregar(), Login());
+
+    /// <summary>
+    /// "Testar conexão": entra com o e-mail e a senha digitados (a senha não é guardada) e confirma a LEITURA lendo
+    /// no máximo um produto da empresa. Não grava nada no ERP. Falhas de login, de permissão e de rede viram mensagens
+    /// em português (<see cref="FalhaLoginException"/> ou <see cref="FalhaDestinoException"/>).
+    /// </summary>
+    public async Task<ResultadoTesteErp> TestarConexaoAsync(string email, string senha, CancellationToken ct = default)
+    {
+        var cfg = _config.Carregar();
+        if (!cfg.EstaCompleta) throw new RegraDeNegocioException("Informe o projeto, a empresa e a chave da API do ERP e salve antes de testar.");
+        var sessao = await EntrarAsync(email, senha, ct);
+        var fonte = new FirestoreErpFonte(_http, cfg, Login());
+        var lidos = await fonte.LerAmostraAsync("produtos", 1, ct);
+        var msg = lidos > 0
+            ? $"Conexão confirmada: {sessao.Email} consegue ler os produtos de {cfg.EmpresaId} no projeto {cfg.ProjectId}."
+            : $"Login confirmado ({sessao.Email}) e a leitura de {cfg.EmpresaId} foi aceita, mas ainda não há produtos lá.";
+        return new ResultadoTesteErp(sessao.Email, cfg.ProjectId, cfg.EmpresaId, lidos, msg);
+    }
 }
+
+/// <summary>O que "Testar conexão" descobriu. Nunca inclui chave, senha nem token.</summary>
+public sealed record ResultadoTesteErp(string Email, string ProjectId, string EmpresaId, int ProdutosLidos, string Mensagem);

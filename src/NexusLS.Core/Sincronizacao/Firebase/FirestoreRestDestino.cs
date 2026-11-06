@@ -112,6 +112,7 @@ public sealed class FirestoreRestDestino : IDestinoCatalogo
 
     public FirestoreRestDestino(HttpClient http, string projectId, IProvedorToken token, Func<DateTime>? agora = null)
     {
+        if (NexusLS.Core.Importacao.Erp.GuardaErp.EhProjetoDoErp(projectId)) throw new FalhaDestinoException(NexusLS.Core.Importacao.Erp.GuardaErp.MensagemSomenteLeitura);
         _http = http;
         _projectId = projectId;
         _token = token;

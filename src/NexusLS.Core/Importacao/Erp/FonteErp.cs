@@ -19,6 +19,12 @@ public class ConfiguracaoErp
     /// <summary>Empresa do ERP de onde vêm os dados (no ERP, <c>activeTenantId</c>).</summary>
     public string EmpresaId { get; set; } = "lifesurf-principal";
 
+    /// <summary>
+    /// Chave que liberaria a gravação no formato do ERP (<see cref="GravadorErp"/>). Desligada por padrão: o Nexus só
+    /// lê o ERP. Mesmo ligada, nada é gravado sem um destino de gravação real, que ainda não existe no programa.
+    /// </summary>
+    public bool GravacaoAtivada { get; set; }
+
     public bool EstaCompleta =>
         !string.IsNullOrWhiteSpace(ProjectId) && !string.IsNullOrWhiteSpace(ApiKey) && !string.IsNullOrWhiteSpace(EmpresaId);
 
@@ -119,6 +125,20 @@ public sealed class FirestoreErpFonte : IFonteErp
             lista.Add(new DocumentoErp(nome[(nome.LastIndexOf('/') + 1)..], Decodificar(doc["fields"] as JsonObject)));
         }
         return lista;
+    }
+
+    /// <summary>
+    /// Lê no máximo <paramref name="limite"/> documentos da coleção, sem filtro nem ordem (usado em "Testar conexão":
+    /// cada documento lido é uma leitura cobrada, então o limite é pequeno). Nunca grava.
+    /// </summary>
+    public async Task<int> LerAmostraAsync(string colecao, int limite, CancellationToken ct = default)
+    {
+        var consulta = new JsonObject { ["from"] = new JsonArray(new JsonObject { ["collectionId"] = colecao }), ["limit"] = Math.Clamp(limite, 1, 5) };
+        var corpo = new JsonObject { ["structuredQuery"] = consulta }.ToJsonString();
+        var url = $"https://firestore.googleapis.com/v1/projects/{_config.ProjectId}/databases/(default)/documents/empresas/{_config.EmpresaId}:runQuery";
+        var (status, texto) = await PostAsync(url, corpo, ct);
+        if (status != HttpStatusCode.OK) throw FirestoreRestDestino.TraduzirErro(status, texto);
+        return JsonNode.Parse(texto)!.AsArray().Count(item => item?["document"] is not null);
     }
 
     private async Task<(HttpStatusCode, string)> PostAsync(string url, string json, CancellationToken ct)

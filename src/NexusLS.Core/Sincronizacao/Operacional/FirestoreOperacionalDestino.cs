@@ -22,6 +22,7 @@ public sealed class FirestoreOperacionalDestino : IDestinoOperacional
 
     public FirestoreOperacionalDestino(HttpClient http, string projectId, string lojaId, IProvedorToken token)
     {
+        if (NexusLS.Core.Importacao.Erp.GuardaErp.EhProjetoDoErp(projectId)) throw new FalhaDestinoException(NexusLS.Core.Importacao.Erp.GuardaErp.MensagemSomenteLeitura);
         _http = http;
         _projectId = projectId;
         _lojaId = lojaId;

@@ -47,6 +47,7 @@ public class ConfiguracaoFirebase
 
     public void Validar()
     {
+        NexusLS.Core.Importacao.Erp.GuardaErp.ExigirNaoSerOErp(ProjectId);
         if (!PadraoProjeto.IsMatch(ProjectId.Trim()))
             throw new RegraDeNegocioException("O id do projeto Firebase deve ter de 5 a 30 letras minúsculas, números ou hífens (ex.: minha-loja-1a2b3).");
         if (string.IsNullOrWhiteSpace(ApiKey))

@@ -17,6 +17,7 @@ public sealed class StorageRestEnviador : IEnviadorFoto
 
     public StorageRestEnviador(HttpClient http, string bucket, IProvedorToken token)
     {
+        if (NexusLS.Core.Importacao.Erp.GuardaErp.EhBucketDoErp(bucket)) throw new FalhaDestinoException(NexusLS.Core.Importacao.Erp.GuardaErp.MensagemSomenteLeitura);
         _http = http;
         _bucket = bucket;
         _token = token;
