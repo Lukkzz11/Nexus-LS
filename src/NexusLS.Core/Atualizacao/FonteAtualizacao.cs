@@ -32,7 +32,7 @@ public class FonteGitHub : IFonteAtualizacao
     private readonly string _repositorio;
     private readonly Func<Uri, bool> _urlPermitida;
 
-    /// <param name="repositorio">No formato dono/nome, por exemplo "Lukkzz11/Nexus-LS-Atualizacoes".</param>
+    /// <param name="repositorio">No formato dono/nome, por exemplo "Lukkzz11/Nexus-LS---Update".</param>
     /// <param name="urlPermitida">Só para testes: troca a regra de quais endereços podem ser baixados.</param>
     public FonteGitHub(HttpClient http, string repositorio, Func<Uri, bool>? urlPermitida = null)
     {

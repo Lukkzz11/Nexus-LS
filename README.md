@@ -1,4 +1,4 @@
-﻿# Nexus LS
+# Nexus LS
 
 PDV (frente de caixa) e controle de estoque para loja de roupas e acessórios, feito em C# com .NET e WPF, para Windows.
 Funciona sem internet e sem login, com uma loja só. Todo o programa, o código e os comentários estão em português.
@@ -247,7 +247,7 @@ Um instalador com assistente (`.msi`) não faz parte desta versão. Para um arqu
 
 **Para publicar uma versão nova** (quem desenvolve):
 
-1. Uma vez só: crie no GitHub um repositório **público** só para os instaladores (padrão: `Lukkzz11/Nexus-LS-Atualizacoes`; nunca coloque o código-fonte nele), instale o GitHub CLI (`winget install GitHub.cli`) e entre com `gh auth login`.
+1. Uma vez só: crie no GitHub um repositório **público** só para os instaladores (padrão: `Lukkzz11/Nexus-LS---Update`; nunca coloque o código-fonte nele), instale o GitHub CLI (`winget install GitHub.cli`) e entre com `gh auth login`.
 2. Faça o commit do código e rode, na pasta do projeto:
 
 ```bash

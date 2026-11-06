@@ -534,7 +534,7 @@ public partial class MainWindow : Window
 
     private void BtnAbrirReleases_Click(object sender, RoutedEventArgs e)
     {
-        AbrirUrl("https://github.com/Lukkzz11/Nexus-LS-Atualizacoes/releases");
+        AbrirUrl("https://github.com/Lukkzz11/Nexus-LS---Update/releases");
     }
 
     private void BtnAbrirFirebaseApp_Click(object sender, RoutedEventArgs e)

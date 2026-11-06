@@ -9,7 +9,7 @@ namespace NexusLS.Core.Atualizacao;
 /// </summary>
 public static class ConfiguracaoAtualizacao
 {
-    public const string RepositorioPadrao = "Lukkzz11/Nexus-LS-Atualizacoes";
+    public const string RepositorioPadrao = "Lukkzz11/Nexus-LS---Update";
 
     public static string CaminhoPadrao() => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "NexusLS", "atualizacao.json");

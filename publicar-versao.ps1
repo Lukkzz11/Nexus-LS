@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
   Gera e envia uma nova versão do Nexus LS para o repositório de atualizações (GitHub Releases).
 
@@ -27,7 +27,7 @@ param(
     [Parameter(Mandatory = $true)][string]$Versao,
     [string]$Notas = "",
     [string]$NotasArquivo = "",
-    [string]$Repositorio = "Lukkzz11/Nexus-LS-Atualizacoes",
+    [string]$Repositorio = "Lukkzz11/Nexus-LS---Update",
     [switch]$SemTestes,
     [switch]$SoGerar
 )
