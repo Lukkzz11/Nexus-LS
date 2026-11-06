@@ -14,7 +14,7 @@ public partial class VendasView : UserControl
             if (DataContext is VendasViewModel vm)
             {
                 vm.Confirmar = mensagem =>
-                    MessageBox.Show(Window.GetWindow(this), mensagem, "Nexus LS",
+                    MessageBox.Show(Window.GetWindow(this), mensagem, "Nexus",
                         MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
                 vm.PedirCancelamento = PedirMotivo;
                 vm.EscolherArquivoParaSalvar = SalvarComo;

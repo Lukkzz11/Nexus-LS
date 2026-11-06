@@ -7,7 +7,7 @@
 
     <!--
         Cartões e campos. Os controles em si vêm da biblioteca WPF-UI (estilo Windows 11); aqui só se ajusta o que
-        é do Nexus LS: contorno, cor do texto e o cartão que agrupa uma parte da tela.
+        é do Nexus: contorno, cor do texto e o cartão que agrupa uma parte da tela.
     -->
 
     <!-- Cartão: caixa branca de cantos arredondados que agrupa uma parte da tela. -->

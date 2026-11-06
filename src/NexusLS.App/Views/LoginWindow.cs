@@ -30,7 +30,7 @@ public sealed class LoginWindow : Window
     {
         _servico = servico;
         _podeCancelar = podeCancelar;
-        Title = "Nexus LS — Entrar";
+        Title = "Nexus — Entrar";
         Width = 400;
         SizeToContent = SizeToContent.Height;
         ResizeMode = ResizeMode.NoResize;
@@ -62,7 +62,7 @@ public sealed class LoginWindow : Window
             Margin = new Thickness(28),
             Children =
             {
-                new TextBlock { Text = "Nexus LS", FontSize = 24, FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 0, 0, 16) },
+                new TextBlock { Text = "Nexus", FontSize = 24, FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 0, 0, 16) },
                 _painelEntrada, _painelRecuperacao, _erro
             }
         };

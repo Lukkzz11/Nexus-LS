@@ -1,7 +1,7 @@
 ﻿<Window x:Class="NexusLS.Atualizador.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Nexus LS — Atualizador e Ativador de Licença"
+        Title="Nexus — Atualizador e Ativador de Licença"
         Icon="pack://application:,,,/nexus.ico"
         Height="760" Width="1020" MinHeight="660" MinWidth="880"
         WindowStartupLocation="CenterScreen"
@@ -9,7 +9,7 @@
         FontFamily="{StaticResource FonteTexto}">
 
     <Window.Resources>
-        <!-- Estilo de Aba padronizado com o Nexus LS -->
+        <!-- Estilo de Aba padronizado com o Nexus -->
         <Style x:Key="AbaNexus" TargetType="TabItem">
             <Setter Property="FontSize" Value="14" />
             <Setter Property="FontWeight" Value="SemiBold" />
@@ -98,9 +98,9 @@
                     </StackPanel>
                 </StackPanel>
 
-                <!-- Botão de Iniciar o Nexus LS -->
+                <!-- Botão de Iniciar o Nexus -->
                 <Button Grid.Column="2" x:Name="BtnIniciarNexus" Style="{StaticResource BotaoPrimario}"
-                        Padding="18,10" VerticalAlignment="Center" Click="BtnIniciarNexus_Click" ToolTip="Executa o aplicativo principal Nexus LS">
+                        Padding="18,10" VerticalAlignment="Center" Click="BtnIniciarNexus_Click" ToolTip="Executa o aplicativo principal Nexus">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <Image Source="pack://application:,,,/Assets/emblema-branco.png" Width="16" Height="18" Margin="0,0,8,0" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality" />
                         <TextBlock Text="Iniciar Nexus" FontWeight="SemiBold" FontSize="13" />
@@ -216,7 +216,7 @@
             </TabItem>
 
             <!-- ABA 2: ATUALIZAÇÕES DO NEXUS LS -->
-            <TabItem Header="🔄  Atualizações do Nexus LS" Style="{StaticResource AbaNexus}">
+            <TabItem Header="🔄  Atualizações do Nexus" Style="{StaticResource AbaNexus}">
                 <Border Background="{StaticResource CorPainel}" BorderBrush="{StaticResource CorBorda}" BorderThickness="1"
                         CornerRadius="0,10,10,10" Padding="24">
                     <ScrollViewer VerticalScrollBarVisibility="Auto">

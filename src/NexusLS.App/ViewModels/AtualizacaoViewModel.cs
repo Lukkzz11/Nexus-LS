@@ -99,7 +99,7 @@ public partial class AtualizacaoViewModel : ViewModelBase
     private Task AtualizarAgoraAsync() => ExecutarAsync(async () =>
     {
         if (_nova is null || Ocupado) return;
-        if (!Confirmar($"O Nexus LS vai baixar a versão {_nova.Versao}, fechar e abrir de novo.\n\n" +
+        if (!Confirmar($"O Nexus vai baixar a versão {_nova.Versao}, fechar e abrir de novo.\n\n" +
                        "Uma venda em andamento fica salva e volta ao abrir. Seus dados não são apagados.\n\nAtualizar agora?"))
             return;
 

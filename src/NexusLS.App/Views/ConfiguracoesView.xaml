@@ -154,7 +154,7 @@
                                         <CheckBox Content="Nome do cliente" IsChecked="{Binding CupomMostrarCliente}" Margin="0,3,12,3" />
                                         <CheckBox Content="Forma de pagamento e troco" IsChecked="{Binding CupomMostrarPagamento}" Margin="0,3,12,3" />
                                         <CheckBox Content="Chave Pix no rodapé" IsChecked="{Binding CupomMostrarPix}" Margin="0,3,12,3" />
-                                        <CheckBox Content="Linha “Impresso pelo Nexus LS”" IsChecked="{Binding CupomMostrarAssinatura}" Margin="0,3,12,3" />
+                                        <CheckBox Content="Linha “Impresso pelo Nexus”" IsChecked="{Binding CupomMostrarAssinatura}" Margin="0,3,12,3" />
                                     </UniformGrid>
 
                                     <Grid Margin="0,4,0,0">
@@ -382,7 +382,7 @@
                                 <TextBlock Text="Google Drive" FontSize="18" FontWeight="SemiBold" />
                                 <TextBlock Text="{Binding GoogleSituacao}" Foreground="{StaticResource CorTextoSuave}" Margin="0,4,0,0" />
                                 <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,6,0,0"
-                                           Text="Envia uma cópia do backup para a pasta &quot;Nexus LS Backups&quot; do seu Drive. O programa só enxerga os arquivos que ele mesmo criou. Você precisa criar um acesso (Client ID e Client Secret, tipo &quot;App para computador&quot;) no Google Cloud, com a Google Drive API ativada; o passo a passo está no manual." />
+                                           Text="Envia uma cópia do backup para a pasta &quot;Nexus Backups&quot; do seu Drive. O programa só enxerga os arquivos que ele mesmo criou. Você precisa criar um acesso (Client ID e Client Secret, tipo &quot;App para computador&quot;) no Google Cloud, com a Google Drive API ativada; o passo a passo está no manual." />
 
                                 <TextBlock Text="Client ID" Style="{StaticResource Rotulo}" />
                                 <TextBox Text="{Binding GoogleClientId, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Client ID do Google" />

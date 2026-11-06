@@ -19,7 +19,7 @@ public sealed class LoginFirebaseWindow : Window
     public SessaoUsuario? Entrou { get; private set; }
 
     public LoginFirebaseWindow(GestorLogin login)
-        : this((e, s) => login.EntrarAsync(e, s), login.EmailSugerido, "Nexus LS — Entrar na conta", "Conta do Nexus LS",
+        : this((e, s) => login.EntrarAsync(e, s), login.EmailSugerido, "Nexus — Entrar na conta", "Conta do Nexus",
             "Entre para enviar o catálogo à nuvem. As vendas e o estoque continuam funcionando sem internet.")
     {
     }
@@ -78,7 +78,7 @@ public sealed class LoginFirebaseWindow : Window
     /// <summary>Entrada no Firebase do ERP (só para ler dados de lá).</summary>
     public static SessaoUsuario? PedirErp(NexusLS.Core.Importacao.Erp.ContaErp conta, Window? dono)
     {
-        var janela = new LoginFirebaseWindow((e, s) => conta.EntrarAsync(e, s), conta.Email ?? "", "Nexus LS — Entrar no ERP", "Conta do ERP",
+        var janela = new LoginFirebaseWindow((e, s) => conta.EntrarAsync(e, s), conta.Email ?? "", "Nexus — Entrar no ERP", "Conta do ERP",
             "Use o mesmo e-mail e senha do ERP. O Nexus só lê as informações de lá; nada é gravado no ERP.") { Owner = dono };
         return janela.ShowDialog() == true ? janela.Entrou : null;
     }

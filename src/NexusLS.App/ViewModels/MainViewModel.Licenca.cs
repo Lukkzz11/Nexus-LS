@@ -92,7 +92,7 @@ public partial class MainViewModel
         }
     }
 
-    public string VersaoTexto => "Nexus LS v" + NexusLS.Core.Atualizacao.VersaoPrograma.Atual().ToString();
+    public string VersaoTexto => "Nexus v" + NexusLS.Core.Atualizacao.VersaoPrograma.Atual().ToString();
 
     [ObservableProperty] private string _bancoTexto = "";
 

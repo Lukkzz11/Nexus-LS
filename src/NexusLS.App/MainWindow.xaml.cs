@@ -17,7 +17,7 @@ public partial class MainWindow : FluentWindow
         DataContext = vm;
         vm.EscolherArquivoDeLicenca = () =>
         {
-            var d = new Microsoft.Win32.OpenFileDialog { Filter = "Licença do Nexus LS|*.json", Title = "Escolha o arquivo de licença" };
+            var d = new Microsoft.Win32.OpenFileDialog { Filter = "Licença do Nexus|*.json", Title = "Escolha o arquivo de licença" };
             return d.ShowDialog(this) == true ? d.FileName : null;
         };
         vm.AtualizarLicenca();
@@ -26,7 +26,7 @@ public partial class MainWindow : FluentWindow
 
         // Atualização: as perguntas ficam aqui (janela); a consulta ao abrir é silenciosa e nunca atrapalha o uso.
         vm.Atualizacao.Confirmar = texto =>
-            System.Windows.MessageBox.Show(this, texto, "Atualizar o Nexus LS", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question) == System.Windows.MessageBoxResult.Yes;
+            System.Windows.MessageBox.Show(this, texto, "Atualizar o Nexus", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question) == System.Windows.MessageBoxResult.Yes;
         vm.Atualizacao.MostrarNotas = (titulo, texto) =>
             System.Windows.MessageBox.Show(this, texto, titulo, System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
         Loaded += async (_, _) => await vm.Atualizacao.VerificarAoAbrirAsync();

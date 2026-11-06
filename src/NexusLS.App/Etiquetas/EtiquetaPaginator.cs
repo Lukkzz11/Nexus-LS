@@ -99,7 +99,7 @@ internal static class ImpressoraEtiquetas
             // Alguns drivers não aceitam trocar o papel por aqui: imprime com o que a impressora já tem configurado.
         }
 
-        dialogo.PrintDocument(new EtiquetaPaginator(itens, formato, primeiraPosicao), "Etiquetas Nexus LS");
+        dialogo.PrintDocument(new EtiquetaPaginator(itens, formato, primeiraPosicao), "Etiquetas Nexus");
         return true;
     }
 }

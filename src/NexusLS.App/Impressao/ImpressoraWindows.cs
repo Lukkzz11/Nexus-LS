@@ -99,6 +99,6 @@ public class ImpressoraWindows : IImpressoraCupom
         }
         documento.Blocks.Add(paragrafo);
 
-        dialogo.PrintDocument(((IDocumentPaginatorSource)documento).DocumentPaginator, "Cupom Nexus LS");
+        dialogo.PrintDocument(((IDocumentPaginatorSource)documento).DocumentPaginator, "Cupom Nexus");
     }
 }

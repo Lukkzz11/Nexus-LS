@@ -45,7 +45,7 @@ public partial class FechamentoViewModel : ViewModelBase
         var caminho = EscolherArquivoParaSalvar(RelatorioCaixaPdf.NomeDoArquivo(relatorio));
         if (caminho is null) return;
 
-        var loja = _configuracao is null ? "Nexus LS" : (await _configuracao.ObterAsync()).NomeLoja;
+        var loja = _configuracao is null ? "Nexus" : (await _configuracao.ObterAsync()).NomeLoja;
         await System.IO.File.WriteAllBytesAsync(caminho, RelatorioCaixaPdf.Gerar(relatorio, loja));
         MostrarSucesso($"Relatório salvo: {caminho}");
     });

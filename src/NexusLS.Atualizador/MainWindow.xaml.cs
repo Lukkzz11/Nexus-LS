@@ -164,8 +164,8 @@ public partial class MainWindow : Window
     {
         var ofd = new OpenFileDialog
         {
-            Filter = "Nexus LS Executável (NexusLS.exe)|NexusLS.exe|Executáveis (*.exe)|*.exe",
-            Title = "Selecionar Executável do Nexus LS"
+            Filter = "Nexus Executável (NexusLS.exe)|NexusLS.exe|Executáveis (*.exe)|*.exe",
+            Title = "Selecionar Executável do Nexus"
         };
         if (ofd.ShowDialog(this) == true)
         {
@@ -207,7 +207,7 @@ public partial class MainWindow : Window
             {
                 BrdNovidade.Visibility = Visibility.Collapsed;
                 TxtStatusGeral.Text = "Você já está na versão mais recente disponível no repositório.";
-                MessageBox.Show(this, "O Nexus LS já está na versão mais atual.", "Tudo Atualizado", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(this, "O Nexus já está na versão mais atual.", "Tudo Atualizado", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             else
             {
@@ -248,7 +248,7 @@ public partial class MainWindow : Window
             var arquivoBaixado = await _atualizador.BaixarAsync(_versaoDisponivel, progresso);
             TxtStatusGeral.Text = "Download concluído e conferido com SHA-256.";
 
-            // Fechar Nexus LS se aberto
+            // Fechar Nexus se aberto
             FecharProcessoNexusLS();
 
             var exeAlvo = TxtCaminhoExe.Text.Trim();
@@ -261,8 +261,8 @@ public partial class MainWindow : Window
             AtualizadorService.TrocarExecutavel(exeAlvo, arquivoBaixado);
             CarregarStatusVersao();
             BrdNovidade.Visibility = Visibility.Collapsed;
-            TxtStatusGeral.Text = "Nexus LS atualizado com sucesso para a versão " + _versaoDisponivel.Versao;
-            MessageBox.Show(this, "Nexus LS atualizado com sucesso!", "Atualização Concluída", MessageBoxButton.OK, MessageBoxImage.Information);
+            TxtStatusGeral.Text = "Nexus atualizado com sucesso para a versão " + _versaoDisponivel.Versao;
+            MessageBox.Show(this, "Nexus atualizado com sucesso!", "Atualização Concluída", MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (Exception ex)
         {
@@ -310,7 +310,7 @@ public partial class MainWindow : Window
     {
         var ofd = new OpenFileDialog
         {
-            Filter = "Executável Nexus LS (*.exe)|NexusLS.exe;*.exe",
+            Filter = "Executável Nexus (*.exe)|NexusLS.exe;*.exe",
             Title = "Selecionar Novo Executável para Atualizar"
         };
 
@@ -355,7 +355,7 @@ public partial class MainWindow : Window
         var exe = TxtCaminhoExe.Text.Trim();
         if (!File.Exists(exe))
         {
-            MessageBox.Show(this, "Executável do Nexus LS não encontrado em: " + exe, "Não Encontrado", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show(this, "Executável do Nexus não encontrado em: " + exe, "Não Encontrado", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -366,11 +366,11 @@ public partial class MainWindow : Window
                 UseShellExecute = true,
                 WorkingDirectory = Path.GetDirectoryName(exe)!
             });
-            TxtStatusGeral.Text = "Nexus LS iniciado.";
+            TxtStatusGeral.Text = "Nexus iniciado.";
         }
         catch (Exception ex)
         {
-            MessageBox.Show(this, "Erro ao iniciar Nexus LS: " + ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show(this, "Erro ao iniciar Nexus: " + ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -412,7 +412,7 @@ public partial class MainWindow : Window
         try
         {
             var desktop = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
-            var caminhoAtalho = Path.Combine(desktop, "Atualizador e Ativador Nexus LS.lnk");
+            var caminhoAtalho = Path.Combine(desktop, "Atualizador e Ativador Nexus.lnk");
             var alvoExe = @"C:\NexusLS\publicar\atualizador.exe";
 
             if (!File.Exists(alvoExe))
@@ -433,7 +433,7 @@ public partial class MainWindow : Window
                     dynamic shortcut = shell.CreateShortcut(caminhoAtalho);
                     shortcut.TargetPath = alvoExe;
                     shortcut.WorkingDirectory = Path.GetDirectoryName(alvoExe);
-                    shortcut.Description = "Atualizador e Ativador de Licença Nexus LS";
+                    shortcut.Description = "Atualizador e Ativador de Licença Nexus";
                     shortcut.Save();
 
                     if (!silencioso)

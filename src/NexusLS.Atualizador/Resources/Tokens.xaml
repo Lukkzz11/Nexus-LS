@@ -3,7 +3,7 @@
                     xmlns:sys="clr-namespace:System;assembly=System.Runtime">
 
     <!--
-        TOKENS do design system do Nexus LS: as únicas decisões visuais "cruas" (cores, fontes, espaços, cantos).
+        TOKENS do design system do Nexus: as únicas decisões visuais "cruas" (cores, fontes, espaços, cantos).
         Todo estilo e toda tela devem usar estes nomes em vez de escrever valores. Para mudar o visual do
         programa inteiro, mude aqui.
     -->

@@ -43,7 +43,7 @@ public sealed class ConexaoBancoWindow : Window
         _operacional = operacional;
         _erp = erp ?? PadraoDoPrograma(s => s.ErpConfig);
         _contaErp = contaErp ?? PadraoDoPrograma(s => s.ContaErp);
-        Title = "Nexus LS — Conectar banco de dados";
+        Title = "Nexus — Conectar banco de dados";
         Width = 560;
         MaxHeight = 800;
         SizeToContent = SizeToContent.Height;

@@ -272,7 +272,7 @@ public partial class ConfiguracoesViewModel : ViewModelBase
         var d = DadosDoFormulario();
         return new ConfiguracaoLoja
         {
-            NomeLoja = string.IsNullOrWhiteSpace(d.NomeLoja) ? "Nexus LS" : d.NomeLoja.Trim(),
+            NomeLoja = string.IsNullOrWhiteSpace(d.NomeLoja) ? "Nexus" : d.NomeLoja.Trim(),
             Documento = Vazio(d.Documento),
             Endereco = Vazio(d.Endereco),
             Telefone = Vazio(d.Telefone),

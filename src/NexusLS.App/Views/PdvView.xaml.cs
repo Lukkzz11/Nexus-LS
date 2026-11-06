@@ -38,7 +38,7 @@ public partial class PdvView : UserControl
         {
             // Cuidados de "janela" ficam aqui na View, não no ViewModel.
             vm.Confirmar = mensagem =>
-                MessageBox.Show(Window.GetWindow(this), mensagem, "Nexus LS",
+                MessageBox.Show(Window.GetWindow(this), mensagem, "Nexus",
                     MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
             vm.FocoSolicitado += AoPedirFoco;
             _ = vm.AtualizarCaixaAsync();

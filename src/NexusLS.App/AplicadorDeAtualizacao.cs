@@ -21,7 +21,7 @@ public static class AplicadorDeAtualizacao
         }
         catch (UnauthorizedAccessException)
         {
-            throw new InvalidOperationException("Sem permissão para trocar o programa nesta pasta. Instale o Nexus LS numa pasta sua (por exemplo em Documentos) ou execute como administrador.");
+            throw new InvalidOperationException("Sem permissão para trocar o programa nesta pasta. Instale o Nexus numa pasta sua (por exemplo em Documentos) ou execute como administrador.");
         }
 
         Process.Start(new ProcessStartInfo(exe) { UseShellExecute = true, WorkingDirectory = Path.GetDirectoryName(exe)! });

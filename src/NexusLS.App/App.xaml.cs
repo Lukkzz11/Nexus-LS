@@ -24,11 +24,11 @@ public partial class App : Application
     /// <summary>Os serviços do programa, criados uma vez só (raiz de composição). Quem precisa deles os recebe pelo construtor.</summary>
     public static ContainerDeServicos Servicos => _servicos ??= new ContainerDeServicos(OpcoesBanco);
 
-    // Trava de instância única: dois Nexus LS abertos gravariam no mesmo banco ao mesmo tempo.
+    // Trava de instância única: dois Nexus abertos gravariam no mesmo banco ao mesmo tempo.
     private static Mutex? _instanciaUnica;
 
     /// <summary>
-    /// Só um Nexus LS por usuário do Windows. Espera até 15 s porque, numa atualização, o programa novo abre
+    /// Só um Nexus por usuário do Windows. Espera até 15 s porque, numa atualização, o programa novo abre
     /// enquanto o antigo ainda está terminando de fechar.
     /// </summary>
     private static bool ObterInstanciaUnica()
@@ -53,7 +53,7 @@ public partial class App : Application
     {
         if (!ObterInstanciaUnica())
         {
-            MessageBox.Show("O Nexus LS já está aberto neste computador. Use a janela que já existe.", "Nexus LS",
+            MessageBox.Show("O Nexus já está aberto neste computador. Use a janela que já existe.", "Nexus",
                 MessageBoxButton.OK, MessageBoxImage.Information);
             Shutdown();
             return;
@@ -61,7 +61,7 @@ public partial class App : Application
 
         if (!PrepararBanco()) return; // falhou e o usuário escolheu sair: nada de abrir a janela
 
-        // Cor de destaque da biblioteca WPF-UI (foco dos campos, seleção, abas...) igual ao azul do Nexus LS.
+        // Cor de destaque da biblioteca WPF-UI (foco dos campos, seleção, abas...) igual ao azul do Nexus.
         Wpf.Ui.Appearance.ApplicationAccentColorManager.Apply(
             System.Windows.Media.Color.FromRgb(0x25, 0x63, 0xEB), Wpf.Ui.Appearance.ApplicationTheme.Light);
 
@@ -107,7 +107,7 @@ public partial class App : Application
         }
         catch (Exception ex)
         {
-            MessageBox.Show("Não foi possível abrir a tela de entrada: " + ex.Message, "Nexus LS", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show("Não foi possível abrir a tela de entrada: " + ex.Message, "Nexus", MessageBoxButton.OK, MessageBoxImage.Error);
             return false;
         }
     }
@@ -135,7 +135,7 @@ public partial class App : Application
                 {
                     var seguir = MessageBox.Show(
                         "Não foi possível fazer o backup antes de atualizar o banco:" + Environment.NewLine + ex.Message +
-                        Environment.NewLine + Environment.NewLine + "Continuar mesmo assim? (Não é recomendado.)", "Nexus LS",
+                        Environment.NewLine + Environment.NewLine + "Continuar mesmo assim? (Não é recomendado.)", "Nexus",
                         MessageBoxButton.YesNo, MessageBoxImage.Warning);
                     if (seguir != MessageBoxResult.Yes)
                     {
@@ -163,7 +163,7 @@ public partial class App : Application
                              Environment.NewLine + "O backup está em: " + seguranca.Caminho;
                 }
             }
-            MessageBox.Show(texto, "Nexus LS", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show(texto, "Nexus", MessageBoxButton.OK, MessageBoxImage.Error);
             Current.Shutdown();
             return false;
         }
@@ -192,7 +192,7 @@ public partial class App : Application
             if (_avisouFalhaBackup) return;
             _avisouFalhaBackup = true;
             MessageBox.Show("O backup automático falhou:" + Environment.NewLine + ex.Message +
-                            Environment.NewLine + Environment.NewLine + "Verifique a pasta de backup em Configurações.", "Nexus LS",
+                            Environment.NewLine + Environment.NewLine + "Verifique a pasta de backup em Configurações.", "Nexus",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }

@@ -31,7 +31,7 @@ public class DialogosBackupWpf : IDialogosBackup
         var janela = new OpenFileDialog
         {
             Title = "Escolha o backup para restaurar",
-            Filter = "Backup do Nexus LS (*.db)|*.db",
+            Filter = "Backup do Nexus (*.db)|*.db",
             CheckFileExists = true
         };
         if (!string.IsNullOrWhiteSpace(pastaInicial) && System.IO.Directory.Exists(pastaInicial))
@@ -40,7 +40,7 @@ public class DialogosBackupWpf : IDialogosBackup
     }
 
     public bool Confirmar(string texto) =>
-        MessageBox.Show(texto, "Nexus LS", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes;
+        MessageBox.Show(texto, "Nexus", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes;
 
     /// <summary>Abre o programa de novo e fecha este (depois de restaurar, para tudo recarregar do banco novo).</summary>
     public void Reiniciar()

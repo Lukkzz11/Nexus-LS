@@ -28,7 +28,7 @@
                 </Style.Triggers>
             </Style>
 
-            <!-- Caixa de Texto com bordas arredondadas e foco azul do Nexus LS -->
+            <!-- Caixa de Texto com bordas arredondadas e foco azul do Nexus -->
             <Style TargetType="TextBox">
                 <Setter Property="Background" Value="White" />
                 <Setter Property="Foreground" Value="{StaticResource CorTexto}" />
