@@ -68,9 +68,9 @@ public partial class MainWindow : Window
             {
                 _chavePrivada = File.ReadAllText(caminhoPadrao).Trim();
                 TxtChaveStatus.Text = $"Chave mestra carregada com sucesso ({caminhoPadrao})";
-                TxtChaveStatus.Foreground = (SolidColorBrush)FindResource("CorSucesso");
-                BrdChaveStatus.BorderBrush = (SolidColorBrush)FindResource("CorSucesso");
-                BrdChaveStatus.Background = new SolidColorBrush(Color.FromArgb(50, 16, 185, 129));
+                TxtChaveStatus.Foreground = (SolidColorBrush)FindResource("CorPositivo");
+                BrdChaveStatus.BorderBrush = (SolidColorBrush)FindResource("CorPositivo");
+                BrdChaveStatus.Background = new SolidColorBrush(Color.FromArgb(25, 21, 128, 61));
                 return;
             }
             catch (Exception ex)
@@ -84,8 +84,8 @@ public partial class MainWindow : Window
         }
 
         TxtChaveStatus.Foreground = (SolidColorBrush)FindResource("CorAviso");
-        BrdChaveStatus.BorderBrush = (SolidColorBrush)FindResource("CorAviso");
-        BrdChaveStatus.Background = new SolidColorBrush(Color.FromArgb(40, 245, 158, 11));
+        BrdChaveStatus.BorderBrush = (SolidColorBrush)FindResource("CorAtencaoBorda");
+        BrdChaveStatus.Background = (SolidColorBrush)FindResource("CorAvisoFundo");
     }
 
     private void CarregarStatusLicenca()
@@ -107,10 +107,10 @@ public partial class MainWindow : Window
 
             TxtLicencaStatus.Foreground = res.Estado switch
             {
-                EstadoLicenca.Valida => (SolidColorBrush)FindResource("CorSucesso"),
+                EstadoLicenca.Valida => (SolidColorBrush)FindResource("CorPositivo"),
                 EstadoLicenca.Vencendo => (SolidColorBrush)FindResource("CorAviso"),
-                EstadoLicenca.SemLicenca => (SolidColorBrush)FindResource("CorTextoSecundario"),
-                _ => (SolidColorBrush)FindResource("CorErro")
+                EstadoLicenca.SemLicenca => (SolidColorBrush)FindResource("CorTextoSuave"),
+                _ => (SolidColorBrush)FindResource("CorPerigo")
             };
 
             TxtLicencaDetalhe.Text = res.Mensagem;

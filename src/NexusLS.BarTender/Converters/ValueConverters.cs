@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Media;
+using NexusLS.BarTender.Models.Designer;
 using NexusLS.Core.Services;
 
 namespace NexusLS.BarTender.Converters;
@@ -23,8 +24,8 @@ public class CentavosParaMoedaConverter : IValueConverter
 
 public class StatusCodigoCorConverter : IValueConverter
 {
-    private static readonly SolidColorBrush Verde = new(Color.FromRgb(0x10, 0xB9, 0x81)); // #10B981
-    private static readonly SolidColorBrush Amarelo = new(Color.FromRgb(0xF5, 0x9E, 0x0B)); // #F59E0B
+    private static readonly SolidColorBrush Verde = new(Color.FromRgb(0x15, 0x80, 0x3D)); // #15803D
+    private static readonly SolidColorBrush Amarelo = new(Color.FromRgb(0xB4, 0x53, 0x09)); // #B45309
 
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
@@ -40,8 +41,8 @@ public class StatusCodigoCorConverter : IValueConverter
 
 public class StatusCodigoFundoConverter : IValueConverter
 {
-    private static readonly SolidColorBrush VerdeFundo = new(Color.FromArgb(0x28, 0x10, 0xB9, 0x81));
-    private static readonly SolidColorBrush AmareloFundo = new(Color.FromArgb(0x28, 0xF5, 0x9E, 0x0B));
+    private static readonly SolidColorBrush VerdeFundo = new(Color.FromRgb(0xDC, 0xFC, 0xE7)); // #DCFCE7
+    private static readonly SolidColorBrush AmareloFundo = new(Color.FromRgb(0xFE, 0xF3, 0xC7)); // #FEF3C7
 
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
@@ -75,4 +76,67 @@ public class BoolInversoConverter : IValueConverter
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
         value is bool b ? !b : value;
+}
+
+public class NullParaColapsadoConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        var invert = parameter?.ToString()?.Equals("invert", StringComparison.OrdinalIgnoreCase) ?? false;
+        var isNull = (value == null);
+
+        if (invert)
+        {
+            return isNull ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        return isNull ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}
+
+public class BoolParaVisibilidadeConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        var invert = parameter?.ToString()?.Equals("invert", StringComparison.OrdinalIgnoreCase) ?? false;
+        var b = value is true;
+
+        if (invert)
+        {
+            return b ? Visibility.Collapsed : Visibility.Visible;
+        }
+
+        return b ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}
+
+public class TipoElementoVisibilidadeConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        if (value is not TipoElemento tipo || parameter == null)
+            return Visibility.Collapsed;
+
+        var paramStr = parameter.ToString();
+
+        if (paramStr == "Forma")
+        {
+            return (tipo == TipoElemento.Retangulo || tipo == TipoElemento.Linha)
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+        }
+
+        return tipo.ToString().Equals(paramStr, StringComparison.OrdinalIgnoreCase)
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
 }

@@ -1,0 +1,172 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="Tokens.xaml" />
+    </ResourceDictionary.MergedDictionaries>
+
+    <!--
+        Botões. Uma ação PRIMÁRIA por região (azul); as demais são secundárias. Perigo só para o que desativa ou apaga.
+        Estados: normal, mouse em cima, pressionado, foco pelo teclado (halo azul), desabilitado.
+    -->
+
+    <!-- Base: forma, tamanho e o halo de foco. Cada variante define as cores e a troca de cor ao passar o mouse. -->
+    <Style x:Key="BotaoBase" TargetType="Button">
+        <Setter Property="Padding" Value="16,8" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="borda"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="{StaticResource RaioMedio}"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="borda" Property="Effect">
+                                <Setter.Value>
+                                    <DropShadowEffect ShadowDepth="0" BlurRadius="7" Color="#2563EB" Opacity="0.75" />
+                                </Setter.Value>
+                            </Setter>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="borda" Property="Opacity" Value="0.45" />
+                            <Setter Property="Cursor" Value="Arrow" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="BotaoPrimario" TargetType="Button" BasedOn="{StaticResource BotaoBase}">
+        <Setter Property="Background" Value="{StaticResource CorPrimaria}" />
+        <Setter Property="BorderBrush" Value="{StaticResource CorPrimaria}" />
+        <Setter Property="Foreground" Value="{StaticResource CorSobrePrimaria}" />
+        <Style.Triggers>
+            <MultiTrigger>
+                <MultiTrigger.Conditions>
+                    <Condition Property="IsMouseOver" Value="True" />
+                    <Condition Property="IsEnabled" Value="True" />
+                </MultiTrigger.Conditions>
+                <Setter Property="Background" Value="{StaticResource CorPrimariaHover}" />
+                <Setter Property="BorderBrush" Value="{StaticResource CorPrimariaHover}" />
+            </MultiTrigger>
+            <Trigger Property="IsPressed" Value="True">
+                <Setter Property="Background" Value="{StaticResource CorPrimariaPressionada}" />
+                <Setter Property="BorderBrush" Value="{StaticResource CorPrimariaPressionada}" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="BotaoSecundario" TargetType="Button" BasedOn="{StaticResource BotaoBase}">
+        <Setter Property="Background" Value="{StaticResource CorPainel}" />
+        <Setter Property="BorderBrush" Value="{StaticResource CorBordaCampo}" />
+        <Setter Property="Foreground" Value="{StaticResource CorTexto}" />
+        <Style.Triggers>
+            <MultiTrigger>
+                <MultiTrigger.Conditions>
+                    <Condition Property="IsMouseOver" Value="True" />
+                    <Condition Property="IsEnabled" Value="True" />
+                </MultiTrigger.Conditions>
+                <Setter Property="Background" Value="{StaticResource CorHover}" />
+                <Setter Property="BorderBrush" Value="{StaticResource CorBordaForte}" />
+            </MultiTrigger>
+            <Trigger Property="IsPressed" Value="True">
+                <Setter Property="Background" Value="{StaticResource CorBorda}" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="BotaoPerigo" TargetType="Button" BasedOn="{StaticResource BotaoBase}">
+        <Setter Property="Background" Value="{StaticResource CorPerigo}" />
+        <Setter Property="BorderBrush" Value="{StaticResource CorPerigo}" />
+        <Setter Property="Foreground" Value="{StaticResource CorSobrePrimaria}" />
+        <Style.Triggers>
+            <MultiTrigger>
+                <MultiTrigger.Conditions>
+                    <Condition Property="IsMouseOver" Value="True" />
+                    <Condition Property="IsEnabled" Value="True" />
+                </MultiTrigger.Conditions>
+                <Setter Property="Background" Value="{StaticResource CorPerigoHover}" />
+                <Setter Property="BorderBrush" Value="{StaticResource CorPerigoHover}" />
+            </MultiTrigger>
+            <Trigger Property="IsPressed" Value="True">
+                <Setter Property="Background" Value="{StaticResource CorPerigoPressionado}" />
+                <Setter Property="BorderBrush" Value="{StaticResource CorPerigoPressionado}" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Fantasma: sem contorno, para ações de menor peso (Cancelar, Depois, Ver detalhes). -->
+    <Style x:Key="BotaoFantasma" TargetType="Button" BasedOn="{StaticResource BotaoBase}">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />
+        <Style.Triggers>
+            <MultiTrigger>
+                <MultiTrigger.Conditions>
+                    <Condition Property="IsMouseOver" Value="True" />
+                    <Condition Property="IsEnabled" Value="True" />
+                </MultiTrigger.Conditions>
+                <Setter Property="Background" Value="{StaticResource CorHover}" />
+                <Setter Property="Foreground" Value="{StaticResource CorTexto}" />
+            </MultiTrigger>
+            <Trigger Property="IsPressed" Value="True">
+                <Setter Property="Background" Value="{StaticResource CorBorda}" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Botão só com ícone (quadrado). Informe o ToolTip e o AutomationProperties.Name. -->
+    <Style x:Key="BotaoIcone" TargetType="Button" BasedOn="{StaticResource BotaoFantasma}">
+        <Setter Property="Padding" Value="6" />
+        <Setter Property="MinWidth" Value="{StaticResource AlturaControle}" />
+        <Setter Property="MinHeight" Value="{StaticResource AlturaControle}" />
+    </Style>
+
+    <!-- RadioButton com cara de botão: o marcado fica azul. -->
+    <Style x:Key="BotaoOpcao" TargetType="RadioButton">
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="FontSize" Value="17" />
+        <Setter Property="Foreground" Value="{StaticResource CorTexto}" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Border x:Name="borda" Background="{StaticResource CorPainel}" BorderBrush="{StaticResource CorBordaCampo}"
+                            BorderThickness="1" CornerRadius="{StaticResource RaioMedio}" Padding="8,11">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="borda" Property="BorderBrush" Value="{StaticResource CorPrimaria}" />
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="borda" Property="Background" Value="{StaticResource CorPrimaria}" />
+                            <Setter TargetName="borda" Property="BorderBrush" Value="{StaticResource CorPrimaria}" />
+                            <Setter Property="Foreground" Value="{StaticResource CorSobrePrimaria}" />
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="borda" Property="Effect">
+                                <Setter.Value>
+                                    <DropShadowEffect ShadowDepth="0" BlurRadius="7" Color="#2563EB" Opacity="0.75" />
+                                </Setter.Value>
+                            </Setter>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>

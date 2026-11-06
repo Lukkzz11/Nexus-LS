@@ -39,6 +39,12 @@ public partial class MainViewModel : ObservableObject
     private ConfiguracaoEtiqueta _config = new();
 
     [ObservableProperty]
+    private DesignerViewModel _designerVM = new();
+
+    [ObservableProperty]
+    private bool _usarModeloDesigner = true;
+
+    [ObservableProperty]
     private BitmapSource? _previewImagem;
 
     [ObservableProperty]
@@ -70,7 +76,11 @@ public partial class MainViewModel : ObservableObject
     public ObservableCollection<ItemFila> FilaImpressao { get; } = new();
     public IReadOnlyList<FormatoOpcao> FormatosDisponiveis => FormatoOpcao.ListaPadrao;
 
-    public MainViewModel(BancoDadosService? dbService = null)
+    public MainViewModel() : this(null)
+    {
+    }
+
+    public MainViewModel(BancoDadosService? dbService)
     {
         _dbService = dbService ?? new BancoDadosService();
         _caminhoBanco = _dbService.CaminhoAtual;
@@ -116,16 +126,19 @@ public partial class MainViewModel : ObservableObject
     partial void OnProdutoSelecionadoChanged(ProdutoItemViewModel? value)
     {
         AtualizarPreview();
+        DesignerVM.DefinirProduto(value?.Produto, Config.NomeLoja);
     }
 
     [RelayCommand]
     public async Task RecarregarDadosAsync()
     {
+        App.Log("RecarregarDadosAsync BEGIN");
         EstaCarregando = true;
         try
         {
             CaminhoBanco = _dbService.CaminhoAtual;
             BancoConectado = _dbService.BancoExiste();
+            App.Log($"RecarregarDadosAsync: BancoConectado={BancoConectado}");
 
             if (!BancoConectado)
             {
@@ -139,9 +152,11 @@ public partial class MainViewModel : ObservableObject
             if (loja != null && !string.IsNullOrWhiteSpace(loja.NomeLoja))
             {
                 Config.NomeLoja = loja.NomeLoja;
+                DesignerVM.NomeLoja = loja.NomeLoja;
             }
 
             var produtos = await _dbService.ObterProdutosAsync();
+            App.Log($"RecarregarDadosAsync: Obtidos {produtos.Count} produtos do SQLite");
             TodosProdutos.Clear();
             foreach (var p in produtos)
             {
@@ -153,15 +168,18 @@ public partial class MainViewModel : ObservableObject
 
             if (ProdutoSelecionado == null && TodosProdutos.Count > 0)
             {
+                App.Log("RecarregarDadosAsync: Definindo ProdutoSelecionado = primeiro");
                 ProdutoSelecionado = TodosProdutos[0];
             }
             else
             {
                 AtualizarPreview();
             }
+            App.Log("RecarregarDadosAsync SUCCESS");
         }
         catch (Exception ex)
         {
+            App.Log($"RecarregarDadosAsync EXCEPTION: {ex}");
             StatusBanco = $"Erro ao conectar: {ex.Message}";
         }
         finally
@@ -414,7 +432,10 @@ public partial class MainViewModel : ObservableObject
 
         try
         {
-            var imprimiu = ImpressaoService.Imprimir(FilaImpressao, Config);
+            var imprimiu = UsarModeloDesigner
+                ? ImpressaoService.ImprimirDesign(FilaImpressao, DesignerVM.Modelo, Config.NomeLoja)
+                : ImpressaoService.Imprimir(FilaImpressao, Config);
+
             if (imprimiu)
             {
                 var limpar = MessageBox.Show(

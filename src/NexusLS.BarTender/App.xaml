@@ -4,170 +4,25 @@
              xmlns:conv="clr-namespace:NexusLS.BarTender.Converters"
              StartupUri="Views/MainWindow.xaml">
     <Application.Resources>
-        <!-- Conversores Globais -->
-        <conv:CentavosParaMoedaConverter x:Key="CentavosParaMoedaConverter" />
-        <conv:StatusCodigoCorConverter x:Key="StatusCodigoCorConverter" />
-        <conv:StatusCodigoFundoConverter x:Key="StatusCodigoFundoConverter" />
-        <conv:ComparisonConverter x:Key="ComparisonConverter" />
-        <conv:BoolInversoConverter x:Key="BoolInversoConverter" />
-        <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Resources/Tokens.xaml" />
+                <ResourceDictionary Source="Resources/Tipografia.xaml" />
+                <ResourceDictionary Source="Resources/Botoes.xaml" />
+                <ResourceDictionary Source="Resources/Campos.xaml" />
+                <ResourceDictionary Source="Resources/Tabelas.xaml" />
+            </ResourceDictionary.MergedDictionaries>
 
-        <!-- Paleta de Cores Premium Dark -->
-        <SolidColorBrush x:Key="CorFundoApp" Color="#0F1117" />
-        <SolidColorBrush x:Key="CorFundoHeader" Color="#161922" />
-        <SolidColorBrush x:Key="CorCardFundo" Color="#1A1D27" />
-        <SolidColorBrush x:Key="CorCardBorda" Color="#2A2F3E" />
-        <SolidColorBrush x:Key="CorCardHover" Color="#222634" />
-
-        <SolidColorBrush x:Key="CorTextoPrincipal" Color="#F8FAFC" />
-        <SolidColorBrush x:Key="CorTextoSecundario" Color="#94A3B8" />
-        <SolidColorBrush x:Key="CorTextoMuted" Color="#64748B" />
-
-        <SolidColorBrush x:Key="CorPrimaria" Color="#3B82F6" />
-        <SolidColorBrush x:Key="CorPrimariaHover" Color="#2563EB" />
-        <SolidColorBrush x:Key="CorSucesso" Color="#10B981" />
-        <SolidColorBrush x:Key="CorSucessoHover" Color="#059669" />
-        <SolidColorBrush x:Key="CorAviso" Color="#F59E0B" />
-        <SolidColorBrush x:Key="CorPerigo" Color="#EF4444" />
-        <SolidColorBrush x:Key="CorBarTenderRoxo" Color="#8B5CF6" />
-        <SolidColorBrush x:Key="CorBarTenderRoxoHover" Color="#7C3AED" />
-
-        <SolidColorBrush x:Key="CorInputFundo" Color="#12141C" />
-        <SolidColorBrush x:Key="CorInputBorda" Color="#33394B" />
-
-        <!-- Estilos de Controles -->
-        <Style TargetType="TextBox">
-            <Setter Property="Background" Value="{StaticResource CorInputFundo}" />
-            <Setter Property="Foreground" Value="{StaticResource CorTextoPrincipal}" />
-            <Setter Property="BorderBrush" Value="{StaticResource CorInputBorda}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Padding" Value="10,7" />
-            <Setter Property="FontSize" Value="13" />
-            <Setter Property="CaretBrush" Value="{StaticResource CorPrimaria}" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="TextBox">
-                        <Border x:Name="border" Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="6">
-                            <ScrollViewer x:Name="PART_ContentHost" Focusable="false" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsFocused" Value="True">
-                                <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource CorPrimaria}" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style TargetType="CheckBox">
-            <Setter Property="Foreground" Value="{StaticResource CorTextoPrincipal}" />
-            <Setter Property="FontSize" Value="13" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Margin" Value="0,3,0,3" />
-        </Style>
-
-        <Style TargetType="Button">
-            <Setter Property="Background" Value="{StaticResource CorPrimaria}" />
-            <Setter Property="Foreground" Value="White" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="FontSize" Value="13" />
-            <Setter Property="Padding" Value="14,8" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="{StaticResource CorPrimariaHover}" />
-                </Trigger>
-                <Trigger Property="IsEnabled" Value="False">
-                    <Setter Property="Opacity" Value="0.4" />
-                    <Setter Property="Cursor" Value="Arrow" />
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-
-        <Style x:Key="BotaoSecundario" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
-            <Setter Property="Background" Value="#252A38" />
-            <Setter Property="Foreground" Value="{StaticResource CorTextoPrincipal}" />
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#32384B" />
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-
-        <Style x:Key="BotaoSucesso" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
-            <Setter Property="Background" Value="{StaticResource CorSucesso}" />
-            <Setter Property="Foreground" Value="White" />
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="{StaticResource CorSucessoHover}" />
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-
-        <Style x:Key="BotaoRoxo" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
-            <Setter Property="Background" Value="{StaticResource CorBarTenderRoxo}" />
-            <Setter Property="Foreground" Value="White" />
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="{StaticResource CorBarTenderRoxoHover}" />
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-
-        <Style x:Key="BotaoPequeno" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
-            <Setter Property="Padding" Value="8,4" />
-            <Setter Property="FontSize" Value="12" />
-        </Style>
-
-        <Style TargetType="DataGrid">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="{StaticResource CorTextoPrincipal}" />
-            <Setter Property="BorderBrush" Value="{StaticResource CorCardBorda}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="RowBackground" Value="#171A24" />
-            <Setter Property="AlternatingRowBackground" Value="#1A1E29" />
-            <Setter Property="HorizontalGridLinesBrush" Value="#262C3A" />
-            <Setter Property="VerticalGridLinesBrush" Value="Transparent" />
-            <Setter Property="AutoGenerateColumns" Value="False" />
-            <Setter Property="CanUserAddRows" Value="False" />
-            <Setter Property="IsReadOnly" Value="True" />
-            <Setter Property="SelectionMode" Value="Single" />
-            <Setter Property="SelectionUnit" Value="FullRow" />
-            <Setter Property="RowHeight" Value="38" />
-            <Setter Property="FontSize" Value="12.5" />
-        </Style>
-
-        <Style TargetType="DataGridColumnHeader">
-            <Setter Property="Background" Value="#141720" />
-            <Setter Property="Foreground" Value="{StaticResource CorTextoSecundario}" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="FontSize" Value="12" />
-            <Setter Property="Padding" Value="10,8" />
-            <Setter Property="BorderThickness" Value="0,0,0,1" />
-            <Setter Property="BorderBrush" Value="{StaticResource CorCardBorda}" />
-        </Style>
-
-        <Style TargetType="DataGridRow">
-            <Style.Triggers>
-                <Trigger Property="IsSelected" Value="True">
-                    <Setter Property="Background" Value="#29354E" />
-                    <Setter Property="Foreground" Value="White" />
-                </Trigger>
-            </Style.Triggers>
-        </Style>
+            <!-- Conversores Globais -->
+            <conv:CentavosParaMoedaConverter x:Key="CentavosParaMoedaConverter" />
+            <conv:StatusCodigoCorConverter x:Key="StatusCodigoCorConverter" />
+            <conv:StatusCodigoFundoConverter x:Key="StatusCodigoFundoConverter" />
+            <conv:ComparisonConverter x:Key="ComparisonConverter" />
+            <conv:BoolInversoConverter x:Key="BoolInversoConverter" />
+            <conv:NullParaColapsadoConverter x:Key="NullParaColapsadoConverter" />
+            <conv:TipoElementoVisibilidadeConverter x:Key="TipoElementoVisibilidadeConverter" />
+            <conv:BoolParaVisibilidadeConverter x:Key="BoolParaVisibilidadeConverter" />
+            <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
+        </ResourceDictionary>
     </Application.Resources>
 </Application>

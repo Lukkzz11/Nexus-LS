@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
 using NexusLS.BarTender.Models;
+using NexusLS.BarTender.Models.Designer;
 using NexusLS.Core.Etiquetas;
 using NexusLS.Core.Models;
 
@@ -44,6 +45,39 @@ public class ImpressaoService
 
         var paginator = new BarTenderPaginator(listaItens, config, primeiraPosicao);
         dialogo.PrintDocument(paginator, "Nexus BarTender - Impressão de Etiquetas");
+        return true;
+    }
+
+    public static bool ImprimirDesign(
+        IEnumerable<ItemFila> itens,
+        ModeloEtiquetaDesign modelo,
+        string nomeLoja,
+        int primeiraPosicao = 1)
+    {
+        var listaItens = itens.ToList();
+        if (listaItens.Count == 0) return false;
+
+        var dialogo = new PrintDialog();
+        if (dialogo.ShowDialog() != true) return false;
+
+        try
+        {
+            if (modelo.LarguraMm >= 200)
+            {
+                dialogo.PrintTicket.PageMediaSize = new System.Printing.PageMediaSize(
+                    System.Printing.PageMediaSizeName.ISOA4);
+            }
+            else
+            {
+                dialogo.PrintTicket.PageMediaSize = new System.Printing.PageMediaSize(
+                    EditorDesenhoService.Dip(modelo.LarguraMm),
+                    EditorDesenhoService.Dip(modelo.AlturaMm));
+            }
+        }
+        catch { }
+
+        var paginator = new BarTenderDesignPaginator(listaItens, modelo, nomeLoja, primeiraPosicao);
+        dialogo.PrintDocument(paginator, $"Nexus BarTender - {modelo.Nome}");
         return true;
     }
 }
@@ -123,6 +157,69 @@ public class BarTenderPaginator : DocumentPaginator
                     DesenhoEtiquetaService.Desenhar(dc, pos.Produto, pos.Tamanho, _config, largDip, altDip);
 
                     dc.Pop();
+                }
+            }
+        }
+
+        return new DocumentPage(visual, PageSize, new Rect(PageSize), new Rect(PageSize));
+    }
+}
+
+public class BarTenderDesignPaginator : DocumentPaginator
+{
+    private readonly List<List<PosicaoItemBarTender>> _paginas = new();
+    private readonly ModeloEtiquetaDesign _modelo;
+    private readonly string _nomeLoja;
+
+    public BarTenderDesignPaginator(
+        IEnumerable<ItemFila> itens,
+        ModeloEtiquetaDesign modelo,
+        string nomeLoja,
+        int primeiraPosicao = 1)
+    {
+        _modelo = modelo;
+        _nomeLoja = nomeLoja;
+
+        PageSize = new Size(
+            EditorDesenhoService.Dip(modelo.LarguraMm),
+            EditorDesenhoService.Dip(modelo.AlturaMm));
+
+        Paginar(itens);
+    }
+
+    private void Paginar(IEnumerable<ItemFila> itens)
+    {
+        // Para bobina/modelo individual: 1 etiqueta por página
+        foreach (var item in itens)
+        {
+            for (var copia = 0; copia < item.Quantidade; copia++)
+            {
+                var pagina = new List<PosicaoItemBarTender>
+                {
+                    new(0, 0, item.Produto, item.Tamanho)
+                };
+                _paginas.Add(pagina);
+            }
+        }
+    }
+
+    public override bool IsPageCountValid => true;
+    public override int PageCount => Math.Max(1, _paginas.Count);
+    public override Size PageSize { get; set; }
+    public override IDocumentPaginatorSource Source => null!;
+
+    public override DocumentPage GetPage(int pageNumber)
+    {
+        var visual = new DrawingVisual();
+        using (var dc = visual.RenderOpen())
+        {
+            dc.DrawRectangle(Brushes.White, null, new Rect(PageSize));
+
+            if (pageNumber < _paginas.Count)
+            {
+                foreach (var pos in _paginas[pageNumber])
+                {
+                    EditorDesenhoService.Desenhar(dc, _modelo, pos.Produto, pos.Tamanho, _nomeLoja, desenharBordaExterna: false);
                 }
             }
         }

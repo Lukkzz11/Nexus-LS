@@ -3,74 +3,66 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-        <SolidColorBrush x:Key="CorFundo" Color="#18181F" />
-        <SolidColorBrush x:Key="CorPainel" Color="#22222B" />
-        <SolidColorBrush x:Key="CorPainelBorda" Color="#2F2F3B" />
-        <SolidColorBrush x:Key="CorTexto" Color="#F3F4F6" />
-        <SolidColorBrush x:Key="CorTextoSecundario" Color="#9CA3AF" />
-        <SolidColorBrush x:Key="CorDestaque" Color="#3B82F6" />
-        <SolidColorBrush x:Key="CorDestaqueHover" Color="#2563EB" />
-        <SolidColorBrush x:Key="CorSucesso" Color="#10B981" />
-        <SolidColorBrush x:Key="CorAviso" Color="#F59E0B" />
-        <SolidColorBrush x:Key="CorErro" Color="#EF4444" />
-        <SolidColorBrush x:Key="CorBotaoSecundario" Color="#2E2E3A" />
-        <SolidColorBrush x:Key="CorBotaoSecundarioHover" Color="#3E3E4E" />
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Resources/Tokens.xaml" />
+                <ResourceDictionary Source="Resources/Tipografia.xaml" />
+                <ResourceDictionary Source="Resources/Botoes.xaml" />
+                <ResourceDictionary Source="Resources/Campos.xaml" />
+            </ResourceDictionary.MergedDictionaries>
 
-        <Style TargetType="TextBox">
-            <Setter Property="Background" Value="#1E1E28" />
-            <Setter Property="Foreground" Value="#F3F4F6" />
-            <Setter Property="BorderBrush" Value="#3F3F50" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Padding" Value="8,6" />
-            <Setter Property="FontSize" Value="13" />
-        </Style>
+            <BooleanToVisibilityConverter x:Key="BoolVis" />
 
-        <Style TargetType="Button">
-            <Setter Property="Background" Value="{StaticResource CorDestaque}" />
-            <Setter Property="Foreground" Value="White" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="FontSize" Value="13" />
-            <Setter Property="Padding" Value="14,8" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="{StaticResource CorDestaqueHover}" />
-                </Trigger>
-                <Trigger Property="IsEnabled" Value="False">
-                    <Setter Property="Opacity" Value="0.5" />
-                    <Setter Property="Cursor" Value="Arrow" />
-                </Trigger>
-            </Style.Triggers>
-        </Style>
+            <!-- Estilo Padrão para Botão (Primário por padrão) -->
+            <Style TargetType="Button" BasedOn="{StaticResource BotaoPrimario}" />
 
-        <Style x:Key="BotaoSecundario" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
-            <Setter Property="Background" Value="{StaticResource CorBotaoSecundario}" />
-            <Setter Property="Foreground" Value="{StaticResource CorTexto}" />
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="{StaticResource CorBotaoSecundarioHover}" />
-                </Trigger>
-            </Style.Triggers>
-        </Style>
+            <!-- Botão de Sucesso (Verde vibrante nos padrões do design system) -->
+            <Style x:Key="BotaoSucesso" TargetType="Button" BasedOn="{StaticResource BotaoBase}">
+                <Setter Property="Background" Value="#15803D" />
+                <Setter Property="BorderBrush" Value="#166534" />
+                <Setter Property="Foreground" Value="White" />
+                <Style.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Background" Value="#166534" />
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
 
-        <Style x:Key="BotaoSucesso" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
-            <Setter Property="Background" Value="{StaticResource CorSucesso}" />
-            <Setter Property="Foreground" Value="White" />
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#059669" />
-                </Trigger>
-            </Style.Triggers>
-        </Style>
+            <!-- Caixa de Texto com bordas arredondadas e foco azul do Nexus LS -->
+            <Style TargetType="TextBox">
+                <Setter Property="Background" Value="White" />
+                <Setter Property="Foreground" Value="{StaticResource CorTexto}" />
+                <Setter Property="BorderBrush" Value="{StaticResource CorBordaCampo}" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="Padding" Value="10,7" />
+                <Setter Property="FontSize" Value="13" />
+                <Setter Property="VerticalContentAlignment" Value="Center" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="TextBox">
+                            <Border x:Name="border"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="{StaticResource RaioPequeno}">
+                                <ScrollViewer x:Name="PART_ContentHost" Focusable="False"
+                                              HorizontalScrollBarVisibility="Hidden"
+                                              VerticalScrollBarVisibility="Hidden"
+                                              Margin="{TemplateBinding Padding}" />
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource CorBordaForte}" />
+                                </Trigger>
+                                <Trigger Property="IsKeyboardFocused" Value="True">
+                                    <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource CorPrimaria}" />
+                                    <Setter TargetName="border" Property="BorderThickness" Value="1.5" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </ResourceDictionary>
     </Application.Resources>
 </Application>
