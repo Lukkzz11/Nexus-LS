@@ -6,6 +6,18 @@
         <Style x:Key="ColunaNumero" TargetType="TextBlock">
             <Setter Property="HorizontalAlignment" Value="Right" />
         </Style>
+
+        <!-- Número grande de um cartão (crédito do cliente). -->
+        <Style x:Key="ValorDestaque" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="{StaticResource TamDestaque}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{StaticResource CorPositivo}" />
+        </Style>
+
+        <!-- Nome do cartão do formulário. -->
+        <Style x:Key="TituloCartao" TargetType="TextBlock" BasedOn="{StaticResource TituloSecao}">
+            <Setter Property="Margin" Value="0,0,0,2" />
+        </Style>
     </UserControl.Resources>
 
     <UserControl.InputBindings>
@@ -14,213 +26,410 @@
     </UserControl.InputBindings>
 
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="16" />
-            <ColumnDefinition Width="400" />
-        </Grid.ColumnDefinitions>
-
-        <!-- ===== Lista e histórico ===== -->
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="2*" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <TextBlock Text="Clientes" Style="{StaticResource TituloTela}" Margin="0,0,0,14" />
-
-            <Grid Grid.Row="1" Margin="0,0,0,10">
+            <!-- ===== Cabeçalho: título, contagem e ações ===== -->
+            <Grid Margin="0,0,0,14">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <TextBox Text="{Binding Busca, UpdateSourceTrigger=PropertyChanged}"
-                         ToolTip="Buscar por nome, documento ou telefone" />
-                <CheckBox Grid.Column="1" Content="Mostrar inativos" Margin="16,0,0,0" VerticalAlignment="Center"
-                          IsChecked="{Binding MostrarInativos}" />
-            </Grid>
-
-            <Border Grid.Row="2" Style="{StaticResource Painel}" Padding="0">
-                <DataGrid ItemsSource="{Binding Clientes}"
-                          SelectedItem="{Binding Selecionado, Mode=TwoWay}"
-                          AutoGenerateColumns="False" IsReadOnly="True"
-                          SelectionMode="Single" SelectionUnit="FullRow"
-                          CanUserAddRows="False" CanUserDeleteRows="False"
-                          HeadersVisibility="Column" GridLinesVisibility="Horizontal"
-                          HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0"
-                          Background="{StaticResource CorPainel}" RowHeight="36">
-                    <DataGrid.RowStyle>
-                        <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
-                            <Setter Property="Background" Value="{StaticResource CorPainel}" />
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding Ativo}" Value="False">
-                                    <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />
-                                </DataTrigger>
-                                <Trigger Property="IsSelected" Value="True">
-                                    <Setter Property="Background" Value="{StaticResource CorSelecao}" />
-                                    <Setter Property="Foreground" Value="{StaticResource CorTexto}" />
-                                </Trigger>
-                            </Style.Triggers>
-                        </Style>
-                    </DataGrid.RowStyle>
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="Nome" Binding="{Binding Nome, Mode=OneWay}" Width="*" />
-                        <DataGridTextColumn Header="Documento" Binding="{Binding Documento, Mode=OneWay}" Width="160" />
-                        <DataGridTextColumn Header="Telefone" Binding="{Binding Telefone, Mode=OneWay}" Width="150" />
-                        <DataGridTextColumn Header="Situação" Width="80"
-                                            Binding="{Binding Ativo, Mode=OneWay, Converter={StaticResource BoolTexto}, ConverterParameter='Ativo|Inativo'}" />
-                    </DataGrid.Columns>
-                </DataGrid>
-            </Border>
-
-            <StackPanel Grid.Row="3" Margin="0,14,0,6">
-                <TextBlock Text="Compras do cliente selecionado" FontWeight="SemiBold" />
-                <TextBlock Text="{Binding ResumoCompras}" Foreground="{StaticResource CorTextoSuave}" Margin="0,2,0,0" />
-                <TextBlock Text="{Binding ResumoAPrazo}" Foreground="{StaticResource CorTextoSuave}" TextWrapping="Wrap" />
-            </StackPanel>
-
-            <Border Grid.Row="4" Style="{StaticResource Painel}" Padding="0">
-                <DataGrid ItemsSource="{Binding Compras}"
-                          AutoGenerateColumns="False" IsReadOnly="True"
-                          SelectionMode="Single" CanUserAddRows="False"
-                          HeadersVisibility="Column" GridLinesVisibility="Horizontal"
-                          HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0"
-                          Background="{StaticResource CorPainel}" RowHeight="32">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="Nº" Binding="{Binding Id, Mode=OneWay}" Width="70" />
-                        <DataGridTextColumn Header="Data" Width="150"
-                                            Binding="{Binding DataHora, Mode=OneWay, StringFormat='dd/MM/yyyy HH:mm'}" />
-                        <DataGridTextColumn Header="Pagamento" Width="*"
-                                            Binding="{Binding FormaPagamento, Mode=OneWay, Converter={StaticResource FormaPag}}" />
-                        <DataGridTextColumn Header="Total" Width="120" ElementStyle="{StaticResource ColunaNumero}"
-                                            Binding="{Binding TotalCentavos, Mode=OneWay, Converter={StaticResource Centavos}}" />
-                        <DataGridTextColumn Header="Situação" Width="100"
-                                            Binding="{Binding Cancelada, Mode=OneWay, Converter={StaticResource BoolTexto}, ConverterParameter='Cancelada|Concluída'}" />
-                    </DataGrid.Columns>
-                </DataGrid>
-            </Border>
-        </Grid>
-
-        <!-- ===== Cadastro ===== -->
-        <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
-        <Border Style="{StaticResource Painel}" VerticalAlignment="Top">
-            <StackPanel>
-                <!-- Enter em qualquer campo do formulário salva -->
-                <StackPanel.InputBindings>
-                    <KeyBinding Key="Enter" Command="{Binding SalvarCommand}" />
-                </StackPanel.InputBindings>
-                <TextBlock Text="{Binding TituloFormulario}" FontSize="18" FontWeight="SemiBold" />
-
-                <TextBlock Text="Nome" Style="{StaticResource Rotulo}" />
-                <TextBox Text="{Binding Nome, UpdateSourceTrigger=PropertyChanged}" />
-
-                <TextBlock Text="CPF ou CNPJ" Style="{StaticResource Rotulo}" />
-                <TextBox Text="{Binding Documento, UpdateSourceTrigger=PropertyChanged}" />
-
-                <TextBlock Text="Telefone" Style="{StaticResource Rotulo}" />
-                <TextBox Text="{Binding Telefone, UpdateSourceTrigger=PropertyChanged}" />
-
-                <TextBlock Text="Limite de crédito a prazo (vazio = sem limite)" Style="{StaticResource Rotulo}" />
-                <TextBox Text="{Binding LimiteTexto, UpdateSourceTrigger=PropertyChanged}"
-                         AutomationProperties.Name="Limite de crédito" />
-
-                <TextBlock Text="Observação" Style="{StaticResource Rotulo}" />
-                <TextBox Text="{Binding Observacao, UpdateSourceTrigger=PropertyChanged}" Height="70"
-                         TextWrapping="Wrap" AcceptsReturn="True" VerticalContentAlignment="Top" />
-
-                <StackPanel Orientation="Horizontal" Margin="0,20,0,0">
-                    <Button Content="Salvar (Ctrl+S)" Style="{StaticResource BotaoPrimario}"
-                            Command="{Binding SalvarCommand}" />
-                    <Button Content="Novo (Ctrl+N)" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0"
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Clientes" Style="{StaticResource TituloTela}" />
+                    <TextBlock Text="{Binding ResumoLista}" Style="{StaticResource TextoApoio}" VerticalAlignment="Bottom"
+                               Margin="12,0,0,4" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button Content="Importar CSV" Style="{StaticResource BotaoSecundario}" Command="{Binding ImportarCommand}"
+                            ToolTip="Lê uma planilha CSV de clientes e mostra o que vai mudar antes de gravar" />
+                    <Button Content="Exportar CSV" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0"
+                            Command="{Binding ExportarCommand}" ToolTip="Salva todos os clientes numa planilha CSV (abre no Excel)" />
+                    <Button Content="Novo cliente (Ctrl+N)" Style="{StaticResource BotaoPrimario}" Margin="8,0,0,0"
                             Command="{Binding NovoCommand}" />
                 </StackPanel>
+            </Grid>
 
-                <Button Content="{Binding TextoBotaoAtivo}" Style="{StaticResource BotaoPerigo}"
-                        Margin="0,10,0,0" HorizontalAlignment="Left"
-                        Command="{Binding AlternarAtivoCommand}"
-                        Visibility="{Binding EstaEditando, Converter={StaticResource BoolVis}}" />
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="3*" />
+                    <ColumnDefinition Width="16" />
+                    <ColumnDefinition Width="2*" MinWidth="420" />
+                </Grid.ColumnDefinitions>
 
-                <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" />
+                <!-- ===== Lista e histórico ===== -->
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="2*" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
 
-                <!-- Dívida a prazo -->
-                <StackPanel Visibility="{Binding EstaEditando, Converter={StaticResource BoolVis}}" Margin="0,18,0,0">
-                    <Separator Margin="0,0,0,12" />
-                    <TextBlock Text="Dívida a prazo" FontSize="16" FontWeight="SemiBold" />
-                    <TextBlock Text="{Binding ResumoDivida}" TextWrapping="Wrap" Margin="0,4,0,0" />
-                    <ListBox ItemsSource="{Binding Titulos}" SelectedItem="{Binding TituloSelecionado}" Margin="0,8,0,0"
-                             BorderThickness="0" Background="Transparent" AutomationProperties.Name="Títulos a prazo"
-                             ScrollViewer.HorizontalScrollBarVisibility="Disabled" HorizontalContentAlignment="Stretch">
-                        <ListBox.ItemContainerStyle>
-                            <Style TargetType="ListBoxItem">
-                                <Setter Property="Padding" Value="8,6" />
-                                <Setter Property="Margin" Value="0,0,0,2" />
-                                <Setter Property="Template">
-                                    <Setter.Value>
-                                        <ControlTemplate TargetType="ListBoxItem">
-                                            <Border x:Name="Fundo" Background="Transparent" CornerRadius="{StaticResource RaioPequeno}" Padding="{TemplateBinding Padding}">
-                                                <ContentPresenter />
-                                            </Border>
-                                            <ControlTemplate.Triggers>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter TargetName="Fundo" Property="Background" Value="{StaticResource CorHover}" />
-                                                </Trigger>
-                                                <Trigger Property="IsSelected" Value="True">
-                                                    <Setter TargetName="Fundo" Property="Background" Value="{StaticResource CorSelecao}" />
-                                                </Trigger>
-                                            </ControlTemplate.Triggers>
-                                        </ControlTemplate>
-                                    </Setter.Value>
-                                </Setter>
-                            </Style>
-                        </ListBox.ItemContainerStyle>
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock TextWrapping="Wrap" Margin="0,2">
-                                    <Run Text="{Binding VendaId, Mode=OneWay, StringFormat='#{0}'}" FontWeight="SemiBold" />
-<Run Text="{Binding Detalhe, Mode=OneWay}" />
-                                </TextBlock>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
+                    <Border Style="{StaticResource Painel}" Padding="14,10" Margin="0,0,0,10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox Text="{Binding Busca, UpdateSourceTrigger=PropertyChanged}"
+                                     ToolTip="Buscar por nome, razão social, CPF/CNPJ, telefone ou e-mail"
+                                     AutomationProperties.Name="Buscar cliente" />
+                            <TextBlock Text="Buscar por nome, CPF/CNPJ, telefone ou e-mail..."
+                                       IsHitTestVisible="False" VerticalAlignment="Center" Margin="12,0,0,0">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource TextoApoio}">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Busca}" Value="">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                            <CheckBox Grid.Column="1" Content="Mostrar inativos" Margin="16,0,0,0" VerticalAlignment="Center"
+                                      IsChecked="{Binding MostrarInativos}" />
+                        </Grid>
+                    </Border>
 
-                    <StackPanel Visibility="{Binding PodeEditarTitulo, Converter={StaticResource BoolVis}}">
-                        <TextBlock Text="Ajustar o título escolhido (valor devido e vencimento; a venda não muda)" Style="{StaticResource Rotulo}" Margin="0,12,0,0" TextWrapping="Wrap" />
-                        <TextBlock Text="Novo valor devido (R$)" Style="{StaticResource Rotulo}" />
-                        <TextBox Text="{Binding AjusteValorTexto, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Novo valor do título" />
-                        <TextBlock Text="Novo vencimento" Style="{StaticResource Rotulo}" />
-                        <DatePicker SelectedDateFormat="Short" SelectedDate="{Binding AjusteVencimento}" VerticalContentAlignment="Center"
-                                    AutomationProperties.Name="Novo vencimento do título" />
-                        <TextBlock Text="Motivo do ajuste (obrigatório)" Style="{StaticResource Rotulo}" />
-                        <TextBox Text="{Binding AjusteMotivo, UpdateSourceTrigger=PropertyChanged}"
-                                 AutomationProperties.Name="Motivo do ajuste" ToolTip="Motivo do ajuste (obrigatório, mínimo 3 letras)" />
-                        <Button Content="Salvar ajuste" Style="{StaticResource BotaoSecundario}" Margin="0,10,0,0"
-                                HorizontalAlignment="Left" Command="{Binding SalvarAjusteTituloCommand}" />
-                        <TextBlock Text="Ajustes feitos (de → para, motivo, quem, quando)" Style="{StaticResource Rotulo}" Margin="0,12,0,0" />
-                        <ItemsControl ItemsSource="{Binding Ajustes}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding}" TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource CorTextoSuave}" Margin="0,2" />
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
+                    <Border Grid.Row="1" Style="{StaticResource Painel}" Padding="0">
+                        <DataGrid ItemsSource="{Binding Clientes}"
+                                  SelectedItem="{Binding Selecionado, Mode=TwoWay}"
+                                  AutoGenerateColumns="False" IsReadOnly="True"
+                                  SelectionMode="Single" SelectionUnit="FullRow"
+                                  CanUserAddRows="False" CanUserDeleteRows="False"
+                                  HeadersVisibility="Column" RowHeight="38"
+                                  Background="{StaticResource CorPainel}" AutomationProperties.Name="Lista de clientes">
+                            <DataGrid.RowStyle>
+                                <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
+                                    <Setter Property="Background" Value="{StaticResource CorPainel}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Ativo}" Value="False">
+                                            <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />
+                                        </DataTrigger>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter Property="Background" Value="{StaticResource CorSelecao}" />
+                                            <Setter Property="Foreground" Value="{StaticResource CorTexto}" />
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DataGrid.RowStyle>
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Nome" Binding="{Binding Nome, Mode=OneWay}" Width="2*" MinWidth="140" />
+                                <DataGridTextColumn Header="CPF / CNPJ" Binding="{Binding DocumentoFormatado, Mode=OneWay}" Width="150" />
+                                <DataGridTextColumn Header="Telefone" Binding="{Binding Telefone, Mode=OneWay}" Width="130" />
+                                <DataGridTextColumn Header="E-mail" Binding="{Binding Email, Mode=OneWay}" Width="1.5*" MinWidth="120" />
+                                <DataGridTextColumn Header="Crédito" Width="100" ElementStyle="{StaticResource ColunaNumero}"
+                                                    Binding="{Binding CreditoCentavos, Mode=OneWay, Converter={StaticResource Centavos}}" />
+                                <DataGridTextColumn Header="Situação" Width="76"
+                                                    Binding="{Binding Ativo, Mode=OneWay, Converter={StaticResource BoolTexto}, ConverterParameter='Ativo|Inativo'}" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+
+                    <StackPanel Grid.Row="2" Margin="0,14,0,6">
+                        <TextBlock Text="Compras do cliente selecionado" Style="{StaticResource TituloSecao}" />
+                        <TextBlock Text="{Binding ResumoCompras}" Foreground="{StaticResource CorTextoSuave}" Margin="0,2,0,0" />
+                        <TextBlock Text="{Binding ResumoAPrazo}" Foreground="{StaticResource CorTextoSuave}" TextWrapping="Wrap" />
                     </StackPanel>
 
-                    <TextBlock Text="Receber pagamento" Style="{StaticResource Rotulo}" Margin="0,12,0,0" />
-                    <TextBox Text="{Binding PagamentoValorTexto, UpdateSourceTrigger=PropertyChanged}"
-                             AutomationProperties.Name="Valor do pagamento" />
-                    <ComboBox ItemsSource="{Binding FormasDePagamento}" DisplayMemberPath="Texto"
-                              SelectedItem="{Binding PagamentoForma}" Margin="0,8,0,0"
-                              AutomationProperties.Name="Forma do pagamento" />
-                    <TextBox Text="{Binding PagamentoObservacao, UpdateSourceTrigger=PropertyChanged}" Margin="0,8,0,0"
-                             AutomationProperties.Name="Observação do pagamento" ToolTip="Observação (opcional)" />
-                    <Button Content="Receber" Style="{StaticResource BotaoSecundario}" Margin="0,10,0,0"
-                            HorizontalAlignment="Left" Command="{Binding ReceberPagamentoCommand}" />
-                </StackPanel>
-            </StackPanel>
-        </Border>
-        </ScrollViewer>
+                    <Border Grid.Row="3" Style="{StaticResource Painel}" Padding="0">
+                        <DataGrid ItemsSource="{Binding Compras}"
+                                  AutoGenerateColumns="False" IsReadOnly="True"
+                                  SelectionMode="Single" CanUserAddRows="False"
+                                  HeadersVisibility="Column" RowHeight="34"
+                                  Background="{StaticResource CorPainel}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Nº" Binding="{Binding Id, Mode=OneWay}" Width="70" />
+                                <DataGridTextColumn Header="Data" Width="150"
+                                                    Binding="{Binding DataHora, Mode=OneWay, StringFormat='dd/MM/yyyy HH:mm'}" />
+                                <DataGridTextColumn Header="Pagamento" Width="*"
+                                                    Binding="{Binding FormaPagamento, Mode=OneWay, Converter={StaticResource FormaPag}}" />
+                                <DataGridTextColumn Header="Total" Width="120" ElementStyle="{StaticResource ColunaNumero}"
+                                                    Binding="{Binding TotalCentavos, Mode=OneWay, Converter={StaticResource Centavos}}" />
+                                <DataGridTextColumn Header="Situação" Width="100"
+                                                    Binding="{Binding Cancelada, Mode=OneWay, Converter={StaticResource BoolTexto}, ConverterParameter='Cancelada|Concluída'}" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+                </Grid>
+
+                <!-- ===== Cadastro: um cartão por assunto ===== -->
+                <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+
+                        <!-- Dados do cliente -->
+                        <Border Style="{StaticResource Painel}" VerticalAlignment="Top">
+                            <StackPanel>
+                                <!-- Enter em qualquer campo do formulário salva -->
+                                <StackPanel.InputBindings>
+                                    <KeyBinding Key="Enter" Command="{Binding SalvarCommand}" />
+                                </StackPanel.InputBindings>
+                                <TextBlock Text="{Binding TituloFormulario}" Style="{StaticResource TituloCartao}" />
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="12" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="CPF ou CNPJ *" Style="{StaticResource Rotulo}" />
+                                        <TextBox Text="{Binding Documento, UpdateSourceTrigger=PropertyChanged}"
+                                                 AutomationProperties.Name="CPF ou CNPJ" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Nome *" Style="{StaticResource Rotulo}" />
+                                        <TextBox Text="{Binding Nome, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Nome" />
+                                    </StackPanel>
+                                </Grid>
+                                <TextBlock Text="{Binding DocumentoDica}" Margin="0,4,0,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock" BasedOn="{StaticResource TextoApoio}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding DocumentoComErro}" Value="True">
+                                                    <Setter Property="Foreground" Value="{StaticResource CorPerigo}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+
+                                <TextBlock Text="Razão social (para CNPJ)" Style="{StaticResource Rotulo}" />
+                                <TextBox Text="{Binding RazaoSocial, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Razão social" />
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="12" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Telefone / contato" Style="{StaticResource Rotulo}" />
+                                        <TextBox Text="{Binding Telefone, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Telefone" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="E-mail de contato" Style="{StaticResource Rotulo}" />
+                                        <TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="E-mail" />
+                                    </StackPanel>
+                                </Grid>
+
+                                <TextBlock Text="Limite para vendas a prazo (vazio = sem limite)" Style="{StaticResource Rotulo}" />
+                                <TextBox Text="{Binding LimiteTexto, UpdateSourceTrigger=PropertyChanged}"
+                                         AutomationProperties.Name="Limite de crédito" />
+
+                                <TextBlock Text="Observação" Style="{StaticResource Rotulo}" />
+                                <TextBox Text="{Binding Observacao, UpdateSourceTrigger=PropertyChanged}" Height="64"
+                                         TextWrapping="Wrap" AcceptsReturn="True" VerticalContentAlignment="Top" />
+
+                                <StackPanel Orientation="Horizontal" Margin="0,18,0,0">
+                                    <Button Content="Salvar (Ctrl+S)" Style="{StaticResource BotaoPrimario}"
+                                            Command="{Binding SalvarCommand}" />
+                                    <Button Content="Limpar" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0"
+                                            Command="{Binding NovoCommand}" />
+                                    <Button Content="{Binding TextoBotaoAtivo}" Style="{StaticResource BotaoPerigo}" Margin="8,0,0,0"
+                                            Command="{Binding AlternarAtivoCommand}"
+                                            Visibility="{Binding EstaEditando, Converter={StaticResource BoolVis}}" />
+                                </StackPanel>
+
+                                <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Crédito do cliente (saldo a favor) -->
+                        <Border Style="{StaticResource Painel}" Margin="0,12,0,0"
+                                Visibility="{Binding EstaEditando, Converter={StaticResource BoolVis}}">
+                            <StackPanel>
+                                <TextBlock Text="Crédito do cliente" Style="{StaticResource TituloCartao}" />
+                                <TextBlock Text="Saldo que o cliente tem a favor na loja." Style="{StaticResource TextoApoio}" />
+                                <TextBlock Text="{Binding CreditoAtualTexto}" Style="{StaticResource ValorDestaque}" Margin="0,6,0,0" />
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="150" />
+                                        <ColumnDefinition Width="12" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Novo saldo (R$)" Style="{StaticResource Rotulo}" />
+                                        <TextBox Text="{Binding NovoCreditoTexto, UpdateSourceTrigger=PropertyChanged}"
+                                                 AutomationProperties.Name="Novo saldo de crédito" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Motivo do ajuste (obrigatório)" Style="{StaticResource Rotulo}" />
+                                        <TextBox Text="{Binding CreditoMotivo, UpdateSourceTrigger=PropertyChanged}"
+                                                 AutomationProperties.Name="Motivo do ajuste de crédito"
+                                                 ToolTip="Mínimo 3 letras. Fica no histórico com quem fez e quando." />
+                                    </StackPanel>
+                                </Grid>
+                                <Button Content="Ajustar crédito" Style="{StaticResource BotaoSecundario}" Margin="0,12,0,0"
+                                        HorizontalAlignment="Left" Command="{Binding SalvarCreditoCommand}" />
+
+                                <TextBlock Text="Histórico (de → para, motivo, quem, quando)" Style="{StaticResource Rotulo}" Margin="0,14,0,4" />
+                                <TextBlock Text="Nenhum ajuste de crédito ainda.">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock" BasedOn="{StaticResource TextoApoio}">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding HistoricoCredito.Count}" Value="0">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <ItemsControl ItemsSource="{Binding HistoricoCredito}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding}" TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource CorTextoSuave}" Margin="0,2" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Dívida a prazo -->
+                        <Border Style="{StaticResource Painel}" Margin="0,12,0,0"
+                                Visibility="{Binding EstaEditando, Converter={StaticResource BoolVis}}">
+                            <StackPanel>
+                                <TextBlock Text="Dívida a prazo" Style="{StaticResource TituloCartao}" />
+                                <TextBlock Text="{Binding ResumoDivida}" TextWrapping="Wrap" Margin="0,4,0,0" />
+                                <ListBox ItemsSource="{Binding Titulos}" SelectedItem="{Binding TituloSelecionado}" Margin="0,8,0,0"
+                                         BorderThickness="0" Background="Transparent" AutomationProperties.Name="Títulos a prazo"
+                                         ScrollViewer.HorizontalScrollBarVisibility="Disabled" HorizontalContentAlignment="Stretch">
+                                    <ListBox.ItemContainerStyle>
+                                        <Style TargetType="ListBoxItem">
+                                            <Setter Property="Padding" Value="8,6" />
+                                            <Setter Property="Margin" Value="0,0,0,2" />
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="ListBoxItem">
+                                                        <Border x:Name="Fundo" Background="Transparent" CornerRadius="{StaticResource RaioPequeno}" Padding="{TemplateBinding Padding}">
+                                                            <ContentPresenter />
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="Fundo" Property="Background" Value="{StaticResource CorHover}" />
+                                                            </Trigger>
+                                                            <Trigger Property="IsSelected" Value="True">
+                                                                <Setter TargetName="Fundo" Property="Background" Value="{StaticResource CorSelecao}" />
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </ListBox.ItemContainerStyle>
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock TextWrapping="Wrap" Margin="0,2">
+                                                <Run Text="{Binding VendaId, Mode=OneWay, StringFormat='#{0}'}" FontWeight="SemiBold" />
+<Run Text="{Binding Detalhe, Mode=OneWay}" />
+                                            </TextBlock>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+
+                                <StackPanel Visibility="{Binding PodeEditarTitulo, Converter={StaticResource BoolVis}}">
+                                    <TextBlock Text="Ajustar o título escolhido (valor devido e vencimento; a venda não muda)" Style="{StaticResource Rotulo}" Margin="0,12,0,0" TextWrapping="Wrap" />
+                                    <TextBlock Text="Novo valor devido (R$)" Style="{StaticResource Rotulo}" />
+                                    <TextBox Text="{Binding AjusteValorTexto, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Novo valor do título" />
+                                    <TextBlock Text="Novo vencimento" Style="{StaticResource Rotulo}" />
+                                    <DatePicker SelectedDateFormat="Short" SelectedDate="{Binding AjusteVencimento}" VerticalContentAlignment="Center"
+                                                AutomationProperties.Name="Novo vencimento do título" />
+                                    <TextBlock Text="Motivo do ajuste (obrigatório)" Style="{StaticResource Rotulo}" />
+                                    <TextBox Text="{Binding AjusteMotivo, UpdateSourceTrigger=PropertyChanged}"
+                                             AutomationProperties.Name="Motivo do ajuste" ToolTip="Motivo do ajuste (obrigatório, mínimo 3 letras)" />
+                                    <Button Content="Salvar ajuste" Style="{StaticResource BotaoSecundario}" Margin="0,10,0,0"
+                                            HorizontalAlignment="Left" Command="{Binding SalvarAjusteTituloCommand}" />
+                                    <TextBlock Text="Ajustes feitos (de → para, motivo, quem, quando)" Style="{StaticResource Rotulo}" Margin="0,12,0,0" />
+                                    <ItemsControl ItemsSource="{Binding Ajustes}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding}" TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource CorTextoSuave}" Margin="0,2" />
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+
+                                <TextBlock Text="Receber pagamento" Style="{StaticResource Rotulo}" Margin="0,12,0,0" />
+                                <TextBox Text="{Binding PagamentoValorTexto, UpdateSourceTrigger=PropertyChanged}"
+                                         AutomationProperties.Name="Valor do pagamento" />
+                                <ComboBox ItemsSource="{Binding FormasDePagamento}" DisplayMemberPath="Texto"
+                                          SelectedItem="{Binding PagamentoForma}" Margin="0,8,0,0"
+                                          AutomationProperties.Name="Forma do pagamento" />
+                                <TextBox Text="{Binding PagamentoObservacao, UpdateSourceTrigger=PropertyChanged}" Margin="0,8,0,0"
+                                         AutomationProperties.Name="Observação do pagamento" ToolTip="Observação (opcional)" />
+                                <Button Content="Receber" Style="{StaticResource BotaoSecundario}" Margin="0,10,0,0"
+                                        HorizontalAlignment="Left" Command="{Binding ReceberPagamentoCommand}" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </Grid>
+
+        <!-- ===== Pré-visualização da importação (nada é gravado antes de confirmar) ===== -->
+        <Grid Background="{StaticResource CorSobreposicao}" Panel.ZIndex="10"
+              Visibility="{Binding ImportacaoAberta, Converter={StaticResource BoolVis}}">
+            <Border Style="{StaticResource Painel}" Margin="48,32" Padding="22">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <TextBlock Text="Importar clientes" Style="{StaticResource TituloSecao}" />
+                        <TextBlock Style="{StaticResource TextoApoio}" Margin="0,2,0,0"
+                                   Text="{Binding ArquivoImportacao, StringFormat='Arquivo: {0}. Nada foi gravado ainda: confira a lista e confirme.'}" />
+                    </StackPanel>
+
+                    <Border Grid.Row="1" Style="{StaticResource FaixaAviso}" Margin="0,14,0,12" Background="{StaticResource CorSelecaoSuave}">
+                        <TextBlock Text="{Binding ResumoImportacao}" FontWeight="SemiBold" Foreground="{StaticResource CorTexto}"
+                                   TextWrapping="Wrap" AutomationProperties.Name="Resumo da importação" />
+                    </Border>
+
+                    <Border Grid.Row="2" BorderBrush="{StaticResource CorBorda}" BorderThickness="1" CornerRadius="{StaticResource RaioMedio}">
+                        <DataGrid ItemsSource="{Binding LinhasImportacao}" AutoGenerateColumns="False" IsReadOnly="True"
+                                  SelectionMode="Single" CanUserAddRows="False" HeadersVisibility="Column" RowHeight="34"
+                                  Background="{StaticResource CorPainel}" AutomationProperties.Name="Linhas da importação">
+                            <DataGrid.RowStyle>
+                                <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Situacao}" Value="Erro">
+                                            <Setter Property="Foreground" Value="{StaticResource CorNegativo}" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Situacao}" Value="SemMudanca">
+                                            <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DataGrid.RowStyle>
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Linha" Binding="{Binding Numero, Mode=OneWay}" Width="64" />
+                                <DataGridTextColumn Header="O que acontece" Binding="{Binding SituacaoTexto, Mode=OneWay}" Width="120" />
+                                <DataGridTextColumn Header="CPF / CNPJ" Binding="{Binding Documento, Mode=OneWay}" Width="160" />
+                                <DataGridTextColumn Header="Nome" Binding="{Binding Nome, Mode=OneWay}" Width="*" />
+                                <DataGridTextColumn Header="Detalhe / motivo" Binding="{Binding Motivo, Mode=OneWay}" Width="2*" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+
+                    <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+                        <Button Content="Cancelar" Style="{StaticResource BotaoSecundario}" Command="{Binding CancelarImportacaoCommand}" />
+                        <Button Content="Confirmar importação" Style="{StaticResource BotaoPrimario}" Margin="8,0,0,0"
+                                Command="{Binding ConfirmarImportacaoCommand}"
+                                IsEnabled="{Binding ImportacaoPodeConfirmar}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
     </Grid>
 </UserControl>

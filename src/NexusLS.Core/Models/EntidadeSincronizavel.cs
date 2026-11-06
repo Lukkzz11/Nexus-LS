@@ -41,6 +41,7 @@ public static class NomesEntidade
     public const string ChequeEmitido = "chequeemitido";
     public const string CategoriaFinanceira = "categoriafinanceira";
     public const string AjusteTituloPrazo = "ajustetituloprazo";
+    public const string AjusteCreditoCliente = "ajustecreditocliente";
     public const string MateriaPrima = "materiaprima";
     public const string OrdemProducao = "ordemproducao";
     public const string PerdaProducao = "perdaproducao";

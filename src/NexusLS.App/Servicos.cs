@@ -77,7 +77,7 @@ public sealed class ContainerDeServicos
         Vendas = new(fabrica);
         ModelosEtiqueta = new(NexusLS.Core.Etiquetas.ModeloEtiquetaStore.CaminhoPadrao());
         Caixa = new(fabrica);
-        Clientes = new(fabrica);
+        Clientes = new(fabrica) { ExigirDocumentoNaTela = true };
         TitulosPrazo = new(fabrica);
         Configuracao = new(fabrica);
         Inicio = new(fabrica);

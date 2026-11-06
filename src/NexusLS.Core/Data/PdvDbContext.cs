@@ -19,6 +19,7 @@ public class PdvDbContext : DbContext
     public DbSet<Cliente> Clientes => Set<Cliente>();
     public DbSet<ConfiguracaoLoja> ConfiguracoesLoja => Set<ConfiguracaoLoja>();
     public DbSet<PagamentoCliente> PagamentosCliente => Set<PagamentoCliente>();
+    public DbSet<AjusteCreditoCliente> AjustesCreditoCliente => Set<AjusteCreditoCliente>();
     public DbSet<TurnoCaixa> TurnosCaixa => Set<TurnoCaixa>();
     public DbSet<MovimentoCaixa> MovimentosCaixa => Set<MovimentoCaixa>();
     public DbSet<FechamentoCaixa> FechamentosCaixa => Set<FechamentoCaixa>();
@@ -189,10 +190,20 @@ public class PdvDbContext : DbContext
         modelBuilder.Entity<Cliente>(e =>
         {
             e.Property(c => c.Nome).IsRequired().HasMaxLength(200);
+            e.Property(c => c.RazaoSocial).HasMaxLength(200);
             e.Property(c => c.Documento).HasMaxLength(20);
             e.Property(c => c.Telefone).HasMaxLength(30);
+            e.Property(c => c.Email).HasMaxLength(150);
             e.Property(c => c.Observacao).HasMaxLength(500);
             e.HasIndex(c => c.Nome);
+        });
+
+        modelBuilder.Entity<AjusteCreditoCliente>(e =>
+        {
+            e.Property(a => a.Motivo).IsRequired().HasMaxLength(200);
+            e.Property(a => a.Operador).HasMaxLength(80);
+            e.HasOne(a => a.Cliente).WithMany().HasForeignKey(a => a.ClienteId).OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(a => a.ClienteId);
         });
 
         modelBuilder.Entity<ConfiguracaoLoja>(e =>

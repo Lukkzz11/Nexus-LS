@@ -54,6 +54,8 @@ public class AtividadeService
         TipoAtividade.ChequeEmitido => "Cheque emitido",
         TipoAtividade.ChequeEmitidoCompensado => "Cheque emitido compensado",
         TipoAtividade.ChequeEmitidoCancelado => "Cheque emitido cancelado",
+        TipoAtividade.CreditoClienteAjustado => "Crédito de cliente ajustado",
+        TipoAtividade.ClientesImportados => "Clientes importados",
         _ => tipo.ToString()
     };
 

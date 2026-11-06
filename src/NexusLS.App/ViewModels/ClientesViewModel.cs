@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NexusLS.Core.Models;
@@ -16,17 +17,19 @@ public record LinhaTitulo(int VendaId, string Data, string Vencimento, string To
     public string Detalhe => $" {Total} · {Situacao}\nvence {Vencimento} · falta {Saldo}" + (string.IsNullOrEmpty(Ajuste) ? "" : $"\n{Ajuste}");   // linhas próprias: "R$" nunca fica longe do valor
 }
 
-/// <summary>Cadastro de clientes (nome, documento, telefone, limite de crédito, observação) com o histórico de compras e a dívida a prazo de cada um.</summary>
+/// <summary>Cadastro de clientes (CPF/CNPJ, nome, razão social, telefone, e-mail, crédito, limite a prazo, observação) com o histórico de compras, a dívida a prazo, importação e exportação em CSV.</summary>
 public partial class ClientesViewModel : ViewModelBase
 {
     private readonly ClienteService _clientes;
     private readonly TituloPrazoService? _titulosPrazo;
+    private readonly Func<DateTime> _hoje;
     private int _versaoBusca;
     private bool _silenciar; // true enquanto a seleção da lista é refeita pelo programa (não pelo operador)
 
-    public ClientesViewModel(ClienteService clientes, TituloPrazoService? titulosPrazo = null)
+    public ClientesViewModel(ClienteService clientes, TituloPrazoService? titulosPrazo = null, Func<DateTime>? hoje = null)
     {
         _clientes = clientes;
+        _hoje = hoje ?? (() => DateTime.Now);
         _titulosPrazo = titulosPrazo;
         _pagamentoForma = FormasDePagamento[0];
         Novo();
@@ -70,10 +73,24 @@ public partial class ClientesViewModel : ViewModelBase
 
     // ----- Cadastro -----
     [ObservableProperty] private string _nome = "";
-    [ObservableProperty] private string _documento = "";
+    [ObservableProperty] private string _razaoSocial = "";
+    [ObservableProperty] private string _email = "";
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DocumentoDica))]
+    [NotifyPropertyChangedFor(nameof(DocumentoComErro))]
+    private string _documento = "";
     [ObservableProperty] private string _telefone = "";
     [ObservableProperty] private string _observacao = "";
     [ObservableProperty] private string _limiteTexto = "";
+
+    // ----- Crédito do cliente (saldo a favor) -----
+    [ObservableProperty] private string _creditoAtualTexto = "R$ 0,00";
+    [ObservableProperty] private string _novoCreditoTexto = "";
+    [ObservableProperty] private string _creditoMotivo = "";
+
+    /// <summary>Ajustes do crédito do cliente aberto (de → para, motivo, quem, quando), do mais recente para o mais antigo.</summary>
+    public ObservableCollection<string> HistoricoCredito { get; } = new();
 
     // ----- Recebimento de dívida -----
     [ObservableProperty] private string _pagamentoValorTexto = "";
@@ -93,6 +110,28 @@ public partial class ClientesViewModel : ViewModelBase
     // ----- Histórico do cliente aberto -----
     [ObservableProperty] private string _resumoCompras = "";
     [ObservableProperty] private string _resumoAPrazo = "";
+
+    [ObservableProperty] private string _resumoLista = "";
+
+    /// <summary>Diz, enquanto o operador digita, se o número é CPF ou CNPJ e se está certo.</summary>
+    public string DocumentoDica
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(Documento)) return "Obrigatório: CPF (11 números) ou CNPJ (14 números), com ou sem pontos.";
+            var r = ValidadorDocumento.Validar(Documento);
+            return r.Valido ? (r.Tipo == TipoDocumento.Cpf ? "CPF válido." : "CNPJ válido.") : (r.Digitos.Length is 11 or 14 ? r.Erro! : "Digitando…");
+        }
+    }
+
+    public bool DocumentoComErro
+    {
+        get
+        {
+            var r = ValidadorDocumento.Validar(Documento);
+            return !r.Valido && r.Digitos.Length is 11 or 14;
+        }
+    }
 
     public bool EstaEditando => IdEditando is not null;
     public string TituloFormulario => EstaEditando ? "Editar cliente" : "Novo cliente";
@@ -117,6 +156,7 @@ public partial class ClientesViewModel : ViewModelBase
 
         Clientes.Clear();
         foreach (var c in lista) Clientes.Add(c);
+        ResumoLista = lista.Count == 1 ? "1 cliente" : $"{lista.Count} clientes";
         if (IdEditando is int id) Reselecionar(id);
     });
 
@@ -137,9 +177,15 @@ public partial class ClientesViewModel : ViewModelBase
         IdEditando = null;
         Nome = "";
         Documento = "";
+        RazaoSocial = "";
+        Email = "";
         Telefone = "";
         Observacao = "";
         LimiteTexto = "";
+        CreditoAtualTexto = Dinheiro.Formatar(0);
+        NovoCreditoTexto = "";
+        CreditoMotivo = "";
+        HistoricoCredito.Clear();
         ClienteAtivo = true;
         ResumoDivida = "";
         Titulos.Clear();
@@ -157,7 +203,7 @@ public partial class ClientesViewModel : ViewModelBase
         long limite = 0;
         if (!string.IsNullOrWhiteSpace(LimiteTexto) && !Dinheiro.TentarConverter(LimiteTexto, out limite))
             throw new RegraDeNegocioException("Limite de crédito inválido. Digite um valor como 500,00 (vazio = sem limite).");
-        var dados = new DadosCliente(Nome, Documento, Telefone, Observacao, limite);
+        var dados = new DadosCliente(Nome, Documento, Telefone, Observacao, limite, RazaoSocial, Email, _clientes.ExigirDocumentoNaTela);
 
         if (IdEditando is int id)
         {
@@ -193,12 +239,17 @@ public partial class ClientesViewModel : ViewModelBase
     {
         IdEditando = cliente.Id;
         Nome = cliente.Nome;
-        Documento = cliente.Documento ?? "";
+        Documento = cliente.DocumentoFormatado;
+        RazaoSocial = cliente.RazaoSocial ?? "";
+        Email = cliente.Email ?? "";
         Telefone = cliente.Telefone ?? "";
         Observacao = cliente.Observacao ?? "";
         LimiteTexto = cliente.LimiteCreditoCentavos > 0 ? Dinheiro.FormatarParaEdicao(cliente.LimiteCreditoCentavos) : "";
         ClienteAtivo = cliente.Ativo;
         Mensagem = "";
+        CreditoAtualTexto = Dinheiro.Formatar(cliente.CreditoCentavos);
+        NovoCreditoTexto = cliente.CreditoCentavos > 0 ? Dinheiro.FormatarParaEdicao(cliente.CreditoCentavos) : "";
+        CreditoMotivo = "";
 
         await CarregarHistoricoAsync(cliente.Id);
         Reselecionar(cliente.Id);
@@ -216,8 +267,13 @@ public partial class ClientesViewModel : ViewModelBase
             : $"{h.Compras} compra(s) · Total {Dinheiro.Formatar(h.TotalCompradoCentavos)} · Última em {h.UltimaCompra:dd/MM/yyyy}";
         ResumoAPrazo = h.TotalAPrazoCentavos > 0 ? $"Vendido a prazo: {Dinheiro.Formatar(h.TotalAPrazoCentavos)}" : "";
 
+        HistoricoCredito.Clear();
+        foreach (var a in await _clientes.HistoricoCreditoAsync(clienteId))
+            HistoricoCredito.Add($"{Dinheiro.Formatar(a.SaldoAnteriorCentavos)} → {Dinheiro.Formatar(a.SaldoNovoCentavos)} · {a.Motivo}" +
+                                 $"{(string.IsNullOrWhiteSpace(a.Operador) ? "" : " · " + a.Operador)} · {a.Quando:dd/MM/yyyy HH:mm}");
+
         var conta = await _clientes.ContaAsync(clienteId);
-        var agora = DateTime.Now;
+        var agora = _hoje();
         var selecionadoId = TituloSelecionado?.VendaId;
         Titulos.Clear();
         foreach (var t in conta.Titulos)
@@ -244,6 +300,101 @@ public partial class ClientesViewModel : ViewModelBase
             : $"Deve {Dinheiro.Formatar(conta.SaldoDevedorCentavos)} · Já pagou {Dinheiro.Formatar(conta.TotalPagoCentavos)}"
               + (vencido > 0 ? $"\nVENCIDO: {Dinheiro.Formatar(vencido)}" : "");
     }
+
+    /// <summary>Muda o crédito do cliente aberto para o saldo digitado. Exige motivo; vai para o histórico e para a trilha de atividades.</summary>
+    [RelayCommand]
+    private Task SalvarCreditoAsync() => ExecutarAsync(async () =>
+    {
+        if (IdEditando is not int id) return;
+        long novo = 0;
+        if (!string.IsNullOrWhiteSpace(NovoCreditoTexto) && !Dinheiro.TentarConverter(NovoCreditoTexto, out novo))
+            throw new RegraDeNegocioException("Saldo de crédito inválido. Digite um valor como 50,00 (vazio = zero).");
+
+        await _clientes.AjustarCreditoAsync(id, novo, CreditoMotivo);
+        CreditoMotivo = "";
+        await BuscarAsync();
+        var cliente = Clientes.FirstOrDefault(c => c.Id == id);
+        if (cliente is not null) await AbrirAsync(cliente);
+        MostrarSucesso($"Crédito do cliente ajustado para {Dinheiro.Formatar(novo)}.");
+    });
+
+    // ----- Exportar e importar (CSV) -----
+    /// <summary>A tela define a caixa "Salvar como" do Windows (nulo = cancelou).</summary>
+    public Func<string, string?> EscolherArquivoParaSalvar { get; set; } = _ => null;
+    /// <summary>A tela define a caixa "Abrir arquivo" do Windows (nulo = cancelou).</summary>
+    public Func<string?> EscolherArquivoParaAbrir { get; set; } = () => null;
+
+    /// <summary>Linhas da pré-visualização da importação (uma por linha do arquivo).</summary>
+    public ObservableCollection<LinhaImportacaoCliente> LinhasImportacao { get; } = new();
+    [ObservableProperty] private bool _importacaoAberta;
+    [ObservableProperty] private bool _importacaoPodeConfirmar;
+    [ObservableProperty] private string _resumoImportacao = "";
+    [ObservableProperty] private string _arquivoImportacao = "";
+    private string? _csvImportacao;
+
+    /// <summary>Grava todos os clientes (inclusive os desativados) num CSV do Excel: UTF-8 com BOM, separador ponto e vírgula.</summary>
+    [RelayCommand]
+    private Task ExportarAsync() => ExecutarAsync(async () =>
+    {
+        var lista = await _clientes.ListarParaExportacaoAsync();
+        if (lista.Count == 0) throw new RegraDeNegocioException("Não há clientes cadastrados para exportar.");
+
+        var caminho = EscolherArquivoParaSalvar($"clientes-{_hoje():yyyy-MM-dd}.csv");
+        if (caminho is null) return;
+
+        ExportadorClientes.Salvar(caminho, lista);
+        MostrarSucesso($"Clientes exportados: {lista.Count}. Arquivo salvo: {caminho}");
+    });
+
+    /// <summary>Lê o CSV escolhido e mostra a pré-visualização. Nada é gravado até o operador confirmar.</summary>
+    [RelayCommand]
+    private Task ImportarAsync() => ExecutarAsync(async () =>
+    {
+        var caminho = EscolherArquivoParaAbrir();
+        if (caminho is null) return;
+
+        var texto = ImportadorProdutos.Decodificar(await File.ReadAllBytesAsync(caminho));
+        await PreverAsync(texto, Path.GetFileName(caminho));
+    });
+
+    /// <summary>Pré-visualiza um CSV já lido (usado também pelos testes).</summary>
+    public async Task PreverAsync(string csv, string nomeDoArquivo = "")
+    {
+        var previa = await _clientes.PreverImportacaoAsync(csv);
+        if (previa.Erro is not null) { MostrarErro(previa.Erro); return; }
+
+        _csvImportacao = csv;
+        ArquivoImportacao = nomeDoArquivo;
+        LinhasImportacao.Clear();
+        foreach (var l in previa.Linhas) LinhasImportacao.Add(l);
+        ResumoImportacao = previa.Resumo;
+        ImportacaoPodeConfirmar = previa.PodeImportar;
+        ImportacaoAberta = true;
+        Mensagem = "";
+    }
+
+    [RelayCommand]
+    private void CancelarImportacao()
+    {
+        ImportacaoAberta = false;
+        LinhasImportacao.Clear();
+        _csvImportacao = null;
+        MostrarSucesso("Importação cancelada. Nada foi gravado.");
+    }
+
+    /// <summary>Grava o que a pré-visualização mostrou (as linhas com erro ficam de fora).</summary>
+    [RelayCommand]
+    private Task ConfirmarImportacaoAsync() => ExecutarAsync(async () =>
+    {
+        if (_csvImportacao is null) return;
+        var resultado = await _clientes.ImportarAsync(_csvImportacao);
+        ImportacaoAberta = false;
+        LinhasImportacao.Clear();
+        _csvImportacao = null;
+        await BuscarAsync();
+        MostrarSucesso($"Importação concluída: {resultado.Novos} cliente(s) novo(s), {resultado.Atualizados} atualizado(s)" +
+                       (resultado.Erros > 0 ? $", {resultado.Erros} linha(s) com erro ficaram de fora." : "."));
+    });
 
     /// <summary>Muda o valor devido e/ou o vencimento do título escolhido. A dívida é recalculada por FIFO; a venda não é alterada.</summary>
     [RelayCommand]

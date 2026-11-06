@@ -17,6 +17,49 @@ namespace NexusLS.Core.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.13");
 
+            modelBuilder.Entity("NexusLS.Core.Models.AjusteCreditoCliente", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("AtualizadoEm")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ClienteId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CriadoEm")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("Guid")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Motivo")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Operador")
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("SaldoAnteriorCentavos")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("SaldoNovoCentavos")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClienteId");
+
+                    b.HasIndex("Guid")
+                        .IsUnique();
+
+                    b.ToTable("AjustesCreditoCliente");
+                });
+
             modelBuilder.Entity("NexusLS.Core.Models.AjusteTituloPrazo", b =>
                 {
                     b.Property<int>("Id")
@@ -286,11 +329,18 @@ namespace NexusLS.Core.Migrations
                     b.Property<DateTime>("AtualizadoEm")
                         .HasColumnType("TEXT");
 
+                    b.Property<long>("CreditoCentavos")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime>("DataCadastro")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Documento")
                         .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(150)
                         .HasColumnType("TEXT");
 
                     b.Property<Guid>("Guid")
@@ -306,6 +356,10 @@ namespace NexusLS.Core.Migrations
 
                     b.Property<string>("Observacao")
                         .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RazaoSocial")
+                        .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Telefone")
@@ -434,10 +488,34 @@ namespace NexusLS.Core.Migrations
                     b.Property<int>("CupomLinhasFinais")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("CupomMensagemCabecalho")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("CupomMostrarAssinatura")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("CupomMostrarCidade")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("CupomMostrarCliente")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("CupomMostrarDocumento")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("CupomMostrarEmail")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("CupomMostrarEndereco")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("CupomMostrarInscricao")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("CupomMostrarOperador")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("CupomMostrarPagamento")
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("CupomMostrarPix")
@@ -1877,6 +1955,17 @@ namespace NexusLS.Core.Migrations
                         .IsUnique();
 
                     b.ToTable("Vendas");
+                });
+
+            modelBuilder.Entity("NexusLS.Core.Models.AjusteCreditoCliente", b =>
+                {
+                    b.HasOne("NexusLS.Core.Models.Cliente", "Cliente")
+                        .WithMany()
+                        .HasForeignKey("ClienteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Cliente");
                 });
 
             modelBuilder.Entity("NexusLS.Core.Models.AjusteTituloPrazo", b =>
