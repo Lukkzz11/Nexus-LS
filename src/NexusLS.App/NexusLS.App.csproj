@@ -7,6 +7,7 @@
   <ItemGroup>
     <EmbeddedResource Include="Web\catalogo.zip" LogicalName="catalogo.zip" />
     <Resource Include="Assets\logo.png" />
+    <Resource Include="Assets\icone.png" />
     <Resource Include="Assets\nexus.ico" />
   </ItemGroup>
 
