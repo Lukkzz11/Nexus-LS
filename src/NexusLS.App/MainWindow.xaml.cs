@@ -21,6 +21,8 @@ public partial class MainWindow : FluentWindow
             return d.ShowDialog(this) == true ? d.FileName : null;
         };
         vm.AtualizarLicenca();
+        vm.AbrirConexaoBanco = () => new Views.ConexaoBancoWindow(App.Servicos.Firebase, App.Servicos.Operacional) { Owner = this }.ShowDialog() == true;
+        vm.AtualizarBanco();
 
         // Atualização: as perguntas ficam aqui (janela); a consulta ao abrir é silenciosa e nunca atrapalha o uso.
         vm.Atualizacao.Confirmar = texto =>

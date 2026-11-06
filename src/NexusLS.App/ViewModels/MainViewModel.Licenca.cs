@@ -84,6 +84,25 @@ public partial class MainViewModel
         }
     }
 
+    public string VersaoTexto => "Nexus LS v" + NexusLS.Core.Atualizacao.VersaoPrograma.Atual().ToString();
+
+    [ObservableProperty] private string _bancoTexto = "";
+
+    /// <summary>A janela define como abrir a tela de conexão (devolve verdadeiro se algo foi salvo).</summary>
+    public Func<bool> AbrirConexaoBanco { get; set; } = () => false;
+
+    public void AtualizarBanco()
+    {
+        var c = _servicos.Firebase.Carregar();
+        BancoTexto = c.EstaCompleta ? $"Conectado: {c.ProjectId}" : "Não conectado";
+    }
+
+    [RelayCommand]
+    private void AbrirConexaoBancoDeDados()
+    {
+        if (AbrirConexaoBanco()) AtualizarBanco();
+    }
+
     [RelayCommand]
     public void AbrirPortalWeb()
     {
