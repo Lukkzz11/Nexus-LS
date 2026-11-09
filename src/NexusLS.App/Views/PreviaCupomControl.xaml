@@ -1,0 +1,40 @@
+<UserControl x:Class="NexusLS.App.Views.PreviaCupomControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Prévia fiel do comprovante: usa o ConfiguracoesViewModel da tela (mesmo DataContext) -->
+    <StackPanel Grid.Column="1">
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+            <TextBlock Text="Pré-visualização do comprovante" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" />
+            <TextBlock Text="80 mm" FontSize="11" Foreground="{StaticResource CorTextoSuave}" Margin="10,0,0,0" VerticalAlignment="Center" />
+        </StackPanel>
+        <Border Background="White" BorderBrush="{StaticResource CorBorda}" BorderThickness="1" CornerRadius="8" Padding="16,14">
+            <StackPanel>
+                <Image Source="{Binding LogoPrevia}" MaxHeight="64" MaxWidth="220" Stretch="Uniform" Margin="0,0,0,6"
+                       HorizontalAlignment="Center" AutomationProperties.Name="Logo na prévia do cupom" />
+                <!-- Uma linha por item; cada pedaço da linha pode estar em negrito (igual ao que sai na impressora) -->
+                <ItemsControl ItemsSource="{Binding LinhasPrevia}" HorizontalAlignment="Center"
+                              TextElement.FontFamily="Consolas" TextElement.FontSize="12" TextElement.Foreground="Black"
+                              AutomationProperties.Name="Prévia do cupom">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <ItemsControl ItemsSource="{Binding}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Texto}" FontWeight="{Binding Peso}" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </Border>
+        <TextBlock Text="Os itens e valores acima são só de exemplo. Os dados da loja vêm do formulário."
+                   Foreground="{StaticResource CorTextoSuave}" FontSize="13" Margin="0,10,0,10" TextWrapping="Wrap" />
+        <Button Content="Testar impressão na impressora física" Style="{StaticResource BotaoSecundario}"
+                Command="{Binding ImprimirTesteCommand}" HorizontalAlignment="Stretch" />
+    </StackPanel>
+</UserControl>

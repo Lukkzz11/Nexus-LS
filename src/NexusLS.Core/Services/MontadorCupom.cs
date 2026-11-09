@@ -3,6 +3,17 @@ using NexusLS.Core.Models;
 
 namespace NexusLS.Core.Services;
 
+/// <summary>Os modelos de comprovante que a loja pode escolher.</summary>
+public enum ModeloCupom
+{
+    /// <summary>O estilo do ERP PDV Life (padrão).</summary>
+    Life = 0,
+    /// <summary>Enxuto: um item por linha, sem rótulos extras.</summary>
+    Compacto = 1,
+    /// <summary>"Comprovante de venda" com número, referência, total da nota, recebido, troco, garantia e assinatura.</summary>
+    Comprovante = 2
+}
+
 /// <summary>Um pedaço de uma linha do cupom, em negrito ou não.</summary>
 public record SegmentoCupom(string Texto, bool Negrito);
 
@@ -32,14 +43,17 @@ public static class MontadorCupom
             foreach (var parte in Paragrafos(loja.CupomMensagemCabecalho))
                 linhas.AddRange(Centralizar(parte, largura));
 
+        var modelo = (ModeloCupom)Math.Clamp(loja.CupomModelo, 0, 2);
+        var titulo = modelo == ModeloCupom.Comprovante ? "COMPROVANTE DE VENDA" : "CUPOM NÃO FISCAL";
         if (loja.CupomTituloEmCaixa)
         {
-            var miolo = "| CUPOM NÃO FISCAL |";
+            var miolo = $"| {titulo} |";
             linhas.AddRange(Centralizar("+" + new string('-', miolo.Length - 2) + "+", largura));
             linhas.AddRange(Centralizar(miolo, largura));
             linhas.AddRange(Centralizar("+" + new string('-', miolo.Length - 2) + "+", largura));
         }
-        else linhas.AddRange(Centralizar("CUPOM NÃO FISCAL", largura));
+        else linhas.AddRange(Centralizar(titulo, largura));
+        if (modelo == ModeloCupom.Comprovante) linhas.AddRange(Centralizar($"(NÃO FISCAL)  Nº {venda.Id:000000}", largura));
         if (venda.Cancelada) linhas.AddRange(Centralizar("*** VENDA CANCELADA ***", largura));
         linhas.Add(traco);
 
@@ -52,24 +66,35 @@ public static class MontadorCupom
         linhas.Add(traco);
 
         // Itens: nome (e tamanho) numa linha, "qtd x unitário ........ total" na seguinte
-        linhas.Add("ITENS DA VENDA");
+        if (modelo != ModeloCupom.Compacto) linhas.Add("ITENS DA VENDA");
         foreach (var item in venda.Itens)
         {
             var nome = item.Tamanho == Tamanhos.SemTamanho ? item.NomeProduto : $"{item.NomeProduto} ({item.Tamanho})";
+            var total = Reais(item.TotalCentavos);
+            if (modelo == ModeloCupom.Compacto)
+            {
+                // Uma linha por item: "2x Camiseta (M) ........ R$ 119,80" (se o nome não couber, quebra e o valor vai na linha de baixo)
+                var texto = $"{item.Quantidade}x {nome}";
+                if (texto.Length + total.Length + 1 <= largura) linhas.Add(DuasPontas(texto, total, largura));
+                else { linhas.AddRange(Quebrar(texto, largura)); linhas.Add(DuasPontas("", total, largura)); }
+                continue;
+            }
             linhas.AddRange(Quebrar(nome, largura));
-            if (loja.CupomMostrarReferencia && !string.IsNullOrWhiteSpace(item.Referencia))
+            if ((loja.CupomMostrarReferencia || modelo == ModeloCupom.Comprovante) && !string.IsNullOrWhiteSpace(item.Referencia))
                 linhas.AddRange(Quebrar($"Ref: {item.Referencia}", largura));
-            linhas.Add(DuasPontas($"{item.Quantidade}x {Reais(item.PrecoUnitarioCentavos)}", Reais(item.TotalCentavos), largura));
+            linhas.Add(DuasPontas($"{item.Quantidade}x {Reais(item.PrecoUnitarioCentavos)}", total, largura));
         }
         linhas.Add(traco);
 
         // Totais
-        linhas.Add(DuasPontas("Subtotal:", Reais(venda.SubtotalCentavos), largura));
+        var temAjuste = venda.DescontoCentavos > 0 || venda.AcrescimoCentavos > 0;
+        if (modelo != ModeloCupom.Compacto || temAjuste)
+            linhas.Add(DuasPontas("Subtotal:", Reais(venda.SubtotalCentavos), largura));
         if (venda.DescontoCentavos > 0)
             linhas.Add(DuasPontas("Desconto:", "- " + Reais(venda.DescontoCentavos), largura));
         if (venda.AcrescimoCentavos > 0)
             linhas.Add(DuasPontas("Acréscimo crédito:", "+" + Reais(venda.AcrescimoCentavos), largura));
-        linhas.Add(DuasPontas("TOTAL A PAGAR:", Reais(venda.TotalCentavos), largura));
+        linhas.Add(DuasPontas(modelo == ModeloCupom.Comprovante ? "Total da Nota:" : "TOTAL A PAGAR:", Reais(venda.TotalCentavos), largura));
 
         // Pagamento
         if (loja.CupomMostrarPagamento)
@@ -78,10 +103,11 @@ public static class MontadorCupom
             var forma = SelecaoPagamento.Nome(venda.FormaPagamento).ToUpper(new CultureInfo("pt-BR"));
             if (venda.FormaPagamento == FormaPagamento.CartaoCredito && venda.Parcelas > 1)
                 forma += $" {venda.Parcelas}x";
-            linhas.AddRange(Quebrar($"Forma de Pagamento: {forma}", largura));
+            var rotuloForma = modelo == ModeloCupom.Comprovante ? "FORMA DE PGTO.:" : modelo == ModeloCupom.Compacto ? "Pgto:" : "Forma de Pagamento:";
+            linhas.AddRange(Quebrar($"{rotuloForma} {forma}", largura));
             if (venda.FormaPagamento == FormaPagamento.Dinheiro && venda.ValorRecebidoCentavos is long recebido && venda.TrocoCentavos > 0)
             {
-                linhas.Add(DuasPontas("Recebido:", Reais(recebido), largura));
+                linhas.Add(DuasPontas(modelo == ModeloCupom.Comprovante ? "Valor Recebido:" : "Recebido:", Reais(recebido), largura));
                 linhas.Add(DuasPontas("TROCO:", Reais(venda.TrocoCentavos), largura));
             }
             if (venda.FormaPagamento == FormaPagamento.CartaoCredito && venda.Parcelas > 1)
@@ -117,7 +143,8 @@ public static class MontadorCupom
 
     private static readonly string[] RotulosEmNegrito =
     {
-        "Venda / Pedido:", "Data/Hora:", "Operador:", "Cliente:", "Tabela:", "Forma de Pagamento:", "Recebido:", "Subtotal:"
+        "Venda / Pedido:", "Data/Hora:", "Operador:", "Cliente:", "Tabela:", "Forma de Pagamento:", "FORMA DE PGTO.:", "Pgto:",
+        "Valor Recebido:", "Recebido:", "Subtotal:"
     };
 
     /// <summary>
@@ -140,6 +167,8 @@ public static class MontadorCupom
             }
             else if (corte is "CUPOM NÃO FISCAL" or "ITENS DA VENDA" || corte.StartsWith("***", StringComparison.Ordinal)
                      || corte.StartsWith("+--", StringComparison.Ordinal) || corte.StartsWith("| CUPOM", StringComparison.Ordinal)
+                     || corte.StartsWith("COMPROVANTE DE VENDA", StringComparison.Ordinal) || corte.StartsWith("| COMPROVANTE", StringComparison.Ordinal)
+                     || corte.StartsWith("Total da Nota:", StringComparison.Ordinal)
                      || corte.StartsWith("TOTAL A PAGAR:", StringComparison.Ordinal) || corte.StartsWith("TROCO:", StringComparison.Ordinal))
             {
                 segmentos.Add(new SegmentoCupom(linha, true));

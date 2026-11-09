@@ -10,6 +10,22 @@ namespace NexusLS.App.ViewModels;
 
 public record OpcaoLargura(string Texto, int Colunas);
 
+/// <summary>Um modelo de comprovante na lista de escolha.</summary>
+public sealed partial class OpcaoModeloCupom : CommunityToolkit.Mvvm.ComponentModel.ObservableObject
+{
+    public OpcaoModeloCupom(int valor, string nome) { Valor = valor; Nome = nome; }
+    public int Valor { get; }
+    public string Nome { get; }
+    public Action<OpcaoModeloCupom>? AoEscolher { get; set; }
+
+    private bool _escolhido;
+    public bool Escolhido
+    {
+        get => _escolhido;
+        set { if (SetProperty(ref _escolhido, value) && value) AoEscolher?.Invoke(this); }
+    }
+}
+
 /// <summary>Um pedaço de linha da prévia do cupom, com o peso da letra já escolhido.</summary>
 public record SegmentoPrevia(string Texto, System.Windows.FontWeight Peso);
 
@@ -30,6 +46,8 @@ public partial class ConfiguracoesViewModel : ViewModelBase
         _backup = backup;
         _dialogos = dialogos;
         _larguraSelecionada = Larguras[1];
+        Modelos[0].Escolhido = true;                                   // antes de ligar o clique: não aplica o ajuste do modelo
+        foreach (var m in Modelos) m.AoEscolher = EscolherModelo;
         _impressoraSelecionada = ImpressoraWindows.ImpressoraPadrao;
         Impressoras.Add(ImpressoraWindows.ImpressoraPadrao);
         foreach (var nome in ImpressoraWindows.ListarImpressoras()) Impressoras.Add(nome);
@@ -116,7 +134,11 @@ public partial class ConfiguracoesViewModel : ViewModelBase
     partial void OnSegmentoChanged(string value) => AtualizarPrevia();
     partial void OnEnderecoNumeroChanged(string value) => AtualizarPrevia();
     partial void OnBairroChanged(string value) => AtualizarPrevia();
-    partial void OnCepChanged(string value) => AtualizarPrevia();
+    partial void OnCepChanged(string value)
+    {
+        var f = ValidadorDocumento.FormatarCepDigitando(value);
+        if (f != value) Cep = f; else AtualizarPrevia();
+    }
 
     // Empresa
     [ObservableProperty] private string _razaoSocial = "";
@@ -137,6 +159,40 @@ public partial class ConfiguracoesViewModel : ViewModelBase
     [ObservableProperty] private bool _cupomMostrarCliente = true;
     [ObservableProperty] private bool _cupomMostrarPagamento = true;
     [ObservableProperty] private bool _cupomMostrarAssinatura;
+    [ObservableProperty] private int _cupomModelo;
+    private bool _sincronizandoModelo;
+
+    /// <summary>Os modelos de comprovante para escolher (Life, Compacto, Comprovante de venda).</summary>
+    public IReadOnlyList<OpcaoModeloCupom> Modelos { get; } = CriarModelos();
+    private static List<OpcaoModeloCupom> CriarModelos() => new()
+    {
+        new(0, "Life (padrão do ERP)"), new(1, "Compacto"), new(2, "Comprovante de venda")
+    };
+
+    partial void OnCupomModeloChanged(int value)
+    {
+        _sincronizandoModelo = true;
+        foreach (var m in Modelos) m.Escolhido = m.Valor == value;
+        _sincronizandoModelo = false;
+        AtualizarPrevia();
+    }
+
+    /// <summary>A pessoa clicou num modelo: ele vira o modelo atual e ajusta as opções que combinam com ele.</summary>
+    private void EscolherModelo(OpcaoModeloCupom modelo)
+    {
+        if (_sincronizandoModelo) return;
+        CupomModelo = modelo.Valor;
+        switch (modelo.Valor)
+        {
+            case 0: CupomTituloEmCaixa = true; CupomMostrarReferencia = false; CupomMostrarAssinaturaCliente = false; break;
+            case 1: CupomTituloEmCaixa = false; CupomMostrarReferencia = false; CupomMostrarAssinaturaCliente = false; break;
+            default:
+                CupomTituloEmCaixa = false; CupomMostrarReferencia = true; CupomMostrarAssinaturaCliente = true;
+                if (string.IsNullOrWhiteSpace(CupomTextoGarantia)) CupomTextoGarantia = "Troca em até 7 dias com a etiqueta e este comprovante.";
+                break;
+        }
+    }
+
     [ObservableProperty] private bool _cupomMostrarReferencia;
     [ObservableProperty] private bool _cupomTituloEmCaixa;
     [ObservableProperty] private bool _cupomMostrarAssinaturaCliente;
@@ -153,9 +209,18 @@ public partial class ConfiguracoesViewModel : ViewModelBase
     [ObservableProperty] private string _margemPadrao = "0";
 
     partial void OnNomeLojaChanged(string value) => AtualizarPrevia();
-    partial void OnDocumentoChanged(string value) => AtualizarPrevia();
+    // CNPJ/CPF, telefone e CEP ficam sempre com a máscara (também os valores que já estavam salvos sem ela)
+    partial void OnDocumentoChanged(string value)
+    {
+        var f = ValidadorDocumento.FormatarDigitando(value);
+        if (f != value) Documento = f; else AtualizarPrevia();
+    }
     partial void OnEnderecoChanged(string value) => AtualizarPrevia();
-    partial void OnTelefoneChanged(string value) => AtualizarPrevia();
+    partial void OnTelefoneChanged(string value)
+    {
+        var f = ValidadorDocumento.FormatarTelefoneDigitando(value);
+        if (f != value) Telefone = f; else AtualizarPrevia();
+    }
     partial void OnRodapeCupomChanged(string value) => AtualizarPrevia();
     partial void OnRazaoSocialChanged(string value) => AtualizarPrevia();
     partial void OnInscricaoEstadualChanged(string value) => AtualizarPrevia();
@@ -217,6 +282,7 @@ public partial class ConfiguracoesViewModel : ViewModelBase
         CupomMostrarCliente = c.CupomMostrarCliente;
         CupomMostrarPagamento = c.CupomMostrarPagamento;
         CupomMostrarAssinatura = c.CupomMostrarAssinatura;
+        CupomModelo = c.CupomModelo;
         CupomMostrarReferencia = c.CupomMostrarReferencia;
         CupomTituloEmCaixa = c.CupomTituloEmCaixa;
         CupomMostrarAssinaturaCliente = c.CupomMostrarAssinaturaCliente;
@@ -272,7 +338,7 @@ public partial class ConfiguracoesViewModel : ViewModelBase
         CupomMostrarCidade, CupomMostrarInscricao, CupomMostrarEmail, CupomMostrarOperador, CupomMostrarCliente,
         CupomMostrarPagamento, CupomMostrarAssinatura, CupomMensagemCabecalho,
         Segmento, EnderecoNumero, Bairro, Cep, CupomMostrarLogo, _logoBytes, _logoAlterado,
-        CupomMostrarReferencia, CupomTituloEmCaixa, CupomMostrarAssinaturaCliente, CupomTextoGarantia);
+        CupomMostrarReferencia, CupomTituloEmCaixa, CupomMostrarAssinaturaCliente, CupomTextoGarantia, CupomModelo);
 
     private static int NumeroInteiro(string texto, string campo) =>
         int.TryParse(string.IsNullOrWhiteSpace(texto) ? "0" : texto.Trim(), out var n)
@@ -323,6 +389,7 @@ public partial class ConfiguracoesViewModel : ViewModelBase
             Bairro = Vazio(d.Bairro),
             Cep = Vazio(d.Cep),
             CupomMostrarLogo = d.CupomMostrarLogo,
+            CupomModelo = d.CupomModelo,
             CupomMostrarReferencia = d.CupomMostrarReferencia,
             CupomTituloEmCaixa = d.CupomTituloEmCaixa,
             CupomMostrarAssinaturaCliente = d.CupomMostrarAssinaturaCliente,

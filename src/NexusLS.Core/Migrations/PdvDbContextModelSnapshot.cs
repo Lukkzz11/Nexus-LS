@@ -529,6 +529,9 @@ namespace NexusLS.Core.Migrations
                     b.Property<string>("CupomMensagemCabecalho")
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("CupomModelo")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("CupomMostrarAssinatura")
                         .HasColumnType("INTEGER");
 

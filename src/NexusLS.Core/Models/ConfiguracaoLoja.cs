@@ -72,6 +72,8 @@ public class ConfiguracaoLoja
     public bool CupomMostrarPagamento { get; set; } = true;
     /// <summary>Linha "Impresso pelo Nexus LS" no rodapé.</summary>
     public bool CupomMostrarAssinatura { get; set; }
+    /// <summary>Modelo do comprovante (ver <see cref="ModeloCupom"/>): 0 = Life, 1 = Compacto, 2 = Comprovante de venda.</summary>
+    public int CupomModelo { get; set; }
     /// <summary>Referência do produto embaixo do nome de cada item.</summary>
     public bool CupomMostrarReferencia { get; set; }
     /// <summary>"CUPOM NÃO FISCAL" dentro de uma caixa.</summary>

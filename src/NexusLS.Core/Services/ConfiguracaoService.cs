@@ -48,7 +48,8 @@ public record DadosLoja(
     bool CupomMostrarReferencia = false,
     bool CupomTituloEmCaixa = false,
     bool CupomMostrarAssinaturaCliente = false,
-    string? CupomTextoGarantia = null);
+    string? CupomTextoGarantia = null,
+    int CupomModelo = 0);
 
 /// <summary>Dados da loja e do cupom. Só existe uma configuração; ela é criada na primeira leitura.</summary>
 public class ConfiguracaoService
@@ -141,6 +142,7 @@ public class ConfiguracaoService
         config.Bairro = Limpar(dados.Bairro);
         config.Cep = Limpar(dados.Cep);
         config.CupomMostrarLogo = dados.CupomMostrarLogo;
+        config.CupomModelo = Math.Clamp(dados.CupomModelo, 0, 2);
         config.CupomMostrarReferencia = dados.CupomMostrarReferencia;
         config.CupomTituloEmCaixa = dados.CupomTituloEmCaixa;
         config.CupomMostrarAssinaturaCliente = dados.CupomMostrarAssinaturaCliente;

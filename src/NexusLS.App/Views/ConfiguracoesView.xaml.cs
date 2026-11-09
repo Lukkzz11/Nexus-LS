@@ -23,6 +23,27 @@ public partial class ConfiguracoesView : UserControl
         };
     }
 
+    // Máscaras enquanto digita (CNPJ/CPF, telefone e CEP), como no ERP.
+    private static void Mascarar(object sender, Func<string?, string> formatar)
+    {
+        if (sender is not TextBox caixa) return;
+        var formatado = formatar(caixa.Text);
+        if (formatado == caixa.Text) return;
+        caixa.Text = formatado;
+        caixa.CaretIndex = formatado.Length;
+    }
+
+    private void Documento_TextChanged(object sender, TextChangedEventArgs e) => Mascarar(sender, NexusLS.Core.Services.ValidadorDocumento.FormatarDigitando);
+    private void Telefone_TextChanged(object sender, TextChangedEventArgs e) => Mascarar(sender, NexusLS.Core.Services.ValidadorDocumento.FormatarTelefoneDigitando);
+    private void Cep_TextChanged(object sender, TextChangedEventArgs e) => Mascarar(sender, NexusLS.Core.Services.ValidadorDocumento.FormatarCepDigitando);
+
+    /// <summary>Abre o editor do comprovante numa janela própria (usa os mesmos dados da tela, então a prévia acompanha).</summary>
+    private void EditarComprovante_Click(object sender, System.Windows.RoutedEventArgs e)
+    {
+        if (DataContext is not ConfiguracoesViewModel vm) return;
+        new ComprovanteWindow { DataContext = vm, Owner = System.Windows.Window.GetWindow(this) }.ShowDialog();
+    }
+
     private void AoMudarPropriedade(object? remetente, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(ConfiguracoesViewModel.GoogleSegredoNovo) && remetente is ConfiguracoesViewModel vm

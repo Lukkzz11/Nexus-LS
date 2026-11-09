@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="NexusLS.App.Views.ConfiguracoesView"
+<UserControl x:Class="NexusLS.App.Views.ConfiguracoesView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:v="clr-namespace:NexusLS.App.Views">
@@ -43,7 +43,7 @@
                                         <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="12" /><ColumnDefinition Width="*" /><ColumnDefinition Width="12" /><ColumnDefinition Width="1.4*" /></Grid.ColumnDefinitions>
                                         <StackPanel>
                                             <TextBlock Text="CNPJ ou CPF da empresa" Style="{StaticResource Rotulo}" />
-                                            <TextBox Text="{Binding Documento, UpdateSourceTrigger=PropertyChanged}" />
+                                            <TextBox Text="{Binding Documento, UpdateSourceTrigger=PropertyChanged}" TextChanged="Documento_TextChanged" />
                                         </StackPanel>
                                         <StackPanel Grid.Column="2">
                                             <TextBlock Text="Inscrição estadual (IE)" Style="{StaticResource Rotulo}" />
@@ -58,7 +58,7 @@
                                         <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="12" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                                         <StackPanel>
                                             <TextBlock Text="Telefone / WhatsApp comercial" Style="{StaticResource Rotulo}" />
-                                            <TextBox Text="{Binding Telefone, UpdateSourceTrigger=PropertyChanged}" />
+                                            <TextBox Text="{Binding Telefone, UpdateSourceTrigger=PropertyChanged}" TextChanged="Telefone_TextChanged" />
                                         </StackPanel>
                                         <StackPanel Grid.Column="2">
                                             <TextBlock Text="E-mail de contato / financeiro" Style="{StaticResource Rotulo}" />
@@ -105,112 +105,22 @@
                                         </StackPanel>
                                         <StackPanel Grid.Column="4">
                                             <TextBlock Text="CEP" Style="{StaticResource Rotulo}" />
-                                            <TextBox Text="{Binding Cep, UpdateSourceTrigger=PropertyChanged}" />
+                                            <TextBox Text="{Binding Cep, UpdateSourceTrigger=PropertyChanged}" TextChanged="Cep_TextChanged" />
                                         </StackPanel>
                                     </Grid>
                                 </StackPanel>
                             </Border>
 
-                            <Border Style="{StaticResource Painel}" Margin="0,0,0,16">
+                            <!-- O editor completo do comprovante abre numa janela própria -->
+                            <Border Style="{StaticResource Painel}">
                                 <StackPanel>
                                     <TextBlock Text="Comprovante de venda (cupom não fiscal 80 mm)" FontSize="18" FontWeight="SemiBold" />
                                     <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
-                                               Text="Escolha o que aparece no comprovante. Ele sai sempre como CUPOM NÃO FISCAL: o programa não emite nota fiscal." />
-
+                                               Text="Modelo, logo, o que aparece no cupom, mensagens, impressora e largura do papel. A prévia ao lado acompanha o que você muda." />
                                     <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
-                                        <Border Background="White" BorderBrush="{StaticResource CorBorda}" BorderThickness="1" CornerRadius="4"
-                                                Width="110" Height="64" Padding="4">
-                                            <Grid>
-                                                <Image Source="{Binding LogoPrevia}" Stretch="Uniform" AutomationProperties.Name="Logo do cupom" />
-                                                <TextBlock Text="Sem logo" Foreground="Gray" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                                    <TextBlock.Style>
-                                                        <Style TargetType="TextBlock">
-                                                            <Setter Property="Visibility" Value="Collapsed" />
-                                                            <Style.Triggers><DataTrigger Binding="{Binding TemLogo}" Value="False"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers>
-                                                        </Style>
-                                                    </TextBlock.Style>
-                                                </TextBlock>
-                                            </Grid>
-                                        </Border>
-                                        <Button Content="Enviar logo" Style="{StaticResource BotaoSecundario}" Margin="12,0,0,0" VerticalAlignment="Center"
-                                                Command="{Binding EnviarLogoCommand}" />
-                                        <Button Content="Remover" Style="{StaticResource BotaoFantasma}" Margin="6,0,0,0" VerticalAlignment="Center"
-                                                Command="{Binding RemoverLogoCommand}" />
+                                        <Button Content="Editar comprovante…" Style="{StaticResource BotaoPrimario}" Click="EditarComprovante_Click" />
+                                        <Button Content="Salvar (Ctrl+S)" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0" Command="{Binding SalvarCommand}" />
                                     </StackPanel>
-                                    <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="12" TextWrapping="Wrap" Margin="0,6,0,0"
-                                               Text="Imagem PNG, JPG ou BMP. O programa reduz e imprime em tons de cinza no topo do cupom." />
-
-                                    <TextBlock Text="O que mostrar no cupom" Style="{StaticResource Rotulo}" Margin="0,16,0,6" />
-                                    <UniformGrid Columns="2">
-                                        <CheckBox Content="Logo da loja" IsChecked="{Binding CupomMostrarLogo}" Margin="0,3,12,3" />
-                                        <CheckBox Content="Razão social" IsChecked="{Binding CupomMostrarRazaoSocial}" Margin="0,3,12,3" />
-                                        <CheckBox Content="Endereço" IsChecked="{Binding CupomMostrarEndereco}" Margin="0,3,12,3" />
-                                        <CheckBox Content="Cidade e UF" IsChecked="{Binding CupomMostrarCidade}" Margin="0,3,12,3" />
-                                        <CheckBox Content="CNPJ ou CPF" IsChecked="{Binding CupomMostrarDocumento}" Margin="0,3,12,3" />
-                                        <CheckBox Content="Inscrição estadual" IsChecked="{Binding CupomMostrarInscricao}" Margin="0,3,12,3" />
-                                        <CheckBox Content="Telefone / WhatsApp" IsChecked="{Binding CupomMostrarTelefone}" Margin="0,3,12,3" />
-                                        <CheckBox Content="E-mail" IsChecked="{Binding CupomMostrarEmail}" Margin="0,3,12,3" />
-                                        <CheckBox Content="Nome do operador" IsChecked="{Binding CupomMostrarOperador}" Margin="0,3,12,3" />
-                                        <CheckBox Content="Nome do cliente" IsChecked="{Binding CupomMostrarCliente}" Margin="0,3,12,3" />
-                                        <CheckBox Content="Forma de pagamento e troco" IsChecked="{Binding CupomMostrarPagamento}" Margin="0,3,12,3" />
-                                        <CheckBox Content="Chave Pix no rodapé" IsChecked="{Binding CupomMostrarPix}" Margin="0,3,12,3" />
-                                        <CheckBox Content="Linha “Impresso pelo Nexus”" IsChecked="{Binding CupomMostrarAssinatura}" Margin="0,3,12,3" />
-                                        <CheckBox Content="Referência do produto em cada item" IsChecked="{Binding CupomMostrarReferencia}" Margin="0,3,12,3" />
-                                        <CheckBox Content="“CUPOM NÃO FISCAL” dentro de uma caixa" IsChecked="{Binding CupomTituloEmCaixa}" Margin="0,3,12,3" />
-                                        <CheckBox Content="Assinatura do cliente" IsChecked="{Binding CupomMostrarAssinaturaCliente}" Margin="0,3,12,3" />
-                                    </UniformGrid>
-
-                                    <Grid Margin="0,4,0,0">
-                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="12" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                                        <StackPanel>
-                                            <TextBlock Text="Mensagem no cabeçalho (opcional)" Style="{StaticResource Rotulo}" />
-                                            <TextBox Text="{Binding CupomMensagemCabecalho, UpdateSourceTrigger=PropertyChanged}" MaxLength="200"
-                                                     AcceptsReturn="True" TextWrapping="Wrap" MinLines="2" MaxLines="3" VerticalScrollBarVisibility="Auto"
-                                                     AutomationProperties.Name="Mensagem no cabeçalho do cupom" />
-                                        </StackPanel>
-                                        <StackPanel Grid.Column="2">
-                                            <TextBlock Text="Mensagem no rodapé" Style="{StaticResource Rotulo}" />
-                                            <TextBox Text="{Binding RodapeCupom, UpdateSourceTrigger=PropertyChanged}"
-                                                     AcceptsReturn="True" TextWrapping="Wrap" MinLines="2" MaxLines="3" VerticalScrollBarVisibility="Auto"
-                                                     AutomationProperties.Name="Mensagem no rodapé do cupom" />
-                                        </StackPanel>
-                                    </Grid>
-                                    <TextBlock Text="Garantia / termos (opcional, sai antes da assinatura)" Style="{StaticResource Rotulo}" Margin="0,10,0,0" />
-                                    <TextBox Text="{Binding CupomTextoGarantia, UpdateSourceTrigger=PropertyChanged}" MaxLength="300"
-                                             AcceptsReturn="True" TextWrapping="Wrap" MinLines="2" MaxLines="4" VerticalScrollBarVisibility="Auto"
-                                             AutomationProperties.Name="Garantia e termos do cupom" />
-                                    <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
-                                               Text="Rodapé: agradecimento, política de trocas, redes sociais. Em branco, sai “OBRIGADO PELA PREFERÊNCIA! VOLTE SEMPRE!”." />
-                                </StackPanel>
-                            </Border>
-
-                            <Border Style="{StaticResource Painel}">
-                                <StackPanel>
-                                    <TextBlock Text="Impressão do cupom" FontSize="18" FontWeight="SemiBold" />
-                                    <Grid>
-                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="12" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                                        <StackPanel>
-                                            <TextBlock Text="Impressora" Style="{StaticResource Rotulo}" />
-                                            <ComboBox ItemsSource="{Binding Impressoras}" SelectedItem="{Binding ImpressoraSelecionada}" Padding="8,7" />
-                                        </StackPanel>
-                                        <StackPanel Grid.Column="2">
-                                            <TextBlock Text="Largura do papel" Style="{StaticResource Rotulo}" />
-                                            <ComboBox ItemsSource="{Binding Larguras}" DisplayMemberPath="Texto"
-                                                      SelectedItem="{Binding LarguraSelecionada}" Padding="8,7" />
-                                        </StackPanel>
-                                    </Grid>
-
-                                    <TextBlock Text="Linhas em branco no fim (para o corte da impressora)" Style="{StaticResource Rotulo}" TextWrapping="Wrap" />
-                                    <TextBox Text="{Binding CupomLinhasFinais, UpdateSourceTrigger=PropertyChanged}" Width="100" HorizontalAlignment="Left" />
-
-                                    <CheckBox Margin="0,16,0,0" IsChecked="{Binding ImprimirAoFinalizar}"
-                                              Content="Imprimir o cupom sozinho ao finalizar a venda" />
-
-                                    <StackPanel Orientation="Horizontal" Margin="0,20,0,0">
-                                        <Button Content="Salvar (Ctrl+S)" Style="{StaticResource BotaoPrimario}"
-                                                Command="{Binding SalvarCommand}" />
-                                    </StackPanel>
-
                                     <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" />
                                 </StackPanel>
                             </Border>
@@ -218,41 +128,7 @@
                     </ScrollViewer>
 
                     <!-- Prévia fiel do comprovante (papel branco, fonte de largura fixa), sempre visível ao lado do formulário -->
-                    <StackPanel Grid.Column="1">
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                            <TextBlock Text="Pré-visualização do comprovante" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" />
-                            <TextBlock Text="80 mm" FontSize="11" Foreground="{StaticResource CorTextoSuave}" Margin="10,0,0,0" VerticalAlignment="Center" />
-                        </StackPanel>
-                        <Border Background="White" BorderBrush="{StaticResource CorBorda}" BorderThickness="1" CornerRadius="8" Padding="16,14">
-                            <StackPanel>
-                                <Image Source="{Binding LogoPrevia}" MaxHeight="64" MaxWidth="220" Stretch="Uniform" Margin="0,0,0,6"
-                                       HorizontalAlignment="Center" AutomationProperties.Name="Logo na prévia do cupom" />
-                                <!-- Uma linha por item; cada pedaço da linha pode estar em negrito (igual ao que sai na impressora) -->
-                                <ItemsControl ItemsSource="{Binding LinhasPrevia}" HorizontalAlignment="Center"
-                                              TextElement.FontFamily="Consolas" TextElement.FontSize="12" TextElement.Foreground="Black"
-                                              AutomationProperties.Name="Prévia do cupom">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <ItemsControl ItemsSource="{Binding}">
-                                                <ItemsControl.ItemsPanel>
-                                                    <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
-                                                </ItemsControl.ItemsPanel>
-                                                <ItemsControl.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <TextBlock Text="{Binding Texto}" FontWeight="{Binding Peso}" />
-                                                    </DataTemplate>
-                                                </ItemsControl.ItemTemplate>
-                                            </ItemsControl>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </StackPanel>
-                        </Border>
-                        <TextBlock Text="Os itens e valores acima são só de exemplo. Os dados da loja vêm do formulário."
-                                   Foreground="{StaticResource CorTextoSuave}" FontSize="13" Margin="0,10,0,10" TextWrapping="Wrap" />
-                        <Button Content="Testar impressão na impressora física" Style="{StaticResource BotaoSecundario}"
-                                Command="{Binding ImprimirTesteCommand}" HorizontalAlignment="Stretch" />
-                    </StackPanel>
+                    <v:PreviaCupomControl Grid.Column="1" />
                 </Grid>
             </TabItem>
             <TabItem Header="Vendas e aparência">
@@ -457,7 +333,7 @@
                                     Command="{Binding AbrirPastaDeDadosCommand}" />
                             <Button Content="Abrir Atualizador / Ativador" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,6"
                                     Command="{Binding AbrirAtualizadorCommand}" />
-                            <Button Content="Portal Web" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,6"
+                            <Button Content="Portal Web" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,6" Visibility="Collapsed"
                                     Command="{Binding AbrirPortalWebCommand}" />
                         </WrapPanel>
                     </StackPanel>

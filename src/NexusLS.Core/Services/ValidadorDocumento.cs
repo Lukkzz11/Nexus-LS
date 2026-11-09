@@ -82,6 +82,38 @@ public static class ValidadorDocumento
         };
     }
 
+    /// <summary>
+    /// Telefone enquanto digita, como no ERP: celular "(81) 9.2142-3368" (começa com 9 depois do DDD) e fixo "(81) 3333-4444".
+    /// </summary>
+    public static string FormatarTelefoneDigitando(string? texto)
+    {
+        var d = SoDigitos(texto);
+        if (d.Length > 11) d = d[..11];
+        if (d.Length == 0) return "";
+        if (d.Length <= 2) return $"({d}";
+        var ddd = d[..2];
+        var resto = d[2..];
+        if (resto[0] == '9')   // celular: 9.XXXX-XXXX
+        {
+            var corpo = resto.Length switch
+            {
+                1 => resto,
+                <= 5 => $"{resto[0]}.{resto[1..]}",
+                _ => $"{resto[0]}.{resto[1..5]}-{resto[5..]}"
+            };
+            return $"({ddd}) {corpo}";
+        }
+        return resto.Length <= 4 ? $"({ddd}) {resto}" : $"({ddd}) {resto[..4]}-{resto[4..]}";
+    }
+
+    /// <summary>CEP enquanto digita: 55038-275.</summary>
+    public static string FormatarCepDigitando(string? texto)
+    {
+        var d = SoDigitos(texto);
+        if (d.Length > 8) d = d[..8];
+        return d.Length <= 5 ? d : $"{d[..5]}-{d[5..]}";
+    }
+
     private static bool TodosIguais(string d) => d.All(c => c == d[0]);
 
     private static int Digito(string d, int quantos, int pesoInicial)
