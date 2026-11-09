@@ -200,6 +200,48 @@ public static class MontadorErp
     }
 
     /// <summary>
+    /// Ajuste manual de estoque (entrada, perda ou correção) no formato do ERP: soma ou tira a DIFERENÇA do saldo do ERP (incremento
+    /// atômico, nunca regrava o saldo, que o ERP também mexe) e deixa a linha no Kardex. Os dois vão na mesma operação.
+    /// </summary>
+    public static IReadOnlyList<DocumentoGravacaoErp> AjusteManual(string empresaId, MovimentacaoEstoque m, Produto p, string idProduto, DateTime agoraUtc)
+    {
+        var incrementos = new Dictionary<string, double> { ["estoqueTotal"] = m.Quantidade };
+        var grade = new Dictionary<string, object?>();
+        if (!string.IsNullOrWhiteSpace(m.Tamanho) && m.Tamanho != Tamanhos.SemTamanho)
+        {
+            incrementos[$"gradeTamanhos.{m.Tamanho}"] = m.Quantidade;
+            grade[m.Tamanho] = m.Quantidade;
+        }
+        var tipo = m.Tipo switch
+        {
+            TipoMovimentacao.Entrada => "ENTRADA_MANUAL",
+            TipoMovimentacao.Perda => "SAIDA_PERDA",
+            _ => "AJUSTE_INVENTARIO"
+        };
+        return new[]
+        {
+            new DocumentoGravacaoErp($"empresas/{empresaId}/produtos/{idProduto}", new Dictionary<string, object?>(), Array.Empty<string>(), false, incrementos),
+            new DocumentoGravacaoErp($"empresas/{empresaId}/movimentacoes_estoque/nx-mov-{m.Guid:N}",
+                new Dictionary<string, object?>
+                {
+                    ["tipo"] = tipo,
+                    ["produtoId"] = idProduto,
+                    ["produtoNome"] = p.Nome,
+                    ["referencia"] = p.Referencia ?? "",
+                    ["quantidade"] = m.Quantidade,
+                    ["gradeMovimentada"] = grade,
+                    ["origem"] = "Estoque Loja (Nexus)",
+                    ["destino"] = "Estoque Loja",
+                    ["motivo"] = m.Motivo ?? "",
+                    ["justificativa"] = "Ajuste feito no Nexus",
+                    ["responsavel"] = new Dictionary<string, object?> { ["nome"] = "Nexus" },
+                    ["empresaId"] = empresaId,
+                    ["criadoEm"] = m.DataHora.ToUniversalTime()
+                }, new[] { "tipo" }, true)
+        };
+    }
+
+    /// <summary>
     /// O que o ERP faz junto com uma venda: baixa do estoque (incremento atômico em <c>estoqueTotal</c> e na grade; nunca regrava o
     /// saldo), linha no Kardex e, a prazo, título em <c>contas_receber</c> e dívida do cliente. Vão na MESMA operação da venda.
     /// </summary>

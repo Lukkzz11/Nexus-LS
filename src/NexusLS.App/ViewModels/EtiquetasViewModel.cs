@@ -193,10 +193,14 @@ public partial class EtiquetasViewModel : ViewModelBase
         await CarregarTamanhosAsync(produto);
     });
 
+    /// <summary>Código de barras de cada tamanho do produto atual (código da referência + número do tamanho).</summary>
+    private Dictionary<string, string> _codigosPorTamanho = new();
+
     private async Task CarregarTamanhosAsync(Produto produto)
     {
         _produtoAtual = produto;
         var grade = await _produtos.ListarTamanhosAsync(produto.Id);
+        _codigosPorTamanho = grade.Where(t => !t.EhSemTamanho && t.CodigoBarras is not null).ToDictionary(t => t.Tamanho, t => t.CodigoBarras!);
 
         _carregando = true;
         OpcoesDeTamanho.Clear();
@@ -264,7 +268,7 @@ public partial class EtiquetasViewModel : ViewModelBase
         else
         {
             Fila.Add(new LinhaEtiquetaViewModel(produto.Id, produto.Nome, tamanho, produto.PrecoVendaCentavos,
-                produto.PrecoAtacadoCentavos, produto.CodigoBarras, quantidade, AtualizarResumo));
+                produto.PrecoAtacadoCentavos, _codigosPorTamanho.GetValueOrDefault(tamanho) ?? produto.CodigoBarras, quantidade, AtualizarResumo));
         }
         Mensagem = "";
         QuantidadeTexto = "1";

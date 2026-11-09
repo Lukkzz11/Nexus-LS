@@ -68,6 +68,7 @@ public sealed class ContainerDeServicos
     public NexusLS.Core.Importacao.Erp.ConfiguracaoErpStore ErpConfig { get; }
     public NexusLS.Core.Importacao.Erp.ContaErp ContaErp { get; }
     public Func<NexusLS.Core.Importacao.Erp.ImportadorErp> CriarImportadorErp { get; }
+    public NexusLS.Core.Importacao.Erp.EnvioErpAutomatico EnvioErpAuto { get; }
 
     public ContainerDeServicos(DbContextOptions<PdvDbContext> opcoesBanco)
     {
@@ -144,6 +145,20 @@ public sealed class ContainerDeServicos
         ErpConfig = new(NexusLS.Core.Importacao.Erp.ConfiguracaoErpStore.CaminhoPadrao());
         ContaErp = new(ErpConfig, _httpFirebase, protetor);
         CriarImportadorErp = () => new NexusLS.Core.Importacao.Erp.ImportadorErp(fabrica, ContaErp.CriarFonte());
+        // Envio automático ao ERP: a cada 30 s, se algo foi gravado no banco, manda só o que mudou (precisa estar ligado e com a conta do ERP aberta).
+        EnvioErpAuto = new(() => ErpConfig.Carregar(), async ct =>
+            !ContaErp.Conectada && !await ContaErp.RestaurarAsync(ct) ? null
+                : new NexusLS.Core.Importacao.Erp.EnviadorErp(fabrica, ErpConfig.Carregar(), ContaErp.CriarDestinoGravacao()),
+            () => PdvDbContext.Alteracoes);
+        _ = Task.Run(async () =>
+        {
+            using var relogio = new PeriodicTimer(TimeSpan.FromSeconds(30));
+            while (await relogio.WaitForNextTickAsync())
+            {
+                try { await EnvioErpAuto.TentarAsync(); }
+                catch { /* o envio automático nunca derruba o programa; a próxima volta tenta de novo */ }
+            }
+        });
         Rascunho = new(new RascunhoStore(RascunhoStore.CaminhoPadrao()), fabrica);
     }
 }

@@ -414,14 +414,46 @@ public class PdvDbContext : DbContext
 
     // ---- AtualizadoEm: mantido em UM lugar só, para nenhum serviço esquecer de atualizar ----
 
+    /// <summary>
+    /// Sobe a cada gravação que mexe em dados do negócio (ignora só as anotações do envio ao ERP). O envio automático ao ERP
+    /// compara este número para saber se há algo novo a enviar.
+    /// </summary>
+    public static long Alteracoes => Interlocked.Read(ref _alteracoes);
+    private static long _alteracoes;
+
+    private void ContarAlteracao()
+    {
+        if (ChangeTracker.Entries().Any(e => e.State is EntityState.Added or EntityState.Modified or EntityState.Deleted
+                                             && e.Entity is not ImportacaoErpItem and not ImportacaoErpCursor))
+            Interlocked.Increment(ref _alteracoes);
+    }
+
+    /// <summary>Dá a cada tamanho novo o próximo número do produto (1, 2, 3...), sem nunca reaproveitar um número.</summary>
+    private void NumerarTamanhosNovos()
+    {
+        var novos = ChangeTracker.Entries<ProdutoTamanho>()
+            .Where(e => e.State == EntityState.Added && e.Entity.Ordem == 0 && !e.Entity.EhSemTamanho).ToList();
+        foreach (var grupo in novos.GroupBy(e => e.Property(nameof(ProdutoTamanho.ProdutoId)).CurrentValue as int? ?? 0))
+        {
+            var ultimo = grupo.Key > 0
+                ? TamanhosProduto.AsNoTracking().Where(t => t.ProdutoId == grupo.Key).Max(t => (int?)t.Ordem) ?? 0
+                : 0;
+            foreach (var e in grupo) e.Entity.Ordem = ++ultimo;
+        }
+    }
+
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
+        NumerarTamanhosNovos();
+        ContarAlteracao();
         CarimbarProdutosAlterados();
         return base.SaveChanges(acceptAllChangesOnSuccess);
     }
 
     public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
     {
+        NumerarTamanhosNovos();
+        ContarAlteracao();
         CarimbarProdutosAlterados();
         return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
     }

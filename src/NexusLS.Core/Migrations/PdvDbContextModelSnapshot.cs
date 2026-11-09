@@ -1756,6 +1756,9 @@ namespace NexusLS.Core.Migrations
                     b.Property<int>("Estoque")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("Ordem")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("ProdutoId")
                         .HasColumnType("INTEGER");
 

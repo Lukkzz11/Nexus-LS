@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using NexusLS.Core.Data;
 using NexusLS.Core.Models;
@@ -106,6 +107,87 @@ public class ProdutoService
         var total = await db.Produtos.Where(p => p.Ativo)
             .ExecuteUpdateAsync(s => s.SetProperty(p => p.VenderSemBaixa, venderSemBaixa));
         return total;
+    }
+
+    /// <summary>Marca ou desmarca 'Vender sem baixa' só nos produtos escolhidos.</summary>
+    public async Task<int> DefinirVenderSemBaixaAsync(IEnumerable<int> ids, bool venderSemBaixa)
+    {
+        var lista = ids.Distinct().ToList();
+        if (lista.Count == 0) return 0;
+        await using var db = await _fabrica.CreateDbContextAsync();
+        var produtos = await db.Produtos.Where(p => lista.Contains(p.Id) && p.VenderSemBaixa != venderSemBaixa).ToListAsync();
+        foreach (var p in produtos) p.VenderSemBaixa = venderSemBaixa;
+        await db.SaveChangesAsync();
+        return produtos.Count;
+    }
+
+    /// <summary>
+    /// Código lido que é "código da referência + número do tamanho" (55551 = ref 5555, tamanho 1). Nulo se o código é exatamente
+    /// o de um produto (ou uma referência) ou se não casa com nenhum tamanho. Quando mais de um casa, vale o código-base mais longo.
+    /// </summary>
+    public async Task<(Produto Produto, ProdutoTamanho Tamanho)?> ObterPorCodigoDeTamanhoAsync(string codigoLido)
+    {
+        var codigo = (codigoLido ?? "").Trim();
+        if (codigo.Length < 2 || !codigo.All(char.IsAsciiDigit)) return null;
+
+        await using var db = await _fabrica.CreateDbContextAsync();
+        if (await db.Produtos.AnyAsync(p => p.Ativo && (p.CodigoBarras == codigo || p.CodigoInterno == codigo || p.Referencia == codigo)))
+            return null;
+
+        var prefixos = Enumerable.Range(1, codigo.Length - 1).Select(i => codigo[..i]).ToList();
+        var candidatos = await db.Produtos.AsNoTracking()
+            .Where(p => p.Ativo && p.CodigoBarras != null && prefixos.Contains(p.CodigoBarras))
+            .ToListAsync();
+        foreach (var produto in candidatos.OrderByDescending(p => p.CodigoBarras!.Length))
+        {
+            var resto = codigo[produto.CodigoBarras!.Length..];
+            if (!int.TryParse(resto, NumberStyles.None, CultureInfo.InvariantCulture, out var ordem) || ordem < 1) continue;
+            var tamanho = await db.TamanhosProduto.AsNoTracking().FirstOrDefaultAsync(t => t.ProdutoId == produto.Id && t.Ordem == ordem);
+            if (tamanho is null) continue;
+            tamanho.CodigoBarras = codigo;
+            return (produto, tamanho);
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Para criar uma referência nova a partir de uma existente: devolve a base (preços, categoria, cores...), os tamanhos dela e a
+    /// próxima referência livre do mesmo modelo (as 2 primeiras casas indicam o modelo: 1403 → 1404, 1405...).
+    /// </summary>
+    public async Task<ModeloDeReferencia> ModeloDaReferenciaAsync(string referenciaBase)
+    {
+        var texto = (referenciaBase ?? "").Trim();
+        if (texto.Length == 0) throw new RegraDeNegocioException("Informe a referência que servirá de base.");
+        await using var db = await _fabrica.CreateDbContextAsync();
+        var semEspaco = texto.Replace(" ", "");
+        var baseProduto = await db.Produtos.AsNoTracking()
+            .Where(p => p.Referencia != null && (p.Referencia == texto || p.Referencia.Replace(" ", "") == semEspaco))
+            .OrderByDescending(p => p.Ativo).ThenBy(p => p.Nome).FirstOrDefaultAsync()
+            ?? throw new RegraDeNegocioException($"Não há produto com a referência {texto}.");
+
+        var nova = ProximaReferencia(baseProduto.Referencia!, await db.Produtos.AsNoTracking()
+            .Where(p => p.Referencia != null).Select(p => p.Referencia!).ToListAsync());
+        var tamanhos = await db.TamanhosProduto.AsNoTracking()
+            .Where(t => t.ProdutoId == baseProduto.Id && t.Tamanho != Tamanhos.SemTamanho)
+            .OrderBy(t => t.Ordem).Select(t => t.Tamanho).ToListAsync();
+        return new ModeloDeReferencia(baseProduto, tamanhos, nova);
+    }
+
+    /// <summary>Próximo número livre do modelo: mesmas 2 primeiras casas e mesmo tamanho da referência base, só dígitos.</summary>
+    public static string ProximaReferencia(string referenciaBase, IEnumerable<string> existentes)
+    {
+        var b = referenciaBase.Trim();
+        if (b.Length < 3 || !b.All(char.IsAsciiDigit))
+            throw new RegraDeNegocioException("A referência base precisa ser só de números (ex.: 1403) para gerar a próxima.");
+        var prefixo = b[..2];
+        var maior = existentes.Select(r => r.Trim())
+            .Where(r => r.Length == b.Length && r.StartsWith(prefixo, StringComparison.Ordinal) && r.All(char.IsAsciiDigit))
+            .Select(r => long.Parse(r, CultureInfo.InvariantCulture)).DefaultIfEmpty(0).Max();
+        var proxima = maior + 1;
+        var texto = proxima.ToString(CultureInfo.InvariantCulture).PadLeft(b.Length, '0');
+        if (texto.Length != b.Length || !texto.StartsWith(prefixo, StringComparison.Ordinal))
+            throw new RegraDeNegocioException($"Acabaram os números livres do modelo {prefixo}.");
+        return texto;
     }
 
     /// <summary>Desativar não apaga: o produto some do PDV, mas o histórico de vendas continua intacto.</summary>
@@ -238,10 +320,13 @@ public class ProdutoService
     public async Task<List<ProdutoTamanho>> ListarTamanhosAsync(int produtoId)
     {
         await using var db = await _fabrica.CreateDbContextAsync();
-        return await db.TamanhosProduto.AsNoTracking()
+        var lista = await db.TamanhosProduto.AsNoTracking()
             .Where(t => t.ProdutoId == produtoId)
             .OrderBy(t => t.Id)
             .ToListAsync();
+        var codigo = await db.Produtos.AsNoTracking().Where(p => p.Id == produtoId).Select(p => p.CodigoBarras).FirstOrDefaultAsync();
+        foreach (var t in lista) t.CodigoBarras = t.EhSemTamanho ? null : CodigoBarrasTamanho.Montar(codigo, t.Ordem);
+        return lista;
     }
 
     /// <summary>Acrescenta um tamanho (ex.: "M", "38") com estoque zero. O nome é guardado em maiúsculas.</summary>

@@ -152,7 +152,7 @@ public sealed record ResultadoEnvioErp(int Vendas, int Clientes, int Produtos, i
 /// </summary>
 public sealed class EnviadorErp
 {
-    private const string EnvVendas = "enviado_vendas", EnvClientes = "enviado_clientes", EnvProdutos = "enviado_produtos";
+    private const string EnvVendas = "enviado_vendas", EnvClientes = "enviado_clientes", EnvProdutos = "enviado_produtos", EnvMov = "enviado_movimentos";
 
     private static readonly HashSet<string> CamposDeCadastro =
         MontadorErp.CamposProduto.Concat(MontadorErp.CamposCliente).ToHashSet();
@@ -185,7 +185,8 @@ public sealed class EnviadorErp
             .Where(l => l.Colecao == "produtos" || l.Colecao == "clientes" || l.Colecao == "vendas")
             .ToListAsync(ct);
         var idErp = ligacoes.ToDictionary(l => (l.Colecao, l.EntidadeGuid), l => l.ErpId);
-        var enviados = await db.ImportacaoErp.Where(l => l.Colecao == EnvVendas || l.Colecao == EnvClientes || l.Colecao == EnvProdutos).ToListAsync(ct);
+        var enviados = await db.ImportacaoErp.Where(l => l.Colecao == EnvVendas || l.Colecao == EnvClientes || l.Colecao == EnvProdutos || l.Colecao == EnvMov).ToListAsync(ct);
+        var produtosNovosNoErp = new HashSet<Guid>();
         string IdDe(string colecao, Guid guid) => idErp.TryGetValue((colecao, guid), out var id) ? id : guid.ToString("D").ToLowerInvariant();
         bool ExisteNoErp(string colecao, Guid guid) =>
             idErp.ContainsKey((colecao, guid)) || enviados.Any(e => e.Colecao == "enviado_" + colecao && e.EntidadeGuid == guid);
@@ -215,8 +216,13 @@ public sealed class EnviadorErp
                 Anotar(db, enviados, EnvProdutos, p.Guid, IdDe("produtos", p.Guid), Hash(doc), agora);
                 produtos++;
                 idErp[("produtos", p.Guid)] = IdDe("produtos", p.Guid);
+                if (!existe) produtosNovosNoErp.Add(p.Guid);
             }
         }
+        await db.SaveChangesAsync(ct);
+
+        // ---- 2b) Ajustes manuais de estoque (entrada, perda, correção): vão como diferença, nunca como saldo ----
+        await EnviarAjustesDeEstoqueAsync(db, enviados, produtosNovosNoErp, empresa, agora, IdDe, ExisteNoErp, falhas, ct);
         await db.SaveChangesAsync(ct);
 
         // ---- 3) Vendas (só as do Nexus; as importadas do ERP já estão lá) ----
@@ -248,6 +254,41 @@ public sealed class EnviadorErp
         }
         await db.SaveChangesAsync(ct);
         return new ResultadoEnvioErp(vendas, clientes, produtos, ja, falhas);
+    }
+
+    /// <summary>
+    /// Na primeira vez só anota o que já existe (esses ajustes já estão no saldo que o ERP tem); daí em diante cada ajuste novo
+    /// vai uma única vez. Produto que acabou de ser criado no ERP já levou o saldo atual: seus ajustes só são anotados.
+    /// </summary>
+    private async Task EnviarAjustesDeEstoqueAsync(PdvDbContext db, List<ImportacaoErpItem> enviados, HashSet<Guid> novosNoErp, string empresa,
+        DateTime agora, Func<string, Guid, string> idDe, Func<string, Guid, bool> existeNoErp, List<string> falhas, CancellationToken ct)
+    {
+        var movimentos = await db.Movimentacoes.AsNoTracking()
+            .Where(m => m.VendaId == null && (m.Tipo == TipoMovimentacao.Entrada || m.Tipo == TipoMovimentacao.Perda || m.Tipo == TipoMovimentacao.Correcao))
+            .OrderBy(m => m.DataHora).ThenBy(m => m.Id).ToListAsync(ct);
+        var primeira = !enviados.Any(e => e.Colecao == EnvMov && e.EntidadeGuid == Guid.Empty);
+        var feitos = enviados.Where(e => e.Colecao == EnvMov).Select(e => e.EntidadeGuid).ToHashSet();
+        var produtos = await db.Produtos.AsNoTracking().ToDictionaryAsync(p => p.Id, ct);
+
+        if (primeira)
+        {
+            foreach (var m in movimentos) Anotar(db, enviados, EnvMov, m.Guid, m.Guid.ToString("D"), "base", agora);
+            Anotar(db, enviados, EnvMov, Guid.Empty, "base", "base", agora);
+            return;
+        }
+
+        foreach (var m in movimentos.Where(m => !feitos.Contains(m.Guid)))
+        {
+            if (!produtos.TryGetValue(m.ProdutoId, out var p)) continue;
+            if (novosNoErp.Contains(p.Guid) || p.VenderSemBaixa || m.Quantidade == 0)
+            {
+                Anotar(db, enviados, EnvMov, m.Guid, m.Guid.ToString("D"), "incluida", agora);
+                continue;
+            }
+            if (!existeNoErp("produtos", p.Guid)) continue; // produto ainda fora do ERP: tenta de novo no próximo envio
+            if (await TentarAsync(MontadorErp.AjusteManual(empresa, m, p, idDe("produtos", p.Guid), agora), $"ajuste de estoque de {p.Nome}", falhas, ct))
+                Anotar(db, enviados, EnvMov, m.Guid, m.Guid.ToString("D"), "enviado", agora);
+        }
     }
 
     private async Task<bool> TentarAsync(IReadOnlyList<DocumentoGravacaoErp> docs, string quem, List<string> falhas, CancellationToken ct)

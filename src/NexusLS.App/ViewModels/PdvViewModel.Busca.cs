@@ -52,7 +52,9 @@ public partial class PdvViewModel
         var texto = Busca;
         var destacado = _desceu ? ResultadoSelecionado : null;
 
-        var produto = await _produtos.EscolherParaVendaAsync(texto, destacado);
+        // Código "da referência + número do tamanho" (55551): já escolhe o produto e o tamanho.
+        var porTamanho = destacado is null ? await _produtos.ObterPorCodigoDeTamanhoAsync(texto) : null;
+        var produto = porTamanho?.Produto ?? await _produtos.EscolherParaVendaAsync(texto, destacado);
         if (produto is null)
         {
             MostrarErro($"Nenhum produto encontrado para \"{texto.Trim()}\".");
@@ -80,11 +82,14 @@ public partial class PdvViewModel
         foreach (var o in _grade.Opcoes)
             OpcoesTamanho.Add(new OpcaoViewModel(o.Tamanho,
                 produto.VenderSemBaixa ? "sem controle de estoque" : o.Estoque > 0 ? $"{o.Estoque} em estoque" : "esgotado", o.Estoque <= 0));
+        if (porTamanho is not null)
+            _grade.IrPara(_grade.Opcoes.ToList().FindIndex(o => o.Tamanho == porTamanho.Value.Tamanho.Tamanho));
         AtualizarSelecaoTamanho();
 
         Resultados.Clear();
         Mensagem = "";
         IrPara(EtapaPdv.Tamanho);
+        if (porTamanho is not null) { ConfirmarTamanho(); return; }
 
         // Modo rápido: com uma única opção disponível, não há o que perguntar.
         if (_grade.Opcoes.Count == 1 && _grade.Opcoes[0].Estoque > 0

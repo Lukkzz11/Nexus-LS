@@ -34,9 +34,15 @@
             <Grid Margin="0,0,0,14">
                 <TextBlock Text="Estoque da loja" Style="{StaticResource TituloTela}" />
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                    <Button Content="Vender sem baixa (Todos)" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,0"
+                    <Button Content="Sem baixa (todos)" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,0"
                             AutomationProperties.Name="Marcar todos para vender sem baixa" ToolTip="Ativa a opção 'Vender sem baixa' em todos os produtos cadastrados de uma só vez."
                             Command="{Binding AtivarVenderSemBaixaEmTodosCommand}" />
+                    <Button Content="Sem baixa (marcados)" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,0"
+                            AutomationProperties.Name="Marcar os selecionados para vender sem baixa" ToolTip="Marque produtos na lista (Ctrl + clique ou Shift + clique) e ative 'Vender sem baixa' só neles."
+                            Command="{Binding MarcarSelecionadosVenderSemBaixaCommand}" />
+                    <Button Content="Contar estoque (marcados)" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,0"
+                            AutomationProperties.Name="Voltar os selecionados a contar estoque" ToolTip="Desliga 'Vender sem baixa' nos produtos marcados na lista."
+                            Command="{Binding DesmarcarSelecionadosVenderSemBaixaCommand}" />
                     <Button Content="Adicionar sobra" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,0"
                             AutomationProperties.Name="Adicionar sobra" ToolTip="Cadastra uma peça que sobrou: continua sendo estoque e vende no PDV, só fica separada na lista de Sobras."
                             Command="{Binding AdicionarSobraCommand}" />
@@ -79,8 +85,9 @@
             <Border Grid.Row="3" Style="{StaticResource Painel}" Padding="0">
                 <DataGrid ItemsSource="{Binding Produtos}"
                           SelectedItem="{Binding Selecionado, Mode=TwoWay}"
+                          SelectionChanged="ListaProdutos_SelectionChanged"
                           AutoGenerateColumns="False" IsReadOnly="True"
-                          SelectionMode="Single" SelectionUnit="FullRow"
+                          SelectionMode="Extended" SelectionUnit="FullRow"
                           CanUserAddRows="False" CanUserDeleteRows="False"
                           HeadersVisibility="Column" GridLinesVisibility="Horizontal"
                           HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0"
@@ -123,7 +130,10 @@
                 </DataGrid>
             </Border>
 
-            <TextBlock Grid.Row="4" Text="Histórico do produto selecionado" FontWeight="SemiBold" Margin="0,14,0,6" />
+            <TextBlock Grid.Row="4" FontWeight="SemiBold" Margin="0,14,0,6">
+                <Run Text="Histórico do produto selecionado" />
+                <Run Text="{Binding TextoMarcados, Mode=OneWay, StringFormat='   ·   {0}'}" Foreground="{StaticResource CorTextoSuave}" />
+            </TextBlock>
 
             <Border Grid.Row="5" Style="{StaticResource Painel}" Padding="0">
                 <DataGrid ItemsSource="{Binding Movimentacoes}"
@@ -164,6 +174,26 @@
                                     <KeyBinding Key="Enter" Command="{Binding SalvarCommand}" />
                                 </StackPanel.InputBindings>
                                 <TextBlock Text="{Binding TituloFormulario}" FontSize="18" FontWeight="SemiBold" />
+
+                                <!-- Nova referência a partir de uma já existente (as 2 primeiras casas indicam o modelo) -->
+                                <StackPanel Visibility="{Binding EhNovo, Converter={StaticResource BoolVis}}" Margin="0,8,0,0">
+                                    <TextBlock Text="Criar a partir da referência" Style="{StaticResource Rotulo}"
+                                               ToolTip="Copia categoria, preços, cores e tamanhos de uma referência existente e já dá a próxima referência do mesmo modelo (ex.: 1403 gera 1405)." />
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="8" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox Text="{Binding ReferenciaBase, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Referência base">
+                                            <TextBox.InputBindings>
+                                                <KeyBinding Key="Enter" Command="{Binding CriarDaReferenciaBaseCommand}" />
+                                            </TextBox.InputBindings>
+                                        </TextBox>
+                                        <Button Grid.Column="2" Content="Copiar da base" Style="{StaticResource BotaoSecundario}"
+                                                Command="{Binding CriarDaReferenciaBaseCommand}" AutomationProperties.Name="Criar a partir da referência base" />
+                                    </Grid>
+                                </StackPanel>
 
                                 <TextBlock Text="Nome" Style="{StaticResource Rotulo}" />
                                 <TextBox Text="{Binding Nome, UpdateSourceTrigger=PropertyChanged}" />
@@ -339,6 +369,7 @@
                                               Background="{StaticResource CorPainel}" RowHeight="32" MaxHeight="190" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                                         <DataGrid.Columns>
                                             <DataGridTextColumn Header="Tamanho" Binding="{Binding Tamanho, Mode=OneWay}" Width="*" />
+                                            <DataGridTextColumn Header="Cód. barras" Binding="{Binding CodigoBarras, Mode=OneWay}" Width="1.3*" />
                                             <DataGridTextColumn Header="Estoque" Binding="{Binding Estoque, Mode=OneWay}" Width="90"
                                                                 ElementStyle="{StaticResource ColunaNumero}" />
                                         </DataGrid.Columns>

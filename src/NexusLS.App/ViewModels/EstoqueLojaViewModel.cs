@@ -421,9 +421,70 @@ public partial class EstoqueLojaViewModel : ViewModelBase
         MostrarSucesso($"{alterados} produto(s) marcado(s) para vender sem baixa de estoque.");
     });
 
+    /// <summary>Produtos marcados na lista (Ctrl/Shift + clique). A View preenche.</summary>
+    public IReadOnlyList<Produto> Marcados { get; set; } = Array.Empty<Produto>();
+
+    [ObservableProperty] private string _textoMarcados = "";
+
+    private Task DefinirVenderSemBaixaNosMarcadosAsync(bool venderSemBaixa) => ExecutarAsync(async () =>
+    {
+        if (Marcados.Count == 0)
+            throw new RegraDeNegocioException("Marque os produtos na lista (Ctrl + clique ou Shift + clique) e tente de novo.");
+        var texto = venderSemBaixa ? "vender sem baixa de estoque" : "contar estoque normalmente";
+        if (!Confirmar($"Marcar {Marcados.Count} produto(s) para {texto}?")) return;
+
+        var alterados = await _produtos.DefinirVenderSemBaixaAsync(Marcados.Select(p => p.Id), venderSemBaixa);
+        await BuscarAsync();
+        if (IdEditando is int id) await AtualizarDetalhesAsync(id);
+        MostrarSucesso($"{alterados} produto(s) agora {(venderSemBaixa ? "vendem sem baixa de estoque" : "contam estoque")}.");
+    });
+
+    [RelayCommand]
+    private Task MarcarSelecionadosVenderSemBaixaAsync() => DefinirVenderSemBaixaNosMarcadosAsync(true);
+
+    [RelayCommand]
+    private Task DesmarcarSelecionadosVenderSemBaixaAsync() => DefinirVenderSemBaixaNosMarcadosAsync(false);
+
+    /// <summary>Atualiza o aviso "N selecionados" conforme a seleção da lista.</summary>
+    public void DefinirMarcados(IReadOnlyList<Produto> marcados)
+    {
+        Marcados = marcados;
+        TextoMarcados = marcados.Count > 1 ? $"{marcados.Count} produtos selecionados" : "";
+    }
+
+    // ----- Nova referência a partir de uma base -----
+    [ObservableProperty] private string _referenciaBase = "";
+    private List<string> _tamanhosACopiar = new();
+
+    /// <summary>
+    /// Abre um cadastro novo já com os dados da referência base (nome, categoria, preços, cores, mínimo e a grade de tamanhos) e a
+    /// próxima referência livre do mesmo modelo. O código de barras sugerido é o número da referência; os tamanhos usam esse número + 1, 2, 3...
+    /// </summary>
+    [RelayCommand]
+    private Task CriarDaReferenciaBaseAsync() => ExecutarAsync(async () =>
+    {
+        var modelo = await _produtos.ModeloDaReferenciaAsync(ReferenciaBase);
+        var b = modelo.Base;
+        Novo();
+        Nome = b.Nome;
+        Referencia = modelo.NovaReferencia;
+        CodigoBarras = modelo.NovaReferencia;
+        Categoria = b.Categoria ?? "";
+        Cores = b.Cores ?? "";
+        PrecoVenda = Dinheiro.FormatarParaEdicao(b.PrecoVendaCentavos);
+        PrecoAtacado = b.PrecoAtacadoCentavos > 0 ? Dinheiro.FormatarParaEdicao(b.PrecoAtacadoCentavos) : "";
+        PrecoCusto = Dinheiro.FormatarParaEdicao(b.PrecoCustoCentavos);
+        EstoqueMinimo = b.EstoqueMinimo.ToString(CultureInfo.InvariantCulture);
+        VenderSemBaixa = b.VenderSemBaixa;
+        _tamanhosACopiar = modelo.Tamanhos.ToList();
+        MostrarSucesso($"Nova referência {modelo.NovaReferencia} criada a partir da {b.Referencia}. Confira o nome e salve" +
+                       (_tamanhosACopiar.Count > 0 ? $"; os tamanhos ({string.Join(", ", _tamanhosACopiar)}) entram junto." : "."));
+    });
+
     [RelayCommand]
     private void Novo()
     {
+        _tamanhosACopiar = new();
         _silenciar = true;
         try { Selecionado = null; }
         finally { _silenciar = false; }
@@ -472,6 +533,8 @@ public partial class EstoqueLojaViewModel : ViewModelBase
         else
         {
             var novo = await _produtos.CadastrarAsync(dados, estoqueInicial);
+            if (_tamanhosACopiar.Count > 0) await _produtos.AdicionarGradeAsync(novo.Id, _tamanhosACopiar);
+            _tamanhosACopiar = new();
             if (dados.Sobra) DeixarForaDoCatalogo(novo);
             await BuscarAsync();
             await AbrirProdutoAsync(novo);
