@@ -44,7 +44,11 @@ public record DadosLoja(
     string? Cep = null,
     bool CupomMostrarLogo = true,
     byte[]? LogoCupom = null,
-    bool LogoAlterado = false);
+    bool LogoAlterado = false,
+    bool CupomMostrarReferencia = false,
+    bool CupomTituloEmCaixa = false,
+    bool CupomMostrarAssinaturaCliente = false,
+    string? CupomTextoGarantia = null);
 
 /// <summary>Dados da loja e do cupom. Só existe uma configuração; ela é criada na primeira leitura.</summary>
 public class ConfiguracaoService
@@ -137,6 +141,10 @@ public class ConfiguracaoService
         config.Bairro = Limpar(dados.Bairro);
         config.Cep = Limpar(dados.Cep);
         config.CupomMostrarLogo = dados.CupomMostrarLogo;
+        config.CupomMostrarReferencia = dados.CupomMostrarReferencia;
+        config.CupomTituloEmCaixa = dados.CupomTituloEmCaixa;
+        config.CupomMostrarAssinaturaCliente = dados.CupomMostrarAssinaturaCliente;
+        config.CupomTextoGarantia = Limpar(dados.CupomTextoGarantia);
         if (dados.LogoAlterado) config.LogoCupom = dados.LogoCupom is { Length: > 0 } ? dados.LogoCupom : null;
         config.NomeOperador = string.IsNullOrWhiteSpace(dados.NomeOperador) ? "Caixa" : dados.NomeOperador.Trim();
 

@@ -155,6 +155,9 @@
                                         <CheckBox Content="Forma de pagamento e troco" IsChecked="{Binding CupomMostrarPagamento}" Margin="0,3,12,3" />
                                         <CheckBox Content="Chave Pix no rodapé" IsChecked="{Binding CupomMostrarPix}" Margin="0,3,12,3" />
                                         <CheckBox Content="Linha “Impresso pelo Nexus”" IsChecked="{Binding CupomMostrarAssinatura}" Margin="0,3,12,3" />
+                                        <CheckBox Content="Referência do produto em cada item" IsChecked="{Binding CupomMostrarReferencia}" Margin="0,3,12,3" />
+                                        <CheckBox Content="“CUPOM NÃO FISCAL” dentro de uma caixa" IsChecked="{Binding CupomTituloEmCaixa}" Margin="0,3,12,3" />
+                                        <CheckBox Content="Assinatura do cliente" IsChecked="{Binding CupomMostrarAssinaturaCliente}" Margin="0,3,12,3" />
                                     </UniformGrid>
 
                                     <Grid Margin="0,4,0,0">
@@ -172,6 +175,10 @@
                                                      AutomationProperties.Name="Mensagem no rodapé do cupom" />
                                         </StackPanel>
                                     </Grid>
+                                    <TextBlock Text="Garantia / termos (opcional, sai antes da assinatura)" Style="{StaticResource Rotulo}" Margin="0,10,0,0" />
+                                    <TextBox Text="{Binding CupomTextoGarantia, UpdateSourceTrigger=PropertyChanged}" MaxLength="300"
+                                             AcceptsReturn="True" TextWrapping="Wrap" MinLines="2" MaxLines="4" VerticalScrollBarVisibility="Auto"
+                                             AutomationProperties.Name="Garantia e termos do cupom" />
                                     <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
                                                Text="Rodapé: agradecimento, política de trocas, redes sociais. Em branco, sai “OBRIGADO PELA PREFERÊNCIA! VOLTE SEMPRE!”." />
                                 </StackPanel>

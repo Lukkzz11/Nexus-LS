@@ -72,6 +72,15 @@ public class ConfiguracaoLoja
     public bool CupomMostrarPagamento { get; set; } = true;
     /// <summary>Linha "Impresso pelo Nexus LS" no rodapé.</summary>
     public bool CupomMostrarAssinatura { get; set; }
+    /// <summary>Referência do produto embaixo do nome de cada item.</summary>
+    public bool CupomMostrarReferencia { get; set; }
+    /// <summary>"CUPOM NÃO FISCAL" dentro de uma caixa.</summary>
+    public bool CupomTituloEmCaixa { get; set; }
+    /// <summary>Linha para o cliente assinar (recebimento da mercadoria).</summary>
+    public bool CupomMostrarAssinaturaCliente { get; set; }
+    /// <summary>Texto de garantia/termos impresso antes da assinatura (opcional).</summary>
+    [System.ComponentModel.DataAnnotations.MaxLength(300)]
+    public string? CupomTextoGarantia { get; set; }
     /// <summary>Mensagem logo abaixo dos dados da loja, antes do "CUPOM NÃO FISCAL" (opcional, até 200 letras).</summary>
     public string? CupomMensagemCabecalho { get; set; }
     /// <summary>Linhas em branco depois do cupom, para o corte da impressora não pegar o texto (0 a 15).</summary>

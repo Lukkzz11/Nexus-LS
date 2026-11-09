@@ -32,7 +32,14 @@ public static class MontadorCupom
             foreach (var parte in Paragrafos(loja.CupomMensagemCabecalho))
                 linhas.AddRange(Centralizar(parte, largura));
 
-        linhas.AddRange(Centralizar("CUPOM NÃO FISCAL", largura));
+        if (loja.CupomTituloEmCaixa)
+        {
+            var miolo = "| CUPOM NÃO FISCAL |";
+            linhas.AddRange(Centralizar("+" + new string('-', miolo.Length - 2) + "+", largura));
+            linhas.AddRange(Centralizar(miolo, largura));
+            linhas.AddRange(Centralizar("+" + new string('-', miolo.Length - 2) + "+", largura));
+        }
+        else linhas.AddRange(Centralizar("CUPOM NÃO FISCAL", largura));
         if (venda.Cancelada) linhas.AddRange(Centralizar("*** VENDA CANCELADA ***", largura));
         linhas.Add(traco);
 
@@ -50,6 +57,8 @@ public static class MontadorCupom
         {
             var nome = item.Tamanho == Tamanhos.SemTamanho ? item.NomeProduto : $"{item.NomeProduto} ({item.Tamanho})";
             linhas.AddRange(Quebrar(nome, largura));
+            if (loja.CupomMostrarReferencia && !string.IsNullOrWhiteSpace(item.Referencia))
+                linhas.AddRange(Quebrar($"Ref: {item.Referencia}", largura));
             linhas.Add(DuasPontas($"{item.Quantidade}x {Reais(item.PrecoUnitarioCentavos)}", Reais(item.TotalCentavos), largura));
         }
         linhas.Add(traco);
@@ -86,6 +95,19 @@ public static class MontadorCupom
             linhas.AddRange(Centralizar(parte, largura));
         if (loja.CupomMostrarPix && !string.IsNullOrWhiteSpace(loja.ChavePix))
             linhas.AddRange(Centralizar($"Pix: {loja.ChavePix}", largura));
+        if (!string.IsNullOrWhiteSpace(loja.CupomTextoGarantia))
+        {
+            linhas.Add(traco);
+            foreach (var parte in Paragrafos(loja.CupomTextoGarantia))
+                linhas.AddRange(Quebrar(parte, largura));
+        }
+        if (loja.CupomMostrarAssinaturaCliente)
+        {
+            linhas.Add("");
+            linhas.Add("");
+            linhas.AddRange(Centralizar(new string('_', Math.Max(10, largura - 8)), largura));
+            linhas.AddRange(Centralizar("Assinatura do cliente", largura));
+        }
         if (loja.CupomMostrarAssinatura)
             linhas.AddRange(Centralizar("Impresso pelo Nexus LS", largura));
 
@@ -117,6 +139,7 @@ public static class MontadorCupom
                 segmentos.Add(new SegmentoCupom(linha, true));
             }
             else if (corte is "CUPOM NÃO FISCAL" or "ITENS DA VENDA" || corte.StartsWith("***", StringComparison.Ordinal)
+                     || corte.StartsWith("+--", StringComparison.Ordinal) || corte.StartsWith("| CUPOM", StringComparison.Ordinal)
                      || corte.StartsWith("TOTAL A PAGAR:", StringComparison.Ordinal) || corte.StartsWith("TROCO:", StringComparison.Ordinal))
             {
                 segmentos.Add(new SegmentoCupom(linha, true));
@@ -200,7 +223,7 @@ public static class MontadorCupom
         TrocoCentavos = 5020,
         Itens =
         {
-            new ItemVenda { NomeProduto = "Camiseta Básica", Tamanho = "M", PrecoUnitarioCentavos = 5990, Quantidade = 2, TotalCentavos = 11980 },
+            new ItemVenda { NomeProduto = "Camiseta Básica", Referencia = "CAM-001", Tamanho = "M", PrecoUnitarioCentavos = 5990, Quantidade = 2, TotalCentavos = 11980 },
             new ItemVenda { NomeProduto = "Boné Aba Reta", Tamanho = Tamanhos.SemTamanho, PrecoUnitarioCentavos = 4000, Quantidade = 1, TotalCentavos = 4000 }
         }
     };

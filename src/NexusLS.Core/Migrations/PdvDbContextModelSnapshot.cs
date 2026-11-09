@@ -532,6 +532,9 @@ namespace NexusLS.Core.Migrations
                     b.Property<bool>("CupomMostrarAssinatura")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("CupomMostrarAssinaturaCliente")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("CupomMostrarCidade")
                         .HasColumnType("INTEGER");
 
@@ -565,7 +568,17 @@ namespace NexusLS.Core.Migrations
                     b.Property<bool>("CupomMostrarRazaoSocial")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("CupomMostrarReferencia")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("CupomMostrarTelefone")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("CupomTextoGarantia")
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("CupomTituloEmCaixa")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Documento")

@@ -137,6 +137,14 @@ public partial class ConfiguracoesViewModel : ViewModelBase
     [ObservableProperty] private bool _cupomMostrarCliente = true;
     [ObservableProperty] private bool _cupomMostrarPagamento = true;
     [ObservableProperty] private bool _cupomMostrarAssinatura;
+    [ObservableProperty] private bool _cupomMostrarReferencia;
+    [ObservableProperty] private bool _cupomTituloEmCaixa;
+    [ObservableProperty] private bool _cupomMostrarAssinaturaCliente;
+    [ObservableProperty] private string _cupomTextoGarantia = "";
+    partial void OnCupomMostrarReferenciaChanged(bool value) => AtualizarPrevia();
+    partial void OnCupomTituloEmCaixaChanged(bool value) => AtualizarPrevia();
+    partial void OnCupomMostrarAssinaturaClienteChanged(bool value) => AtualizarPrevia();
+    partial void OnCupomTextoGarantiaChanged(string value) => AtualizarPrevia();
     [ObservableProperty] private string _cupomMensagemCabecalho = "";
     [ObservableProperty] private string _cupomLinhasFinais = "1";
     // Parâmetros de operação
@@ -209,6 +217,10 @@ public partial class ConfiguracoesViewModel : ViewModelBase
         CupomMostrarCliente = c.CupomMostrarCliente;
         CupomMostrarPagamento = c.CupomMostrarPagamento;
         CupomMostrarAssinatura = c.CupomMostrarAssinatura;
+        CupomMostrarReferencia = c.CupomMostrarReferencia;
+        CupomTituloEmCaixa = c.CupomTituloEmCaixa;
+        CupomMostrarAssinaturaCliente = c.CupomMostrarAssinaturaCliente;
+        CupomTextoGarantia = c.CupomTextoGarantia ?? "";
         CupomMensagemCabecalho = c.CupomMensagemCabecalho ?? "";
         CupomLinhasFinais = c.CupomLinhasFinais.ToString();
         FundoTrocoPadrao = c.FundoTrocoPadraoCentavos > 0 ? Dinheiro.FormatarParaEdicao(c.FundoTrocoPadraoCentavos) : "";
@@ -259,7 +271,8 @@ public partial class ConfiguracoesViewModel : ViewModelBase
         NumeroInteiro(MargemPadrao, "A margem padrão"),
         CupomMostrarCidade, CupomMostrarInscricao, CupomMostrarEmail, CupomMostrarOperador, CupomMostrarCliente,
         CupomMostrarPagamento, CupomMostrarAssinatura, CupomMensagemCabecalho,
-        Segmento, EnderecoNumero, Bairro, Cep, CupomMostrarLogo, _logoBytes, _logoAlterado);
+        Segmento, EnderecoNumero, Bairro, Cep, CupomMostrarLogo, _logoBytes, _logoAlterado,
+        CupomMostrarReferencia, CupomTituloEmCaixa, CupomMostrarAssinaturaCliente, CupomTextoGarantia);
 
     private static int NumeroInteiro(string texto, string campo) =>
         int.TryParse(string.IsNullOrWhiteSpace(texto) ? "0" : texto.Trim(), out var n)
@@ -310,6 +323,10 @@ public partial class ConfiguracoesViewModel : ViewModelBase
             Bairro = Vazio(d.Bairro),
             Cep = Vazio(d.Cep),
             CupomMostrarLogo = d.CupomMostrarLogo,
+            CupomMostrarReferencia = d.CupomMostrarReferencia,
+            CupomTituloEmCaixa = d.CupomTituloEmCaixa,
+            CupomMostrarAssinaturaCliente = d.CupomMostrarAssinaturaCliente,
+            CupomTextoGarantia = Vazio(d.CupomTextoGarantia),
             LogoCupom = _logoBytes
         };
     }

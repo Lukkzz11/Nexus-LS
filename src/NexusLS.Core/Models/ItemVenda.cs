@@ -21,4 +21,8 @@ public class ItemVenda
     /// <summary>Esta venda baixou o estoque deste item? (Falso em produto "vender sem baixa".) Só quem baixou devolve ao cancelar.</summary>
     public bool BaixouEstoque { get; set; } = true;
     public long TotalCentavos { get; set; }
+
+    /// <summary>Referência do produto, só para o cupom (não vai para o banco; é preenchida na hora de montar o cupom).</summary>
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    public string? Referencia { get; set; }
 }

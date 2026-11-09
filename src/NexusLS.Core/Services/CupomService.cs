@@ -85,6 +85,14 @@ public class CupomService
             .FirstOrDefaultAsync(v => v.Id == vendaId)
             ?? throw new RegraDeNegocioException("Venda não encontrada.");
 
+        if (loja.CupomMostrarReferencia)
+        {
+            var ids = venda.Itens.Select(i => i.ProdutoId).Distinct().ToList();
+            var refs = await db.Produtos.AsNoTracking().Where(p => ids.Contains(p.Id))
+                .Select(p => new { p.Id, p.Referencia }).ToDictionaryAsync(p => p.Id, p => p.Referencia);
+            foreach (var item in venda.Itens) item.Referencia = refs.GetValueOrDefault(item.ProdutoId);
+        }
+
         return (MontadorCupom.Montar(venda, loja), loja);
     }
 }
