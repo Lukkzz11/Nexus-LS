@@ -173,6 +173,36 @@ public class ProdutoService
         return new ModeloDeReferencia(baseProduto, tamanhos, nova);
     }
 
+    /// <summary>
+    /// Sugere a próxima referência da categoria pelo modelo (bermuda 14xx, calça 15xx...): continua a maior referência numérica já
+    /// usada na categoria; se não houver, começa no prefixo do modelo. Categoria sem modelo e sem referências → código interno EAN-13.
+    /// Só sugere: quem grava é o cadastro.
+    /// </summary>
+    public async Task<string> SugerirReferenciaAsync(string? categoria)
+    {
+        await using var db = await _fabrica.CreateDbContextAsync();
+        var todas = await db.Produtos.AsNoTracking().Where(p => p.Referencia != null).Select(p => new { p.Referencia, p.Categoria }).ToListAsync();
+        var chave = ModelosDeReferencia.Chave(categoria);
+        var daCategoria = chave.Length == 0 ? new List<string>() : todas
+            .Where(p => ModelosDeReferencia.Chave(p.Categoria) == chave)
+            .Select(p => p.Referencia!.Trim()).Where(r => r.Length >= 3 && r.All(char.IsAsciiDigit)).ToList();
+        var todasRefs = todas.Select(p => p.Referencia!).ToList();
+
+        if (daCategoria.Count > 0)
+        {
+            var maior = daCategoria.OrderByDescending(r => long.Parse(r, CultureInfo.InvariantCulture)).First();
+            return ProximaReferencia(maior, todasRefs);
+        }
+        var prefixo = ModelosDeReferencia.PrefixoDa(categoria);
+        if (prefixo is not null)
+        {
+            var primeira = ModelosDeReferencia.PrimeiraDe(prefixo);
+            var usadas = todasRefs.Select(r => r.Trim()).Where(r => r.Length == primeira.Length && r.StartsWith(prefixo, StringComparison.Ordinal) && r.All(char.IsAsciiDigit)).ToList();
+            return usadas.Count == 0 ? primeira : ProximaReferencia(primeira, usadas);
+        }
+        return await GerarCodigoBarrasInternoAsync();
+    }
+
     /// <summary>Próximo número livre do modelo: mesmas 2 primeiras casas e mesmo tamanho da referência base, só dígitos.</summary>
     public static string ProximaReferencia(string referenciaBase, IEnumerable<string> existentes)
     {

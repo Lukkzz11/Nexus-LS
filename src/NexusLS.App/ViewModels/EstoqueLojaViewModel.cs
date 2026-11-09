@@ -432,6 +432,27 @@ public partial class EstoqueLojaViewModel : ViewModelBase
         if (IdEditando is int id) await AtualizarDetalhesAsync(id);
     });
 
+    // ----- Tela de produto novo -----
+    /// <summary>A View abre a tela de cadastro (modal) e devolve o produto criado, ou nulo se o operador cancelou.</summary>
+    public Func<ProdutoService, EstoqueService, int, int, bool, Produto?> AbrirNovoProduto { get; set; } = (_, _, _, _, _) => null;
+
+    [RelayCommand]
+    private Task NovoProdutoTelaAsync() => AbrirTelaDeNovoAsync(false);
+
+    [RelayCommand]
+    private Task NovaSobraTelaAsync() => AbrirTelaDeNovoAsync(true);
+
+    private Task AbrirTelaDeNovoAsync(bool sobra) => ExecutarAsync(async () =>
+    {
+        var criado = AbrirNovoProduto(_produtos, _estoque, _margemPadrao, _estoqueMinimoPadrao, sobra);
+        if (criado is null) return;
+        if (criado.Sobra) DeixarForaDoCatalogo(criado);
+        await BuscarAsync();
+        var atual = await _produtos.ObterAsync(criado.Id);
+        if (atual is not null) await AbrirProdutoAsync(atual);
+        MostrarSucesso($"Produto {criado.Nome} cadastrado.");
+    });
+
     // ----- Nova referência a partir de uma base -----
     [ObservableProperty] private string _referenciaBase = "";
     private List<string> _tamanhosACopiar = new();

@@ -10,7 +10,7 @@ public class GradesEEnderecoTests
     public void As_tres_grades_tem_os_tamanhos_pedidos()
     {
         Assert.Equal("PP P M G GG G1 G2 G3 G4 G5 G6 G7 G8 G9 G10", string.Join(" ", GradesDeTamanho.Letras.Tamanhos));
-        Assert.Equal("36 38 40 42 44 46 48 50 52 54 56 58 60 62 64 66 68 70", string.Join(" ", GradesDeTamanho.CalcaBermuda.Tamanhos));
+        Assert.Equal("34 36 38 40 42 44 46 48 50 52 54 56 58 60 62 64 66 68 70", string.Join(" ", GradesDeTamanho.CalcaBermuda.Tamanhos));
         Assert.Equal("1 2 3 4 5 6 7 8 9 10", string.Join(" ", GradesDeTamanho.CamisaBotao.Tamanhos));
     }
 
@@ -24,7 +24,7 @@ public class GradesEEnderecoTests
 
         var criados = await produtos.AdicionarGradeAsync(p.Id, GradesDeTamanho.CalcaBermuda.Tamanhos);
 
-        Assert.Equal(17, criados.Count); // 18 tamanhos, o 40 já existia
+        Assert.Equal(18, criados.Count); // 19 tamanhos, o 40 já existia
         var tamanhos = await produtos.ListarTamanhosAsync(p.Id);
         Assert.Equal(1, tamanhos.Count(t => t.Tamanho == "40"));
         Assert.Equal("preto, Branco", (await produtos.ObterAsync(p.Id))!.Cores);
