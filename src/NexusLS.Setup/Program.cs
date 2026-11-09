@@ -40,7 +40,21 @@ public static class Program
             }
         }
 
+        AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+        {
+            var msg = e.ExceptionObject?.ToString() ?? "Erro fatal desconhecido";
+            try { File.WriteAllText(Path.Combine(Path.GetTempPath(), "nexus-setup-fatal.txt"), msg); } catch { }
+            MessageBox.Show(msg, "Erro Fatal do Instalador", MessageBoxButton.OK, MessageBoxImage.Error);
+        };
+
         var app = new Application();
+        app.DispatcherUnhandledException += (s, e) =>
+        {
+            e.Handled = true;
+            var msg = e.Exception.ToString();
+            try { File.WriteAllText(Path.Combine(Path.GetTempPath(), "nexus-setup-fatal.txt"), msg); } catch { }
+            MessageBox.Show(msg, "Erro na Interface do Instalador", MessageBoxButton.OK, MessageBoxImage.Error);
+        };
         return app.Run(new JanelaSetup(op));
     }
 }
@@ -99,9 +113,9 @@ public sealed class JanelaSetup : Window
     private readonly Button _btnConcluirAbrirBarTender;
 
     // Botões Inferiores de Navegação
-    private readonly Button _btnCancelar;
-    private readonly Button _btnVoltar;
-    private readonly Button _btnAvancar;
+    private readonly Button _btnCancelar = new();
+    private readonly Button _btnVoltar = new();
+    private readonly Button _btnAvancar = new();
 
     public JanelaSetup(OpcoesSetup op)
     {
@@ -654,48 +668,39 @@ public sealed class JanelaSetup : Window
         gridRodape.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         gridRodape.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
-        _btnCancelar = new Button
-        {
-            Content = "Cancelar",
-            FontSize = 13,
-            Padding = new Thickness(16, 8, 16, 8),
-            Background = new SolidColorBrush(Color.FromRgb(0x33, 0x41, 0x55)),
-            Foreground = Brushes.White,
-            BorderThickness = new Thickness(0),
-            Cursor = Cursors.Hand
-        };
+        _btnCancelar.Content = "Cancelar";
+        _btnCancelar.FontSize = 13;
+        _btnCancelar.Padding = new Thickness(16, 8, 16, 8);
+        _btnCancelar.Background = new SolidColorBrush(Color.FromRgb(0x33, 0x41, 0x55));
+        _btnCancelar.Foreground = Brushes.White;
+        _btnCancelar.BorderThickness = new Thickness(0);
+        _btnCancelar.Cursor = Cursors.Hand;
         _btnCancelar.Click += (_, _) => Close();
         Grid.SetColumn(_btnCancelar, 0);
         gridRodape.Children.Add(_btnCancelar);
 
         var spBotoesDir = new StackPanel { Orientation = Orientation.Horizontal };
-        _btnVoltar = new Button
-        {
-            Content = "< Voltar",
-            FontSize = 13,
-            Padding = new Thickness(18, 8, 18, 8),
-            Margin = new Thickness(0, 0, 10, 0),
-            Background = new SolidColorBrush(Color.FromRgb(0x33, 0x41, 0x55)),
-            Foreground = Brushes.White,
-            BorderThickness = new Thickness(0),
-            Cursor = Cursors.Hand,
-            IsEnabled = false
-        };
+        _btnVoltar.Content = "< Voltar";
+        _btnVoltar.FontSize = 13;
+        _btnVoltar.Padding = new Thickness(18, 8, 18, 8);
+        _btnVoltar.Margin = new Thickness(0, 0, 10, 0);
+        _btnVoltar.Background = new SolidColorBrush(Color.FromRgb(0x33, 0x41, 0x55));
+        _btnVoltar.Foreground = Brushes.White;
+        _btnVoltar.BorderThickness = new Thickness(0);
+        _btnVoltar.Cursor = Cursors.Hand;
+        _btnVoltar.IsEnabled = false;
         _btnVoltar.Click += (_, _) => IrParaPasso(_passoAtual - 1);
         spBotoesDir.Children.Add(_btnVoltar);
 
-        _btnAvancar = new Button
-        {
-            Content = "Avançar >",
-            FontSize = 13,
-            FontWeight = FontWeights.Bold,
-            Padding = new Thickness(24, 8, 24, 8),
-            Background = new SolidColorBrush(Color.FromRgb(0x25, 0x63, 0xEB)),
-            Foreground = Brushes.White,
-            BorderThickness = new Thickness(0),
-            Cursor = Cursors.Hand,
-            IsEnabled = false
-        };
+        _btnAvancar.Content = "Avançar >";
+        _btnAvancar.FontSize = 13;
+        _btnAvancar.FontWeight = FontWeights.Bold;
+        _btnAvancar.Padding = new Thickness(24, 8, 24, 8);
+        _btnAvancar.Background = new SolidColorBrush(Color.FromRgb(0x25, 0x63, 0xEB));
+        _btnAvancar.Foreground = Brushes.White;
+        _btnAvancar.BorderThickness = new Thickness(0);
+        _btnAvancar.Cursor = Cursors.Hand;
+        _btnAvancar.IsEnabled = false;
         _btnAvancar.Click += async (_, _) => await AoClicarAvancarAsync();
         spBotoesDir.Children.Add(_btnAvancar);
 
@@ -740,7 +745,7 @@ public sealed class JanelaSetup : Window
 
     private static CheckBox CriarCardOpcaoApp(string titulo, string descricao, bool selecionado)
     {
-        var sp = new StackPanel { Margin = new Thickness(8, 0, 0, 0) };
+        var sp = new StackPanel { Margin = new Thickness(8, 2, 8, 2) };
         sp.Children.Add(new TextBlock
         {
             Text = titulo,
@@ -757,23 +762,13 @@ public sealed class JanelaSetup : Window
             TextWrapping = TextWrapping.Wrap
         });
 
-        var border = new Border
-        {
-            Background = new SolidColorBrush(Color.FromRgb(0x1E, 0x29, 0x3B)),
-            BorderBrush = new SolidColorBrush(Color.FromRgb(0x33, 0x41, 0x55)),
-            BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(8),
-            Padding = new Thickness(14, 10, 14, 10),
-            Margin = new Thickness(0, 6, 0, 6)
-        };
-        var chk = new CheckBox
+        return new CheckBox
         {
             Content = sp,
             IsChecked = selecionado,
-            VerticalContentAlignment = VerticalAlignment.Center
+            VerticalContentAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(0, 6, 0, 6)
         };
-        border.Child = chk;
-        return chk;
     }
 
     private void AtualizarIndicadorEtapas()
@@ -826,6 +821,8 @@ public sealed class JanelaSetup : Window
 
     private void AtualizarEstadoBotoes()
     {
+        if (_btnAvancar is null || _btnVoltar is null || _btnCancelar is null) return;
+
         if (_passoAtual == 5) // Instalando
         {
             _btnCancelar.IsEnabled = false;
