@@ -1,4 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using NexusLS.BarTender.Services;
 using NexusLS.Core.Models;
 using NexusLS.Core.Services;
 
@@ -13,6 +15,27 @@ public partial class ProdutoItemViewModel : ObservableObject
 
     [ObservableProperty]
     private string? _codigoBarras;
+
+    [ObservableProperty]
+    private int _quantidadeAdicionar = 1;
+
+    [ObservableProperty]
+    private bool _temEtiquetaPersonalizada;
+
+    [ObservableProperty]
+    private string _nomeEtiquetaPersonalizada = "Padrão do Sistema";
+
+    [ObservableProperty]
+    private string _dimensoesEtiquetaPersonalizada = "50 × 30 mm";
+
+    [RelayCommand]
+    public void IncrementarQtd() => QuantidadeAdicionar++;
+
+    [RelayCommand]
+    public void DecrementarQtd()
+    {
+        if (QuantidadeAdicionar > 1) QuantidadeAdicionar--;
+    }
 
     public int Id => Produto.Id;
     public string Nome => Produto.Nome;
@@ -33,6 +56,15 @@ public partial class ProdutoItemViewModel : ObservableObject
     {
         Produto = produto;
         _codigoBarras = produto.CodigoBarras;
+        AtualizarInfoEtiqueta();
+    }
+
+    public void AtualizarInfoEtiqueta()
+    {
+        var info = GerenciadorEtiquetasProdutoService.ObterInfoEtiqueta(Id);
+        TemEtiquetaPersonalizada = info.TemPersonalizada;
+        NomeEtiquetaPersonalizada = info.NomeModelo;
+        DimensoesEtiquetaPersonalizada = info.Dimensoes;
     }
 
     public void AtualizarCodigo(string? novoCodigo)

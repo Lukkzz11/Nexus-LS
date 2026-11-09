@@ -47,6 +47,19 @@ public class EditorDesenhoService
         }
     }
 
+    public static Brush ConverterCor(string? hex, Brush fallback)
+    {
+        if (string.IsNullOrWhiteSpace(hex)) return fallback;
+        try
+        {
+            return (Brush)new BrushConverter().ConvertFromString(hex) ?? fallback;
+        }
+        catch
+        {
+            return fallback;
+        }
+    }
+
     private static void DesenharElemento(
         DrawingContext dc,
         ElementoDesign el,
@@ -54,10 +67,19 @@ public class EditorDesenhoService
         string? tamanho,
         string nomeLoja)
     {
+        if (!el.Visivel) return;
+
         var xDip = Dip(el.X);
         var yDip = Dip(el.Y);
         var largDip = Dip(el.Largura);
         var altDip = Dip(el.Altura);
+
+        bool rotacionou = false;
+        if (el.Rotacao != 0)
+        {
+            rotacionou = true;
+            dc.PushTransform(new RotateTransform(el.Rotacao, xDip + (largDip / 2.0), yDip + (altDip / 2.0)));
+        }
 
         switch (el.Tipo)
         {
@@ -70,19 +92,32 @@ public class EditorDesenhoService
                 break;
 
             case TipoElemento.CodigoBarras:
-                DesenharCodigoBarras(dc, el, produto, xDip, yDip, largDip, altDip);
+                DesenharCodigoBarras(dc, el, produto, tamanho, xDip, yDip, largDip, altDip);
                 break;
 
             case TipoElemento.Retangulo:
-                var penRet = new Pen(Brushes.Black, Math.Max(0.5, Dip(el.EspessuraBorda * 0.25)));
-                var brushRet = el.Preenchido ? Brushes.Black : null;
-                dc.DrawRectangle(brushRet, penRet, new Rect(xDip, yDip, largDip, altDip));
+                var penRet = new Pen(ConverterCor(el.CorTexto, Brushes.Black), Math.Max(0.5, Dip(el.EspessuraBorda * 0.25)));
+                var brushRet = el.Preenchido ? ConverterCor(el.CorFundo, Brushes.Black) : null;
+                var raioDip = Dip(el.RaioCanto);
+                if (raioDip > 0)
+                {
+                    dc.DrawRoundedRectangle(brushRet, penRet, new Rect(xDip, yDip, largDip, altDip), raioDip, raioDip);
+                }
+                else
+                {
+                    dc.DrawRectangle(brushRet, penRet, new Rect(xDip, yDip, largDip, altDip));
+                }
                 break;
 
             case TipoElemento.Linha:
-                var penLinha = new Pen(Brushes.Black, Math.Max(0.5, Dip(el.EspessuraBorda * 0.25)));
+                var penLinha = new Pen(ConverterCor(el.CorTexto, Brushes.Black), Math.Max(0.5, Dip(el.EspessuraBorda * 0.25)));
                 dc.DrawLine(penLinha, new Point(xDip, yDip + (altDip / 2)), new Point(xDip + largDip, yDip + (altDip / 2)));
                 break;
+        }
+
+        if (rotacionou)
+        {
+            dc.Pop();
         }
     }
 
@@ -99,7 +134,9 @@ public class EditorDesenhoService
 
         var peso = el.Negrito ? FontWeights.Bold : FontWeights.Normal;
         var estilo = el.Italico ? FontStyles.Italic : FontStyles.Normal;
-        var typeface = new Typeface(new FontFamily("Segoe UI"), estilo, peso, FontStretches.Normal);
+        var nomeFonte = !string.IsNullOrWhiteSpace(el.Fonte) ? el.Fonte : "Segoe UI";
+        var typeface = new Typeface(new FontFamily(nomeFonte), estilo, peso, FontStretches.Normal);
+        var pincelTexto = ConverterCor(el.CorTexto, Brushes.Black);
 
         var formatted = new FormattedText(
             textoFinal,
@@ -107,7 +144,7 @@ public class EditorDesenhoService
             FlowDirection.LeftToRight,
             typeface,
             el.TamanhoFonte,
-            Brushes.Black,
+            pincelTexto,
             1.0)
         {
             MaxTextWidth = Math.Max(1, larg),
@@ -198,7 +235,7 @@ public class EditorDesenhoService
             // Placeholder visual para imagens não carregadas
             dc.DrawRectangle(new SolidColorBrush(Color.FromRgb(0xF3, 0xF4, 0xF6)), new Pen(Brushes.Gray, 0.8) { DashStyle = DashStyles.Dash }, new Rect(x, y, larg, alt));
             var txtPlaceholder = new FormattedText(
-                "🖼️ [Logo]",
+                "[Logotipo]",
                 CultureInfo.InvariantCulture,
                 FlowDirection.LeftToRight,
                 FontePadrao,
@@ -217,9 +254,10 @@ public class EditorDesenhoService
         DrawingContext dc,
         ElementoDesign el,
         Produto? produto,
+        string? tamanho,
         double x, double y, double larg, double alt)
     {
-        var codigo = ResolverCodigo(el, produto);
+        var codigo = ResolverCodigo(el, produto, tamanho);
         if (string.IsNullOrWhiteSpace(codigo))
         {
             codigo = "7891234567890";
@@ -311,6 +349,19 @@ public class EditorDesenhoService
         var precoVenda = Dinheiro.FormatarParaEdicao(produto.PrecoVendaCentavos);
         var precoAtacado = produto.PrecoAtacadoCentavos > 0 ? Dinheiro.FormatarParaEdicao(produto.PrecoAtacadoCentavos) : "";
 
+        // Suporte à regra Nexus de código de barras com sufixo de tamanho
+        string codigoFormatado;
+        var codBase = produto.CodigoBarras ?? produto.Referencia ?? produto.CodigoInterno;
+        if (!string.IsNullOrWhiteSpace(codBase) && !string.IsNullOrWhiteSpace(tamanho) && CodigoBarrasTamanho.UsaNumeroDoTamanho(codBase))
+        {
+            var ordem = ObterOrdemTamanhoProduto(produto, tamanho);
+            codigoFormatado = CodigoBarrasTamanho.Montar(codBase, ordem) ?? codBase;
+        }
+        else
+        {
+            codigoFormatado = produto.CodigoBarras ?? produto.CodigoInterno ?? "";
+        }
+
         // Suporte a substituição inline {Nome}, {Preco}, {Ref}, etc.
         return baseTexto
             .Replace("{Nome}", produto.Nome)
@@ -322,15 +373,27 @@ public class EditorDesenhoService
             .Replace("{PrecoAtacado}", precoAtacado)
             .Replace("{Ref}", produto.Referencia ?? "")
             .Replace("{Tamanho}", tamanho ?? "")
-            .Replace("{Codigo}", produto.CodigoBarras ?? produto.CodigoInterno ?? "")
+            .Replace("{Codigo}", codigoFormatado)
             .Replace("{Loja}", nomeLoja);
     }
 
-    public static string ResolverCodigo(ElementoDesign el, Produto? produto)
+    public static string ResolverCodigo(ElementoDesign el, Produto? produto, string? tamanho = null)
     {
+        // Se a variável é Nenhuma ou se tem ValorCodigo fixo e a variável não foi definida para um campo específico
+        if (el.Variavel == VariavelEtiqueta.Nenhuma && !string.IsNullOrWhiteSpace(el.ValorCodigo))
+        {
+            return el.ValorCodigo;
+        }
+
         if (produto == null)
         {
-            return !string.IsNullOrWhiteSpace(el.ValorCodigo) ? el.ValorCodigo : "7891234567890";
+            var codPadrao = !string.IsNullOrWhiteSpace(el.ValorCodigo) ? el.ValorCodigo : "7891234567890";
+            if (!string.IsNullOrWhiteSpace(tamanho) && CodigoBarrasTamanho.UsaNumeroDoTamanho(codPadrao))
+            {
+                var ordemPadrao = ObterOrdemTamanhoGenerica(tamanho);
+                return CodigoBarrasTamanho.Montar(codPadrao, ordemPadrao) ?? codPadrao;
+            }
+            return codPadrao;
         }
 
         if (el.Variavel == VariavelEtiqueta.CodigoInterno && !string.IsNullOrWhiteSpace(produto.CodigoInterno))
@@ -338,17 +401,90 @@ public class EditorDesenhoService
             return produto.CodigoInterno;
         }
 
-        if (!string.IsNullOrWhiteSpace(produto.CodigoBarras))
+        if (el.Variavel == VariavelEtiqueta.Referencia && !string.IsNullOrWhiteSpace(produto.Referencia))
         {
-            return produto.CodigoBarras;
+            var refBase = produto.Referencia;
+            if (!string.IsNullOrWhiteSpace(tamanho))
+            {
+                var ordemRef = ObterOrdemTamanhoProduto(produto, tamanho);
+                return CodigoBarrasTamanho.Montar(refBase, ordemRef) ?? refBase;
+            }
+            return refBase;
         }
 
-        if (!string.IsNullOrWhiteSpace(produto.CodigoInterno))
+        if (el.Variavel == VariavelEtiqueta.NomeProduto && !string.IsNullOrWhiteSpace(produto.Nome))
         {
-            return produto.CodigoInterno;
+            return produto.Nome;
+        }
+
+        if (el.Variavel == VariavelEtiqueta.PrecoVarejo)
+        {
+            return (produto.PrecoVendaCentavos / 100.0).ToString("F2");
+        }
+
+        // Padrão: Código de barras do produto (ou referência / código interno como fallback)
+        var codigoBase = !string.IsNullOrWhiteSpace(produto.CodigoBarras)
+            ? produto.CodigoBarras
+            : (!string.IsNullOrWhiteSpace(produto.Referencia) ? produto.Referencia : produto.CodigoInterno);
+
+        if (!string.IsNullOrWhiteSpace(codigoBase))
+        {
+            // Regra oficial Nexus: se houver tamanho e o código base não for EAN-13 completo, acrescenta o número do tamanho
+            if (!string.IsNullOrWhiteSpace(tamanho) && CodigoBarrasTamanho.UsaNumeroDoTamanho(codigoBase))
+            {
+                var ordem = ObterOrdemTamanhoProduto(produto, tamanho);
+                return CodigoBarrasTamanho.Montar(codigoBase, ordem) ?? codigoBase;
+            }
+            return codigoBase;
         }
 
         return !string.IsNullOrWhiteSpace(el.ValorCodigo) ? el.ValorCodigo : "7891234567890";
+    }
+
+    public static int ObterOrdemTamanhoProduto(Produto produto, string tamanho)
+    {
+        if (produto.Tamanhos != null && produto.Tamanhos.Count > 0)
+        {
+            var match = produto.Tamanhos.FirstOrDefault(t =>
+                string.Equals(t.Tamanho, tamanho, StringComparison.OrdinalIgnoreCase));
+            if (match != null && match.Ordem > 0)
+            {
+                return match.Ordem;
+            }
+        }
+        return ObterOrdemTamanhoGenerica(tamanho);
+    }
+
+    public static int ObterOrdemTamanhoGenerica(string tamanho)
+    {
+        if (int.TryParse(tamanho, out var n) && n > 0 && n <= 99)
+        {
+            return n;
+        }
+
+        return tamanho.Trim().ToUpperInvariant() switch
+        {
+            "PP" => 1,
+            "P" => 2,
+            "M" => 3,
+            "G" => 4,
+            "GG" => 5,
+            "XG" => 6,
+            "XXG" => 7,
+            "G1" => 5,
+            "G2" => 6,
+            "G3" => 7,
+            "34" => 1,
+            "36" => 2,
+            "38" => 3,
+            "40" => 4,
+            "42" => 5,
+            "44" => 6,
+            "46" => 7,
+            "48" => 8,
+            "50" => 9,
+            _ => 1
+        };
     }
 
     public static BitmapSource RenderizarBitmap(
@@ -382,7 +518,7 @@ public class EditorDesenhoService
         return rtb;
     }
 
-    public static string GerarZpl(ModeloEtiquetaDesign modelo, Produto? produto, string nomeLoja, int copias = 1)
+    public static string GerarZpl(ModeloEtiquetaDesign modelo, Produto? produto, string nomeLoja, int copias = 1, string? tamanho = null)
     {
         const double dotsPorMm = 8.0; // 203 DPI padrão térmico
         var larguraDots = (int)(modelo.LarguraMm * dotsPorMm);
@@ -396,37 +532,48 @@ public class EditorDesenhoService
 
         foreach (var el in modelo.Elementos)
         {
+            if (!el.Visivel) continue;
+
             var xDots = (int)(el.X * dotsPorMm);
             var yDots = (int)(el.Y * dotsPorMm);
             var largDots = (int)(el.Largura * dotsPorMm);
             var altDots = (int)(el.Altura * dotsPorMm);
 
+            char orientacaoZpl = el.Rotacao switch
+            {
+                90 => 'R',
+                180 => 'I',
+                270 => 'B',
+                _ => 'N'
+            };
+
             switch (el.Tipo)
             {
                 case TipoElemento.Texto:
-                    var txt = ResolverTexto(el, produto, null, nomeLoja);
+                    var txt = ResolverTexto(el, produto, tamanho, nomeLoja);
                     var tamFonteZpl = Math.Clamp((int)(el.TamanhoFonte * 2.8), 16, 80);
-                    sb.AppendLine($"^FO{xDots},{yDots}^A0N,{tamFonteZpl},{tamFonteZpl}^FD{txt}^FS");
+                    sb.AppendLine($"^FO{xDots},{yDots}^A0{orientacaoZpl},{tamFonteZpl},{tamFonteZpl}^FD{txt}^FS");
                     break;
 
                 case TipoElemento.CodigoBarras:
-                    var cod = ResolverCodigo(el, produto);
+                    var cod = ResolverCodigo(el, produto, tamanho);
                     if (el.TipoCodigo == TipoSimboloCodigo.QrCode)
                     {
                         var mag = Math.Clamp(altDots / 25, 2, 8);
-                        sb.AppendLine($"^FO{xDots},{yDots}^BQN,2,{mag}^FDQA,{cod}^FS");
+                        sb.AppendLine($"^FO{xDots},{yDots}^BQ{orientacaoZpl},2,{mag}^FDQA,{cod}^FS");
                     }
                     else
                     {
                         var hBarras = Math.Max(20, altDots - 20);
                         var legivel = el.MostrarTextoLegivel ? "Y" : "N";
-                        sb.AppendLine($"^FO{xDots},{yDots}^BCN,{hBarras},{legivel},N,N^FD{cod}^FS");
+                        sb.AppendLine($"^FO{xDots},{yDots}^BC{orientacaoZpl},{hBarras},{legivel},N,N^FD{cod}^FS");
                     }
                     break;
 
                 case TipoElemento.Retangulo:
                     var esp = Math.Max(1, (int)(el.EspessuraBorda * 2));
-                    sb.AppendLine($"^FO{xDots},{yDots}^GB{largDots},{altDots},{esp}^FS");
+                    var raioZpl = Math.Clamp((int)(el.RaioCanto * 2), 0, 8);
+                    sb.AppendLine($"^FO{xDots},{yDots}^GB{largDots},{altDots},{esp},B,{raioZpl}^FS");
                     break;
 
                 case TipoElemento.Linha:

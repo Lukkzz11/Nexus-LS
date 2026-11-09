@@ -7,6 +7,28 @@ using NexusLS.Core.Services;
 
 namespace NexusLS.BarTender.Converters;
 
+public class IgualAoTagConverter : IMultiValueConverter
+{
+    public object Convert(object[] values, Type targetType, object? parameter, CultureInfo culture) =>
+        values.Length == 2 && values[0] is not null && values[1] is not null
+        && string.Equals(values[0].ToString(), values[1].ToString(), StringComparison.Ordinal);
+
+    public object[] ConvertBack(object value, Type[] targetTypes, object? parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}
+
+public class BoolParaTextoConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        var partes = (parameter as string ?? "Sim|Não").Split('|');
+        return value is true ? partes[0] : partes[1];
+    }
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}
+
 public class CentavosParaMoedaConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)

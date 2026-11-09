@@ -14,12 +14,22 @@ public class ImpressaoService
     public static bool Imprimir(
         IEnumerable<ItemFila> itens,
         ConfiguracaoEtiqueta config,
-        int primeiraPosicao = 1)
+        int primeiraPosicao = 1,
+        string? nomeImpressora = null)
     {
         var listaItens = itens.ToList();
         if (listaItens.Count == 0) return false;
 
         var dialogo = new PrintDialog();
+        if (!string.IsNullOrWhiteSpace(nomeImpressora))
+        {
+            try
+            {
+                var server = new System.Printing.LocalPrintServer();
+                dialogo.PrintQueue = server.GetPrintQueue(nomeImpressora);
+            }
+            catch { }
+        }
         if (dialogo.ShowDialog() != true) return false;
 
         var formatoCore = config.Formato.FormatoCore;
@@ -52,12 +62,22 @@ public class ImpressaoService
         IEnumerable<ItemFila> itens,
         ModeloEtiquetaDesign modelo,
         string nomeLoja,
-        int primeiraPosicao = 1)
+        int primeiraPosicao = 1,
+        string? nomeImpressora = null)
     {
         var listaItens = itens.ToList();
         if (listaItens.Count == 0) return false;
 
         var dialogo = new PrintDialog();
+        if (!string.IsNullOrWhiteSpace(nomeImpressora))
+        {
+            try
+            {
+                var server = new System.Printing.LocalPrintServer();
+                dialogo.PrintQueue = server.GetPrintQueue(nomeImpressora);
+            }
+            catch { }
+        }
         if (dialogo.ShowDialog() != true) return false;
 
         try
@@ -219,7 +239,16 @@ public class BarTenderDesignPaginator : DocumentPaginator
             {
                 foreach (var pos in _paginas[pageNumber])
                 {
-                    EditorDesenhoService.Desenhar(dc, _modelo, pos.Produto, pos.Tamanho, _nomeLoja, desenharBordaExterna: false);
+                    var modeloEfetivo = _modelo;
+                    if (GerenciadorEtiquetasProdutoService.TemEtiquetaPersonalizada(pos.Produto.Id))
+                    {
+                        var modeloCustom = GerenciadorEtiquetasProdutoService.CarregarEtiquetaProduto(pos.Produto.Id);
+                        if (modeloCustom != null)
+                        {
+                            modeloEfetivo = modeloCustom;
+                        }
+                    }
+                    EditorDesenhoService.Desenhar(dc, modeloEfetivo, pos.Produto, pos.Tamanho, _nomeLoja, desenharBordaExterna: false);
                 }
             }
         }

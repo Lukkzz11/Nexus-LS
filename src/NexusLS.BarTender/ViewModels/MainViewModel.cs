@@ -1,6 +1,8 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
+using System.Net.Http;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Media.Imaging;
@@ -9,6 +11,8 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
 using NexusLS.BarTender.Models;
 using NexusLS.BarTender.Services;
+using NexusLS.Core.Atualizacao;
+using NexusLS.Core.Licenciamento;
 using NexusLS.Core.Models;
 
 namespace NexusLS.BarTender.ViewModels;
@@ -16,6 +20,19 @@ namespace NexusLS.BarTender.ViewModels;
 public partial class MainViewModel : ObservableObject
 {
     private readonly BancoDadosService _dbService;
+    private readonly ServicoLicencaNuvem _licencaNuvem;
+
+    [ObservableProperty]
+    private string _licencaTexto = "Verificando licença...";
+
+    [ObservableProperty]
+    private bool _licencaAtiva = true;
+
+    [ObservableProperty]
+    private bool _temAtualizacaoDisponivel;
+
+    [ObservableProperty]
+    private string _mensagemAtualizacao = "";
 
     [ObservableProperty]
     private string _caminhoBanco = "";
@@ -25,6 +42,9 @@ public partial class MainViewModel : ObservableObject
 
     [ObservableProperty]
     private string _statusBanco = "Verificando banco de dados...";
+
+    [ObservableProperty]
+    private string _telaAtiva = "Estudio"; // "Estudio", "Catalogo", "Fila", "Configuracoes"
 
     [ObservableProperty]
     private string _filtroTipo = "Todos"; // Todos, SemCodigo, ComCodigo
@@ -71,6 +91,18 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private bool _estaCarregando;
 
+    [ObservableProperty]
+    private string _categoriaSelecionada = "Todas";
+
+    [ObservableProperty]
+    private string? _impressoraSelecionada;
+
+    [ObservableProperty]
+    private int _posicaoInicialFolha = 1;
+
+    public ObservableCollection<string> CategoriasDisponiveis { get; } = new() { "Todas" };
+    public ObservableCollection<string> ImpressorasInstaladas { get; } = new();
+
     public ObservableCollection<ProdutoItemViewModel> TodosProdutos { get; } = new();
     public ICollectionView ProdutosView { get; }
     public ObservableCollection<ItemFila> FilaImpressao { get; } = new();
@@ -82,6 +114,11 @@ public partial class MainViewModel : ObservableObject
 
     public MainViewModel(BancoDadosService? dbService)
     {
+        var http = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+        _licencaNuvem = new ServicoLicencaNuvem(
+            new FonteLicencaComReserva(new FonteLicencaCloudFunction(http), new FonteLicencaFirestore(http)),
+            ServicoLicencaNuvem.CaminhoPadrao());
+
         _dbService = dbService ?? new BancoDadosService();
         _caminhoBanco = _dbService.CaminhoAtual;
 
@@ -92,17 +129,111 @@ public partial class MainViewModel : ObservableObject
 
         Config.PropertyChanged += (_, _) => AtualizarPreview();
 
+        CarregarImpressoras();
+        AtualizarLicenca();
         _ = InicializarAsync();
+    }
+
+    public void AtualizarLicenca()
+    {
+        var local = _licencaNuvem.AvaliarLocal();
+        if (local.Estado != EstadoLicencaNuvem.NaoEncontrada)
+        {
+            LicencaTexto = local.Mensagem;
+            LicencaAtiva = local.Ativa;
+        }
+        else
+        {
+            LicencaTexto = "Licença: Modo de Demonstração / Avaliação";
+            LicencaAtiva = true;
+        }
+    }
+
+    [RelayCommand]
+    public void AbrirAtualizadorLicenca()
+    {
+        var caminhos = new[]
+        {
+            Path.Combine(AppContext.BaseDirectory, "atualizador.exe"),
+            Path.Combine(AppContext.BaseDirectory, "..", "atualizador.exe"),
+            @"C:\Nexus\atualizador.exe",
+            @"C:\NexusLS\atualizador.exe",
+            @"C:\NexusLS\publicar\atualizador.exe",
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "NexusLS", "atualizador.exe"),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "NexusLS", "atualizador.exe")
+        };
+        var exe = caminhos.FirstOrDefault(File.Exists);
+        if (exe != null)
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo(exe)
+                {
+                    UseShellExecute = true,
+                    Arguments = "--bartender",
+                    WorkingDirectory = Path.GetDirectoryName(exe)!
+                });
+            }
+            catch { }
+        }
+        else
+        {
+            MessageBox.Show("O aplicativo Atualizador e Ativador (atualizador.exe) não foi localizado nesta pasta.", "Nexus BarTender", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+    }
+
+    public async Task VerificarAtualizacaoAsync()
+    {
+        try
+        {
+            using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+            http.DefaultRequestHeaders.UserAgent.ParseAdd("NexusBarTender/1.0");
+            var repo = ConfiguracaoAtualizacao.Repositorio();
+            var fonte = new FonteGitHub(http, repo, "NexusBarTender.exe", "NexusBarTender.exe.sha256");
+            var versaoAtual = VersaoPrograma.Atual();
+            var servico = new AtualizadorService(fonte, AtualizadorService.PastaPadrao(), versaoAtual);
+            var res = await servico.VerificarAsync();
+            if (res.Estado == EstadoVerificacao.Disponivel && res.Nova != null)
+            {
+                TemAtualizacaoDisponivel = true;
+                MensagemAtualizacao = $"Nova versão {res.Nova.Versao} disponível!";
+            }
+        }
+        catch { }
+    }
+
+    public void CarregarImpressoras()
+    {
+        ImpressorasInstaladas.Clear();
+        try
+        {
+            foreach (string printer in System.Drawing.Printing.PrinterSettings.InstalledPrinters)
+            {
+                ImpressorasInstaladas.Add(printer);
+            }
+            var padrao = new System.Drawing.Printing.PrinterSettings().PrinterName;
+            ImpressoraSelecionada = ImpressorasInstaladas.Contains(padrao) ? padrao : ImpressorasInstaladas.FirstOrDefault();
+        }
+        catch
+        {
+            ImpressorasInstaladas.Add("Impressora Padrão do Windows");
+            ImpressoraSelecionada = "Impressora Padrão do Windows";
+        }
     }
 
     private async Task InicializarAsync()
     {
         await RecarregarDadosAsync();
+        _ = VerificarAtualizacaoAsync();
     }
 
     private bool FiltrarProduto(object obj)
     {
         if (obj is not ProdutoItemViewModel item) return false;
+
+        // Filtro por categoria
+        if (CategoriaSelecionada != "Todas" && !string.Equals(item.Categoria, CategoriaSelecionada, StringComparison.OrdinalIgnoreCase))
+            return false;
 
         // Filtro por tipo de código
         if (FiltroTipo == "SemCodigo" && item.TemCodigoBarras) return false;
@@ -122,6 +253,8 @@ public partial class MainViewModel : ObservableObject
     partial void OnTextoBuscaChanged(string value) => ProdutosView.Refresh();
 
     partial void OnFiltroTipoChanged(string value) => ProdutosView.Refresh();
+
+    partial void OnCategoriaSelecionadaChanged(string value) => ProdutosView.Refresh();
 
     partial void OnProdutoSelecionadoChanged(ProdutoItemViewModel? value)
     {
@@ -165,6 +298,13 @@ public partial class MainViewModel : ObservableObject
 
             AtualizarContadores();
             StatusBanco = $"Conectado ao Nexus LS ({TodosProdutos.Count} produtos ativos)";
+
+            CategoriasDisponiveis.Clear();
+            CategoriasDisponiveis.Add("Todas");
+            var cats = produtos.Select(p => p.Categoria).Where(c => !string.IsNullOrWhiteSpace(c)).Distinct().OrderBy(c => c);
+            foreach (var c in cats) CategoriasDisponiveis.Add(c!);
+
+            DesignerVM.SincronizarProdutos(TodosProdutos);
 
             if (ProdutoSelecionado == null && TodosProdutos.Count > 0)
             {
@@ -422,6 +562,23 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
+    public void AdicionarItemComQuantidadeFila(ProdutoItemViewModel? produtoItem)
+    {
+        if (produtoItem == null) return;
+        var qtd = Math.Max(1, produtoItem.QuantidadeAdicionar);
+        var itemExistente = FilaImpressao.FirstOrDefault(i => i.Produto.Id == produtoItem.Id);
+        if (itemExistente != null)
+        {
+            itemExistente.Quantidade += qtd;
+        }
+        else
+        {
+            FilaImpressao.Add(new ItemFila(produtoItem.Produto, qtd));
+        }
+        AtualizarTotaisFila();
+    }
+
+    [RelayCommand]
     public void Imprimir()
     {
         if (FilaImpressao.Count == 0)
@@ -432,9 +589,10 @@ public partial class MainViewModel : ObservableObject
 
         try
         {
+            var posInicial = Math.Max(1, PosicaoInicialFolha);
             var imprimiu = UsarModeloDesigner
-                ? ImpressaoService.ImprimirDesign(FilaImpressao, DesignerVM.Modelo, Config.NomeLoja)
-                : ImpressaoService.Imprimir(FilaImpressao, Config);
+                ? ImpressaoService.ImprimirDesign(FilaImpressao, DesignerVM.Modelo, Config.NomeLoja, posInicial, ImpressoraSelecionada)
+                : ImpressaoService.Imprimir(FilaImpressao, Config, posInicial, ImpressoraSelecionada);
 
             if (imprimiu)
             {
@@ -485,6 +643,29 @@ public partial class MainViewModel : ObservableObject
             encoder.Save(fs);
 
             MessageBox.Show($"Imagem salva em:\n{sfd.FileName}", "Nexus BarTender", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+    }
+
+    [RelayCommand]
+    public void IrParaEstudio() => TelaAtiva = "Estudio";
+
+    [RelayCommand]
+    public void IrParaCatalogo() => TelaAtiva = "Catalogo";
+
+    [RelayCommand]
+    public void IrParaFila() => TelaAtiva = "Fila";
+
+    [RelayCommand]
+    public void IrParaConfiguracoes() => TelaAtiva = "Configuracoes";
+
+    [RelayCommand]
+    public void UsarProdutoNoEstudio(ProdutoItemViewModel? produtoItem)
+    {
+        if (produtoItem != null)
+        {
+            ProdutoSelecionado = produtoItem;
+            DesignerVM.DefinirProduto(produtoItem.Produto, Config.NomeLoja, carregarEtiquetaSalvaSeHouver: true);
+            TelaAtiva = "Estudio";
         }
     }
 

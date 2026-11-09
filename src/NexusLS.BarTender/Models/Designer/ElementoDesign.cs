@@ -77,6 +77,42 @@ public partial class ElementoDesign : ObservableObject
     [ObservableProperty]
     private bool _preenchido = false;
 
+    // Rotação em graus (0, 90, 180, 270)
+    [ObservableProperty]
+    private double _rotacao = 0.0;
+
+    // Tipografia e Cores
+    [ObservableProperty]
+    private string _fonte = "Segoe UI";
+
+    [ObservableProperty]
+    private string _corTexto = "#000000";
+
+    // Cantos arredondados (em mm) para retângulos
+    [ObservableProperty]
+    private double _raioCanto = 0.0;
+
+    [ObservableProperty]
+    private string _corFundo = "#000000";
+
+    // =========================================================================
+    // SISTEMA DE CAMADAS & GRUPOS (ESTILO PHOTOSHOP / COREL)
+    // =========================================================================
+    [ObservableProperty]
+    private string _nome = "Nova Camada";
+
+    [ObservableProperty]
+    private bool _visivel = true;
+
+    [ObservableProperty]
+    private bool _bloqueado = false;
+
+    [ObservableProperty]
+    private string? _grupoId;
+
+    [ObservableProperty]
+    private string? _nomeGrupo;
+
     // Estado de seleção visual na tela (não persiste em JSON)
     [JsonIgnore]
     [ObservableProperty]
@@ -88,6 +124,11 @@ public partial class ElementoDesign : ObservableObject
         {
             Id = Guid.NewGuid().ToString("N"),
             Tipo = this.Tipo,
+            Nome = $"{this.Nome} (Cópia)",
+            Visivel = this.Visivel,
+            Bloqueado = this.Bloqueado,
+            GrupoId = this.GrupoId,
+            NomeGrupo = this.NomeGrupo,
             X = this.X + 2.0,
             Y = this.Y + 2.0,
             Largura = this.Largura,
@@ -107,7 +148,12 @@ public partial class ElementoDesign : ObservableObject
             ValorCodigo = this.ValorCodigo,
             MostrarTextoLegivel = this.MostrarTextoLegivel,
             EspessuraBorda = this.EspessuraBorda,
-            Preenchido = this.Preenchido
+            Preenchido = this.Preenchido,
+            Rotacao = this.Rotacao,
+            Fonte = this.Fonte,
+            CorTexto = this.CorTexto,
+            RaioCanto = this.RaioCanto,
+            CorFundo = this.CorFundo
         };
     }
 }

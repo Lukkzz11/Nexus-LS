@@ -1,42 +1,48 @@
-<Window x:Class="NexusLS.BarTender.Views.MainWindow"
+<ui:FluentWindow x:Class="NexusLS.BarTender.Views.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         xmlns:vm="clr-namespace:NexusLS.BarTender.ViewModels"
         xmlns:conv="clr-namespace:NexusLS.BarTender.Converters"
         xmlns:designer="clr-namespace:NexusLS.BarTender.Views.Designer"
         mc:Ignorable="d"
-        Title="Nexus BarTender - Impressão de Etiquetas &amp; Códigos de Barras"
-        Width="1420" Height="860"
-        MinWidth="1150" MinHeight="720"
-        WindowStartupLocation="CenterScreen"
-        Background="{StaticResource CorFundo}"
-        FontFamily="{StaticResource FonteTexto}">
+        Title="Nexus BarTender · Estúdio de Etiquetas &amp; Códigos de Barras"
+        Height="860" Width="1440" MinHeight="680" MinWidth="1100"
+        WindowStartupLocation="CenterScreen" WindowState="Maximized"
+        ExtendsContentIntoTitleBar="True"
+        WindowBackdropType="None" Background="{StaticResource CorFundo}"
+        WindowCornerPreference="Round"
+        FontFamily="{StaticResource FonteTexto}" FontSize="{StaticResource TamCorpo}">
 
-    <Window.DataContext>
+    <ui:FluentWindow.DataContext>
         <vm:MainViewModel />
-    </Window.DataContext>
+    </ui:FluentWindow.DataContext>
 
-    <Window.Resources>
-        <!-- Estilo de Aba no Padrão do Nexus LS -->
-        <Style x:Key="AbaNexus" TargetType="TabItem">
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="TabItem">
-                        <Border x:Name="border" Background="{StaticResource CorCabecalho}" BorderBrush="{StaticResource CorBorda}" BorderThickness="1,1,1,0" CornerRadius="8,8,0,0" Padding="18,10" Margin="0,0,4,0" Cursor="Hand">
-                            <ContentPresenter ContentSource="Header" />
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="{StaticResource CorPainel}" />
-                                <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource CorPrimaria}" />
-                                <Setter TargetName="border" Property="BorderThickness" Value="0,3,0,0" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
+    <ui:FluentWindow.Resources>
+        <!-- Estilo de item do menu lateral idêntico ao Nexus LS -->
+        <Style x:Key="ItemDoMenu" TargetType="Button" BasedOn="{StaticResource BotaoMenu}">
+            <Style.Triggers>
+                <DataTrigger Value="True">
+                    <DataTrigger.Binding>
+                        <MultiBinding Converter="{StaticResource IgualTag}">
+                            <Binding Path="TelaAtiva" />
+                            <Binding Path="Tag" RelativeSource="{RelativeSource Self}" />
+                        </MultiBinding>
+                    </DataTrigger.Binding>
+                    <Setter Property="Background" Value="{StaticResource CorMenuAtivo}" />
+                    <Setter Property="BorderBrush" Value="{StaticResource CorSelecao}" />
+                    <Setter Property="FontWeight" Value="SemiBold" />
+                    <Setter Property="Foreground" Value="{StaticResource CorPrimaria}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="IconeDoMenu" TargetType="ui:SymbolIcon">
+            <Setter Property="FontSize" Value="{StaticResource TamIcone}" />
+            <Setter Property="Margin" Value="0,0,12,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
 
         <Style x:Key="PillContador" TargetType="Border">
@@ -44,194 +50,404 @@
             <Setter Property="Padding" Value="8,2" />
             <Setter Property="Margin" Value="0,0,6,0" />
         </Style>
-    </Window.Resources>
+    </ui:FluentWindow.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
-            <!-- 0: Header Superior Nexus -->
+            <!-- 0: Barra de Título Windows 11 Fluent -->
             <RowDefinition Height="Auto" />
-            <!-- 1: Conteúdo Principal -->
+            <!-- 1: Conteúdo Principal com Sidebar -->
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- ==================== HEADER SUPERIOR NO ESTILO NEXUS ==================== -->
-        <Border Grid.Row="0" Background="{StaticResource CorPainel}" BorderBrush="{StaticResource CorBorda}" BorderThickness="0,0,0,1" Padding="20,12">
-            <Grid VerticalAlignment="Center">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+        <!-- Barra de título Fluent com botões minimizar/maximizar/fechar nativos -->
+        <ui:TitleBar Grid.Row="0" Title="Nexus BarTender · Estúdio de Etiquetas &amp; Códigos" />
 
-                <!-- Identidade Visual Nexus BarTender -->
-                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Border Background="{StaticResource CorSelecaoSuave}" BorderBrush="{StaticResource CorSelecao}" BorderThickness="1" CornerRadius="{StaticResource RaioMedio}" Width="40" Height="40" Margin="0,0,12,0">
-                        <TextBlock Text="🏷️" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    </Border>
-                    <StackPanel VerticalAlignment="Center">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="NEXUS" Foreground="{StaticResource CorTexto}" FontWeight="Bold" FontSize="18" />
-                            <TextBlock Text=" BARTENDER" Foreground="{StaticResource CorPrimaria}" FontWeight="Black" FontSize="18" Margin="4,0,0,0" />
-                            <Border Background="{StaticResource CorSelecaoSuave}" BorderBrush="{StaticResource CorSelecao}" BorderThickness="1" CornerRadius="{StaticResource RaioPequeno}" Padding="6,2" Margin="8,0,0,0" VerticalAlignment="Center">
-                                <TextBlock Text="ESTÚDIO DE ETIQUETAS" Foreground="{StaticResource CorPrimaria}" FontSize="10" FontWeight="Bold" />
-                            </Border>
-                        </StackPanel>
-                        <TextBlock Text="Gerador de Códigos de Barras &amp; Designer de Etiquetas integrado ao Nexus LS" Foreground="{StaticResource CorTextoSuave}" FontSize="12" Margin="0,2,0,0" />
-                    </StackPanel>
-                </StackPanel>
-
-                <!-- Status de Conexão com o Banco SQLite -->
-                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Border Background="{StaticResource CorCabecalho}" BorderBrush="{StaticResource CorBorda}" BorderThickness="1" CornerRadius="20" Padding="12,6" Margin="0,0,10,0">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <Ellipse Width="8" Height="8" Margin="0,0,8,0">
-                                <Ellipse.Style>
-                                    <Style TargetType="Ellipse">
-                                        <Setter Property="Fill" Value="{StaticResource CorPositivo}" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding BancoConectado}" Value="False">
-                                                <Setter Property="Fill" Value="{StaticResource CorPerigo}" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Ellipse.Style>
-                            </Ellipse>
-                            <TextBlock Text="{Binding StatusBanco}" Foreground="{StaticResource CorTexto}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Border>
-
-                    <Button Command="{Binding SelecionarBancoCommand}" Style="{StaticResource BotaoSecundario}" Content="📁 Trocar Banco..." Margin="0,0,8,0" Padding="12,6" FontSize="12" />
-                    <Button Command="{Binding RecarregarDadosCommand}" Style="{StaticResource BotaoSecundario}" Content="🔄 Atualizar" Padding="12,6" FontSize="12" />
-                </StackPanel>
-            </Grid>
-        </Border>
-
-        <!-- ==================== CORPO PRINCIPAL ==================== -->
-        <Grid Grid.Row="1" Margin="16">
+        <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <!-- Esquerda: Catálogo e Gerador de Códigos (45%) -->
-                <ColumnDefinition Width="4.6*" MinWidth="420" />
-                <ColumnDefinition Width="12" />
-                <!-- Direita: Designer, Prévia e Fila (55%) -->
-                <ColumnDefinition Width="6.4*" MinWidth="580" />
+                <!-- Menu Lateral Padrão Nexus LS (230px) -->
+                <ColumnDefinition Width="230" />
+                <!-- Área de Conteúdo Ativo -->
+                <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <GridSplitter Grid.Column="1" Width="12" HorizontalAlignment="Stretch" Background="Transparent" Cursor="SizeWE" />
-
-            <!-- COLUNA ESQUERDA: CATÁLOGO & GERADOR -->
-            <Border Grid.Column="0" Style="{StaticResource Painel}" Padding="16">
+            <!-- ==================== MENU LATERAL (NEXUS LS) ==================== -->
+            <Border Grid.Column="0" Style="{StaticResource PainelLateral}">
                 <Grid>
                     <Grid.RowDefinitions>
-                        <!-- 0: Título e Contadores -->
+                        <!-- Topo: Identidade do App -->
                         <RowDefinition Height="Auto" />
-                        <!-- 1: Filtros e Busca -->
-                        <RowDefinition Height="Auto" />
-                        <!-- 2: Tabela de Produtos -->
+                        <!-- Meio: Itens do Menu -->
                         <RowDefinition Height="*" />
-                        <!-- 3: Barra de Ações Rápidas -->
+                        <!-- Rodapé: Conexão SQLite do Nexus LS -->
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <!-- 0: Título & Badges de Status -->
-                    <Grid Grid.Row="0" Margin="0,0,0,12">
+                    <!-- Identidade Visual do BarTender -->
+                    <Border Grid.Row="0" Padding="16,14,16,12" BorderBrush="{StaticResource CorBorda}" BorderThickness="0,0,0,1">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Border Background="{StaticResource CorSelecaoSuave}" BorderBrush="{StaticResource CorSelecao}" BorderThickness="1" CornerRadius="{StaticResource RaioMedio}" Width="36" Height="36" Margin="0,0,10,0">
+                                <ui:SymbolIcon Symbol="Tag24" FontSize="20" Foreground="{StaticResource CorPrimaria}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="NEXUS " FontWeight="Bold" FontSize="14" Foreground="{StaticResource CorTexto}" />
+                                    <TextBlock Text="BARTENDER" FontWeight="Black" FontSize="14" Foreground="{StaticResource CorPrimaria}" />
+                                </StackPanel>
+                                <TextBlock Text="ETIQUETAS &amp; CÓDIGOS" FontSize="9.5" FontWeight="SemiBold" Foreground="{StaticResource CorTextoSuave}" Margin="0,1,0,0" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Itens de Navegação -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="0,12,0,16">
+                            <TextBlock Text="PRODUÇÃO DE ETIQUETAS" Style="{StaticResource SecaoMenu}" />
+
+                            <!-- 1. Estúdio de Etiquetas (Designer CAD) -->
+                            <Button Tag="Estudio" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaEstudioCommand}" Margin="0,0,0,4">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:SymbolIcon Symbol="PaintBrush24" Style="{StaticResource IconeDoMenu}" />
+                                    <TextBlock Text="Estúdio de Etiquetas" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+
+                            <!-- 2. Catálogo de Produtos do ERP -->
+                            <Button Tag="Catalogo" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaCatalogoCommand}" Margin="0,0,0,4">
+                                <Grid Width="170">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Orientation="Horizontal" Grid.Column="0">
+                                        <ui:SymbolIcon Symbol="Box24" Style="{StaticResource IconeDoMenu}" />
+                                        <TextBlock Text="Catálogo ERP" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                    <Border Grid.Column="1" Background="{StaticResource CorCabecalho}" BorderBrush="{StaticResource CorBorda}" BorderThickness="1" CornerRadius="10" Padding="6,1" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding TotalProdutos}" FontSize="10.5" FontWeight="Bold" Foreground="{StaticResource CorTextoSuave}" />
+                                    </Border>
+                                </Grid>
+                            </Button>
+
+                            <!-- 3. Fila de Impressão -->
+                            <Button Tag="Fila" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaFilaCommand}" Margin="0,0,0,4">
+                                <Grid Width="170">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Orientation="Horizontal" Grid.Column="0">
+                                        <ui:SymbolIcon Symbol="Print24" Style="{StaticResource IconeDoMenu}" />
+                                        <TextBlock Text="Fila de Impressão" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                    <Border Grid.Column="1" Background="{StaticResource CorPrimaria}" CornerRadius="10" Padding="7,1" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding TotalEtiquetasFila}" FontSize="10.5" FontWeight="Bold" Foreground="White" />
+                                    </Border>
+                                </Grid>
+                            </Button>
+
+                            <!-- 4. Configurações & Impressora -->
+                            <TextBlock Text="PREFERÊNCIAS" Style="{StaticResource SecaoMenu}" Margin="20,16,18,6" />
+
+                            <Button Tag="Configuracoes" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaConfiguracoesCommand}" Margin="0,0,0,4">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:SymbolIcon Symbol="Settings24" Style="{StaticResource IconeDoMenu}" />
+                                    <TextBlock Text="Configurações" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+
+                            <!-- 5. Licença & Atualizações -->
+                            <Button Style="{StaticResource ItemDoMenu}" Command="{Binding AbrirAtualizadorLicencaCommand}">
+                                <Grid Width="170">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Orientation="Horizontal" Grid.Column="0">
+                                        <ui:SymbolIcon Symbol="ShieldCheckmark24" Style="{StaticResource IconeDoMenu}" />
+                                        <TextBlock Text="Licença &amp; Atualizador" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                    <Border Grid.Column="1" Background="#15803D" CornerRadius="10" Padding="6,1" VerticalAlignment="Center"
+                                            Visibility="{Binding TemAtualizacaoDisponivel, Converter={StaticResource BoolVis}}">
+                                        <TextBlock Text="NOVA" FontSize="9.5" FontWeight="Bold" Foreground="White" />
+                                    </Border>
+                                </Grid>
+                            </Button>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- Rodapé do Menu Lateral: Status do Banco SQLite & Licença -->
+                    <Border Grid.Row="2" Background="{StaticResource CorPainel}" BorderBrush="{StaticResource CorBorda}" BorderThickness="0,1,0,0" Padding="14,10">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,4">
+                                <Ellipse Width="8" Height="8" Margin="0,0,8,0">
+                                    <Ellipse.Style>
+                                        <Style TargetType="Ellipse">
+                                            <Setter Property="Fill" Value="{StaticResource CorPositivo}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding BancoConectado}" Value="False">
+                                                    <Setter Property="Fill" Value="{StaticResource CorPerigo}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Ellipse.Style>
+                                </Ellipse>
+                                <TextBlock Text="{Binding StatusBanco}" Foreground="{StaticResource CorTexto}" FontSize="11" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                            </StackPanel>
+
+                            <TextBlock Text="{Binding LicencaTexto}" Foreground="{StaticResource CorTextoSuave}" FontSize="10.5" TextTrimming="CharacterEllipsis" Margin="0,0,0,8" />
+
+                            <StackPanel Orientation="Horizontal">
+                                <Button Command="{Binding RecarregarDadosCommand}" Style="{StaticResource BotaoSecundario}" Padding="8,4" FontSize="11" Margin="0,0,6,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <ui:SymbolIcon Symbol="ArrowCounterclockwise24" FontSize="13" Margin="0,0,4,0" VerticalAlignment="Center" />
+                                        <TextBlock Text="Atualizar" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Command="{Binding SelecionarBancoCommand}" Style="{StaticResource BotaoSecundario}" Padding="8,4" FontSize="11">
+                                    <StackPanel Orientation="Horizontal">
+                                        <ui:SymbolIcon Symbol="FolderOpen24" FontSize="13" Margin="0,0,4,0" VerticalAlignment="Center" />
+                                        <TextBlock Text="Banco..." VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- ==================== ÁREA DE CONTEÚDO ATIVO ==================== -->
+            <Grid Grid.Column="1">
+
+                <!-- 1. TELA DO ESTÚDIO DE ETIQUETAS (DESIGNER CAD) -->
+                <Grid>
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding TelaAtiva}" Value="Estudio">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
+
+                    <designer:DesignerView DataContext="{Binding DesignerVM}" />
+                </Grid>
+
+                <!-- 2. TELA DO CATÁLOGO DE PRODUTOS DO ERP -->
+                <Grid Margin="20,16">
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding TelaAtiva}" Value="Catalogo">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
+
+                    <Grid.RowDefinitions>
+                        <!-- Header com Título e Estatísticas -->
+                        <RowDefinition Height="Auto" />
+                        <!-- Barra de Busca e Filtros -->
+                        <RowDefinition Height="Auto" />
+                        <!-- Tabela de Produtos -->
+                        <RowDefinition Height="*" />
+                        <!-- Ações Rápidas no Rodapé -->
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Header -->
+                    <Grid Grid.Row="0" Margin="0,0,0,14">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
-                        <TextBlock Text="Catálogo de Produtos" Style="{StaticResource TituloSecao}" VerticalAlignment="Center" />
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Catálogo de Produtos do Nexus LS" Style="{StaticResource TituloTela}" />
+                            <TextBlock Text="Selecione produtos para editar no Estúdio de Etiquetas, gerar códigos EAN-13 ou adicionar à fila." Style="{StaticResource TextoApoio}" Margin="0,2,0,0" />
+                        </StackPanel>
 
-                        <!-- Badges de contagem -->
+                        <!-- Badges de Status -->
                         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                             <Border Style="{StaticResource PillContador}" Background="{StaticResource CorCabecalho}" BorderBrush="{StaticResource CorBorda}" BorderThickness="1">
-                                <TextBlock Text="{Binding TotalProdutos, StringFormat='{}Total: {0}'}" FontSize="11.5" FontWeight="SemiBold" Foreground="{StaticResource CorTexto}" />
+                                <TextBlock Text="{Binding TotalProdutos, StringFormat='{}Total: {0}'}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource CorTexto}" />
                             </Border>
                             <Border Style="{StaticResource PillContador}" Background="#DCFCE7" BorderBrush="#86EFAC" BorderThickness="1">
-                                <TextBlock Text="{Binding ProdutosComCodigo, StringFormat='{}Com Código: {0}'}" FontSize="11.5" FontWeight="Bold" Foreground="#15803D" />
+                                <TextBlock Text="{Binding ProdutosComCodigo, StringFormat='{}Com Código: {0}'}" FontSize="12" FontWeight="Bold" Foreground="#15803D" />
                             </Border>
                             <Border Style="{StaticResource PillContador}" Background="#FEF3C7" BorderBrush="#FCD34D" BorderThickness="1">
-                                <TextBlock Text="{Binding ProdutosSemCodigo, StringFormat='{}Sem Código: {0}'}" FontSize="11.5" FontWeight="Bold" Foreground="#B45309" />
+                                <TextBlock Text="{Binding ProdutosSemCodigo, StringFormat='{}Sem Código: {0}'}" FontSize="12" FontWeight="Bold" Foreground="#B45309" />
                             </Border>
                         </StackPanel>
                     </Grid>
 
-                    <!-- 1: Filtros e Busca -->
-                    <Grid Grid.Row="1" Margin="0,0,0,12">
+                    <!-- Barra de Busca & Filtros -->
+                    <Grid Grid.Row="1" Margin="0,0,0,14">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
-                        <!-- Filtro por status do código -->
-                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,12,0">
-                            <RadioButton Content="Todos" GroupName="FiltroCodigo" IsChecked="{Binding FiltroTipo, Converter={StaticResource ComparisonConverter}, ConverterParameter=Todos, Mode=TwoWay}" Margin="0,0,8,0" />
-                            <RadioButton Content="Sem Código" GroupName="FiltroCodigo" IsChecked="{Binding FiltroTipo, Converter={StaticResource ComparisonConverter}, ConverterParameter=SemCodigo, Mode=TwoWay}" Margin="0,0,8,0" />
-                            <RadioButton Content="Com Código" GroupName="FiltroCodigo" IsChecked="{Binding FiltroTipo, Converter={StaticResource ComparisonConverter}, ConverterParameter=ComCodigo, Mode=TwoWay}" />
-                        </StackPanel>
+                        <TextBox Text="{Binding TextoBusca, UpdateSourceTrigger=PropertyChanged}"
+                                 FontSize="13.5" Padding="10,8" Margin="0,0,12,0" />
 
-                        <!-- Campo de Busca -->
-                        <TextBox Grid.Column="1" Text="{Binding TextoBusca, UpdateSourceTrigger=PropertyChanged}" Padding="10,6"
-                                 AutomationProperties.Name="Pesquisar produtos" ToolTip="Buscar por nome, referência, categoria ou código..." />
+                        <!-- Filtro por Categoria -->
+                        <ComboBox Grid.Column="1" ItemsSource="{Binding CategoriasDisponiveis}"
+                                  SelectedItem="{Binding CategoriaSelecionada, Mode=TwoWay}"
+                                  Width="180" Margin="0,0,12,0" ToolTip="Filtrar por Categoria" />
+
+                        <!-- Segmented Filter -->
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                            <RadioButton Content="Todos" IsChecked="{Binding FiltroTipo, Converter={StaticResource ComparisonConverter}, ConverterParameter=Todos, Mode=TwoWay}"
+                                         Style="{StaticResource BotaoOpcao}" Margin="0,0,6,0" />
+                            <RadioButton Content="Com Código" IsChecked="{Binding FiltroTipo, Converter={StaticResource ComparisonConverter}, ConverterParameter=ComCodigo, Mode=TwoWay}"
+                                         Style="{StaticResource BotaoOpcao}" Margin="0,0,6,0" />
+                            <RadioButton Content="Sem Código" IsChecked="{Binding FiltroTipo, Converter={StaticResource ComparisonConverter}, ConverterParameter=SemCodigo, Mode=TwoWay}"
+                                         Style="{StaticResource BotaoOpcao}" />
+                        </StackPanel>
                     </Grid>
 
-                    <!-- 2: Tabela de Produtos -->
-                    <DataGrid Grid.Row="2"
-                              ItemsSource="{Binding ProdutosView}"
-                              SelectedItem="{Binding ProdutoSelecionado, Mode=TwoWay}"
-                              Margin="0,0,0,12">
-                        <DataGrid.Columns>
-                            <!-- Nome -->
-                            <DataGridTemplateColumn Header="Produto" Width="2.8*" SortMemberPath="Nome">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <StackPanel VerticalAlignment="Center" Margin="6,2">
-                                            <TextBlock Text="{Binding Nome}" FontWeight="SemiBold" Foreground="{StaticResource CorTexto}" TextTrimming="CharacterEllipsis" />
-                                            <TextBlock Text="{Binding Categoria}" Foreground="{StaticResource CorTextoSuave}" FontSize="11" />
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
+                    <!-- Tabela de Produtos -->
+                    <Border Grid.Row="2" Style="{StaticResource Painel}" Padding="0" Margin="0,0,0,14">
+                        <DataGrid ItemsSource="{Binding ProdutosView}"
+                                  SelectedItem="{Binding ProdutoSelecionado}"
+                                  AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
+                                  SelectionMode="Single" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                                  HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0" Background="{StaticResource CorPainel}" RowHeight="42"
+                                  MouseDoubleClick="DataGrid_MouseDoubleClick">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Código" Binding="{Binding CodigoInterno}" Width="90" IsReadOnly="True" />
 
-                            <!-- Referência -->
-                            <DataGridTextColumn Header="Ref." Binding="{Binding Referencia}" Width="1*" />
+                                <DataGridTemplateColumn Header="Produto" Width="3*" SortMemberPath="Nome">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel VerticalAlignment="Center" Margin="6,2">
+                                                <TextBlock Text="{Binding Nome}" FontWeight="SemiBold" Foreground="{StaticResource CorTexto}" TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Text="{Binding Referencia, TargetNullValue='Sem referência'}" Foreground="{StaticResource CorTextoSuave}" FontSize="11" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
 
-                            <!-- Preço Varejo -->
-                            <DataGridTextColumn Header="Preço Varejo" Binding="{Binding PrecoVarejoFormatado}" Width="1.1*" FontWeight="Bold" />
+                                <DataGridTextColumn Header="Categoria" Binding="{Binding Categoria, TargetNullValue='—'}" Width="1.5*" IsReadOnly="True" />
+                                <DataGridTextColumn Header="Preço Varejo" Binding="{Binding PrecoVarejoFormatado}" Width="1.2*" IsReadOnly="True" />
+                                <DataGridTextColumn Header="Preço Atacado" Binding="{Binding PrecoAtacadoFormatado}" Width="1.2*" IsReadOnly="True" />
 
-                            <!-- Preço Atacado -->
-                            <DataGridTextColumn Header="Preço Atacado" Binding="{Binding PrecoAtacadoFormatado}" Width="1.1*" />
+                                <!-- Status do Código de Barras -->
+                                <DataGridTemplateColumn Header="Código de Barras" Width="1.8*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border Background="{Binding TemCodigoBarras, Converter={StaticResource StatusCodigoFundoConverter}}"
+                                                    CornerRadius="{StaticResource RaioPequeno}" Padding="8,3" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding CodigoBarrasExibicao}"
+                                                           Foreground="{Binding TemCodigoBarras, Converter={StaticResource StatusCodigoCorConverter}}"
+                                                           FontWeight="SemiBold" FontSize="11.5" />
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
 
-                            <!-- Estoque -->
-                            <DataGridTextColumn Header="Estoque" Binding="{Binding EstoqueAtual}" Width="0.8*" />
+                                <!-- Modelo de Etiqueta Cadastrado -->
+                                <DataGridTemplateColumn Header="Etiqueta Vinculada" Width="2.2*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel VerticalAlignment="Center" Margin="4,0">
+                                                <Border CornerRadius="{StaticResource RaioPequeno}" Padding="7,3" HorizontalAlignment="Left" ToolTip="{Binding DimensoesEtiquetaPersonalizada, StringFormat='{}Tamanho: {0}'}">
+                                                    <Border.Style>
+                                                        <Style TargetType="Border">
+                                                            <Setter Property="Background" Value="#F1F5F9" />
+                                                            <Setter Property="BorderBrush" Value="#CBD5E1" />
+                                                            <Setter Property="BorderThickness" Value="1" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding TemEtiquetaPersonalizada}" Value="True">
+                                                                    <Setter Property="Background" Value="#F3E8FF" />
+                                                                    <Setter Property="BorderBrush" Value="#C084FC" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Border.Style>
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <ui:SymbolIcon Symbol="Tag24" FontSize="12" Margin="0,0,4,0" VerticalAlignment="Center">
+                                                            <ui:SymbolIcon.Style>
+                                                                <Style TargetType="ui:SymbolIcon">
+                                                                    <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding TemEtiquetaPersonalizada}" Value="True">
+                                                                            <Setter Property="Foreground" Value="#7E22CE" />
+                                                                            <Setter Property="Symbol" Value="ShoppingBag24" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </ui:SymbolIcon.Style>
+                                                        </ui:SymbolIcon>
+                                                        <TextBlock Text="{Binding NomeEtiquetaPersonalizada}" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="150">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Setter Property="Foreground" Value="{StaticResource CorTexto}" />
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding TemEtiquetaPersonalizada}" Value="True">
+                                                                            <Setter Property="Foreground" Value="#7E22CE" />
+                                                                            <Setter Property="FontWeight" Value="Bold" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
+                                                    </StackPanel>
+                                                </Border>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
 
-                            <!-- Código de Barras -->
-                            <DataGridTemplateColumn Header="Código de Barras" Width="1.8*" SortMemberPath="CodigoBarras">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <Border CornerRadius="4" Padding="6,2" Margin="2" HorizontalAlignment="Left"
-                                                Background="{Binding TemCodigoBarras, Converter={StaticResource StatusCodigoFundoConverter}}">
-                                            <TextBlock FontSize="11" FontWeight="Bold"
-                                                       Foreground="{Binding TemCodigoBarras, Converter={StaticResource StatusCodigoCorConverter}}">
-                                                <TextBlock.Style>
-                                                    <Style TargetType="TextBlock">
-                                                        <Setter Property="Text" Value="{Binding CodigoBarras}" />
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding TemCodigoBarras}" Value="False">
-                                                                <Setter Property="Text" Value="SEM CÓDIGO" />
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </TextBlock.Style>
-                                            </TextBlock>
-                                        </Border>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                        </DataGrid.Columns>
-                    </DataGrid>
+                                <!-- Ação Rápida de Usar no Estúdio & Adicionar à Fila com Qtd -->
+                                <DataGridTemplateColumn Header="Ações" Width="2.5*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <Button Command="{Binding DataContext.UsarProdutoNoEstudioCommand, RelativeSource={RelativeSource AncestorType=ui:FluentWindow}}"
+                                                        CommandParameter="{Binding}"
+                                                        Style="{StaticResource BotaoPrimario}" Padding="8,4" FontSize="11" Margin="0,0,6,0"
+                                                        ToolTip="Abrir e editar a etiqueta deste produto no Estúdio">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <ui:SymbolIcon Symbol="PaintBrush24" FontSize="13" Margin="0,0,4,0" VerticalAlignment="Center" />
+                                                        <TextBlock Text="Abrir Etiqueta" VerticalAlignment="Center" />
+                                                    </StackPanel>
+                                                </Button>
 
-                    <!-- 3: Ações Rápidas do Catálogo -->
-                    <Border Grid.Row="3" Background="#F9FAFB" CornerRadius="{StaticResource RaioMedio}" Padding="12,10" BorderBrush="{StaticResource CorBorda}" BorderThickness="1">
+                                                <!-- Quantidade Rápida -->
+                                                <Button Command="{Binding DecrementarQtdCommand}" Style="{StaticResource BotaoSecundario}" Width="24" Height="24" Padding="0" Margin="0,0,2,0">
+                                                    <ui:SymbolIcon Symbol="Subtract24" FontSize="11" />
+                                                </Button>
+                                                <TextBox Text="{Binding QuantidadeAdicionar, UpdateSourceTrigger=PropertyChanged}" Width="34" Height="24"
+                                                         TextAlignment="Center" VerticalContentAlignment="Center" FontSize="11" FontWeight="Bold" Padding="0" Margin="0,0,2,0" />
+                                                <Button Command="{Binding IncrementarQtdCommand}" Style="{StaticResource BotaoSecundario}" Width="24" Height="24" Padding="0" Margin="0,0,4,0">
+                                                    <ui:SymbolIcon Symbol="Add24" FontSize="11" />
+                                                </Button>
+
+                                                <Button Command="{Binding DataContext.AdicionarItemComQuantidadeFilaCommand, RelativeSource={RelativeSource AncestorType=ui:FluentWindow}}"
+                                                        CommandParameter="{Binding}"
+                                                        Style="{StaticResource BotaoSecundario}" Padding="8,4" FontSize="11" ToolTip="Adicionar esta quantidade à fila">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <ui:SymbolIcon Symbol="Add24" FontSize="13" Margin="0,0,4,0" VerticalAlignment="Center" />
+                                                        <TextBlock Text="Fila" VerticalAlignment="Center" />
+                                                    </StackPanel>
+                                                </Button>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+
+                    <!-- Ações Rápidas no Rodapé -->
+                    <Border Grid.Row="3" Style="{StaticResource Painel}" Padding="14,10">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
@@ -239,257 +455,236 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
 
-                            <!-- Geradores de Código -->
                             <StackPanel Grid.Column="0" Orientation="Horizontal">
                                 <Button Command="{Binding GerarCodigoIndividualCommand}" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,0">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="⚡" Margin="0,0,6,0" />
-                                        <TextBlock Text="Gerar Código (EAN-13)" />
+                                        <ui:SymbolIcon Symbol="BarcodeScanner24" FontSize="15" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                        <TextBlock Text="Gerar Código EAN-13 para Selecionado" VerticalAlignment="Center" />
                                     </StackPanel>
                                 </Button>
 
                                 <Button Command="{Binding GerarCodigosEmLoteCommand}" Style="{StaticResource BotaoPrimario}">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="✨" Margin="0,0,6,0" />
-                                        <TextBlock Text="Gerar Todos s/ Código" />
+                                        <ui:SymbolIcon Symbol="Sparkle24" FontSize="15" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                        <TextBlock Text="Gerar Códigos para Todos sem Código" FontWeight="Bold" VerticalAlignment="Center" />
                                     </StackPanel>
                                 </Button>
                             </StackPanel>
 
-                            <!-- Fila de Impressão -->
                             <StackPanel Grid.Column="2" Orientation="Horizontal">
-                                <Button Command="{Binding AdicionarSelecionadoFilaCommand}" Style="{StaticResource BotaoSecundario}" Margin="0,0,6,0">
-                                    <TextBlock Text="➕ Fila" />
-                                </Button>
-                                <Button Command="{Binding PuxarEstoqueAtualCommand}" Style="{StaticResource BotaoSecundario}">
+                                <Button Command="{Binding PuxarEstoqueAtualCommand}" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,0">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="📦" Margin="0,0,4,0" />
-                                        <TextBlock Text="Puxar Estoque" />
+                                        <ui:SymbolIcon Symbol="Box24" FontSize="15" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                        <TextBlock Text="Puxar Estoque da Loja p/ Fila" VerticalAlignment="Center" />
                                     </StackPanel>
                                 </Button>
                             </StackPanel>
                         </Grid>
                     </Border>
                 </Grid>
-            </Border>
 
-            <!-- COLUNA DIREITA: DESIGNER, PRÉVIA & FILA -->
-            <Border Grid.Column="2" Background="Transparent">
-                <TabControl Background="Transparent" BorderThickness="0">
-                    <!-- TAB 1: ESTÚDIO & DESIGNER VISUAL (DRAG & DROP) -->
-                    <TabItem Style="{StaticResource AbaNexus}" IsSelected="True">
-                        <TabItem.Header>
+                <!-- 3. TELA DA FILA DE IMPRESSÃO -->
+                <Grid Margin="20,16">
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding TelaAtiva}" Value="Fila">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
+
+                    <Grid.RowDefinitions>
+                        <!-- Header da Fila -->
+                        <RowDefinition Height="Auto" />
+                        <!-- Tabela da Fila -->
+                        <RowDefinition Height="*" />
+                        <!-- Painel de Disparo de Impressão -->
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Fila de Impressão de Etiquetas" Style="{StaticResource TituloTela}" />
+                            <TextBlock Text="Revise a quantidade de cópias por item antes de enviar para a impressora térmica ou folha A4." Style="{StaticResource TextoApoio}" Margin="0,2,0,0" />
+                        </StackPanel>
+
+                        <Button Grid.Column="1" Command="{Binding LimparFilaCommand}" Style="{StaticResource BotaoSecundario}" Padding="12,6">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="🎨" Margin="0,0,6,0" />
-                                <TextBlock Text="Estúdio de Etiquetas" FontWeight="Bold" FontSize="13" />
-                                <Border Background="{StaticResource CorSelecaoSuave}" BorderBrush="{StaticResource CorSelecao}" BorderThickness="1" CornerRadius="4" Padding="6,1" Margin="8,0,0,0">
-                                    <TextBlock Text="PRO" Foreground="{StaticResource CorPrimaria}" FontSize="10" FontWeight="Bold" />
-                                </Border>
+                                <ui:SymbolIcon Symbol="Delete24" FontSize="15" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                <TextBlock Text="Limpar Toda a Fila" VerticalAlignment="Center" />
                             </StackPanel>
-                        </TabItem.Header>
+                        </Button>
+                    </Grid>
 
-                        <designer:DesignerView DataContext="{Binding DesignerVM}" Margin="0,8,0,0" />
-                    </TabItem>
+                    <Border Grid.Row="1" Style="{StaticResource Painel}" Padding="0" Margin="0,0,0,14">
+                        <DataGrid ItemsSource="{Binding FilaImpressao}"
+                                  AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
+                                  SelectionMode="Single" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                                  HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0" Background="{StaticResource CorPainel}" RowHeight="46">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Header="Produto" Width="3*" SortMemberPath="Nome">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel VerticalAlignment="Center" Margin="10,2">
+                                                <TextBlock Text="{Binding Nome}" FontWeight="SemiBold" Foreground="{StaticResource CorTexto}" TextTrimming="CharacterEllipsis" FontSize="13.5" />
+                                                <TextBlock Text="{Binding CodigoBarras, TargetNullValue='Sem código de barras'}" Foreground="{StaticResource CorTextoSuave}" FontSize="11.5" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
 
-                    <!-- TAB 2: PRÉVIA RÁPIDA -->
-                    <TabItem Style="{StaticResource AbaNexus}">
-                        <TabItem.Header>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="⚡" Margin="0,0,6,0" />
-                                <TextBlock Text="Configuração Rápida" FontWeight="Bold" FontSize="13" />
-                            </StackPanel>
-                        </TabItem.Header>
+                                <DataGridTextColumn Header="Preço Varejo" Binding="{Binding PrecoVarejoFormatado}" Width="1.5*" IsReadOnly="True" />
 
-                        <Border Style="{StaticResource Painel}" Margin="0,8,0,0" Padding="16">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="260" />
-                                    <RowDefinition Height="*" />
-                                </Grid.RowDefinitions>
+                                <DataGridTemplateColumn Header="Quantidade de Etiquetas" Width="2.2*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <Button Command="{Binding DataContext.DecrementarItemCommand, RelativeSource={RelativeSource AncestorType=ui:FluentWindow}}"
+                                                        CommandParameter="{Binding}"
+                                                        Style="{StaticResource BotaoSecundario}" Width="30" Height="30" Padding="0" Margin="0,0,8,0">
+                                                    <ui:SymbolIcon Symbol="Subtract24" FontSize="13" />
+                                                </Button>
 
-                                <!-- Zoom e Exportação -->
-                                <Grid Grid.Row="0" Margin="0,0,0,10">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
+                                                <TextBox Text="{Binding Quantidade, UpdateSourceTrigger=PropertyChanged}" Width="52" Height="30"
+                                                         TextAlignment="Center" VerticalContentAlignment="Center" Padding="2" FontSize="13" FontWeight="Bold" />
 
-                                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="Zoom:" Style="{StaticResource Rotulo}" Margin="0,0,8,0" VerticalAlignment="Center" />
-                                        <Button Command="{Binding ZoomMenosCommand}" Style="{StaticResource BotaoSecundario}" Content="-" Width="28" Height="28" Padding="0" Margin="0,0,4,0" />
-                                        <Button Command="{Binding ZoomPadraoCommand}" Style="{StaticResource BotaoSecundario}" Content="100%" Height="28" Padding="8,0" Margin="0,0,4,0" FontSize="11" />
-                                        <Button Command="{Binding ZoomMaisCommand}" Style="{StaticResource BotaoSecundario}" Content="+" Width="28" Height="28" Padding="0" Margin="0,0,8,0" />
+                                                <Button Command="{Binding DataContext.IncrementarItemCommand, RelativeSource={RelativeSource AncestorType=ui:FluentWindow}}"
+                                                        CommandParameter="{Binding}"
+                                                        Style="{StaticResource BotaoSecundario}" Width="30" Height="30" Padding="0" Margin="8,0,0,0">
+                                                    <ui:SymbolIcon Symbol="Add24" FontSize="13" />
+                                                </Button>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTemplateColumn Header="" Width="0.8*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Command="{Binding DataContext.RemoverItemFilaCommand, RelativeSource={RelativeSource AncestorType=ui:FluentWindow}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource BotaoFantasma}" ToolTip="Remover este item da fila" Padding="6,4">
+                                                <ui:SymbolIcon Symbol="Dismiss24" FontSize="14" Foreground="{StaticResource CorPerigo}" />
+                                            </Button>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+
+                    <!-- Rodapé de Disparo da Fila -->
+                    <Border Grid.Row="2" Background="{StaticResource CorPainel}" CornerRadius="{StaticResource RaioGrande}" Padding="20,16" BorderBrush="{StaticResource CorBorda}" BorderThickness="1">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <Grid Grid.Row="0" Margin="0,0,0,14">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                    <TextBlock Foreground="{StaticResource CorTexto}" FontSize="14">
+                                        <Run Text="Total de Etiquetas a Imprimir: " Foreground="{StaticResource CorTextoSuave}" />
+                                        <Run Text="{Binding TotalEtiquetasFila, Mode=OneWay}" FontWeight="Black" FontSize="18" Foreground="{StaticResource CorPrimaria}" />
+                                    </TextBlock>
+                                    <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="12" Margin="0,2,0,0">
+                                        <Run Text="Estimativa de Páginas / Bobina: " />
+                                        <Run Text="{Binding TotalPaginasFila, Mode=OneWay}" FontWeight="Bold" Foreground="{StaticResource CorTexto}" />
+                                    </TextBlock>
+                                </StackPanel>
+
+                                <!-- Seleção de Impressora e Posição Inicial para Folhas A4 -->
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <StackPanel Margin="0,0,12,0">
+                                        <TextBlock Text="Impressora de Destino" Style="{StaticResource Rotulo}" Margin="0,0,0,3" />
+                                        <ComboBox ItemsSource="{Binding ImpressorasInstaladas}" SelectedItem="{Binding ImpressoraSelecionada, Mode=TwoWay}" Width="240" Height="32" ToolTip="Selecione a impressora térmica ou padrão do Windows" />
                                     </StackPanel>
 
-                                    <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                        <Button Command="{Binding SalvarImagemCommand}" Style="{StaticResource BotaoSecundario}" Margin="0,0,6,0" Padding="10,5">
-                                            <TextBlock Text="💾 Salvar PNG" />
-                                        </Button>
-                                        <Button Command="{Binding CopiarZplCommand}" Style="{StaticResource BotaoSecundario}" Padding="10,5">
-                                            <TextBlock Text="📋 Copiar ZPL II" />
-                                        </Button>
-                                    </StackPanel>
-                                </Grid>
-
-                                <!-- Prévia -->
-                                <Border Grid.Row="1" Background="{StaticResource CorColunaFundo}" CornerRadius="{StaticResource RaioMedio}" BorderBrush="{StaticResource CorBorda}" BorderThickness="1" Margin="0,0,0,12" ClipToBounds="True">
-                                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Padding="20">
-                                        <Border Background="White" CornerRadius="2" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                            <Border.Effect>
-                                                <DropShadowEffect Color="#111827" BlurRadius="16" ShadowDepth="4" Opacity="0.12" />
-                                            </Border.Effect>
-                                            <Image Source="{Binding PreviewImagem}" Stretch="None" RenderOptions.BitmapScalingMode="HighQuality">
-                                                <Image.LayoutTransform>
-                                                    <ScaleTransform ScaleX="{Binding ZoomNivel}" ScaleY="{Binding ZoomNivel}" />
-                                                </Image.LayoutTransform>
-                                            </Image>
-                                        </Border>
-                                    </ScrollViewer>
-                                </Border>
-
-                                <!-- Opções -->
-                                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
                                     <StackPanel>
-                                        <TextBlock Text="Formato do Papel" Style="{StaticResource Rotulo}" Margin="0,0,0,4" />
-                                        <ComboBox ItemsSource="{Binding FormatosDisponiveis}" SelectedItem="{Binding Config.Formato, Mode=TwoWay}" DisplayMemberPath="Nome" Margin="0,0,0,12" />
-
-                                        <TextBlock Text="Cabeçalho da Loja" Style="{StaticResource Rotulo}" Margin="0,0,0,4" />
-                                        <TextBox Text="{Binding Config.NomeLoja, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12" />
-
-                                        <TextBlock Text="Elementos Visíveis" Style="{StaticResource Rotulo}" Margin="0,0,0,4" />
-                                        <UniformGrid Columns="2" Margin="0,0,0,12">
-                                            <CheckBox Content="Nome do Produto" IsChecked="{Binding Config.MostrarNomeProduto, Mode=TwoWay}" />
-                                            <CheckBox Content="Referência (REF)" IsChecked="{Binding Config.MostrarReferencia, Mode=TwoWay}" />
-                                            <CheckBox Content="Preço Varejo" IsChecked="{Binding Config.MostrarPrecoVarejo, Mode=TwoWay}" />
-                                            <CheckBox Content="Preço Atacado" IsChecked="{Binding Config.MostrarPrecoAtacado, Mode=TwoWay}" />
-                                            <CheckBox Content="Código Interno" IsChecked="{Binding Config.MostrarCodigoInterno, Mode=TwoWay}" />
-                                            <CheckBox Content="Tamanho" IsChecked="{Binding Config.MostrarTamanho, Mode=TwoWay}" />
-                                            <CheckBox Content="Código de Barras" IsChecked="{Binding Config.MostrarCodigoBarras, Mode=TwoWay}" />
-                                        </UniformGrid>
+                                        <TextBlock Text="Posição Inicial (Folha A4)" Style="{StaticResource Rotulo}" Margin="0,0,0,3" />
+                                        <TextBox Text="{Binding PosicaoInicialFolha, UpdateSourceTrigger=PropertyChanged}" Width="75" Height="32" TextAlignment="Center" VerticalContentAlignment="Center" FontWeight="Bold" ToolTip="Começar na etiqueta nº para reaproveitar folhas parcialmente usadas" />
                                     </StackPanel>
-                                </ScrollViewer>
+                                </StackPanel>
                             </Grid>
-                        </Border>
-                    </TabItem>
 
-                    <!-- TAB 3: FILA DE IMPRESSÃO -->
-                    <TabItem Style="{StaticResource AbaNexus}">
-                        <TabItem.Header>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="🖨️" Margin="0,0,6,0" />
-                                <TextBlock Text="Fila de Impressão" FontWeight="Bold" FontSize="13" />
-                                <Border Background="{StaticResource CorPrimaria}" CornerRadius="10" Padding="6,1" Margin="6,0,0,0">
-                                    <TextBlock Text="{Binding TotalEtiquetasFila}" Foreground="White" FontSize="11" FontWeight="Bold" />
-                                </Border>
+                            <!-- Checkbox de integração com o Estúdio -->
+                            <Border Grid.Row="1" Background="#F8FAFC" CornerRadius="{StaticResource RaioPequeno}" Padding="12,10" Margin="0,0,0,14" BorderBrush="{StaticResource CorBorda}" BorderThickness="1">
+                                <CheckBox Content="Imprimir usando o modelo customizado ativo no Estúdio de Etiquetas (com imagens/logo, QR code e cores)"
+                                          IsChecked="{Binding UsarModeloDesigner, Mode=TwoWay}"
+                                          FontWeight="SemiBold" Foreground="{StaticResource CorPrimaria}" />
+                            </Border>
+
+                            <!-- Botão Grande de Impressão -->
+                            <Button Grid.Row="2" Command="{Binding ImprimirCommand}" Style="{StaticResource BotaoPrimario}" Padding="20,14" FontSize="16" FontWeight="Bold">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:SymbolIcon Symbol="Print24" FontSize="22" Margin="0,0,10,0" VerticalAlignment="Center" />
+                                    <TextBlock Text="IMPRIMIR ETIQUETAS NO WINDOWS" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <!-- 4. TELA DE CONFIGURAÇÕES -->
+                <ScrollViewer Margin="20,16" VerticalScrollBarVisibility="Auto">
+                    <ScrollViewer.Style>
+                        <Style TargetType="ScrollViewer">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding TelaAtiva}" Value="Configuracoes">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ScrollViewer.Style>
+
+                    <StackPanel MaxWidth="700" HorizontalAlignment="Left">
+                        <TextBlock Text="Configurações de Impressão" Style="{StaticResource TituloTela}" Margin="0,0,0,4" />
+                        <TextBlock Text="Personalize o cabeçalho padrão da sua loja e formatos de bobina." Style="{StaticResource TextoApoio}" Margin="0,0,0,16" />
+
+                        <Border Style="{StaticResource Painel}" Padding="20" Margin="0,0,0,16">
+                            <StackPanel>
+                                <TextBlock Text="DADOS DA LOJA" FontWeight="Bold" FontSize="13" Foreground="{StaticResource CorTexto}" Margin="0,0,0,10" />
+
+                                <TextBlock Text="Nome / Cabeçalho da Loja impresso nas etiquetas" Style="{StaticResource Rotulo}" Margin="0,0,0,4" />
+                                <TextBox Text="{Binding Config.NomeLoja, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,14" />
+
+                                <TextBlock Text="Formato de Papel Padrão" Style="{StaticResource Rotulo}" Margin="0,0,0,4" />
+                                <ComboBox ItemsSource="{Binding FormatosDisponiveis}" SelectedItem="{Binding Config.Formato, Mode=TwoWay}" DisplayMemberPath="Nome" Margin="0,0,0,14" />
                             </StackPanel>
-                        </TabItem.Header>
-
-                        <Border Style="{StaticResource Painel}" Margin="0,8,0,0" Padding="16">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="*" />
-                                    <RowDefinition Height="Auto" />
-                                </Grid.RowDefinitions>
-
-                                <!-- Lista da Fila -->
-                                <DataGrid Grid.Row="0" ItemsSource="{Binding FilaImpressao}" Margin="0,0,0,12">
-                                    <DataGrid.Columns>
-                                        <DataGridTemplateColumn Header="Produto" Width="3*" SortMemberPath="Nome">
-                                            <DataGridTemplateColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <StackPanel VerticalAlignment="Center" Margin="6,2">
-                                                        <TextBlock Text="{Binding Nome}" FontWeight="SemiBold" Foreground="{StaticResource CorTexto}" TextTrimming="CharacterEllipsis" />
-                                                        <TextBlock Text="{Binding CodigoBarras}" Foreground="{StaticResource CorTextoSuave}" FontSize="11" />
-                                                    </StackPanel>
-                                                </DataTemplate>
-                                            </DataGridTemplateColumn.CellTemplate>
-                                        </DataGridTemplateColumn>
-
-                                        <DataGridTextColumn Header="Preço" Binding="{Binding PrecoVarejoFormatado}" Width="1.2*" />
-
-                                        <DataGridTemplateColumn Header="Qtd Etiquetas" Width="2*">
-                                            <DataGridTemplateColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                        <Button Command="{Binding DataContext.DecrementarItemCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                                CommandParameter="{Binding}"
-                                                                Style="{StaticResource BotaoSecundario}" Content="-" Width="26" Height="26" Padding="0" Margin="0,0,6,0" />
-
-                                                        <TextBox Text="{Binding Quantidade, UpdateSourceTrigger=PropertyChanged}" Width="44" Height="28"
-                                                                 TextAlignment="Center" VerticalAlignment="Center" Padding="2" FontSize="12" />
-
-                                                        <Button Command="{Binding DataContext.IncrementarItemCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                                CommandParameter="{Binding}"
-                                                                Style="{StaticResource BotaoSecundario}" Content="+" Width="26" Height="26" Padding="0" Margin="6,0,8,0" />
-                                                    </StackPanel>
-                                                </DataTemplate>
-                                            </DataGridTemplateColumn.CellTemplate>
-                                        </DataGridTemplateColumn>
-
-                                        <DataGridTemplateColumn Header="" Width="0.8*">
-                                            <DataGridTemplateColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <Button Command="{Binding DataContext.RemoverItemFilaCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                            CommandParameter="{Binding}"
-                                                            Style="{StaticResource BotaoFantasma}" Content="✕" ToolTip="Remover da fila" Padding="6,2" />
-                                                </DataTemplate>
-                                            </DataGridTemplateColumn.CellTemplate>
-                                        </DataGridTemplateColumn>
-                                    </DataGrid.Columns>
-                                </DataGrid>
-
-                                <!-- Rodapé da Fila -->
-                                <Border Grid.Row="1" Background="#F9FAFB" CornerRadius="{StaticResource RaioMedio}" Padding="16,12" BorderBrush="{StaticResource CorBorda}" BorderThickness="1">
-                                    <Grid>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="Auto" />
-                                        </Grid.RowDefinitions>
-
-                                        <Grid Grid.Row="0" Margin="0,0,0,10">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="Auto" />
-                                            </Grid.ColumnDefinitions>
-
-                                            <StackPanel Grid.Column="0">
-                                                <TextBlock Foreground="{StaticResource CorTexto}" FontSize="13">
-                                                    <Run Text="Total de Etiquetas: " Foreground="{StaticResource CorTextoSuave}" />
-                                                    <Run Text="{Binding TotalEtiquetasFila, Mode=OneWay}" FontWeight="Black" FontSize="16" />
-                                                </TextBlock>
-                                                <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="11.5" Margin="0,2,0,0">
-                                                    <Run Text="Estimativa: " />
-                                                    <Run Text="{Binding TotalPaginasFila, Mode=OneWay}" FontWeight="SemiBold" />
-                                                    <Run Text=" página(s) / bobina" />
-                                                </TextBlock>
-                                            </StackPanel>
-
-                                            <Button Grid.Column="1" Command="{Binding LimparFilaCommand}" Style="{StaticResource BotaoSecundario}" Content="🗑️ Limpar Fila" FontSize="12" Padding="10,6" />
-                                        </Grid>
-
-                                        <!-- Opção de Modelo -->
-                                        <Border Grid.Row="1" Background="White" CornerRadius="{StaticResource RaioPequeno}" Padding="12,8" Margin="0,0,0,12" BorderBrush="{StaticResource CorBorda}" BorderThickness="1">
-                                            <CheckBox Content="Imprimir usando o modelo montado no Estúdio de Etiquetas (com imagens/logo e QR code)"
-                                                      IsChecked="{Binding UsarModeloDesigner, Mode=TwoWay}"
-                                                      FontWeight="SemiBold" Foreground="{StaticResource CorPrimaria}" />
-                                        </Border>
-
-                                        <!-- Botão Grande de Impressão -->
-                                        <Button Grid.Row="2" Command="{Binding ImprimirCommand}" Style="{StaticResource BotaoPrimario}" Padding="16,12" FontSize="15" FontWeight="Bold">
-                                            <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="🖨️" FontSize="18" Margin="0,0,8,0" VerticalAlignment="Center" />
-                                                <TextBlock Text="IMPRIMIR ETIQUETAS NO WINDOWS" VerticalAlignment="Center" />
-                                            </StackPanel>
-                                        </Button>
-                                    </Grid>
-                                </Border>
-                            </Grid>
                         </Border>
-                    </TabItem>
-                </TabControl>
-            </Border>
+
+                        <Border Style="{StaticResource Painel}" Padding="20">
+                            <StackPanel>
+                                <TextBlock Text="EXPORTAÇÃO ZPL II (ZEBRA)" FontWeight="Bold" FontSize="13" Foreground="{StaticResource CorTexto}" Margin="0,0,0,10" />
+                                <TextBlock Text="Código ZPL II nativo gerado para a etiqueta atual:" Style="{StaticResource TextoApoio}" Margin="0,0,0,8" />
+                                <TextBox Text="{Binding DesignerVM.ZplCodigo, Mode=OneWay}" FontFamily="Consolas" FontSize="11" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" Height="140" Margin="0,0,0,10" />
+                                <Button Command="{Binding CopiarZplCommand}" Style="{StaticResource BotaoSecundario}" Padding="12,6" HorizontalAlignment="Left">
+                                    <StackPanel Orientation="Horizontal">
+                                        <ui:SymbolIcon Symbol="Copy24" FontSize="15" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                        <TextBlock Text="Copiar Código ZPL II" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+
+            </Grid>
         </Grid>
     </Grid>
-</Window>
+</ui:FluentWindow>
