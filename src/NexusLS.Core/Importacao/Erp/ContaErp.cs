@@ -62,6 +62,12 @@ public sealed class ContaErp
     public IFonteErp CriarFonte() => new FirestoreErpFonte(_http, _config.Carregar(), Login());
 
     /// <summary>
+    /// O destino que grava no ERP (só funciona depois de entrar). Quem o usa passa pelo <see cref="GravadorErp"/>, que recusa
+    /// tudo enquanto <see cref="ConfiguracaoErp.GravacaoAtivada"/> estiver desligada (o padrão).
+    /// </summary>
+    public IDestinoErp CriarDestinoGravacao() => new FirestoreErpDestino(_http, _config.Carregar(), Login());
+
+    /// <summary>
     /// "Testar conexão": entra com o e-mail e a senha digitados (a senha não é guardada) e confirma a LEITURA lendo
     /// no máximo um produto da empresa. Não grava nada no ERP. Falhas de login, de permissão e de rede viram mensagens
     /// em português (<see cref="FalhaLoginException"/> ou <see cref="FalhaDestinoException"/>).

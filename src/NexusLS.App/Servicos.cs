@@ -59,6 +59,7 @@ public sealed class ContainerDeServicos
     public NexusLS.Core.Vitrine.IPublicadorVitrine PublicadorVitrine { get; }
     public NexusLS.Core.Vitrine.ServicoCatalogoWeb CatalogoWeb { get; }
     public RascunhoService Rascunho { get; }
+    public IDbContextFactory<PdvDbContext> FabricaBanco { get; }
     public NexusLS.Core.Sincronizacao.Firebase.GestorLogin Login { get; }
     public NexusLS.Core.Sincronizacao.ProcessadorFila Fila { get; }
     public NexusLS.Core.Sincronizacao.Operacional.ConfiguracaoOperacionalStore Operacional { get; }
@@ -71,6 +72,7 @@ public sealed class ContainerDeServicos
     public ContainerDeServicos(DbContextOptions<PdvDbContext> opcoesBanco)
     {
         var fabrica = new FabricaContexto(opcoesBanco);
+        FabricaBanco = fabrica;
 
         Produtos = new(fabrica);
         Estoque = new(fabrica);

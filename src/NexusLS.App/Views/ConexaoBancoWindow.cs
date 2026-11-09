@@ -34,6 +34,10 @@ public sealed class ConexaoBancoWindow : Window
     private readonly TextBlock _erpChaveEstado = new() { FontSize = 11, Opacity = 0.7, Margin = new Thickness(0, -6, 0, 10), TextWrapping = TextWrapping.Wrap };
     private readonly Button _testar = new() { Content = "Testar conexão", Padding = new Thickness(16, 8, 16, 8), MinWidth = 140, HorizontalAlignment = HorizontalAlignment.Left };
     private readonly TextBlock _erpAviso = new() { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 10, 0, 0), MinHeight = 20 };
+    private readonly CheckBox _erpGravar = new() { Content = "Permitir que o Nexus grave no ERP (vendas, clientes e produtos)", Margin = new Thickness(0, 4, 0, 6) };
+    private readonly TextBlock _erpGravarAviso = new() { TextWrapping = TextWrapping.Wrap, FontSize = 12, Opacity = 0.8, Margin = new Thickness(0, 0, 0, 8),
+        Text = "Atenção: isto grava na base REAL da loja. Antes, faça backup do Firestore do ERP ou use uma empresa de teste. O Nexus só cria vendas novas (nunca sobrescreve), baixa o estoque por incremento e atualiza só os campos de cadastro de clientes e produtos." };
+    private readonly Button _enviarErp = new() { Content = "Enviar ao ERP agora", Padding = new Thickness(16, 8, 16, 8), MinWidth = 140, HorizontalAlignment = HorizontalAlignment.Left };
     private readonly Button _colar = new() { Content = "Colar configuração do Firebase", Padding = new Thickness(14, 7, 14, 7), HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 0, 0, 14) };
     private readonly TextBlock _aviso = new() { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 10, 0, 0), MinHeight = 20 };
 
@@ -58,6 +62,7 @@ public sealed class ConexaoBancoWindow : Window
         var e = _erp?.Carregar() ?? new ConfiguracaoErp();
         var erpConfigurado = e.EstaCompleta;
         _erpProjeto.Text = e.ProjectId; _erpEmpresa.Text = e.EmpresaId;
+        _erpGravar.IsChecked = e.GravacaoAtivada;
         _erpEmail.Text = _contaErp?.Email ?? "";
         _erpChaveEstado.Text = string.IsNullOrWhiteSpace(e.ApiKey)
             ? "Chave da API ainda não informada."
@@ -65,7 +70,7 @@ public sealed class ConexaoBancoWindow : Window
 
         foreach (var item in new[]
         {
-            "Importar do ERP PDV Life (somente leitura)",
+            "Importar do ERP PDV Life (e enviar, se permitido)",
             "Catálogo online (projeto próprio da loja)",
             "Nuvem das vendas (projeto próprio da loja)"
         }) _conta.Items.Add(item);
@@ -77,7 +82,7 @@ public sealed class ConexaoBancoWindow : Window
         var cancelar = new Button { Content = "Cancelar", IsCancel = true, Padding = new Thickness(16, 8, 16, 8), Margin = new Thickness(8, 0, 0, 0) };
 
         Preencher(_painelErp,
-            Texto("O Nexus usa o mesmo Firebase do ERP PDV Life, só para LER (importar clientes, produtos, estoque e vendas). Nada é gravado no ERP."),
+            Texto("O Nexus usa o mesmo Firebase do ERP PDV Life: LÊ (importa clientes, produtos, estoque e vendas) e, só se você permitir abaixo, ENVIA as vendas, clientes e produtos do Nexus."),
             Rotulo("ID do projeto do ERP"), _erpProjeto,
             Rotulo("Empresa do ERP"), _erpEmpresa,
             Rotulo("Chave da API (Web API Key) do ERP"), _erpChave, _erpChaveEstado,
@@ -85,7 +90,10 @@ public sealed class ConexaoBancoWindow : Window
             Texto("Digite o e-mail e a senha com que você entra no ERP. A senha é usada só para este teste e não é guardada."),
             Rotulo("E-mail do ERP"), _erpEmail,
             Rotulo("Senha do ERP"), _erpSenha,
-            _testar, _erpAviso);
+            _testar,
+            Secao("Gravar no ERP (as duas bases conversam)"),
+            _erpGravar, _erpGravarAviso, _enviarErp,
+            _erpAviso);
         Preencher(_painelCatalogo,
             Texto("Projeto Firebase PRÓPRIO do catálogo online do Nexus. Não use o projeto do ERP aqui."),
             Rotulo("ID do projeto (ex.: minha-loja-1a2b3)"), _projeto,
@@ -117,6 +125,7 @@ public sealed class ConexaoBancoWindow : Window
         MostrarPainel();
         salvar.Click += (_, _) => Salvar();
         _colar.Click += (_, _) => ColarConfiguracao();
+        _enviarErp.Click += async (_, _) => await EnviarAoErpAsync();
         _testar.Click += async (_, _) => await TestarAsync();
         cancelar.Click += (_, _) => DialogResult = false;
     }
@@ -143,10 +152,43 @@ public sealed class ConexaoBancoWindow : Window
         atual.ProjectId = _erpProjeto.Text;
         atual.EmpresaId = string.IsNullOrWhiteSpace(_erpEmpresa.Text) ? atual.EmpresaId : _erpEmpresa.Text;
         if (!string.IsNullOrWhiteSpace(_erpChave.Password)) atual.ApiKey = _erpChave.Password;
+        atual.GravacaoAtivada = _erpGravar.IsChecked == true;
         _erp.Salvar(atual);
         _erpChave.Clear();
         _erpChaveEstado.Text = "Chave da API salva neste computador (oculta). Deixe em branco para manter.";
         return true;
+    }
+
+    /// <summary>Entra no ERP com o login digitado e leva vendas, clientes e produtos do Nexus (só com a permissão marcada e depois de confirmar).</summary>
+    private async Task EnviarAoErpAsync()
+    {
+        if (_contaErp is null || _erp is null) { Mensagem(_erpAviso, "O envio não está disponível aqui.", erro: true); return; }
+        if (_erpGravar.IsChecked != true)
+        {
+            Mensagem(_erpAviso, "Marque \"Permitir que o Nexus grave no ERP\" antes de enviar.", erro: true);
+            return;
+        }
+        var confirmou = MessageBox.Show(this,
+            "Isto vai gravar na base REAL do ERP da loja (vendas novas, clientes e produtos do Nexus).\n\nVocê já fez o backup do Firestore do ERP, ou está usando uma empresa de teste?",
+            "Enviar ao ERP", MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No);
+        if (confirmou != MessageBoxResult.Yes) return;
+
+        _enviarErp.IsEnabled = false;
+        Mensagem(_erpAviso, "Enviando ao ERP...", erro: false);
+        try
+        {
+            SalvarErp();
+            await _contaErp.EntrarAsync(_erpEmail.Text, _erpSenha.Password);
+            _erpSenha.Clear();
+            var enviador = new EnviadorErp(App.Servicos.FabricaBanco, _erp.Carregar(), _contaErp.CriarDestinoGravacao());
+            var r = await enviador.EnviarAsync();
+            Mensagem(_erpAviso, r.Resumo, erro: r.Falhas.Count > 0);
+        }
+        catch (Exception ex) when (ex is RegraDeNegocioException or FalhaLoginException or FalhaDestinoException)
+        {
+            Mensagem(_erpAviso, ex.Message, erro: true);
+        }
+        finally { _enviarErp.IsEnabled = true; }
     }
 
     private async Task TestarAsync()

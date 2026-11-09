@@ -25,7 +25,12 @@ O agente que desenvolveu isto nunca digitou senha nem imprimiu a chave da API.
 ## Gravação no ERP: DESLIGADA por padrão
 
 - `ConfiguracaoErp.GravacaoAtivada` é `false` por padrão e continua `false` para qualquer `erp.json` antigo.
-- **Não existe, no programa, nenhuma implementação real de `IDestinoErp`** (a interface que enviaria os documentos ao Firestore). Mesmo com a chave ligada, nada é enviado. Só os testes têm um destino, e ele é falso (guarda em memória).
+- **Existe agora o envio real (v1.2.0):** `FirestoreErpDestino` (REST, com o login do usuário) e `EnviadorErp`. Só funciona com `GravacaoAtivada` ligada (caixa "Permitir que o Nexus grave no ERP" em *Conexão com a nuvem*) e o botão **Enviar ao ERP agora**, que pede confirmação.
+  - **Vendas:** só são CRIADAS (`exists=false`, nunca sobrescrevem), no formato do Caixa Loja do ERP (`NX-{id}`). Na MESMA operação (tudo ou nada) vão a baixa de estoque (incremento atômico em `estoqueTotal` e `gradeTamanhos.{tam}`, sem ler nem regravar o saldo), a linha do Kardex e, se a prazo, o título em `contas_receber` e o incremento de `saldoDevedor`/`totalGasto`/`qtdCompras` do cliente.
+  - **Clientes e produtos:** os que já existem no ERP só têm os campos da máscara atualizados; os novos são criados (produto novo leva o estoque inicial). Nunca vão `saldoDevedor`, estoque de produto já existente, fotos, descrição nem cores do ERP.
+  - **Repetir é seguro:** o que foi enviado fica anotado (`enviado_*` na tabela `ImportacaoErp`); venda repetida cai em `ALREADY_EXISTS` e nada é baixado de novo.
+  - **Limites conhecidos:** os contadores/métricas agregadas do ERP (`recordSaleMetrics`) e o pedido que o ERP cria para venda a prazo não são gerados; ajustes de estoque feitos no Nexus e vendas canceladas depois do envio não voltam ao ERP; o estoque pode ficar negativo no ERP se ele já estiver abaixo do vendido.
+  - **Nada disto foi executado contra o Firebase real.** O primeiro envio real deve ser feito com backup ou em uma empresa de teste.
 - Para um dia ligar a gravação é preciso, nesta ordem: (1) decisão explícita do dono da loja; (2) escrever e revisar um `IDestinoErp` real, que use `updateMask`/`currentDocument` e só toque os campos de `MontadorErp.CamposProduto` (nunca descrição, cores nem fotos do ERP); (3) ligar `GravacaoAtivada` no `erp.json` à mão; (4) testar primeiro num projeto Firebase de teste, nunca no real.
 - O estoque (`gradeTamanhos`, `estoqueTotal`) fica fora da gravação por padrão, porque com dois sistemas gravando o saldo quem gravar por último apaga o outro.
 - O `GravadorErp` ainda recusa documento que não esteja em `empresas/{empresa configurada}/...`.
