@@ -225,7 +225,7 @@ public partial class EstoqueLojaViewModel : ViewModelBase
 
     public bool EstaEditando => IdEditando is not null;
     public bool EhNovo => !EstaEditando;
-    public string TituloFormulario => EstaEditando ? "Editar produto" : "Novo produto";
+    public string TituloFormulario => "Editar produto"; // produto novo é cadastrado na tela própria (botão Novo produto)
     public string TextoBotaoAtivo => ProdutoAtivo ? "Desativar" : "Reativar";
     public string EstoqueTotalTexto => $"Estoque total: {EstoqueTotalEditando}";
 
