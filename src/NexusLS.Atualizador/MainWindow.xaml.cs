@@ -3,6 +3,8 @@ using System.IO;
 using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using Microsoft.Win32;
 using NexusLS.Core.Atualizacao;
@@ -57,20 +59,95 @@ public partial class MainWindow : Window
 
         if (args.Any(a => a.Equals("--bartender", StringComparison.OrdinalIgnoreCase) || a.Equals("-b", StringComparison.OrdinalIgnoreCase)))
         {
-            TabControle.SelectedIndex = 3; // Aba Atualizações BarTender
+            NavegarPara("atualizacoes");
         }
         else if (args.Any(a => a.Equals("--licenca", StringComparison.OrdinalIgnoreCase) || a.Equals("-l", StringComparison.OrdinalIgnoreCase)))
         {
-            TabControle.SelectedIndex = 1; // Aba Licença Comercial
+            NavegarPara("licenca");
         }
         else if (args.Any(a => a.Equals("--sistema", StringComparison.OrdinalIgnoreCase) || a.Equals("-s", StringComparison.OrdinalIgnoreCase)))
         {
-            TabControle.SelectedIndex = 2; // Aba Atualizações do Sistema
+            NavegarPara("atualizacoes");
+        }
+        else if (args.Any(a => a.Equals("--diagnostico", StringComparison.OrdinalIgnoreCase) || a.Equals("-d", StringComparison.OrdinalIgnoreCase)))
+        {
+            NavegarPara("diagnostico");
         }
         else
         {
-            TabControle.SelectedIndex = 0; // Aba 0: Central do Cliente (Início)
+            NavegarPara("inicio");
         }
+    }
+
+    // ==================== NAVEGAÇÃO ENTRE AMBIENTES ====================
+
+    private void NavegarPara(string pagina)
+    {
+        PageInicio.Visibility = pagina == "inicio" ? Visibility.Visible : Visibility.Collapsed;
+        PageAtualizacoes.Visibility = pagina == "atualizacoes" ? Visibility.Visible : Visibility.Collapsed;
+        PageLicenca.Visibility = pagina == "licenca" ? Visibility.Visible : Visibility.Collapsed;
+        PageDiagnostico.Visibility = pagina == "diagnostico" ? Visibility.Visible : Visibility.Collapsed;
+        PageSobre.Visibility = pagina == "sobre" ? Visibility.Visible : Visibility.Collapsed;
+
+        AtualizarMenu(BtnMenuInicio, pagina == "inicio");
+        AtualizarMenu(BtnMenuAtualizacoes, pagina == "atualizacoes");
+        AtualizarMenu(BtnMenuLicenca, pagina == "licenca");
+        AtualizarMenu(BtnMenuDiagnostico, pagina == "diagnostico");
+        AtualizarMenu(BtnMenuSobre, pagina == "sobre");
+
+        switch (pagina)
+        {
+            case "inicio":
+                TxtTituloPagina.Text = "Início — Central de Aplicativos";
+                TxtSubtituloPagina.Text = "Gerenciamento e inicialização rápida do ecossistema Nexus";
+                break;
+            case "atualizacoes":
+                TxtTituloPagina.Text = "Atualizações do Sistema";
+                TxtSubtituloPagina.Text = "Gerenciamento de versões e pacotes de atualização para o Nexus LS e BarTender";
+                break;
+            case "licenca":
+                TxtTituloPagina.Text = "Licenciamento Comercial";
+                TxtSubtituloPagina.Text = "Controle de ativação, plano contratado, validade e dispositivos autorizados";
+                break;
+            case "diagnostico":
+                TxtTituloPagina.Text = "Diagnóstico e Suporte Técnico";
+                TxtSubtituloPagina.Text = "Verificações automáticas de integridade, comunicação em nuvem e ambiente";
+                break;
+            case "sobre":
+                TxtTituloPagina.Text = "Sobre o Nexus Hub";
+                TxtSubtituloPagina.Text = "Informações da plataforma, versão dos aplicativos e suporte oficial";
+                break;
+        }
+    }
+
+    private static void AtualizarMenu(Button btn, bool ativo)
+    {
+        btn.Tag = ativo ? "Ativo" : null;
+    }
+
+    private void BtnMenuInicio_Click(object sender, RoutedEventArgs e) => NavegarPara("inicio");
+    private void BtnMenuAtualizacoes_Click(object sender, RoutedEventArgs e) => NavegarPara("atualizacoes");
+    private void BtnMenuLicenca_Click(object sender, RoutedEventArgs e) => NavegarPara("licenca");
+    private void BtnMenuDiagnostico_Click(object sender, RoutedEventArgs e) => NavegarPara("diagnostico");
+    private void BtnMenuSobre_Click(object sender, RoutedEventArgs e) => NavegarPara("sobre");
+
+    // ==================== LOCALIZAÇÃO E VERSÕES ====================
+
+    private static string LocalizarExecutavelPadrao()
+    {
+        var candidatos = new[]
+        {
+            Path.Combine(AppContext.BaseDirectory, "NexusLS.exe"),
+            Path.Combine(AppContext.BaseDirectory, "..", "NexusLS.exe"),
+            @"C:\Nexus\NexusLS.exe",
+            @"C:\NexusLS\NexusLS.exe",
+            @"C:\NexusLS\publicar\NexusLS.exe",
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "NexusLS", "NexusLS.exe"),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "Nexus", "NexusLS.exe"),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "NexusLS", "NexusLS.exe")
+        };
+
+        return candidatos.FirstOrDefault(File.Exists) ?? candidatos[0];
     }
 
     private static string LocalizarBarTenderPadrao()
@@ -83,65 +160,8 @@ public partial class MainWindow : Window
             @"C:\NexusLS\NexusBarTender.exe",
             @"C:\NexusLS\publicar\NexusBarTender.exe",
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "NexusLS", "NexusBarTender.exe"),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "Nexus", "NexusBarTender.exe"),
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "NexusLS", "NexusBarTender.exe")
-        };
-
-        return candidatos.FirstOrDefault(File.Exists) ?? candidatos[0];
-    }
-
-    private void CarregarStatusVersaoBarTender()
-    {
-        try
-        {
-            var exe = TxtCaminhoBarTenderExe.Text.Trim();
-            if (string.IsNullOrWhiteSpace(exe) || !File.Exists(exe))
-            {
-                var detectado = LocalizarBarTenderPadrao();
-                if (File.Exists(detectado))
-                {
-                    exe = detectado;
-                    TxtCaminhoBarTenderExe.Text = detectado;
-                }
-            }
-
-            if (File.Exists(exe))
-            {
-                var vi = FileVersionInfo.GetVersionInfo(exe);
-                var versao = (vi.ProductVersion ?? vi.FileVersion ?? "1.0.0").Split('+')[0];
-                var fi = new FileInfo(exe);
-                var mb = fi.Length / (1024.0 * 1024.0);
-                TxtStatusModuloBarTender.Text = "Módulo instalado e pronto para uso.";
-                TxtVersaoBarTenderInstalada.Text = $"• Versão: v{versao} ({mb:F0} MB) — Modificado em: {fi.LastWriteTime:dd/MM/yyyy HH:mm}";
-                TxtHomeBarTenderStatus.Text = $"● Instalado: v{versao} ({mb:F0} MB)";
-                TxtHomeBarTenderStatus.Foreground = (SolidColorBrush)FindResource("CorPositivo");
-            }
-            else
-            {
-                TxtStatusModuloBarTender.Text = "Executável do BarTender não encontrado no caminho informado.";
-                TxtVersaoBarTenderInstalada.Text = "• O cliente não possui o módulo BarTender instalado ou está em outra pasta.";
-                TxtHomeBarTenderStatus.Text = "○ Não instalado neste computador";
-                TxtHomeBarTenderStatus.Foreground = (SolidColorBrush)FindResource("CorTextoSuave");
-            }
-        }
-        catch
-        {
-            TxtStatusModuloBarTender.Text = "Módulo BarTender opcional.";
-            TxtHomeBarTenderStatus.Text = "○ Módulo opcional";
-            TxtHomeBarTenderStatus.Foreground = (SolidColorBrush)FindResource("CorTextoSuave");
-        }
-    }
-
-    private static string LocalizarExecutavelPadrao()
-    {
-        var candidatos = new[]
-        {
-            Path.Combine(AppContext.BaseDirectory, "NexusLS.exe"),
-            Path.Combine(AppContext.BaseDirectory, "..", "NexusLS.exe"),
-            @"C:\Nexus\NexusLS.exe",
-            @"C:\NexusLS\NexusLS.exe",
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "NexusLS", "NexusLS.exe"),
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "NexusLS", "NexusLS.exe"),
-            @"C:\NexusLS\publicar\NexusLS.exe"
         };
 
         return candidatos.FirstOrDefault(File.Exists) ?? candidatos[0];
@@ -154,116 +174,16 @@ public partial class MainWindow : Window
             var hwid = LicencaService.CodigoDaMaquina();
             TxtCodigoMaquina.Text = hwid;
             TxtNomeComputador.Text = $"Terminal: {Environment.MachineName}";
+            TxtSidebarHwid.Text = $"HWID: {hwid}";
 
-            var pastaDados = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "NexusLS");
-            TxtDiagMaquina.Text = $"• Computador: {Environment.MachineName}  |  HWID: {hwid}";
-            TxtDiagSistema.Text = $"• Sistema Operacional: {RuntimeInformation.OSDescription} ({RuntimeInformation.OSArchitecture})";
-            TxtDiagPastaDados.Text = $"• Diretório de Dados Locais: {pastaDados}";
+            TxtDiagSO.Text = RuntimeInformation.OSDescription;
+            TxtDiagComputador.Text = $"{Environment.MachineName} ({RuntimeInformation.OSArchitecture})";
+            TxtDiagDotNet.Text = RuntimeInformation.FrameworkDescription;
+            TxtDiagPastaExec.Text = AppContext.BaseDirectory;
         }
         catch (Exception ex)
         {
             TxtCodigoMaquina.Text = "Erro: " + ex.Message;
-        }
-    }
-
-    private async void CarregarStatusLicenca()
-    {
-        var chaveSalva = _licenca.ChaveSalva;
-        if (!string.IsNullOrWhiteSpace(chaveSalva) && string.IsNullOrWhiteSpace(TxtChaveLicenca.Text))
-        {
-            TxtChaveLicenca.Text = chaveSalva;
-        }
-
-        MostrarLicenca(_licenca.AvaliarLocal());
-        try
-        {
-            var online = await _licenca.VerificarAsync();
-            MostrarLicenca(online);
-        }
-        catch (Exception ex)
-        {
-            TxtLicencaDetalhe.Text = ex.Message;
-        }
-    }
-
-    private void MostrarLicenca(ResultadoLicencaNuvem r)
-    {
-        _ultimoResultadoLicenca = r;
-
-        if (!string.IsNullOrWhiteSpace(r.Chave) && string.IsNullOrWhiteSpace(TxtChaveLicenca.Text))
-        {
-            TxtChaveLicenca.Text = r.Chave;
-        }
-
-        TxtLicencaStatus.Text = r.Estado switch
-        {
-            EstadoLicencaNuvem.Valida => r.Offline ? "Válida (Modo Offline)" : "Ativa e Autorizada",
-            EstadoLicencaNuvem.Vencendo => "Vencendo em breve",
-            EstadoLicencaNuvem.Vencida => "Licença Vencida",
-            EstadoLicencaNuvem.Bloqueada => "Suspensa / Bloqueada",
-            EstadoLicencaNuvem.OutraMaquina => "Limite de Computadores",
-            EstadoLicencaNuvem.SemConexao => "Sem Conexão",
-            EstadoLicencaNuvem.NaoEncontrada => "Sem Licença Ativa",
-            _ => "Chave Inválida"
-        };
-
-        TxtLicencaStatus.Foreground = r.Estado switch
-        {
-            EstadoLicencaNuvem.Valida => (SolidColorBrush)FindResource("CorPositivo"),
-            EstadoLicencaNuvem.Vencendo or EstadoLicencaNuvem.SemConexao => (SolidColorBrush)FindResource("CorAviso"),
-            EstadoLicencaNuvem.NaoEncontrada => (SolidColorBrush)FindResource("CorTextoSuave"),
-            _ => (SolidColorBrush)FindResource("CorPerigo")
-        };
-
-        TxtLicencaDetalhe.Text = r.Mensagem;
-        TxtLicencaCliente.Text = string.IsNullOrWhiteSpace(r.Cliente) ? "—" : r.Cliente;
-        TxtLicencaEmpresa.Text = string.IsNullOrWhiteSpace(r.Empresa) ? "—" : r.Empresa;
-        TxtLicencaPlano.Text = string.IsNullOrWhiteSpace(r.Plano) ? (r.Ativa ? "COMERCIAL" : "—") : r.Plano.ToUpperInvariant();
-
-        TxtLicencaValidade.Text = r.Validade is { } v
-            ? $"{v:dd/MM/yyyy}" + (r.DiasRestantes is { } d ? $" ({d} dia(s) restantes)" : "")
-            : "—";
-
-        if (r.DispositivosUsados.HasValue && r.LimiteDispositivos.HasValue)
-        {
-            TxtLicencaDispositivos.Text = $"{r.DispositivosUsados} de {r.LimiteDispositivos} computador(es)";
-        }
-        else if (r.Ativa)
-        {
-            TxtLicencaDispositivos.Text = $"Autorizado ({LicencaService.CodigoDaMaquina()})";
-        }
-        else
-        {
-            TxtLicencaDispositivos.Text = "—";
-        }
-
-        TxtLicencaVerificacao.Text = r.VerificadaEm is { } ver
-            ? $"{ver:dd/MM/yyyy HH:mm}" + (r.Offline ? " (Cache)" : " (Online)")
-            : (r.Ativa ? $"{DateTime.Now:dd/MM/yyyy HH:mm}" : "—");
-
-        BtnRemoverLicenca.IsEnabled = !string.IsNullOrWhiteSpace(_licenca.ChaveSalva) || r.Ativa;
-
-        // Atualiza a Central do Cliente (Home)
-        TxtHomeCliente.Text = string.IsNullOrWhiteSpace(r.Cliente) ? "Cliente Nexus" : r.Cliente;
-        TxtHomeEmpresa.Text = string.IsNullOrWhiteSpace(r.Empresa) ? "Nexus LS" : r.Empresa;
-        if (r.Ativa)
-        {
-            var validadeStr = r.Validade is { } val ? $"{val:dd/MM/yyyy}" : "Vitalícia";
-            var planoStr = string.IsNullOrWhiteSpace(r.Plano) ? "COMERCIAL" : r.Plano.ToUpperInvariant();
-            var diasStr = r.DiasRestantes is { } dias ? $" • {dias} dia(s) restantes" : "";
-            TxtHomeDetalhesLicenca.Text = $"Plano {planoStr} • Validade: {validadeStr}{diasStr} • {r.Mensagem}";
-            TxtHomeStatusBadge.Text = "● Licença Ativa";
-            TxtHomeStatusBadge.Foreground = (SolidColorBrush)FindResource("CorPositivo");
-            BrdHomeStatusBadge.Background = new SolidColorBrush(Color.FromArgb(0x22, 0x16, 0xA3, 0x4A));
-            BrdHomeStatusBadge.BorderBrush = (SolidColorBrush)FindResource("CorPositivo");
-        }
-        else
-        {
-            TxtHomeDetalhesLicenca.Text = r.Mensagem;
-            TxtHomeStatusBadge.Text = "● Não Ativada";
-            TxtHomeStatusBadge.Foreground = (SolidColorBrush)FindResource("CorPerigo");
-            BrdHomeStatusBadge.Background = new SolidColorBrush(Color.FromArgb(0x22, 0xDC, 0x26, 0x26));
-            BrdHomeStatusBadge.BorderBrush = (SolidColorBrush)FindResource("CorPerigo");
         }
     }
 
@@ -287,42 +207,288 @@ public partial class MainWindow : Window
                 var vi = FileVersionInfo.GetVersionInfo(exe);
                 var fi = new FileInfo(exe);
                 var verLimpa = (vi.ProductVersion ?? vi.FileVersion ?? "1.0.0").Split('+')[0];
-                TxtVersaoStatus.Text = $"v{verLimpa} ({Math.Max(1, fi.Length / (1024 * 1024))} MB)";
-                TxtVersaoArquivo.Text = $"Atualizado em: {fi.LastWriteTime:dd/MM/yyyy HH:mm}";
-                TxtStatusGeral.Text = $"Executável pronto em: {exe}";
-                TxtHomeNexusStatus.Text = $"● Instalado: v{verLimpa} ({Math.Max(1, fi.Length / (1024 * 1024))} MB)";
-                TxtHomeNexusStatus.Foreground = (SolidColorBrush)FindResource("CorPositivo");
+                var tamMb = Math.Max(1, fi.Length / (1024 * 1024));
+
+                TxtVersaoStatus.Text = $"Versão v{verLimpa} ({tamMb} MB)";
+                TxtVersaoArquivo.Text = $"v{verLimpa} ({tamMb} MB) — Atualizado em {fi.LastWriteTime:dd/MM/yyyy HH:mm}";
+                TxtStatusGeral.Text = $"Nexus LS pronto em: {exe}";
+
+                TxtVersaoDetalheNexus.Text = $"v{verLimpa} ({tamMb} MB)";
+                TxtHomeVersaoInstalada.Text = $"v{verLimpa}";
+                TxtHomeUltimaAtualizacao.Text = fi.LastWriteTime.ToString("dd/MM/yyyy HH:mm");
+                TxtSobreVersaoNexus.Text = $"v{verLimpa}";
+
+                TxtBadgeNexusLS.Text = "● Instalado";
+                TxtBadgeNexusLS.Foreground = (SolidColorBrush)FindResource("CorPositivo");
             }
             catch (Exception ex)
             {
                 TxtVersaoStatus.Text = "Arquivo presente (ilegível)";
                 TxtVersaoArquivo.Text = ex.Message;
-                TxtHomeNexusStatus.Text = "○ Arquivo presente";
-                TxtHomeNexusStatus.Foreground = (SolidColorBrush)FindResource("CorTextoSuave");
+                TxtVersaoDetalheNexus.Text = "Presente";
+                TxtBadgeNexusLS.Text = "○ Presente";
             }
         }
         else
         {
             TxtVersaoStatus.Text = "Não localizado";
-            TxtVersaoArquivo.Text = "Selecione o arquivo NexusLS.exe na aba Atualizações";
-            TxtHomeNexusStatus.Text = "○ Não instalado neste computador";
-            TxtHomeNexusStatus.Foreground = (SolidColorBrush)FindResource("CorTextoSuave");
+            TxtVersaoArquivo.Text = "Selecione o arquivo NexusLS.exe na página Atualizações";
+            TxtVersaoDetalheNexus.Text = "Não instalado";
+            TxtHomeVersaoInstalada.Text = "Não instalado";
+            TxtBadgeNexusLS.Text = "○ Não Instalado";
+            TxtBadgeNexusLS.Foreground = (SolidColorBrush)FindResource("CorTextoSuave");
         }
     }
 
-    // --- ABA 0: CENTRAL DO CLIENTE (HOME / LAUNCHER) ---
-
-    private void BtnHomeIrParaUpdates_Click(object sender, RoutedEventArgs e)
+    private void CarregarStatusVersaoBarTender()
     {
-        TabControle.SelectedIndex = 2; // Aba Atualizações do Sistema
+        try
+        {
+            var exe = TxtCaminhoBarTenderExe.Text.Trim();
+            if (string.IsNullOrWhiteSpace(exe) || !File.Exists(exe))
+            {
+                var detectado = LocalizarBarTenderPadrao();
+                if (File.Exists(detectado))
+                {
+                    exe = detectado;
+                    TxtCaminhoBarTenderExe.Text = detectado;
+                }
+            }
+
+            if (File.Exists(exe))
+            {
+                var vi = FileVersionInfo.GetVersionInfo(exe);
+                var versao = (vi.ProductVersion ?? vi.FileVersion ?? "1.0.0").Split('+')[0];
+                var fi = new FileInfo(exe);
+                var mb = fi.Length / (1024.0 * 1024.0);
+
+                TxtStatusModuloBarTender.Text = $"Módulo instalado: v{versao} ({mb:F0} MB)";
+                TxtVersaoBarTenderInstalada.Text = $"v{versao} ({mb:F0} MB) — Modificado em: {fi.LastWriteTime:dd/MM/yyyy HH:mm}";
+                TxtVersaoDetalheBarTender.Text = $"v{versao} ({mb:F0} MB)";
+                TxtSobreVersaoBarTender.Text = $"v{versao}";
+
+                TxtBadgeBarTender.Text = "● Instalado";
+                TxtBadgeBarTender.Foreground = (SolidColorBrush)FindResource("CorPositivo");
+            }
+            else
+            {
+                TxtStatusModuloBarTender.Text = "Executável do BarTender não encontrado no caminho informado.";
+                TxtVersaoBarTenderInstalada.Text = "Módulo BarTender não localizado neste computador.";
+                TxtVersaoDetalheBarTender.Text = "Não instalado";
+                TxtSobreVersaoBarTender.Text = "Não instalado";
+
+                TxtBadgeBarTender.Text = "○ Opcional";
+                TxtBadgeBarTender.Foreground = (SolidColorBrush)FindResource("CorTextoSuave");
+            }
+        }
+        catch
+        {
+            TxtStatusModuloBarTender.Text = "Módulo BarTender opcional.";
+            TxtVersaoDetalheBarTender.Text = "Opcional";
+            TxtBadgeBarTender.Text = "○ Opcional";
+        }
     }
 
-    private void BtnHomeIrParaLicenca_Click(object sender, RoutedEventArgs e)
+    // ==================== LICENCIAMENTO ====================
+
+    private async void CarregarStatusLicenca()
     {
-        TabControle.SelectedIndex = 1; // Aba Licença Comercial
+        var chaveSalva = _licenca.ChaveSalva;
+        if (!string.IsNullOrWhiteSpace(chaveSalva) && string.IsNullOrWhiteSpace(TxtChaveLicenca.Text))
+        {
+            TxtChaveLicenca.Text = chaveSalva;
+        }
+
+        MostrarLicenca(_licenca.AvaliarLocal());
+        try
+        {
+            var online = await _licenca.VerificarAsync();
+            MostrarLicenca(online);
+        }
+        catch (Exception ex)
+        {
+            TxtLicencaDetalhe.Text = ex.Message;
+            TxtSidebarConexao.Text = "Offline";
+            DotStatusConexao.Fill = (SolidColorBrush)FindResource("CorAviso");
+        }
     }
 
-    // --- ABA 1: LICENÇA COMERCIAL ---
+    private void MostrarLicenca(ResultadoLicencaNuvem r)
+    {
+        _ultimoResultadoLicenca = r;
+
+        if (!string.IsNullOrWhiteSpace(r.Chave) && string.IsNullOrWhiteSpace(TxtChaveLicenca.Text))
+        {
+            TxtChaveLicenca.Text = r.Chave;
+        }
+
+        var statusNome = r.Estado switch
+        {
+            EstadoLicencaNuvem.Valida => r.Offline ? "Válida (Modo Offline)" : "Ativa e Autorizada",
+            EstadoLicencaNuvem.Vencendo => "Vencendo em breve",
+            EstadoLicencaNuvem.Vencida => "Licença Vencida",
+            EstadoLicencaNuvem.Bloqueada => "Suspensa / Bloqueada",
+            EstadoLicencaNuvem.OutraMaquina => "Limite de Computadores",
+            EstadoLicencaNuvem.SemConexao => "Sem Conexão",
+            EstadoLicencaNuvem.NaoEncontrada => "Sem Licença Ativa",
+            _ => "Chave Inválida"
+        };
+
+        var statusCor = r.Estado switch
+        {
+            EstadoLicencaNuvem.Valida => (SolidColorBrush)FindResource("CorPositivo"),
+            EstadoLicencaNuvem.Vencendo or EstadoLicencaNuvem.SemConexao => (SolidColorBrush)FindResource("CorAviso"),
+            EstadoLicencaNuvem.NaoEncontrada => (SolidColorBrush)FindResource("CorTextoSuave"),
+            _ => (SolidColorBrush)FindResource("CorPerigo")
+        };
+
+        // Header e Sidebar
+        TxtTopoEmpresa.Text = string.IsNullOrWhiteSpace(r.Empresa) ? "NEXUS HUB" : r.Empresa.ToUpperInvariant();
+        TxtTopoLicencaBadge.Text = r.Ativa ? (r.Offline ? "● Licença Offline" : "● Licença Ativa") : "● Licença Não Ativada";
+        TxtTopoLicencaBadge.Foreground = statusCor;
+        TxtSidebarConexao.Text = r.Offline ? "Modo Offline" : "Conectado";
+        DotStatusConexao.Fill = r.Offline ? (SolidColorBrush)FindResource("CorAviso") : (SolidColorBrush)FindResource("CorPositivo");
+
+        // Informações da Instalação (Página Início)
+        TxtHomeCliente.Text = string.IsNullOrWhiteSpace(r.Cliente) ? "—" : r.Cliente;
+        TxtHomeEmpresa.Text = string.IsNullOrWhiteSpace(r.Empresa) ? "—" : r.Empresa;
+        TxtHomePlano.Text = string.IsNullOrWhiteSpace(r.Plano) ? (r.Ativa ? "COMERCIAL" : "—") : r.Plano.ToUpperInvariant();
+        TxtHomeLicencaStatus.Text = statusNome;
+        TxtHomeLicencaStatus.Foreground = statusCor;
+        TxtHomeValidade.Text = r.Validade is { } v ? $"{v:dd/MM/yyyy}" : (r.Ativa ? "Vitalícia" : "—");
+        TxtHomeDiasRestantes.Text = r.DiasRestantes is { } d ? $"{d} dia(s)" : (r.Ativa ? "Ilimitado" : "0");
+
+        // Página de Licença
+        TxtLicencaStatus.Text = statusNome;
+        TxtLicencaStatus.Foreground = statusCor;
+        TxtLicencaDetalhe.Text = r.Mensagem;
+        TxtLicencaCliente.Text = string.IsNullOrWhiteSpace(r.Cliente) ? "—" : r.Cliente;
+        TxtLicencaEmpresa.Text = string.IsNullOrWhiteSpace(r.Empresa) ? "—" : r.Empresa;
+        TxtLicencaPlano.Text = string.IsNullOrWhiteSpace(r.Plano) ? (r.Ativa ? "COMERCIAL" : "—") : r.Plano.ToUpperInvariant();
+
+        TxtLicencaValidade.Text = r.Validade is { } v2
+            ? $"{v2:dd/MM/yyyy}" + (r.DiasRestantes is { } d2 ? $" ({d2} dia(s) restantes)" : "")
+            : "—";
+
+        if (r.DispositivosUsados.HasValue && r.LimiteDispositivos.HasValue)
+        {
+            TxtLicencaDispositivos.Text = $"{r.DispositivosUsados} de {r.LimiteDispositivos} computador(es)";
+        }
+        else if (r.Ativa)
+        {
+            TxtLicencaDispositivos.Text = $"Autorizado ({LicencaService.CodigoDaMaquina()})";
+        }
+        else
+        {
+            TxtLicencaDispositivos.Text = "—";
+        }
+
+        TxtLicencaVerificacao.Text = r.VerificadaEm is { } ver
+            ? $"{ver:dd/MM/yyyy HH:mm}" + (r.Offline ? " (Cache)" : " (Online)")
+            : (r.Ativa ? $"{DateTime.Now:dd/MM/yyyy HH:mm}" : "—");
+
+        BtnRemoverLicenca.IsEnabled = !string.IsNullOrWhiteSpace(_licenca.ChaveSalva) || r.Ativa;
+    }
+
+    private void CardAppNexus_MouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ChangedButton == MouseButton.Left)
+        {
+            BtnIniciarNexus_Click(sender, e);
+        }
+    }
+
+    private void CardAppBarTender_MouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ChangedButton == MouseButton.Left)
+        {
+            BtnIniciarBarTender_Click(sender, e);
+        }
+    }
+
+    private void BtnIniciarNexus_Click(object sender, RoutedEventArgs e)
+    {
+        var avaliacao = _ultimoResultadoLicenca ?? _licenca.AvaliarLocal();
+        if (!avaliacao.Ativa)
+        {
+            MessageBox.Show(
+                this,
+                $"Não é possível iniciar o Nexus LS porque a licença não está ativa neste computador.\n\nSituação atual: {TxtLicencaStatus.Text}\nDetalhe: {avaliacao.Mensagem}\n\nAtive ou valide sua chave no menu 'Licença'.",
+                "Licença Necessária",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+            NavegarPara("licenca");
+            return;
+        }
+
+        var exe = TxtCaminhoExe.Text.Trim();
+        if (!File.Exists(exe))
+        {
+            MessageBox.Show(this, "Executável do Nexus LS não encontrado em:\n" + exe, "Executável Não Encontrado", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        try
+        {
+            Process.Start(new ProcessStartInfo(exe)
+            {
+                UseShellExecute = true,
+                WorkingDirectory = Path.GetDirectoryName(exe)!
+            });
+            TxtStatusGeral.Text = "Nexus LS iniciado com sucesso.";
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, "Erro ao iniciar o Nexus LS: " + ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private void BtnIniciarBarTender_Click(object sender, RoutedEventArgs e)
+    {
+        var avaliacao = _ultimoResultadoLicenca ?? _licenca.AvaliarLocal();
+        if (!avaliacao.Ativa)
+        {
+            MessageBox.Show(
+                this,
+                $"Não é possível iniciar o Nexus BarTender porque a licença não está ativa neste computador.\n\nSituação atual: {TxtLicencaStatus.Text}\nDetalhe: {avaliacao.Mensagem}\n\nAtive ou valide sua chave no menu 'Licença'.",
+                "Licença Necessária",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+            NavegarPara("licenca");
+            return;
+        }
+
+        var candidatos = new[]
+        {
+            TxtCaminhoBarTenderExe.Text.Trim(),
+            Path.Combine(AppContext.BaseDirectory, "NexusBarTender.exe"),
+            @"C:\NexusLS\publicar\NexusBarTender.exe",
+            Path.Combine(Path.GetDirectoryName(TxtCaminhoExe.Text) ?? "", "NexusBarTender.exe")
+        };
+
+        var exe = candidatos.FirstOrDefault(File.Exists);
+        if (exe == null)
+        {
+            MessageBox.Show(this, "Executável do Nexus BarTender (NexusBarTender.exe) não foi localizado neste computador.\nVocê pode instalá-lo ou atualizar pelo menu Atualizações.", "Módulo Não Encontrado", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        try
+        {
+            Process.Start(new ProcessStartInfo(exe)
+            {
+                UseShellExecute = true,
+                WorkingDirectory = Path.GetDirectoryName(exe)!
+            });
+            TxtStatusGeral.Text = "Nexus BarTender iniciado com sucesso.";
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, "Erro ao iniciar o Nexus BarTender: " + ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    // ==================== EVENTOS DE LICENÇA ====================
 
     private void BtnCopiarHwid_Click(object sender, RoutedEventArgs e)
     {
@@ -331,7 +497,7 @@ public partial class MainWindow : Window
             var hwid = LicencaService.CodigoDaMaquina();
             Clipboard.SetText(hwid);
             TxtStatusGeral.Text = $"Código deste computador ({hwid}) copiado para a área de transferência!";
-            BtnCopiarHwid.Content = "✓ Copiado!";
+            BtnCopiarHwid.Content = "✓ HWID Copiado!";
         }
         catch (Exception ex)
         {
@@ -422,7 +588,7 @@ public partial class MainWindow : Window
         }
     }
 
-    // --- ABA 2: ATUALIZAÇÃO DO SISTEMA ---
+    // ==================== ATUALIZAÇÕES DO NEXUS LS ====================
 
     private void BtnSelecionarExe_Click(object sender, RoutedEventArgs e)
     {
@@ -465,6 +631,7 @@ public partial class MainWindow : Window
                     ? "Melhorias de estabilidade, segurança e desempenho."
                     : _versaoDisponivel.Notas;
                 TxtStatusGeral.Text = $"Nova versão {_versaoDisponivel.Versao} encontrada!";
+                BadgeMenuUpdate.Visibility = Visibility.Visible;
             }
             else if (res.Estado == EstadoVerificacao.SemNovidade)
             {
@@ -505,7 +672,7 @@ public partial class MainWindow : Window
             {
                 PrgAtualizacao.IsIndeterminate = false;
                 PrgAtualizacao.Value = p * 100;
-                TxtStatusGeral.Text = $"Baixando atualização... {p:P0}";
+                TxtStatusGeral.Text = $"Baixando atualização do Nexus LS... {p:P0}";
             });
 
             var versaoInstaladaNova = _versaoDisponivel.Versao;
@@ -601,7 +768,9 @@ public partial class MainWindow : Window
         }
     }
 
-    private void BtnProcurarBarTenderExe_Click(object sender, RoutedEventArgs e)
+    // ==================== ATUALIZAÇÕES DO BARTENDER ====================
+
+    private void BtnSelecionarBarTenderExe_Click(object sender, RoutedEventArgs e)
     {
         var d = new OpenFileDialog
         {
@@ -613,75 +782,6 @@ public partial class MainWindow : Window
         {
             TxtCaminhoBarTenderExe.Text = d.FileName;
             CarregarStatusVersaoBarTender();
-        }
-    }
-
-    private void BtnCopiarBarTenderCompilado_Click(object sender, RoutedEventArgs e)
-    {
-        var d = new OpenFileDialog
-        {
-            Title = "Selecionar Novo Executável NexusBarTender.exe",
-            Filter = "Executável NexusBarTender.exe|NexusBarTender.exe|Executáveis (*.exe)|*.exe"
-        };
-
-        if (d.ShowDialog(this) == true)
-        {
-            try
-            {
-                var destino = TxtCaminhoBarTenderExe.Text.Trim();
-                if (string.IsNullOrWhiteSpace(destino)) destino = @"C:\NexusLS\publicar\NexusBarTender.exe";
-
-                foreach (var p in Process.GetProcessesByName("NexusBarTender"))
-                {
-                    try { p.Kill(); p.WaitForExit(3000); } catch { }
-                }
-
-                if (File.Exists(destino))
-                {
-                    var backup = Path.Combine(Path.GetDirectoryName(destino)!, "NexusBarTender.anterior.exe");
-                    File.Copy(destino, backup, overwrite: true);
-                }
-
-                File.Copy(d.FileName, destino, overwrite: true);
-                CarregarStatusVersaoBarTender();
-                MessageBox.Show(this, "Executável do BarTender atualizado com sucesso!", "Atualizado", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(this, "Erro ao copiar arquivo do BarTender: " + ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-    }
-
-    private void BtnRestaurarBarTenderBackup_Click(object sender, RoutedEventArgs e)
-    {
-        var exeAlvo = TxtCaminhoBarTenderExe.Text.Trim();
-        var pasta = Path.GetDirectoryName(exeAlvo) ?? AppContext.BaseDirectory;
-        var backup = Path.Combine(pasta, "NexusBarTender.anterior.exe");
-
-        if (!File.Exists(backup))
-        {
-            MessageBox.Show(this, "Nenhum arquivo de backup anterior do BarTender encontrado em:\n" + backup, "Backup Não Encontrado", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
-        }
-
-        if (MessageBox.Show(this, $"Deseja restaurar a versão anterior do BarTender ({backup})?", "Confirmar Restauração", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
-        {
-            try
-            {
-                foreach (var p in Process.GetProcessesByName("NexusBarTender"))
-                {
-                    try { p.Kill(); p.WaitForExit(3000); } catch { }
-                }
-
-                File.Copy(backup, exeAlvo, overwrite: true);
-                CarregarStatusVersaoBarTender();
-                MessageBox.Show(this, "Versão anterior do BarTender restaurada com sucesso!", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(this, "Erro ao restaurar backup do BarTender: " + ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
         }
     }
 
@@ -792,7 +892,75 @@ public partial class MainWindow : Window
         }
     }
 
-    /// <summary>Solicita o fechamento limpo da janela principal do Nexus LS antes de forçar o encerramento, protegendo o banco SQLite.</summary>
+    private void BtnRestaurarBackupBarTender_Click(object sender, RoutedEventArgs e)
+    {
+        var exeAlvo = TxtCaminhoBarTenderExe.Text.Trim();
+        var pasta = Path.GetDirectoryName(exeAlvo) ?? AppContext.BaseDirectory;
+        var backup = Path.Combine(pasta, "NexusBarTender.anterior.exe");
+
+        if (!File.Exists(backup))
+        {
+            MessageBox.Show(this, "Nenhum arquivo de backup anterior do BarTender encontrado em:\n" + backup, "Backup Não Encontrado", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        if (MessageBox.Show(this, $"Deseja restaurar a versão anterior do BarTender ({backup})?", "Confirmar Restauração", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+        {
+            try
+            {
+                foreach (var p in Process.GetProcessesByName("NexusBarTender"))
+                {
+                    try { p.Kill(); p.WaitForExit(3000); } catch { }
+                }
+
+                File.Copy(backup, exeAlvo, overwrite: true);
+                CarregarStatusVersaoBarTender();
+                MessageBox.Show(this, "Versão anterior do BarTender restaurada com sucesso!", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, "Erro ao restaurar backup do BarTender: " + ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+    }
+
+    private void BtnCopiarCompiladoBarTender_Click(object sender, RoutedEventArgs e)
+    {
+        var d = new OpenFileDialog
+        {
+            Title = "Selecionar Novo Executável NexusBarTender.exe",
+            Filter = "Executável NexusBarTender.exe|NexusBarTender.exe|Executáveis (*.exe)|*.exe"
+        };
+
+        if (d.ShowDialog(this) == true)
+        {
+            try
+            {
+                var destino = TxtCaminhoBarTenderExe.Text.Trim();
+                if (string.IsNullOrWhiteSpace(destino)) destino = @"C:\NexusLS\publicar\NexusBarTender.exe";
+
+                foreach (var p in Process.GetProcessesByName("NexusBarTender"))
+                {
+                    try { p.Kill(); p.WaitForExit(3000); } catch { }
+                }
+
+                if (File.Exists(destino))
+                {
+                    var backup = Path.Combine(Path.GetDirectoryName(destino)!, "NexusBarTender.anterior.exe");
+                    File.Copy(destino, backup, overwrite: true);
+                }
+
+                File.Copy(d.FileName, destino, overwrite: true);
+                CarregarStatusVersaoBarTender();
+                MessageBox.Show(this, "Executável do BarTender atualizado com sucesso!", "Atualizado", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, "Erro ao copiar arquivo do BarTender: " + ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+    }
+
     private static void FecharProcessoNexusLSSeguro()
     {
         try
@@ -814,112 +982,120 @@ public partial class MainWindow : Window
         catch { }
     }
 
-    private void BtnIniciarNexus_Click(object sender, RoutedEventArgs e)
-    {
-        var avaliacao = _ultimoResultadoLicenca ?? _licenca.AvaliarLocal();
-        if (!avaliacao.Ativa)
-        {
-            MessageBox.Show(
-                this,
-                $"Não é possível iniciar o Nexus LS porque a licença não está ativa neste computador.\n\nSituação atual: {TxtLicencaStatus.Text}\nDetalhe: {avaliacao.Mensagem}\n\nAtive ou renove sua chave na aba 'Licença Comercial'.",
-                "Licença Necessária",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
-            return;
-        }
+    // ==================== DIAGNÓSTICO E SUPORTE ====================
 
-        var exe = TxtCaminhoExe.Text.Trim();
-        if (!File.Exists(exe))
-        {
-            MessageBox.Show(this, "Executável do Nexus LS não encontrado em:\n" + exe, "Executável Não Encontrado", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
-        }
+    private async void BtnExecutarDiagnostico_Click(object sender, RoutedEventArgs e)
+    {
+        BtnExecutarDiagnostico.IsEnabled = false;
+        TxtStatusGeral.Text = "Executando bateria de diagnósticos reais do Nexus...";
 
         try
         {
-            Process.Start(new ProcessStartInfo(exe)
+            // 1. Internet
+            TxtDiagInternetStatus.Text = "Testando...";
+            bool internetOk = false;
+            try
             {
-                UseShellExecute = true,
-                WorkingDirectory = Path.GetDirectoryName(exe)!
-            });
-            TxtStatusGeral.Text = "Nexus LS iniciado com sucesso.";
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show(this, "Erro ao iniciar o Nexus LS: " + ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
-        }
-    }
-
-    private void BtnIniciarBarTender_Click(object sender, RoutedEventArgs e)
-    {
-        var avaliacao = _ultimoResultadoLicenca ?? _licenca.AvaliarLocal();
-        if (!avaliacao.Ativa)
-        {
-            MessageBox.Show(
-                this,
-                $"Não é possível iniciar o Nexus BarTender porque a licença não está ativa neste computador.\n\nSituação atual: {TxtLicencaStatus.Text}\nDetalhe: {avaliacao.Mensagem}\n\nAtive ou renove sua chave na aba 'Licença Comercial'.",
-                "Licença Necessária",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
-            return;
-        }
-
-        var candidatos = new[]
-        {
-            Path.Combine(AppContext.BaseDirectory, "NexusBarTender.exe"),
-            @"C:\NexusLS\publicar\NexusBarTender.exe",
-            Path.Combine(Path.GetDirectoryName(TxtCaminhoExe.Text) ?? "", "NexusBarTender.exe")
-        };
-
-        var exe = candidatos.FirstOrDefault(File.Exists);
-        if (exe == null)
-        {
-            MessageBox.Show(this, "Executável do Nexus BarTender (NexusBarTender.exe) não foi localizado.", "Módulo Não Encontrado", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
-        }
-
-        try
-        {
-            Process.Start(new ProcessStartInfo(exe)
-            {
-                UseShellExecute = true,
-                WorkingDirectory = Path.GetDirectoryName(exe)!
-            });
-            TxtStatusGeral.Text = "Nexus BarTender iniciado com sucesso.";
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show(this, "Erro ao iniciar o Nexus BarTender: " + ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
-        }
-    }
-
-    // --- ABA 3: DIAGNÓSTICO & SUPORTE ---
-
-    private async void BtnTestarConexao_Click(object sender, RoutedEventArgs e)
-    {
-        BtnTestarConexao.IsEnabled = false;
-        TxtStatusGeral.Text = "Testando comunicação com o servidor de licenças em nuvem...";
-        try
-        {
-            var r = await _licenca.VerificarAsync();
-            MostrarLicenca(r);
-            if (r.Estado == EstadoLicencaNuvem.SemConexao)
-            {
-                MessageBox.Show(this, "Não foi possível comunicar com o servidor de licenças:\n" + r.Mensagem, "Sem Conexão", MessageBoxButton.OK, MessageBoxImage.Warning);
+                using var pingHttp = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
+                var resp = await pingHttp.GetAsync("https://www.google.com");
+                internetOk = resp.IsSuccessStatusCode;
             }
-            else
+            catch
             {
-                MessageBox.Show(this, $"Conexão estabelecida com sucesso com o servidor Firebase (nexus-ls)!\n\nSituação da licença: {TxtLicencaStatus.Text}", "Conexão OK", MessageBoxButton.OK, MessageBoxImage.Information);
+                internetOk = false;
             }
-            TxtStatusGeral.Text = "Teste de conexão concluído.";
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show(this, "Falha ao testar conexão: " + ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+            SetBadgeStatus(BrdDiagInternet, TxtDiagInternetStatus, internetOk, "Conectado", "Falha de Conexão");
+
+            // 2. Firebase
+            TxtDiagFirebaseStatus.Text = "Verificando...";
+            bool firebaseOk = false;
+            try
+            {
+                var r = await _licenca.VerificarAsync();
+                MostrarLicenca(r);
+                firebaseOk = !r.Offline && r.Estado != EstadoLicencaNuvem.SemConexao;
+            }
+            catch
+            {
+                firebaseOk = false;
+            }
+            SetBadgeStatus(BrdDiagFirebase, TxtDiagFirebaseStatus, firebaseOk, "Online (nexus-ls)", "Serviço Inacessível");
+
+            // 3. Licença
+            var lic = _ultimoResultadoLicenca ?? _licenca.AvaliarLocal();
+            SetBadgeStatus(BrdDiagLicenca, TxtDiagLicencaStatus, lic.Ativa, "Ativa e Autorizada", "Não Ativada", "Vencendo");
+
+            // 4. Arquivos e Dados
+            var pastaDados = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "NexusLS");
+            bool arquivosOk = false;
+            try
+            {
+                Directory.CreateDirectory(pastaDados);
+                var teste = Path.Combine(pastaDados, ".test_diag");
+                File.WriteAllText(teste, "ok");
+                File.Delete(teste);
+                arquivosOk = true;
+            }
+            catch
+            {
+                arquivosOk = false;
+            }
+            SetBadgeStatus(BrdDiagArquivos, TxtDiagArquivosStatus, arquivosOk, "Íntegro e Acessível", "Erro de Permissão");
+
+            // 5. Nexus LS
+            var exeLS = TxtCaminhoExe.Text.Trim();
+            bool nexusOk = File.Exists(exeLS);
+            SetBadgeStatus(BrdDiagNexus, TxtDiagNexusStatus, nexusOk, "Instalado e Pronto", "Executável Ausente");
+
+            // 6. BarTender
+            var exeBT = TxtCaminhoBarTenderExe.Text.Trim();
+            bool btOk = File.Exists(exeBT);
+            SetBadgeStatus(BrdDiagBarTender, TxtDiagBarTenderStatus, btOk ? true : (bool?)null, "Instalado e Pronto", "Não Instalado", "Módulo Opcional");
+
+            // 7. Sistema de Updates
+            TxtDiagUpdatesStatus.Text = "Checando...";
+            bool updateOk = false;
+            try
+            {
+                var repo = ConfiguracaoAtualizacao.Repositorio();
+                using var req = new HttpRequestMessage(HttpMethod.Head, $"https://api.github.com/repos/{repo}/releases/latest");
+                req.Headers.UserAgent.ParseAdd("NexusLS-Diag/1.0");
+                var rResp = await HttpCompartilhado.SendAsync(req);
+                updateOk = rResp.IsSuccessStatusCode;
+            }
+            catch
+            {
+                updateOk = false;
+            }
+            SetBadgeStatus(BrdDiagUpdates, TxtDiagUpdatesStatus, updateOk, "GitHub Operacional", "Repositório Offline");
+
+            TxtStatusGeral.Text = "Diagnóstico do Nexus concluído.";
         }
         finally
         {
-            BtnTestarConexao.IsEnabled = true;
+            BtnExecutarDiagnostico.IsEnabled = true;
+        }
+    }
+
+    private static void SetBadgeStatus(Border brd, TextBlock txt, bool? status, string okTexto, string erroTexto, string? neutroTexto = null)
+    {
+        if (status == true)
+        {
+            brd.Background = new SolidColorBrush(Color.FromRgb(0xDC, 0xFC, 0xE7)); // Verde
+            txt.Foreground = new SolidColorBrush(Color.FromRgb(0x16, 0x65, 0x34));
+            txt.Text = $"✓ {okTexto}";
+        }
+        else if (status == false)
+        {
+            brd.Background = new SolidColorBrush(Color.FromRgb(0xFE, 0xE2, 0xE2)); // Vermelho
+            txt.Foreground = new SolidColorBrush(Color.FromRgb(0x99, 0x1B, 0x1B));
+            txt.Text = $"✕ {erroTexto}";
+        }
+        else
+        {
+            brd.Background = new SolidColorBrush(Color.FromRgb(0xFE, 0xF3, 0xC7)); // Amarelo
+            txt.Foreground = new SolidColorBrush(Color.FromRgb(0x92, 0x40, 0x0E));
+            txt.Text = $"○ {neutroTexto ?? "Opcional"}";
         }
     }
 
@@ -929,24 +1105,25 @@ public partial class MainWindow : Window
         {
             var r = _ultimoResultadoLicenca ?? _licenca.AvaliarLocal();
             var relatorio =
-                $"=== DIAGNÓSTICO NEXUS LS ===\r\n" +
-                $"Data/Hora: {DateTime.Now:dd/MM/yyyy HH:mm:ss}\r\n" +
+                $"=== RELATÓRIO TÉCNICO NEXUS HUB ===\r\n" +
+                $"Data e Hora: {DateTime.Now:dd/MM/yyyy HH:mm:ss}\r\n" +
                 $"Computador: {Environment.MachineName}\r\n" +
-                $"Código HWID: {LicencaService.CodigoDaMaquina()}\r\n" +
-                $"Sistema: {RuntimeInformation.OSDescription} ({RuntimeInformation.OSArchitecture})\r\n" +
-                $"Status Licença: {TxtLicencaStatus.Text}\r\n" +
+                $"HWID: {LicencaService.CodigoDaMaquina()}\r\n" +
+                $"Sistema Operacional: {RuntimeInformation.OSDescription} ({RuntimeInformation.OSArchitecture})\r\n" +
+                $"Ambiente .NET: {RuntimeInformation.FrameworkDescription}\r\n" +
+                $"Status da Licença: {TxtLicencaStatus.Text}\r\n" +
                 $"Cliente: {TxtLicencaCliente.Text} | Empresa: {TxtLicencaEmpresa.Text}\r\n" +
-                $"Validade: {TxtLicencaValidade.Text}\r\n" +
-                $"Versão Executável: {TxtVersaoStatus.Text}\r\n" +
-                $"Caminho Exe: {TxtCaminhoExe.Text}";
+                $"Plano: {TxtLicencaPlano.Text} | Validade: {TxtLicencaValidade.Text}\r\n" +
+                $"Executável Nexus LS: {TxtCaminhoExe.Text} ({TxtVersaoStatus.Text})\r\n" +
+                $"Executável BarTender: {TxtCaminhoBarTenderExe.Text} ({TxtStatusModuloBarTender.Text})";
 
             Clipboard.SetText(relatorio);
             TxtStatusGeral.Text = "Relatório de diagnóstico copiado para a área de transferência!";
-            MessageBox.Show(this, "O relatório de diagnóstico foi copiado!\nAgora basta colar (Ctrl+V) na conversa com o suporte.", "Relatório Copiado", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(this, "O relatório de diagnóstico foi copiado para a área de transferência!\nBasta colar (Ctrl+V) no atendimento ao cliente.", "Relatório Copiado", MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (Exception ex)
         {
-            MessageBox.Show(this, "Não foi possível copiar o diagnóstico: " + ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show(this, "Não foi possível copiar o relatório: " + ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 
@@ -965,9 +1142,9 @@ public partial class MainWindow : Window
         }
     }
 
-    // --- ATALHO NA ÁREA DE TRABALHO ---
+    // ==================== ATALHO DO WINDOWS ====================
 
-    private void BtnCriarAtalho_Click(object sender, RoutedEventArgs e)
+    private void BtnCriarAtalhoDesktop_Click(object sender, RoutedEventArgs e)
     {
         CriarAtalhoDesktop(silencioso: false);
     }
@@ -977,7 +1154,7 @@ public partial class MainWindow : Window
         try
         {
             var desktop = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
-            var caminhoAtalho = Path.Combine(desktop, "Atualizador e Ativador Nexus.lnk");
+            var caminhoAtalho = Path.Combine(desktop, "Nexus Hub — Central de Aplicativos.lnk");
             var alvoExe = Process.GetCurrentProcess().MainModule?.FileName ?? @"C:\NexusLS\publicar\atualizador.exe";
 
             if (!File.Exists(alvoExe) || alvoExe.EndsWith("dotnet.exe", StringComparison.OrdinalIgnoreCase))
@@ -994,7 +1171,7 @@ public partial class MainWindow : Window
                     dynamic shortcut = shell.CreateShortcut(caminhoAtalho);
                     shortcut.TargetPath = alvoExe;
                     shortcut.WorkingDirectory = Path.GetDirectoryName(alvoExe);
-                    shortcut.Description = "Atualizador e Ativador de Licença Nexus LS";
+                    shortcut.Description = "Nexus Hub — Central de Aplicativos Nexus";
                     shortcut.Save();
 
                     if (!silencioso)
