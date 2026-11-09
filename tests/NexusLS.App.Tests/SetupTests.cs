@@ -7,10 +7,10 @@ public class SetupTests
     [Fact]
     public void Linha_de_comando_le_silencioso_empresa_e_pasta()
     {
-        var op = OpcoesSetup.Ler(["/S", "--empresa=arena-sandplay", "--pasta=D:\Nexus"]);
+        var op = OpcoesSetup.Ler(["/S", "--empresa=arena-sandplay", "--pasta=D:/Nexus"]);
         Assert.True(op.Silencioso);
         Assert.Equal("arena-sandplay", op.Empresa);
-        Assert.Equal("D:\Nexus", op.Pasta);
+        Assert.Equal("D:/Nexus", op.Pasta);
         Assert.False(OpcoesSetup.Ler([]).Silencioso);
         Assert.EndsWith("Nexus", OpcoesSetup.Ler([]).Pasta);
     }
