@@ -27,7 +27,7 @@
     <!-- Nome do arquivo gerado: NexusLS.exe -->
     <AssemblyName>NexusLS</AssemblyName>
     <!-- Versão de desenvolvimento. Ao publicar, publicar-versao.ps1 grava a versão do release dentro do .exe. -->
-    <Version>1.1.0</Version>
+    <Version>1.2.8</Version>
     <Product>Nexus LS</Product>
     <AssemblyTitle>Nexus LS</AssemblyTitle>
   </PropertyGroup>
