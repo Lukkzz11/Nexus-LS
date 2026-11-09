@@ -69,6 +69,7 @@ public partial class VendasViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(PodeCancelar))]
     [NotifyPropertyChangedFor(nameof(TemSelecao))]
     [NotifyPropertyChangedFor(nameof(TextoOperador))]
+    [NotifyPropertyChangedFor(nameof(TextoCliente))]
     [NotifyPropertyChangedFor(nameof(TextoCancelamento))]
     [NotifyCanExecuteChangedFor(nameof(CancelarVendaCommand))]
     private Venda? _selecionada;
@@ -80,6 +81,18 @@ public partial class VendasViewModel : ViewModelBase
 
     /// <summary>Linha de texto sobre quem vendeu (vazia se a venda é antiga e não tem operador).</summary>
     public string TextoOperador => Selecionada?.Operador is { Length: > 0 } o ? $"Operador: {o}" : "";
+
+    /// <summary>Para quem foi a venda (a prazo ou com cliente). Venda sem cliente mostra "Consumidor final".</summary>
+    public string TextoCliente
+    {
+        get
+        {
+            if (Selecionada is not { } v) return "";
+            if (v.Cliente is { } c)
+                return $"Cliente: {c.Nome}" + (string.IsNullOrWhiteSpace(c.Telefone) ? "" : $"  ·  {c.Telefone}");
+            return v.FormaPagamento == FormaPagamento.APrazo ? "Cliente: (não identificado)" : "Cliente: Consumidor final";
+        }
+    }
 
     /// <summary>Quem cancelou, quando, por quê e se o estoque voltou. Vazio se a venda não foi cancelada.</summary>
     public string TextoCancelamento => Selecionada is { Cancelada: true } v

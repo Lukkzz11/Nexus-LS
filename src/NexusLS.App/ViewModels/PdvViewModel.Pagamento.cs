@@ -45,6 +45,7 @@ public partial class PdvViewModel
 
         var total = _carrinho.SubtotalCentavos - _descontoResolvido.ValorEmCentavos;
         _pagamento = new SelecaoPagamento(total);
+        EscolhendoParcelas = false;
         if (_clienteFixo is not null) PrepararPagamentoDoCliente();
         TotalFinalTexto = Dinheiro.Formatar(total);
         ValorRecebidoTexto = _pagamento.ValorRecebidoTexto;
@@ -61,6 +62,9 @@ public partial class PdvViewModel
         AtualizarPagamento();
         IrPara(EtapaPdv.Pagamento);
     }
+
+    /// <summary>No crédito: true depois do Enter que leva às parcelas (as setas passam a escolher o número delas).</summary>
+    [ObservableProperty] private bool _escolhendoParcelas;
 
     private void AtualizarOpcoesDesconto()
     {
@@ -94,6 +98,7 @@ public partial class PdvViewModel
     /// <summary>Depois de ← →: outra forma de pagamento. Leva o cursor ao campo que ela pede.</summary>
     private void FormaMudou()
     {
+        EscolhendoParcelas = false;
         AtualizarPagamento();
         Mensagem = "";
 

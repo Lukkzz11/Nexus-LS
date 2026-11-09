@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using Microsoft.EntityFrameworkCore;
 using NexusLS.App.ViewModels;
 using NexusLS.Core.Models;
@@ -399,7 +399,10 @@ public sealed class FluxoPdvTeclado : IDisposable
 
         Tecla(ComandoTecla.Direita, ComandoTecla.Direita, ComandoTecla.Direita); // Pix, Débito, Crédito
         Assert.True(_vm.EmCredito);
-        Tecla(ComandoTecla.Cima, ComandoTecla.Cima);         // 3x
+        Tecla(ComandoTecla.Enter);                           // o Enter leva às parcelas, ainda não finaliza
+        Assert.True(_vm.EscolhendoParcelas);
+        Assert.Equal(EtapaPdv.Pagamento, _vm.Etapa);
+        Tecla(ComandoTecla.Direita, ComandoTecla.Direita);   // 3x (→ mais, ← menos)
         Tecla(ComandoTecla.Enter);
         await AteAsync(() => _vm.Etapa == EtapaPdv.Sucesso, "sucesso");
 

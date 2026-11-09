@@ -338,6 +338,21 @@ public class EscolhaNaBuscaTests
     }
 
     [Fact]
+    public async Task Referencia_vem_antes_do_codigo_de_barras_mesmo_com_espaco()
+    {
+        var banco = new BancoDeTeste();
+        using var _ = banco;
+        var produtos = new ProdutoService(banco.Fabrica);
+        // O código de barras de um produto é igual à referência de outro: a referência ganha.
+        await produtos.CadastrarAsync(new DadosProduto("Bermuda", "1000001425", 5000, 2000, 1, Referencia: "REF-B"));
+        await produtos.CadastrarAsync(new DadosProduto("Camisa", "999", 5000, 2000, 1, Referencia: "100000 1425"));
+
+        Assert.Equal("Camisa", (await produtos.EscolherParaVendaAsync("100000 1425"))!.Nome);
+        Assert.Equal("Camisa", (await produtos.EscolherParaVendaAsync("1000001425"))!.Nome);
+        Assert.Equal("Camisa", (await produtos.BuscarAsync("100000 1425")).First().Nome);
+    }
+
+    [Fact]
     public async Task Sem_codigo_exato_vale_o_primeiro_resultado()
     {
         var (banco, produtos) = await Preparar();

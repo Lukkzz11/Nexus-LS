@@ -107,7 +107,20 @@
 
                 <Grid Grid.Row="2">
                     <TextBox x:Name="CaixaBusca" FontSize="28" Padding="12,10"
-                             Text="{Binding Busca, UpdateSourceTrigger=PropertyChanged}" />
+                             Text="{Binding Busca, UpdateSourceTrigger=PropertyChanged}">
+                        <TextBox.Style>
+                            <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+                                <Style.Triggers>
+                                    <!-- Atacado: a caixa de busca ganha borda azul; no varejo continua como sempre. -->
+                                    <DataTrigger Binding="{Binding EhAtacado}" Value="True">
+                                        <Setter Property="BorderBrush" Value="#2563EB" />
+                                        <Setter Property="BorderThickness" Value="3" />
+                                        <Setter Property="Background" Value="#EFF6FF" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBox.Style>
+                    </TextBox>
                     <!-- Como no ERP: busca vazia com itens no carrinho lembra que Enter finaliza -->
                     <TextBlock Text="Enter para finalizar  ↵" FontWeight="SemiBold" FontSize="14" IsHitTestVisible="False"
                                HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,16,0"
@@ -310,7 +323,8 @@
                         <StackPanel>
                             <TextBlock Text="Venda Cliente" Style="{StaticResource Rotulo}" />
                             <TextBlock Text="{Binding ClienteFixoNome}" FontSize="16" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-                            <TextBlock Text="{Binding ClienteFixoDivida}" FontSize="12" Margin="0,0,0,8" />
+                            <TextBlock Text="{Binding ClienteFixoDivida}" FontSize="12" />
+                            <TextBlock Text="{Binding ClienteFixoInfo}" FontSize="12" TextWrapping="Wrap" Margin="0,2,0,8" />
                             <StackPanel Orientation="Horizontal">
                                 <Button Content="Trocar cliente" Command="{Binding TrocarClienteCommand}" Focusable="False" Style="{StaticResource BotaoSecundario}" Margin="0,0,6,0" />
                                 <Button Content="Sair" Command="{Binding SairDoModoClienteCommand}" Focusable="False" Style="{StaticResource BotaoSecundario}" />
@@ -318,16 +332,16 @@
                         </StackPanel>
                     </Border>
                     <TextBlock Text="Tabela de preço (Espaço troca)" Style="{StaticResource Rotulo}" Margin="0,0,0,4" />
-                    <!-- No atacado o botão fica laranja, para ninguém esquecer em que tabela está vendendo. -->
+                    <!-- No atacado o botão fica azul, para ninguém esquecer em que tabela está vendendo. -->
                     <Button Content="{Binding TabelaTexto}" FontSize="18" Focusable="False"
                             Command="{Binding AlternarTabelaCommand}">
                         <Button.Style>
                             <Style TargetType="Button" BasedOn="{StaticResource BotaoSecundario}">
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding EhAtacado}" Value="True">
-                                        <Setter Property="Background" Value="{StaticResource CorAtencaoFundo}" />
-                                        <Setter Property="BorderBrush" Value="{StaticResource CorAtencaoBorda}" />
-                                        <Setter Property="Foreground" Value="{StaticResource CorAtencaoTexto}" />
+                                        <Setter Property="Background" Value="#2563EB" />
+                                        <Setter Property="BorderBrush" Value="#1D4ED8" />
+                                        <Setter Property="Foreground" Value="White" />
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
@@ -442,7 +456,20 @@
                     <!-- Cartão de crédito: parcelas -->
                     <StackPanel Visibility="{Binding EmCredito, Converter={StaticResource BoolVis}}">
                         <TextBlock Text="{Binding AcrescimoTexto}" TextWrapping="Wrap" FontSize="16" FontWeight="SemiBold" Margin="0,12,0,0" />
-                        <TextBlock Text="Parcelas (↑ mais · ↓ menos)" Style="{StaticResource Rotulo}" />
+                        <TextBlock TextWrapping="Wrap">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource Rotulo}">
+                                    <Setter Property="Text" Value="Parcelas: tecle Enter para escolher" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding EscolhendoParcelas}" Value="True">
+                                            <Setter Property="Text" Value="Escolha as parcelas com as setas (← ↓ menos · → ↑ mais) e tecle Enter para finalizar" />
+                                            <Setter Property="FontWeight" Value="Bold" />
+                                            <Setter Property="Foreground" Value="{StaticResource CorPrimaria}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
                         <ItemsControl ItemsSource="{Binding OpcoesParcela}" ItemTemplate="{StaticResource Azulejo}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>

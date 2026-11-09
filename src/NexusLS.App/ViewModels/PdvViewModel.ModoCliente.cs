@@ -22,11 +22,25 @@ public partial class PdvViewModel
     [ObservableProperty] private string _clienteFixoNome = "";
     [ObservableProperty] private string _clienteFixoDivida = "";
 
+    /// <summary>Dados do cliente da Venda Cliente: desconto por peça que ele ganha, telefone, limite e crédito.</summary>
+    [ObservableProperty] private string _clienteFixoInfo = "";
+
+    private void AtualizarInfoDoCliente()
+    {
+        if (_clienteFixo is not { } c) { ClienteFixoInfo = ""; return; }
+        var partes = new List<string> { $"Desconto: {Dinheiro.Formatar(DescontoPorPecaPadrao())} por peça" };
+        if (!string.IsNullOrWhiteSpace(c.Telefone)) partes.Add($"Tel. {c.Telefone}");
+        partes.Add(c.LimiteCreditoCentavos > 0 ? $"Limite {Dinheiro.Formatar(c.LimiteCreditoCentavos)}" : "Sem limite de crédito");
+        if (c.CreditoCentavos > 0) partes.Add($"Crédito {Dinheiro.Formatar(c.CreditoCentavos)}");
+        ClienteFixoInfo = string.Join(Environment.NewLine, partes);
+    }
+
     /// <summary>Escolhe o cliente da venda: a partir daí o PDV vende no atacado, a prazo, no nome dele.</summary>
     public Task EntrarModoClienteAsync(Cliente cliente) => ExecutarAsync(async () =>
     {
         _clienteFixo = cliente;
         ClienteFixoNome = cliente.Nome;
+        AtualizarInfoDoCliente();
         OnPropertyChanged(nameof(EmModoCliente));
         AplicarTabelaDoCliente();
         await AtualizarDividaDoClienteAsync();
@@ -42,6 +56,7 @@ public partial class PdvViewModel
         _clienteFixo = null;
         ClienteFixoNome = "";
         ClienteFixoDivida = "";
+        ClienteFixoInfo = "";
         OnPropertyChanged(nameof(EmModoCliente));
         MostrarSucesso("Voltou ao PDV comum.");
         FocoSolicitado?.Invoke(AlvoFoco.Busca);

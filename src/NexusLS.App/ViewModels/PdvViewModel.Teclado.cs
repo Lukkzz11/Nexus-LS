@@ -128,8 +128,31 @@ public partial class PdvViewModel
 
     private bool TeclaPagamento(ComandoTecla tecla)
     {
+        // No crédito, o Enter leva às parcelas; lá as setas escolhem e o Enter seguinte finaliza.
+        if (EscolhendoParcelas && EmCredito)
+        {
+            switch (tecla)
+            {
+                case ComandoTecla.Esquerda:
+                case ComandoTecla.Baixo:
+                    if (_pagamento!.MenosParcelas()) AtualizarPagamento();
+                    return true;
+                case ComandoTecla.Direita:
+                case ComandoTecla.Cima:
+                    if (_pagamento!.MaisParcelas()) AtualizarPagamento();
+                    return true;
+                case ComandoTecla.Esc:
+                    EscolhendoParcelas = false; // volta para a escolha da forma de pagamento
+                    return true;
+            }
+        }
+
         switch (tecla)
         {
+            case ComandoTecla.Enter when EmCredito && !EscolhendoParcelas:
+                EscolhendoParcelas = true;
+                Mensagem = "";
+                return true;
             case ComandoTecla.Esquerda: _pagamento!.Anterior(); FormaMudou(); return true;
             case ComandoTecla.Direita: _pagamento!.Proxima(); FormaMudou(); return true;
             case ComandoTecla.Cima:

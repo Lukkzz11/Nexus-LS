@@ -129,10 +129,36 @@ public class ProdutoService
                 (p.Referencia != null && EF.Functions.Like(p.Referencia, padrao)) ||
                 (p.CodigoInterno != null && EF.Functions.Like(p.CodigoInterno, padrao)) ||
                 (p.Categoria != null && EF.Functions.Like(p.Categoria, padrao)) ||
-                (p.CodigoBarras != null && EF.Functions.Like(p.CodigoBarras, padrao)));
+                (p.CodigoBarras != null && EF.Functions.Like(p.CodigoBarras, padrao)) ||
+                (p.Referencia != null && p.Referencia.Replace(" ", "") == texto.Replace(" ", "")));
+
+            // A referência vem sempre primeiro: igual ao digitado, depois começando por ele, depois o resto (nome etc.).
+            var exato = texto;
+            var semEspaco = texto.Replace(" ", "");
+            var comeca = $"{texto}%";
+            return await consulta
+                .OrderBy(p => p.Referencia != null && (p.Referencia == exato || p.Referencia.Replace(" ", "") == semEspaco) ? 0
+                            : p.Referencia != null && EF.Functions.Like(p.Referencia, comeca) ? 1
+                            : 2)
+                .ThenBy(p => p.Nome)
+                .ToListAsync();
         }
 
         return await consulta.OrderBy(p => p.Nome).ToListAsync();
+    }
+
+    /// <summary>Produto ativo cuja referência é exatamente o texto (ignora maiúsculas e espaços).</summary>
+    public async Task<Produto?> ObterPorReferenciaAsync(string referencia)
+    {
+        var texto = (referencia ?? "").Trim();
+        if (texto.Length == 0) return null;
+        var semEspaco = texto.Replace(" ", "");
+        await using var db = await _fabrica.CreateDbContextAsync();
+        return await db.Produtos.AsNoTracking()
+            .Where(p => p.Ativo && p.Referencia != null
+                        && (p.Referencia == texto || p.Referencia.Replace(" ", "") == semEspaco))
+            .OrderBy(p => p.Nome)
+            .FirstOrDefaultAsync();
     }
 
     /// <summary>Todos os produtos com a grade de tamanhos carregada, para exportar o estoque.</summary>
@@ -168,7 +194,7 @@ public class ProdutoService
 
     /// <summary>
     /// A escolha do Enter na busca do PDV: se o operador desceu com ↑↓ até um item, vale esse (<paramref name="destacado"/>);
-    /// senão o código de barras exato tem prioridade (leitor); senão vale o primeiro resultado da busca. Nulo se não achar nada.
+    /// senão a referência exata tem prioridade, depois o código de barras exato (leitor); senão vale o primeiro resultado da busca. Nulo se não achar nada.
     /// </summary>
     public async Task<Produto?> EscolherParaVendaAsync(string texto, Produto? destacado = null)
     {
@@ -177,7 +203,9 @@ public class ProdutoService
         texto = texto.Trim();
         if (texto.Length == 0) return null;
 
-        return await ObterPorCodigoBarrasAsync(texto)
+        // Referência primeiro; só depois o código de barras exato (leitor); por fim o primeiro resultado da busca.
+        return await ObterPorReferenciaAsync(texto)
+            ?? await ObterPorCodigoBarrasAsync(texto)
             ?? (await BuscarAsync(texto)).FirstOrDefault();
     }
 
