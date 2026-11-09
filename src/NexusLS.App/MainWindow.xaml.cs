@@ -1,4 +1,4 @@
-﻿using NexusLS.App.ViewModels;
+using NexusLS.App.ViewModels;
 using Wpf.Ui.Controls;
 
 namespace NexusLS.App;
@@ -21,6 +21,26 @@ public partial class MainWindow : FluentWindow
             return d.ShowDialog(this) == true ? d.FileName : null;
         };
         vm.AtualizarLicenca();
+        vm.AoDetectarLicencaInvalidaNaNuvem = mensagem =>
+        {
+            Dispatcher.Invoke(() =>
+            {
+                System.Windows.MessageBox.Show(this,
+                    $"Atenção: {mensagem}\n\nO Atualizador / Ativador de Licença será aberto para regularização.",
+                    "Licença Nexus LS",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Warning);
+                vm.AbrirAtualizador();
+                Close();
+            });
+        };
+        Loaded += async (_, _) =>
+        {
+            await vm.VerificarLicencaNuvemAsync();
+            var timerLicenca = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMinutes(15) };
+            timerLicenca.Tick += async (_, _) => await vm.VerificarLicencaNuvemAsync();
+            timerLicenca.Start();
+        };
         vm.AbrirConexaoBanco = () => new Views.ConexaoBancoWindow(App.Servicos.Firebase, App.Servicos.Operacional) { Owner = this }.ShowDialog() == true;
         vm.AtualizarBanco();
 

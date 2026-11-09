@@ -76,6 +76,20 @@ export function calcularDataVencimentoPorPlano(plano: PlanoLicenca, dataInicioSt
   return base.toISOString().split("T")[0];
 }
 
+export function extrairMaquinasCampo(campoMaquina?: string | null): string[] {
+  if (!campoMaquina) return [];
+  const limpo = campoMaquina.trim();
+  if (!limpo || limpo === "*") return [];
+  return Array.from(
+    new Set(
+      limpo
+        .split(",")
+        .map((m) => m.trim().toUpperCase())
+        .filter((m) => m.length > 0)
+    )
+  );
+}
+
 export function calcularStatusReal(lic: Partial<Licenca>): { status: StatusLicenca; diasRestantes: number } {
   const agora = new Date();
   const agoraZero = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate());
@@ -104,7 +118,10 @@ export function calcularStatusReal(lic: Partial<Licenca>): { status: StatusLicen
     return { status: "VENCIDA", diasRestantes };
   }
 
-  if (lic.status === "PENDENTE") {
+  const temDispositivoVinculado =
+    extrairMaquinasCampo(lic.maquina).length > 0 || (lic.dispositivosAtivosCount || 0) > 0;
+
+  if (lic.status === "PENDENTE" && !temDispositivoVinculado) {
     return { status: "PENDENTE", diasRestantes };
   }
 
@@ -184,16 +201,21 @@ export async function listarLicencas(): Promise<Licenca[]> {
 
     // Busca contagem de dispositivos por licença
     const dispSnapshot = await getDocs(query(collection(db, "dispositivos"), where("ativo", "==", true)));
-    const dispCountMap: Record<string, number> = {};
+    const dispSetMap: Record<string, Set<string>> = {};
     dispSnapshot.docs.forEach((d) => {
       const data = d.data();
-      if (data.licencaId) {
-        dispCountMap[data.licencaId] = (dispCountMap[data.licencaId] || 0) + 1;
+      if (data.licencaId && data.identificadorDispositivo) {
+        if (!dispSetMap[data.licencaId]) dispSetMap[data.licencaId] = new Set();
+        dispSetMap[data.licencaId].add(String(data.identificadorDispositivo).trim().toUpperCase());
       }
     });
 
     for (const docSnap of snapshot.docs) {
       const data = docSnap.data();
+      const maquinasCampo = extrairMaquinasCampo(data.maquina);
+      const setTotal = new Set<string>(dispSetMap[docSnap.id] ? Array.from(dispSetMap[docSnap.id]) : []);
+      maquinasCampo.forEach((m) => setTotal.add(m));
+
       const lic: Licenca = {
         id: docSnap.id,
         hashChave: data.hashChave || "",
@@ -220,12 +242,12 @@ export async function listarLicencas(): Promise<Licenca[]> {
         validade: data.validade,
         ativa: data.ativa !== false,
         maquina: data.maquina || "",
+        dispositivosAtivosCount: setTotal.size,
       };
 
       const { status: statusReal, diasRestantes } = calcularStatusReal(lic);
       lic.status = statusReal;
       lic.diasRestantes = diasRestantes;
-      lic.dispositivosAtivosCount = dispCountMap[docSnap.id] || (lic.maquina ? 1 : 0);
 
       licencas.push(lic);
     }
@@ -251,29 +273,33 @@ export async function gerarNovaLicenca(params: {
   limiteDispositivos: number;
   observacoes?: string;
   chavePersonalizada?: string;
+  hwidInicial?: string;
 }): Promise<{ id: string; chave: string }> {
   const currentUser = auth.currentUser?.email || "Admin";
+  const hwidLimpo = params.hwidInicial ? params.hwidInicial.trim().toUpperCase() : "";
 
-  // Tenta via Cloud Function administrativa
-  try {
-    const fn = httpsCallable<any, any>(functions, "adminGenerateLicense");
-    const res = await fn({
-      clienteId: params.clienteId,
-      plano: params.plano,
-      dataInicio: params.dataInicio,
-      dataVencimento: params.dataVencimento,
-      limiteDispositivos: params.limiteDispositivos,
-      observacoes: params.observacoes,
-      chavePersonalizada: params.chavePersonalizada,
-    });
-    if (res.data && res.data.sucesso) {
-      return { id: res.data.licencaId, chave: res.data.chave };
+  // Tenta via Cloud Function administrativa (se não houver HWID inicial para vínculo direto)
+  if (!hwidLimpo) {
+    try {
+      const fn = httpsCallable<any, any>(functions, "adminGenerateLicense");
+      const res = await fn({
+        clienteId: params.clienteId,
+        plano: params.plano,
+        dataInicio: params.dataInicio,
+        dataVencimento: params.dataVencimento,
+        limiteDispositivos: params.limiteDispositivos,
+        observacoes: params.observacoes,
+        chavePersonalizada: params.chavePersonalizada,
+      });
+      if (res.data && res.data.sucesso) {
+        return { id: res.data.licencaId, chave: res.data.chave };
+      }
+    } catch (fnErr) {
+      console.warn("Cloud function adminGenerateLicense falhou ou não implantada; aplicando fallback direto seguro no Firestore:", fnErr);
     }
-  } catch (fnErr) {
-    console.warn("Cloud function adminGenerateLicense falhou ou não implantada; aplicando fallback direto seguro no Firestore:", fnErr);
   }
 
-  // Fallback seguro direto no Firestore caso functions ainda estejam em implantação
+  // Fallback seguro direto no Firestore
   const chave = params.chavePersonalizada ? normalizarChave(params.chavePersonalizada) : gerarChaveNexus();
   const hash = await calcularHashChave(chave);
   const docId = chave;
@@ -289,7 +315,7 @@ export async function gerarNovaLicenca(params: {
     dataInicio: params.dataInicio,
     dataVencimento: params.dataVencimento,
     limiteDispositivos: Number(params.limiteDispositivos) || 1,
-    status: "PENDENTE",
+    status: hwidLimpo ? "ATIVA" : "PENDENTE",
     motivoBloqueio: null,
     bloqueadoEm: null,
     bloqueadoPor: null,
@@ -304,10 +330,25 @@ export async function gerarNovaLicenca(params: {
     cliente: params.empresa || params.clienteNome,
     validade: params.dataVencimento,
     ativa: true,
-    maquina: "",
+    maquina: hwidLimpo,
   };
 
   await setDoc(doc(db, "licencas", docId), novaLicenca);
+
+  if (hwidLimpo) {
+    await setDoc(doc(db, "dispositivos", `${docId}_${hwidLimpo}`), {
+      id: `${docId}_${hwidLimpo}`,
+      licencaId: docId,
+      clienteId: params.clienteId,
+      identificadorDispositivo: hwidLimpo,
+      nomeDispositivo: `Ativado pelo Admin (${hwidLimpo})`,
+      hostname: hwidLimpo,
+      sistema: "NexusLS Desktop",
+      ativo: true,
+      primeiraAtivacao: serverTimestamp(),
+      ultimaVerificacao: serverTimestamp(),
+    });
+  }
 
   // Incrementa contador do cliente
   await updateDoc(doc(db, "clientes", params.clienteId), {
@@ -489,10 +530,36 @@ export async function listarDispositivosPorLicenca(licencaId: string): Promise<D
   try {
     const q = query(collection(db, "dispositivos"), where("licencaId", "==", licencaId));
     const snapshot = await getDocs(q);
-    return snapshot.docs.map((docSnap) => ({
-      id: docSnap.id,
-      ...docSnap.data(),
-    })) as DispositivoVinculado[];
+    const lista = (snapshot.docs
+      .map((docSnap) => ({
+        id: docSnap.id,
+        ...docSnap.data(),
+      })) as DispositivoVinculado[]).filter((d) => d.ativo !== false);
+
+    // Sincroniza também HWIDs presentes no campo "maquina" da licença (caso ativado direto via Firestore REST)
+    const licSnap = await getDoc(doc(db, "licencas", licencaId));
+    if (licSnap.exists()) {
+      const licData = licSnap.data();
+      const hwids = extrairMaquinasCampo(licData.maquina);
+      const jaListados = new Set(lista.map((d) => d.identificadorDispositivo.toUpperCase()));
+      for (const hwid of hwids) {
+        if (!jaListados.has(hwid)) {
+          lista.push({
+            id: `${licencaId}_${hwid}`,
+            licencaId,
+            clienteId: licData.clienteId || "",
+            identificadorDispositivo: hwid,
+            nomeDispositivo: `Terminal (${hwid})`,
+            ativo: true,
+            primeiraAtivacao: licData.atualizadoEm || licData.criadoEm || null,
+            ultimaVerificacao: licData.atualizadoEm || licData.criadoEm || null,
+            sistema: "NexusLS Desktop",
+          });
+        }
+      }
+    }
+
+    return lista;
   } catch (error) {
     console.error("Erro ao listar dispositivos:", error);
     return [];
@@ -502,10 +569,38 @@ export async function listarDispositivosPorLicenca(licencaId: string): Promise<D
 export async function listarTodosDispositivos(): Promise<DispositivoVinculado[]> {
   try {
     const snapshot = await getDocs(collection(db, "dispositivos"));
-    return snapshot.docs.map((docSnap) => ({
-      id: docSnap.id,
-      ...docSnap.data(),
-    })) as DispositivoVinculado[];
+    const lista = (snapshot.docs
+      .map((docSnap) => ({
+        id: docSnap.id,
+        ...docSnap.data(),
+      })) as DispositivoVinculado[]).filter((d) => d.ativo !== false);
+
+    const licSnapshot = await getDocs(collection(db, "licencas"));
+    const existentes = new Set(lista.map((d) => `${d.licencaId}_${d.identificadorDispositivo.toUpperCase()}`));
+
+    for (const licDoc of licSnapshot.docs) {
+      const licData = licDoc.data();
+      const hwids = extrairMaquinasCampo(licData.maquina);
+      for (const hwid of hwids) {
+        const chaveUnica = `${licDoc.id}_${hwid}`;
+        if (!existentes.has(chaveUnica)) {
+          existentes.add(chaveUnica);
+          lista.push({
+            id: chaveUnica,
+            licencaId: licDoc.id,
+            clienteId: licData.clienteId || "",
+            identificadorDispositivo: hwid,
+            nomeDispositivo: `Terminal (${hwid})`,
+            ativo: true,
+            primeiraAtivacao: licData.atualizadoEm || licData.criadoEm || null,
+            ultimaVerificacao: licData.atualizadoEm || licData.criadoEm || null,
+            sistema: "NexusLS Desktop",
+          });
+        }
+      }
+    }
+
+    return lista;
   } catch (error) {
     console.error("Erro ao listar todos os dispositivos:", error);
     return [];
@@ -523,31 +618,107 @@ export async function desvincularDispositivo(dispositivoDocId: string, licencaId
     console.warn("Fallback direto para desvinculação de dispositivo:", err);
   }
 
+  let hwidAlvo = "";
   const dispRef = doc(db, "dispositivos", dispositivoDocId);
   const dispSnap = await getDoc(dispRef);
-  const dispData = dispSnap.data() || {};
+  const dispData = dispSnap.exists() ? dispSnap.data() : {};
 
-  await deleteDoc(dispRef);
+  if (dispData?.identificadorDispositivo) {
+    hwidAlvo = String(dispData.identificadorDispositivo).trim().toUpperCase();
+  } else if (dispositivoDocId.startsWith(`${licencaId}_`)) {
+    hwidAlvo = dispositivoDocId.substring(licencaId.length + 1).trim().toUpperCase();
+  }
 
-  // Limpa campo maquina legado da licença se for coincidente
+  if (dispSnap.exists()) {
+    await deleteDoc(dispRef);
+  }
+
+  // Remove o HWID da lista separada por vírgula no campo maquina da licença
   const licRef = doc(db, "licencas", licencaId);
   const licSnap = await getDoc(licRef);
   if (licSnap.exists()) {
     const licData = licSnap.data();
-    if (licData.maquina === dispData.identificadorDispositivo) {
-      await updateDoc(licRef, { maquina: "", atualizadoEm: serverTimestamp() });
-    }
+    const restantes = extrairMaquinasCampo(licData.maquina).filter(
+      (m) => m.toUpperCase() !== hwidAlvo
+    );
+    await updateDoc(licRef, {
+      maquina: restantes.join(","),
+      atualizadoEm: serverTimestamp(),
+    });
   }
 
   await registrarAuditoriaLocal({
     tipoAcao: "REMOCAO_DISPOSITIVO",
     licencaId,
     codigoLicenca: licSnap.exists() ? licSnap.data()?.codigoFormatado : null,
-    clienteId: dispData.clienteId,
+    clienteId: dispData?.clienteId || (licSnap.exists() ? licSnap.data()?.clienteId : null),
     responsavel: currentUser,
     detalhes: {
-      identificadorDispositivo: dispData.identificadorDispositivo,
-      nomeDispositivo: dispData.nomeDispositivo,
+      identificadorDispositivo: hwidAlvo || dispData?.identificadorDispositivo,
+      nomeDispositivo: dispData?.nomeDispositivo || `Terminal (${hwidAlvo})`,
+    },
+  });
+}
+
+export async function vincularDispositivoManual(
+  licencaId: string,
+  identificadorDispositivo: string,
+  nomeDispositivo?: string
+): Promise<void> {
+  const currentUser = auth.currentUser?.email || "Admin";
+  const hwid = identificadorDispositivo.trim().toUpperCase();
+  if (!hwid) throw new Error("Informe o Código do Computador (HWID).");
+
+  const licRef = doc(db, "licencas", licencaId);
+  const licSnap = await getDoc(licRef);
+  if (!licSnap.exists()) throw new Error("Licença não encontrada.");
+
+  const licData = licSnap.data();
+  const limite = Number(licData.limiteDispositivos || 1);
+  const atuais = extrairMaquinasCampo(licData.maquina);
+
+  if (!atuais.includes(hwid) && atuais.length >= limite) {
+    throw new Error(`Limite de ${limite} computador(es) já atingido nesta licença. Desvincule um terminal antes.`);
+  }
+
+  const novaLista = atuais.includes(hwid) ? atuais : [...atuais, hwid];
+  const dispDocId = `${licencaId}_${hwid}`;
+
+  await setDoc(
+    doc(db, "dispositivos", dispDocId),
+    {
+      id: dispDocId,
+      licencaId,
+      clienteId: licData.clienteId || "",
+      identificadorDispositivo: hwid,
+      nomeDispositivo: (nomeDispositivo || "").trim() || `Terminal (${hwid})`,
+      hostname: (nomeDispositivo || "").trim() || hwid,
+      sistema: "NexusLS Desktop",
+      ativo: true,
+      primeiraAtivacao: serverTimestamp(),
+      ultimaVerificacao: serverTimestamp(),
+    },
+    { merge: true }
+  );
+
+  await updateDoc(licRef, {
+    maquina: novaLista.join(","),
+    status: licData.status === "PENDENTE" ? "ATIVA" : licData.status,
+    ativa: true,
+    atualizadoEm: serverTimestamp(),
+  });
+
+  await registrarAuditoriaLocal({
+    tipoAcao: "ATIVACAO_DISPOSITIVO",
+    licencaId,
+    codigoLicenca: licData.codigoFormatado || licencaId,
+    clienteId: licData.clienteId,
+    clienteNome: licData.clienteNome,
+    responsavel: currentUser,
+    detalhes: {
+      identificadorDispositivo: hwid,
+      nomeDispositivo: (nomeDispositivo || "").trim() || `Terminal (${hwid})`,
+      origem: "Painel Admin / Celular",
     },
   });
 }
@@ -686,14 +857,20 @@ export async function simularValidacaoAtualizador(params: {
     };
   }
 
-  // Verifica dispositivos
+  // Verifica dispositivos (coleção dispositivos + campo maquina)
   const dispSnap = await getDocs(
     query(collection(db, "dispositivos"), where("licencaId", "==", licId), where("ativo", "==", true))
   );
-  const ativos = dispSnap.docs.map((d) => d.data());
-  const jaVinculado = ativos.some((d: any) => d.identificadorDispositivo === dispId);
+  const ativosDocs = dispSnap.docs.map((d) => d.data());
+  const hwidsConjunto = new Set<string>(
+    ativosDocs.map((d: any) => String(d.identificadorDispositivo || "").trim().toUpperCase()).filter(Boolean)
+  );
+  extrairMaquinasCampo(licData.maquina).forEach((m) => hwidsConjunto.add(m));
 
-  if (!jaVinculado && ativos.length >= limiteDispositivos) {
+  const dispIdUpper = dispId.toUpperCase();
+  const jaVinculado = hwidsConjunto.has(dispIdUpper);
+
+  if (!jaVinculado && hwidsConjunto.size >= limiteDispositivos) {
     return {
       autorizado: false,
       situacao: "LIMITE_ATINGIDO",
@@ -701,18 +878,19 @@ export async function simularValidacaoAtualizador(params: {
       cliente: clienteNome,
       empresa,
       limiteDispositivos,
-      dispositivosAtivos: ativos.length,
-      mensagem: `Limite de computadores atingido (${ativos.length}/${limiteDispositivos}). Libere um computador no painel de licenças.`,
+      dispositivosAtivos: hwidsConjunto.size,
+      mensagem: `Limite de computadores atingido (${hwidsConjunto.size}/${limiteDispositivos}). Libere um computador no painel de licenças.`,
     };
   }
 
   // Registra novo dispositivo se não estava registrado
   if (!jaVinculado) {
-    const dispRef = doc(db, "dispositivos", `${licId}_${dispId}`);
+    hwidsConjunto.add(dispIdUpper);
+    const dispRef = doc(db, "dispositivos", `${licId}_${dispIdUpper}`);
     await setDoc(dispRef, {
       licencaId: licId,
       clienteId: licData.clienteId,
-      identificadorDispositivo: dispId,
+      identificadorDispositivo: dispIdUpper,
       nomeDispositivo: params.nomeDispositivo || "Computador",
       ativo: true,
       primeiraAtivacao: serverTimestamp(),
@@ -720,14 +898,12 @@ export async function simularValidacaoAtualizador(params: {
       sistema: params.sistema || "NexusLS",
     });
 
-    if (licData.status === "PENDENTE") {
-      await updateDoc(doc(db, "licencas", licId), {
-        status: "ATIVA",
-        ativa: true,
-        maquina: dispId,
-        atualizadoEm: serverTimestamp(),
-      });
-    }
+    await updateDoc(doc(db, "licencas", licId), {
+      status: "ATIVA",
+      ativa: true,
+      maquina: Array.from(hwidsConjunto).join(","),
+      atualizadoEm: serverTimestamp(),
+    });
   }
 
   return {
@@ -742,7 +918,7 @@ export async function simularValidacaoAtualizador(params: {
     identificadorDispositivo: dispId,
     dispositivoAutorizado: dispId,
     limiteDispositivos,
-    dispositivosAtivos: jaVinculado ? ativos.length : ativos.length + 1,
+    dispositivosAtivos: hwidsConjunto.size,
     mensagem:
       diasRestantes <= 15
         ? `Licença válida até ${licData.dataVencimento} (atenção: vence em ${diasRestantes} dias).`

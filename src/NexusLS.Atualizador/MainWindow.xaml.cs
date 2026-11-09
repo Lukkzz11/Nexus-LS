@@ -50,6 +50,9 @@ public partial class MainWindow : Window
         CarregarStatusVersao();
         CarregarStatusVersaoBarTender();
 
+        // Faz checagem automática e não bloqueante do Git vs Instalado na inicialização
+        _ = VerificarAtualizacoesGitBackgroundAsync();
+
         // Processar argumentos de linha de comando se houver
         var args = Environment.GetCommandLineArgs();
         if (args.Contains("--atalho"))
@@ -130,6 +133,194 @@ public partial class MainWindow : Window
     private void BtnMenuLicenca_Click(object sender, RoutedEventArgs e) => NavegarPara("licenca");
     private void BtnMenuDiagnostico_Click(object sender, RoutedEventArgs e) => NavegarPara("diagnostico");
     private void BtnMenuSobre_Click(object sender, RoutedEventArgs e) => NavegarPara("sobre");
+
+    // ==================== CHECAGEM E SINCRONIZAÇÃO COM O GITHUB ====================
+
+    private async Task VerificarAtualizacoesGitBackgroundAsync()
+    {
+        try
+        {
+            TxtRotuloSincronizarGit.Text = "Checando Git...";
+            var repo = ConfiguracaoAtualizacao.Repositorio();
+
+            // 1. Verificar Nexus LS
+            var exeNexus = TxtCaminhoExe.Text.Trim();
+            if (!File.Exists(exeNexus)) exeNexus = LocalizarExecutavelPadrao();
+            var fonteNexus = new FonteGitHub(HttpCompartilhado, repo);
+            var viNexus = File.Exists(exeNexus) ? FileVersionInfo.GetVersionInfo(exeNexus) : null;
+            var versaoNexusStr = viNexus?.ProductVersion?.Split('+')[0] ?? "1.0.0";
+            VersaoPrograma.TryParse(versaoNexusStr, out var versaoNexus);
+            _atualizador = new AtualizadorService(fonteNexus, AtualizadorService.PastaPadrao(), versaoNexus);
+            var resNexus = await _atualizador.VerificarAsync(exeNexus).ConfigureAwait(false);
+
+            // 2. Verificar Nexus BarTender
+            var exeBt = TxtCaminhoBarTenderExe.Text.Trim();
+            if (!File.Exists(exeBt)) exeBt = LocalizarBarTenderPadrao();
+            var fonteBt = new FonteGitHub(HttpCompartilhado, repo, "NexusBarTender.exe", "NexusBarTender.exe.sha256");
+            var viBt = File.Exists(exeBt) ? FileVersionInfo.GetVersionInfo(exeBt) : null;
+            var versaoBtStr = viBt?.ProductVersion?.Split('+')[0] ?? "1.0.0";
+            VersaoPrograma.TryParse(versaoBtStr, out var versaoBt);
+            _atualizadorBarTender = new AtualizadorService(fonteBt, AtualizadorService.PastaPadrao(), versaoBt);
+            var resBt = await _atualizadorBarTender.VerificarAsync(exeBt).ConfigureAwait(false);
+
+            Dispatcher.Invoke(() =>
+            {
+                AtualizarUiAposChecagemGit(resNexus, resBt);
+            });
+        }
+        catch
+        {
+            Dispatcher.Invoke(() =>
+            {
+                TxtRotuloSincronizarGit.Text = "Sincronizar Git";
+            });
+        }
+    }
+
+    private void AtualizarUiAposChecagemGit(ResultadoVerificacao resNexus, ResultadoVerificacao resBt)
+    {
+        TxtRotuloSincronizarGit.Text = "Sincronizado";
+
+        // --- Nexus LS ---
+        if (resNexus.Estado == EstadoVerificacao.SemNovidade)
+        {
+            TxtBadgeNexusLS.Text = $"● Atualizado v{resNexus.Atual} (Git)";
+            TxtBadgeNexusLS.Foreground = (SolidColorBrush)FindResource("CorPositivo");
+            TxtVersaoDetalheNexus.Text = $"v{resNexus.Atual} (Sincronizado com o GitHub)";
+            TxtVersaoStatus.Text = $"v{resNexus.Atual} (Sincronizado Git)";
+            TxtHomeVersaoInstalada.Text = $"v{resNexus.Atual}";
+            TxtVersaoArquivo.Text = $"Hash SHA-256 verificado com o repositório oficial ({resNexus.Atual})";
+            BrdNovidade.Visibility = Visibility.Collapsed;
+        }
+        else if (resNexus.Estado == EstadoVerificacao.Disponivel && resNexus.Nova != null)
+        {
+            _versaoDisponivel = resNexus.Nova;
+            TxtBadgeNexusLS.Text = $"⚠️ Nova versão v{resNexus.Nova.Versao}!";
+            TxtBadgeNexusLS.Foreground = (SolidColorBrush)FindResource("CorAviso");
+            TxtVersaoDetalheNexus.Text = $"Instalada: v{resNexus.Atual} • Nova v{resNexus.Nova.Versao} no Git";
+            TxtVersaoStatus.Text = $"v{resNexus.Atual} (v{resNexus.Nova.Versao} disponível)";
+            BadgeMenuUpdate.Visibility = Visibility.Visible;
+            TxtNovidadeTitulo.Text = $"🎉 Nova Versão {resNexus.Nova.Versao} Disponível no Git!";
+            TxtNovidadeNotas.Text = string.IsNullOrWhiteSpace(resNexus.Nova.Notas)
+                ? "Atualização oficial com melhorias críticas e estabilidade."
+                : resNexus.Nova.Notas;
+            BrdNovidade.Visibility = Visibility.Visible;
+            TxtRotuloSincronizarGit.Text = "Atualizar Apps";
+        }
+
+        // --- BarTender ---
+        if (resBt.Estado == EstadoVerificacao.SemNovidade)
+        {
+            TxtBadgeBarTender.Text = $"● Atualizado v{resBt.Atual} (Git)";
+            TxtBadgeBarTender.Foreground = (SolidColorBrush)FindResource("CorPositivo");
+            TxtVersaoDetalheBarTender.Text = $"v{resBt.Atual} (Sincronizado com o GitHub)";
+            TxtStatusModuloBarTender.Text = $"v{resBt.Atual} (Sincronizado Git)";
+            TxtVersaoBarTenderInstalada.Text = $"Hash SHA-256 verificado com o repositório oficial ({resBt.Atual})";
+            BrdNovidadeBarTender.Visibility = Visibility.Collapsed;
+        }
+        else if (resBt.Estado == EstadoVerificacao.Disponivel && resBt.Nova != null)
+        {
+            _versaoDisponivelBarTender = resBt.Nova;
+            TxtBadgeBarTender.Text = $"⚠️ Nova versão v{resBt.Nova.Versao}!";
+            TxtBadgeBarTender.Foreground = (SolidColorBrush)FindResource("CorAviso");
+            TxtVersaoDetalheBarTender.Text = $"Instalada: v{resBt.Atual} • Nova v{resBt.Nova.Versao} no Git";
+            BadgeMenuUpdate.Visibility = Visibility.Visible;
+            TxtNovidadeTituloBarTender.Text = $"🎉 Nova Versão {resBt.Nova.Versao} do BarTender no Git!";
+            TxtNovidadeNotasBarTender.Text = string.IsNullOrWhiteSpace(resBt.Nova.Notas)
+                ? "Melhorias de impressão e modelos de etiquetas."
+                : resBt.Nova.Notas;
+            BrdNovidadeBarTender.Visibility = Visibility.Visible;
+            TxtRotuloSincronizarGit.Text = "Atualizar Apps";
+        }
+
+        if (resNexus.Estado == EstadoVerificacao.SemNovidade && resBt.Estado == EstadoVerificacao.SemNovidade)
+        {
+            BadgeMenuUpdate.Visibility = Visibility.Collapsed;
+            TxtStatusGeral.Text = $"Todos os programas estão 100% atualizados com o GitHub (v{resNexus.Atual}).";
+        }
+    }
+
+    private async void BtnSincronizarTudo_Click(object sender, RoutedEventArgs e)
+    {
+        BtnSincronizarGit.IsEnabled = false;
+        TxtStatusGeral.Text = "Consultando e sincronizando com o GitHub...";
+        try
+        {
+            var repo = ConfiguracaoAtualizacao.Repositorio();
+            var exeNexus = TxtCaminhoExe.Text.Trim();
+            if (!File.Exists(exeNexus)) exeNexus = LocalizarExecutavelPadrao();
+            var exeBt = TxtCaminhoBarTenderExe.Text.Trim();
+            if (!File.Exists(exeBt)) exeBt = LocalizarBarTenderPadrao();
+
+            var fonteNexus = new FonteGitHub(HttpCompartilhado, repo);
+            var viNexus = File.Exists(exeNexus) ? FileVersionInfo.GetVersionInfo(exeNexus) : null;
+            var versaoNexusStr = viNexus?.ProductVersion?.Split('+')[0] ?? "1.0.0";
+            VersaoPrograma.TryParse(versaoNexusStr, out var versaoNexus);
+            _atualizador = new AtualizadorService(fonteNexus, AtualizadorService.PastaPadrao(), versaoNexus);
+            var resNexus = await _atualizador.VerificarAsync(exeNexus);
+
+            var fonteBt = new FonteGitHub(HttpCompartilhado, repo, "NexusBarTender.exe", "NexusBarTender.exe.sha256");
+            var viBt = File.Exists(exeBt) ? FileVersionInfo.GetVersionInfo(exeBt) : null;
+            var versaoBtStr = viBt?.ProductVersion?.Split('+')[0] ?? "1.0.0";
+            VersaoPrograma.TryParse(versaoBtStr, out var versaoBt);
+            _atualizadorBarTender = new AtualizadorService(fonteBt, AtualizadorService.PastaPadrao(), versaoBt);
+            var resBt = await _atualizadorBarTender.VerificarAsync(exeBt);
+
+            AtualizarUiAposChecagemGit(resNexus, resBt);
+
+            bool precisaNexus = resNexus.Estado == EstadoVerificacao.Disponivel && resNexus.Nova != null;
+            bool precisaBt = resBt.Estado == EstadoVerificacao.Disponivel && resBt.Nova != null;
+
+            if (!precisaNexus && !precisaBt)
+            {
+                TxtStatusGeral.Text = $"Todos os programas estão 100% atualizados com o GitHub (v{resNexus.Atual}).";
+                MessageBox.Show(
+                    this,
+                    $"Todos os aplicativos do Nexus já estão atualizados na versão mais recente oficial do GitHub (v{resNexus.Atual})!\n\n" +
+                    $"• Nexus LS: Sincronizado (hash SHA-256 verificado)\n" +
+                    $"• Nexus BarTender: Sincronizado (hash SHA-256 verificado)\n\n" +
+                    "O programa está pronto e nenhuma atualização é necessária.",
+                    "Sistemas Atualizados",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                return;
+            }
+
+            var confirm = MessageBox.Show(
+                this,
+                $"Foram encontradas atualizações no GitHub:\n\n" +
+                (precisaNexus ? $"• Nexus LS: versão {resNexus.Nova!.Versao}\n" : "• Nexus LS: Atualizado\n") +
+                (precisaBt ? $"• Nexus BarTender: versão {resBt.Nova!.Versao}\n" : "• Nexus BarTender: Atualizado\n") +
+                "\nDeseja baixar e atualizar os aplicativos agora?",
+                "Atualizar com Git",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (confirm != MessageBoxResult.Yes) return;
+
+            NavegarPara("atualizacoes");
+
+            if (precisaNexus)
+            {
+                _versaoDisponivel = resNexus.Nova;
+                BtnBaixarEInstalar_Click(sender, e);
+            }
+            if (precisaBt)
+            {
+                _versaoDisponivelBarTender = resBt.Nova;
+                BtnBaixarEInstalarBarTender_Click(sender, e);
+            }
+        }
+        catch (Exception ex)
+        {
+            TxtStatusGeral.Text = "Erro ao sincronizar com Git: " + ex.Message;
+            MessageBox.Show(this, "Falha ao sincronizar com o GitHub:\n" + ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+        finally
+        {
+            BtnSincronizarGit.IsEnabled = true;
+        }
+    }
 
     // ==================== LOCALIZAÇÃO E VERSÕES ====================
 
@@ -612,7 +803,10 @@ public partial class MainWindow : Window
         {
             var repo = ConfiguracaoAtualizacao.Repositorio();
             var fonte = new FonteGitHub(HttpCompartilhado, repo);
-            var vi = File.Exists(TxtCaminhoExe.Text) ? FileVersionInfo.GetVersionInfo(TxtCaminhoExe.Text) : null;
+            var exeAlvo = TxtCaminhoExe.Text.Trim();
+            if (!File.Exists(exeAlvo)) exeAlvo = LocalizarExecutavelPadrao();
+
+            var vi = File.Exists(exeAlvo) ? FileVersionInfo.GetVersionInfo(exeAlvo) : null;
             var versaoStr = vi?.ProductVersion?.Split('+')[0] ?? "1.0.0";
             if (!VersaoPrograma.TryParse(versaoStr, out var versaoAtual))
             {
@@ -620,7 +814,7 @@ public partial class MainWindow : Window
             }
 
             _atualizador = new AtualizadorService(fonte, AtualizadorService.PastaPadrao(), versaoAtual);
-            var res = await _atualizador.VerificarAsync();
+            var res = await _atualizador.VerificarAsync(exeAlvo);
 
             if (res.Estado == EstadoVerificacao.Disponivel && res.Nova != null)
             {
@@ -630,14 +824,22 @@ public partial class MainWindow : Window
                 TxtNovidadeNotas.Text = string.IsNullOrWhiteSpace(_versaoDisponivel.Notas)
                     ? "Melhorias de estabilidade, segurança e desempenho."
                     : _versaoDisponivel.Notas;
-                TxtStatusGeral.Text = $"Nova versão {_versaoDisponivel.Versao} encontrada!";
+                TxtStatusGeral.Text = $"Nova versão {_versaoDisponivel.Versao} encontrada no GitHub!";
                 BadgeMenuUpdate.Visibility = Visibility.Visible;
+                TxtBadgeNexusLS.Text = $"⚠️ Nova v{_versaoDisponivel.Versao}!";
+                TxtBadgeNexusLS.Foreground = (SolidColorBrush)FindResource("CorAviso");
             }
             else if (res.Estado == EstadoVerificacao.SemNovidade)
             {
                 BrdNovidade.Visibility = Visibility.Collapsed;
-                TxtStatusGeral.Text = "Você já está na versão mais recente disponível.";
-                MessageBox.Show(this, "O Nexus LS já está atualizado na versão mais recente.", "Sistema Atualizado", MessageBoxButton.OK, MessageBoxImage.Information);
+                BadgeMenuUpdate.Visibility = Visibility.Collapsed;
+                TxtVersaoStatus.Text = $"v{res.Atual} (Sincronizado Git)";
+                TxtVersaoArquivo.Text = $"Hash SHA-256 verificado com o Git ({res.Atual})";
+                TxtBadgeNexusLS.Text = $"● Atualizado v{res.Atual} (Git)";
+                TxtBadgeNexusLS.Foreground = (SolidColorBrush)FindResource("CorPositivo");
+                TxtVersaoDetalheNexus.Text = $"v{res.Atual} (Sincronizado com o GitHub)";
+                TxtStatusGeral.Text = "O Nexus LS já está atualizado com a versão oficial do GitHub.";
+                MessageBox.Show(this, $"O Nexus LS já está totalmente atualizado na versão v{res.Atual}.\nO executável instalado confere exatamente com o repositório oficial do GitHub.", "Sistema Atualizado", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             else
             {
@@ -793,7 +995,10 @@ public partial class MainWindow : Window
         {
             var repo = ConfiguracaoAtualizacao.Repositorio();
             var fonte = new FonteGitHub(HttpCompartilhado, repo, "NexusBarTender.exe", "NexusBarTender.exe.sha256");
-            var vi = File.Exists(TxtCaminhoBarTenderExe.Text) ? FileVersionInfo.GetVersionInfo(TxtCaminhoBarTenderExe.Text) : null;
+            var exeAlvoBt = TxtCaminhoBarTenderExe.Text.Trim();
+            if (!File.Exists(exeAlvoBt)) exeAlvoBt = LocalizarBarTenderPadrao();
+
+            var vi = File.Exists(exeAlvoBt) ? FileVersionInfo.GetVersionInfo(exeAlvoBt) : null;
             var versaoStr = vi?.ProductVersion?.Split('+')[0] ?? vi?.FileVersion ?? "1.0.0";
             if (!VersaoPrograma.TryParse(versaoStr, out var versaoAtual))
             {
@@ -801,7 +1006,7 @@ public partial class MainWindow : Window
             }
 
             _atualizadorBarTender = new AtualizadorService(fonte, AtualizadorService.PastaPadrao(), versaoAtual);
-            var res = await _atualizadorBarTender.VerificarAsync();
+            var res = await _atualizadorBarTender.VerificarAsync(exeAlvoBt);
 
             if (res.Estado == EstadoVerificacao.Disponivel && res.Nova != null)
             {
@@ -811,13 +1016,21 @@ public partial class MainWindow : Window
                 TxtNovidadeNotasBarTender.Text = string.IsNullOrWhiteSpace(_versaoDisponivelBarTender.Notas)
                     ? "Melhorias nos modelos de etiquetas, código de barras e desempenho de impressão."
                     : _versaoDisponivelBarTender.Notas;
-                TxtStatusGeral.Text = $"Nova versão {_versaoDisponivelBarTender.Versao} do BarTender encontrada!";
+                TxtStatusGeral.Text = $"Nova versão {_versaoDisponivelBarTender.Versao} do BarTender encontrada no GitHub!";
+                BadgeMenuUpdate.Visibility = Visibility.Visible;
+                TxtBadgeBarTender.Text = $"⚠️ Nova v{_versaoDisponivelBarTender.Versao}!";
+                TxtBadgeBarTender.Foreground = (SolidColorBrush)FindResource("CorAviso");
             }
             else if (res.Estado == EstadoVerificacao.SemNovidade)
             {
                 BrdNovidadeBarTender.Visibility = Visibility.Collapsed;
-                TxtStatusGeral.Text = "O Nexus BarTender já está na versão mais recente disponível.";
-                MessageBox.Show(this, "O Nexus BarTender já está atualizado na versão mais recente.", "Módulo Atualizado", MessageBoxButton.OK, MessageBoxImage.Information);
+                TxtStatusModuloBarTender.Text = $"v{res.Atual} (Sincronizado Git)";
+                TxtVersaoBarTenderInstalada.Text = $"Hash SHA-256 verificado com o Git ({res.Atual})";
+                TxtBadgeBarTender.Text = $"● Atualizado v{res.Atual} (Git)";
+                TxtBadgeBarTender.Foreground = (SolidColorBrush)FindResource("CorPositivo");
+                TxtVersaoDetalheBarTender.Text = $"v{res.Atual} (Sincronizado com o GitHub)";
+                TxtStatusGeral.Text = "O Nexus BarTender já está na versão mais recente disponível (idêntico ao Git).";
+                MessageBox.Show(this, $"O Nexus BarTender já está totalmente atualizado na versão v{res.Atual}.\nO executável instalado confere exatamente com o repositório oficial do GitHub.", "Módulo Atualizado", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             else
             {

@@ -1,4 +1,4 @@
-﻿using NexusLS.Core.Licenciamento;
+using NexusLS.Core.Licenciamento;
 using Xunit;
 
 namespace NexusLS.Tests;
@@ -13,10 +13,13 @@ public class LicencaNuvemTests : IDisposable
         public DocumentoLicenca? Doc;
         public bool SemInternet;
         public string? Registrada;
+        public string? Desvinculada;
         public Task<DocumentoLicenca?> ObterAsync(string chave, CancellationToken ct = default)
             => SemInternet ? throw new FalhaDeConexaoLicencaException("sem net") : Task.FromResult(Doc);
         public Task RegistrarMaquinaAsync(string chave, string maquina, CancellationToken ct = default)
         { Registrada = maquina; Doc = Doc! with { Maquina = maquina }; return Task.CompletedTask; }
+        public Task DesvincularMaquinaAsync(string chave, string maquina, CancellationToken ct = default)
+        { Desvinculada = maquina; return Task.CompletedTask; }
     }
 
     private ServicoLicencaNuvem Novo(FonteFalsa f, string maquina = "MAQ1")
@@ -123,6 +126,99 @@ public class LicencaNuvemTests : IDisposable
         Assert.Equal(EstadoLicencaNuvem.Valida, r.Estado);
         Assert.Equal("MAQ1", reserva.Registrada);
         Assert.Null(principal.Registrada);
+    }
+
+    [Fact]
+    public async Task Bloqueio_no_servidor_apaga_cache_local_para_impedir_burla_offline()
+    {
+        var f = new FonteFalsa { Doc = new("Loja Sol", "2027-05-01", true, "*", null) };
+        var s = Novo(f);
+        await s.AtivarAsync("ABC-123456");
+        Assert.Equal(EstadoLicencaNuvem.Valida, s.AvaliarLocal().Estado);
+
+        f.Doc = f.Doc with { Ativa = false };
+        Assert.Equal(EstadoLicencaNuvem.Bloqueada, (await s.VerificarAsync()).Estado);
+        Assert.Equal(EstadoLicencaNuvem.NaoEncontrada, s.AvaliarLocal().Estado);
+    }
+
+    [Fact]
+    public async Task Adulterar_validade_no_arquivo_local_invalida_assinatura_hmac()
+    {
+        var f = new FonteFalsa { Doc = new("Loja Sol", "2027-05-01", true, "*", null) };
+        var s = Novo(f);
+        await s.AtivarAsync("ABC-123456");
+
+        var arq = Path.Combine(_pasta, "l.json");
+        File.WriteAllText(arq, File.ReadAllText(arq).Replace("2027-05-01", "2099-12-31"));
+        Assert.Equal(EstadoLicencaNuvem.NaoEncontrada, s.AvaliarLocal().Estado);
+    }
+
+    [Fact]
+    public async Task Atrasar_relogio_do_windows_bloqueia_avaliacao_offline()
+    {
+        var f = new FonteFalsa { Doc = new("Loja Sol", "2027-05-01", true, "*", null) };
+        var s = Novo(f);
+        await s.AtivarAsync("ABC-123456");
+
+        _agora = _agora.AddDays(-2);
+        Assert.Equal(EstadoLicencaNuvem.SemConexao, s.AvaliarLocal().Estado);
+    }
+
+    [Fact]
+    public async Task Remover_async_desvincula_na_nuvem_e_apaga_local()
+    {
+        var f = new FonteFalsa { Doc = new("Loja Sol", "2027-05-01", true, "", null) };
+        var s = Novo(f, "MAQ77");
+        await s.AtivarAsync("ABC-123456");
+        await s.RemoverAsync();
+        Assert.Equal("MAQ77", f.Desvinculada);
+        Assert.Equal(EstadoLicencaNuvem.NaoEncontrada, s.AvaliarLocal().Estado);
+    }
+
+    [Fact]
+    public async Task Fluxo_completo_LicenseManager_e_Atualizador_multiplos_computadores_e_desvinculacao()
+    {
+        // 1. Admin gera chave no License Manager com limite de 2 computadores (status inicial PENDENTE, maquina = "")
+        var f = new FonteFalsa
+        {
+            Doc = new("Carlos Silva", "2027-11-09", Ativa: true, Maquina: "", Plano: "anual", Empresa: "Supermercado Central", LimiteDispositivos: 2)
+        };
+
+        var pc1 = new ServicoLicencaNuvem(f, Path.Combine(_pasta, "pc1.json"), () => _agora, () => "PC-CAIXA-01");
+        var pc2 = new ServicoLicencaNuvem(f, Path.Combine(_pasta, "pc2.json"), () => _agora, () => "PC-CAIXA-02");
+        var pc3 = new ServicoLicencaNuvem(f, Path.Combine(_pasta, "pc3.json"), () => _agora, () => "PC-GERENCIA-03");
+
+        // 2. Cliente ativa no PC 1 -> ocupa vaga 1/2
+        var r1 = await pc1.AtivarAsync("NEXUS-8K29-XP41-MZ73");
+        Assert.Equal(EstadoLicencaNuvem.Valida, r1.Estado);
+        Assert.Equal("Supermercado Central", r1.Empresa);
+        Assert.Equal(1, r1.DispositivosUsados);
+        Assert.Equal(2, r1.LimiteDispositivos);
+        Assert.Equal("PC-CAIXA-01", f.Doc.Maquina);
+
+        // 3. Cliente ativa a mesma chave no PC 2 -> ocupa vaga 2/2
+        var r2 = await pc2.AtivarAsync("NEXUS-8K29-XP41-MZ73");
+        Assert.Equal(EstadoLicencaNuvem.Valida, r2.Estado);
+        Assert.Equal(2, r2.DispositivosUsados);
+        Assert.Equal("PC-CAIXA-01,PC-CAIXA-02", f.Doc.Maquina);
+
+        // 4. Cliente tenta ativar no PC 3 -> recusado pois atingiu o limite (2/2)
+        var r3 = await pc3.AtivarAsync("NEXUS-8K29-XP41-MZ73");
+        Assert.Equal(EstadoLicencaNuvem.OutraMaquina, r3.Estado);
+        Assert.False(r3.Ativa);
+
+        // 5. Admin desvincula o PC 1 no License Manager (resta apenas PC-CAIXA-02 no servidor)
+        f.Doc = f.Doc with { Maquina = "PC-CAIXA-02" };
+
+        // Quando o PC 1 verifica novamente, perde a autorização e apaga o cache local
+        var verPc1 = await pc1.VerificarAsync();
+        Assert.Equal(EstadoLicencaNuvem.OutraMaquina, verPc1.Estado);
+        Assert.Equal(EstadoLicencaNuvem.NaoEncontrada, pc1.AvaliarLocal().Estado);
+
+        // 6. Agora o PC 3 consegue ativar na vaga liberada!
+        var r3Novo = await pc3.AtivarAsync("NEXUS-8K29-XP41-MZ73");
+        Assert.Equal(EstadoLicencaNuvem.Valida, r3Novo.Estado);
+        Assert.Equal("PC-CAIXA-02,PC-GERENCIA-03", f.Doc.Maquina);
     }
 
     private ServicoLicencaNuvem Novo2(IFonteLicenca f) => new(f, Path.Combine(_pasta, "l2.json"), () => _agora, () => "MAQ1");

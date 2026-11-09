@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import {
-  KeyRound,
   Search,
   Plus,
   Copy,
@@ -9,10 +8,8 @@ import {
   ShieldAlert,
   ShieldCheck,
   Monitor,
-  Trash2,
-  MoreVertical,
-  Filter,
   XCircle,
+  Share2,
 } from "lucide-react";
 import { Licenca, StatusLicenca, PlanoLicenca } from "../../types";
 import { StatusBadge } from "../common/StatusBadge";
@@ -52,6 +49,28 @@ export const LicensesView: React.FC<LicensesViewProps> = ({
     setTimeout(() => setCopiedKey(null), 2000);
   };
 
+  const handleShareLicenca = async (lic: Licenca) => {
+    const vencBr = lic.dataVencimento
+      ? new Date(lic.dataVencimento + "T00:00:00").toLocaleDateString("pt-BR")
+      : "—";
+    const texto =
+      `🔑 *Licença Nexus LS*\n` +
+      `Cliente: *${lic.clienteNome}*${lic.empresa ? ` (${lic.empresa})` : ""}\n` +
+      `Chave de Ativação: *${lic.codigoFormatado}*\n` +
+      `Validade: *${vencBr}*\n\n` +
+      `Abra o *Nexus Atualizador e Ativador*, cole a chave acima e clique em *Ativar licença*.`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: `Licença Nexus LS — ${lic.clienteNome}`, text: texto });
+        return;
+      } catch {
+        // fallback para WhatsApp
+      }
+    }
+    window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, "_blank");
+  };
+
   const filtradas = licencas.filter((l) => {
     const termo = busca.toLowerCase();
     const bateTexto =
@@ -80,26 +99,26 @@ export const LicensesView: React.FC<LicensesViewProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Top Filter Bar */}
-      <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-2xs space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-white rounded-xl p-3.5 sm:p-4 border border-slate-200 shadow-2xs space-y-3 sm:space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="relative flex-1 max-w-md">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
-              placeholder="Buscar por cliente, empresa ou código da licença..."
-              className="w-full text-xs pl-9 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition"
+              placeholder="Buscar por cliente, empresa ou chave..."
+              className="w-full text-xs pl-9 pr-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition"
             />
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <select
               value={filtroPlano}
               onChange={(e) => setFiltroPlano(e.target.value as any)}
-              className="text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-600 transition font-medium text-slate-700"
+              className="flex-1 sm:flex-initial text-xs px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-600 transition font-medium text-slate-700"
             >
               <option value="TODOS">Todos os Planos</option>
               <option value="mensal">Mensal (30d)</option>
@@ -111,7 +130,7 @@ export const LicensesView: React.FC<LicensesViewProps> = ({
 
             <button
               onClick={onOpenNovaLicenca}
-              className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs transition"
+              className="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs transition shrink-0"
             >
               <Plus className="w-4 h-4 stroke-[2.5]" />
               <span>Gerar Licença</span>
@@ -160,8 +179,127 @@ export const LicensesView: React.FC<LicensesViewProps> = ({
         </div>
       </div>
 
-      {/* Main Table */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
+      {/* Mobile Cards View (< md) */}
+      <div className="md:hidden space-y-3">
+        {filtradas.length === 0 ? (
+          <div className="bg-white rounded-xl border border-slate-200 p-8 text-center text-xs text-slate-400">
+            Nenhuma licença encontrada para os filtros selecionados.
+          </div>
+        ) : (
+          filtradas.map((lic) => (
+            <div
+              key={lic.id}
+              className="bg-white rounded-xl border border-slate-200 shadow-2xs p-4 space-y-3"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-slate-900 truncate">{lic.clienteNome}</p>
+                  <p className="text-xs text-slate-500 truncate">{lic.empresa || "—"}</p>
+                </div>
+                <StatusBadge status={lic.status} size="sm" />
+              </div>
+
+              {/* Chave + Copiar + WhatsApp */}
+              <div className="flex items-center justify-between gap-2 bg-slate-50 border border-slate-200/80 rounded-lg p-2.5">
+                <span className="font-mono text-xs font-bold text-slate-800 select-all truncate">
+                  {lic.codigoFormatado}
+                </span>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    onClick={() => handleCopy(lic.codigoFormatado)}
+                    className="px-2.5 py-1.5 bg-white border border-slate-200 rounded-md text-[11px] font-semibold text-slate-700 flex items-center gap-1"
+                  >
+                    {copiedKey === lic.codigoFormatado ? (
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                    ) : (
+                      <Copy className="w-3.5 h-3.5" />
+                    )}
+                    <span>{copiedKey === lic.codigoFormatado ? "Copiada" : "Copiar"}</span>
+                  </button>
+                  <button
+                    onClick={() => handleShareLicenca(lic)}
+                    className="px-2.5 py-1.5 bg-emerald-600 text-white rounded-md text-[11px] font-semibold flex items-center gap-1"
+                    title="Enviar no WhatsApp"
+                  >
+                    <Share2 className="w-3.5 h-3.5" />
+                    <span>Enviar</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Info Grid */}
+              <div className="grid grid-cols-3 gap-2 text-xs pt-1">
+                <div>
+                  <span className="text-[10px] uppercase text-slate-400 font-semibold block">
+                    Plano
+                  </span>
+                  <span className="font-semibold text-slate-700 capitalize">{lic.plano}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] uppercase text-slate-400 font-semibold block">
+                    Vencimento
+                  </span>
+                  <span className="font-semibold text-slate-800">
+                    {lic.dataVencimento
+                      ? new Date(lic.dataVencimento + "T00:00:00").toLocaleDateString("pt-BR")
+                      : "—"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] uppercase text-slate-400 font-semibold block">
+                    Máquinas
+                  </span>
+                  <span className="font-mono font-bold text-blue-600">
+                    {lic.dispositivosAtivosCount || 0}/{lic.limiteDispositivos} PC(s)
+                  </span>
+                </div>
+              </div>
+
+              {/* Mobile Action Buttons */}
+              <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-100">
+                <button
+                  onClick={() => onVerDispositivos(lic)}
+                  className="flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg bg-blue-50 text-blue-700 font-semibold text-xs transition"
+                >
+                  <Monitor className="w-3.5 h-3.5" />
+                  <span>Ativar PC</span>
+                </button>
+
+                <button
+                  onClick={() => onRenovar(lic)}
+                  disabled={lic.status === "CANCELADA"}
+                  className="flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg bg-emerald-50 text-emerald-700 font-semibold text-xs transition disabled:opacity-40"
+                >
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span>Renovar</span>
+                </button>
+
+                {lic.status === "BLOQUEADA" ? (
+                  <button
+                    onClick={() => onDesbloquear(lic.id)}
+                    className="flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg bg-amber-50 text-amber-800 font-semibold text-xs transition"
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    <span>Liberar</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => onBloquear(lic)}
+                    disabled={lic.status === "CANCELADA"}
+                    className="flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg bg-rose-50 text-rose-700 font-semibold text-xs transition disabled:opacity-40"
+                  >
+                    <ShieldAlert className="w-3.5 h-3.5" />
+                    <span>Bloquear</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Desktop Main Table (hidden on mobile) */}
+      <div className="hidden md:block bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
@@ -205,6 +343,13 @@ export const LicensesView: React.FC<LicensesViewProps> = ({
                               <Copy className="w-3.5 h-3.5" />
                             )}
                           </button>
+                          <button
+                            onClick={() => handleShareLicenca(lic)}
+                            className="text-slate-400 hover:text-emerald-600 p-0.5 rounded transition"
+                            title="Enviar chave no WhatsApp"
+                          >
+                            <Share2 className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                       </td>
                       <td className="py-3 px-4 capitalize text-slate-600 font-medium">
@@ -244,7 +389,7 @@ export const LicensesView: React.FC<LicensesViewProps> = ({
                         <button
                           onClick={() => onVerDispositivos(lic)}
                           className="inline-flex items-center gap-1 font-mono text-xs text-slate-700 bg-slate-100 hover:bg-slate-200/80 px-2.5 py-1 rounded transition"
-                          title="Gerenciar computadores vinculados"
+                          title="Gerenciar ou ativar computadores vinculados"
                         >
                           <Monitor className="w-3 h-3 text-slate-500" />
                           <span>

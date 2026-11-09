@@ -226,6 +226,27 @@ public sealed class AtualizadorTests : IDisposable
     }
 
     [Fact]
+    public async Task Arquivo_com_mesmo_hash_do_github_e_considerado_atualizado()
+    {
+        var conteudo = Programa();
+        var arquivoLocal = Path.Combine(_pasta, "NexusLS.exe");
+        await File.WriteAllBytesAsync(arquivoLocal, conteudo);
+
+        // Git está na versão 1.4.0 e release tem o mesmo hash do arquivo local
+        var fonte = new FonteFalsa { Ultima = Info("1.4.0", conteudo) };
+
+        // Mesmo com a versão base configurada como 1.2.0, como o hash do arquivo bate com o Git,
+        // o sistema reconhece como SemNovidade (já sincronizado)
+        var servico = Servico(fonte, "1.2.0");
+        var resultado = await servico.VerificarAsync(arquivoLocal);
+
+        Assert.Equal(EstadoVerificacao.SemNovidade, resultado.Estado);
+        Assert.Equal(new VersaoPrograma(1, 4, 0), resultado.Atual);
+        Assert.Null(resultado.Nova);
+        Assert.Contains("sincronizada", resultado.Mensagem, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public async Task Sem_internet_nao_estoura_erro_so_avisa()
     {
         var fonte = new FonteFalsa { Erro = new HttpRequestException("sem rede") };

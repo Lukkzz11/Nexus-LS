@@ -8,7 +8,7 @@ import {
   Terminal,
   Shield,
   LogOut,
-  ChevronRight,
+  X,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 
@@ -24,6 +24,8 @@ export type TabId =
 interface SidebarProps {
   currentTab: TabId;
   setCurrentTab: (tab: TabId) => void;
+  mobileOpen?: boolean;
+  onCloseMobile?: () => void;
   counts?: {
     licencasAtivas: number;
     clientes: number;
@@ -32,7 +34,13 @@ interface SidebarProps {
   };
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ currentTab, setCurrentTab, counts }) => {
+export const Sidebar: React.FC<SidebarProps> = ({
+  currentTab,
+  setCurrentTab,
+  mobileOpen = false,
+  onCloseMobile,
+  counts,
+}) => {
   const { user, logout, isSuperAdmin } = useAuth();
 
   const menuItems: Array<{
@@ -83,22 +91,38 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentTab, setCurrentTab, cou
     },
   ];
 
-  return (
-    <aside className="w-64 bg-white border-r border-slate-200 flex flex-col justify-between select-none">
+  const handleSelect = (id: TabId) => {
+    setCurrentTab(id);
+    onCloseMobile?.();
+  };
+
+  const sidebarContent = (
+    <div className="w-64 h-full bg-white border-r border-slate-200 flex flex-col justify-between select-none">
       {/* Top Branding */}
       <div>
-        <div className="h-16 px-6 flex items-center gap-3 border-b border-slate-200">
-          <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-xs">
-            <KeyRound className="w-4 h-4 stroke-[2.2]" />
+        <div className="h-16 px-6 flex items-center justify-between border-b border-slate-200">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-xs">
+              <KeyRound className="w-4 h-4 stroke-[2.2]" />
+            </div>
+            <div>
+              <h1 className="text-sm font-bold tracking-tight text-slate-900 leading-none">
+                NEXUS <span className="text-blue-600">LS</span>
+              </h1>
+              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mt-1">
+                License Manager
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-sm font-bold tracking-tight text-slate-900 leading-none">
-              NEXUS <span className="text-blue-600">LS</span>
-            </h1>
-            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mt-1">
-              License Manager
-            </p>
-          </div>
+
+          {onCloseMobile && (
+            <button
+              onClick={onCloseMobile}
+              className="md:hidden p-1.5 text-slate-400 hover:text-slate-600 rounded-lg"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
         {/* Navigation Items */}
@@ -109,7 +133,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentTab, setCurrentTab, cou
             return (
               <button
                 key={item.id}
-                onClick={() => setCurrentTab(item.id)}
+                onClick={() => handleSelect(item.id)}
                 className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition duration-150 ${
                   active
                     ? "bg-blue-50 text-blue-700"
@@ -164,6 +188,24 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentTab, setCurrentTab, cou
           <span>Encerrar Sessão</span>
         </button>
       </div>
-    </aside>
+    </div>
+  );
+
+  return (
+    <>
+      {/* Desktop Sidebar */}
+      <aside className="hidden md:flex shrink-0">{sidebarContent}</aside>
+
+      {/* Mobile Drawer Overlay */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 md:hidden flex">
+          <div
+            className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs"
+            onClick={onCloseMobile}
+          />
+          <div className="relative z-10 h-full">{sidebarContent}</div>
+        </div>
+      )}
+    </>
   );
 };

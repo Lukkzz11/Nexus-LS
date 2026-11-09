@@ -489,6 +489,9 @@ publicar_novo/
 publicar_release/
 telas-teste/
 
+# Saida de build do License Manager (copiada de license-manager/dist)
+src/NexusLS.LicenseManager/wwwroot/
+
 
 # Web Updater sub-repository
 atualizador-web/

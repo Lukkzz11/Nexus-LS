@@ -1,4 +1,11 @@
 import React, { useState, useEffect, useCallback } from "react";
+import {
+  LayoutDashboard,
+  KeyRound,
+  Users,
+  Monitor,
+  Plus,
+} from "lucide-react";
 import { useAuth } from "./contexts/AuthContext";
 import { LoginView } from "./components/auth/LoginView";
 import { Sidebar, TabId } from "./components/layout/Sidebar";
@@ -33,6 +40,7 @@ import {
 export function App() {
   const { user, loading: authLoading } = useAuth();
   const [currentTab, setCurrentTab] = useState<TabId>("dashboard");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Estados de dados principais
   const [clientes, setClientes] = useState<Cliente[]>([]);
@@ -180,10 +188,12 @@ export function App() {
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden text-slate-800">
-      {/* Sidebar de Navegação */}
+      {/* Sidebar de Navegação (Desktop + Drawer Mobile) */}
       <Sidebar
         currentTab={currentTab}
         setCurrentTab={setCurrentTab}
+        mobileOpen={mobileMenuOpen}
+        onCloseMobile={() => setMobileMenuOpen(false)}
         counts={counts}
       />
 
@@ -193,9 +203,11 @@ export function App() {
           currentTab={currentTab}
           onRefresh={carregarDados}
           isRefreshing={carregandoDados}
+          onOpenMobileMenu={() => setMobileMenuOpen(true)}
+          onQuickNovaLicenca={() => handleAbrirNovaLicenca()}
         />
 
-        <main className="flex-1 overflow-y-auto p-8">
+        <main className="flex-1 overflow-y-auto p-3.5 sm:p-6 md:p-8 pb-24 md:pb-8">
           {currentTab === "dashboard" && (
             <DashboardView
               clientes={clientes}
@@ -246,6 +258,57 @@ export function App() {
 
           {currentTab === "configuracoes" && <SettingsView />}
         </main>
+
+        {/* Barra de Navegação Inferior Exclusiva para Celular (< md) */}
+        <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-slate-200 px-2 py-1.5 flex items-center justify-around shadow-lg">
+          <button
+            onClick={() => setCurrentTab("dashboard")}
+            className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-[10px] font-semibold transition ${
+              currentTab === "dashboard" ? "text-blue-600" : "text-slate-500"
+            }`}
+          >
+            <LayoutDashboard className="w-4 h-4" />
+            <span>Painel</span>
+          </button>
+
+          <button
+            onClick={() => setCurrentTab("licencas")}
+            className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-[10px] font-semibold transition ${
+              currentTab === "licencas" ? "text-blue-600" : "text-slate-500"
+            }`}
+          >
+            <KeyRound className="w-4 h-4" />
+            <span>Licenças</span>
+          </button>
+
+          <button
+            onClick={() => handleAbrirNovaLicenca()}
+            className="flex flex-col items-center justify-center -mt-4 bg-blue-600 text-white w-11 h-11 rounded-full shadow-md active:scale-95 transition"
+            title="Gerar ou Ativar Licença"
+          >
+            <Plus className="w-5 h-5 stroke-[2.5]" />
+          </button>
+
+          <button
+            onClick={() => setCurrentTab("clientes")}
+            className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-[10px] font-semibold transition ${
+              currentTab === "clientes" ? "text-blue-600" : "text-slate-500"
+            }`}
+          >
+            <Users className="w-4 h-4" />
+            <span>Clientes</span>
+          </button>
+
+          <button
+            onClick={() => setCurrentTab("dispositivos")}
+            className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-[10px] font-semibold transition ${
+              currentTab === "dispositivos" ? "text-blue-600" : "text-slate-500"
+            }`}
+          >
+            <Monitor className="w-4 h-4" />
+            <span>Máquinas</span>
+          </button>
+        </nav>
       </div>
 
       {/* Modais Globais */}

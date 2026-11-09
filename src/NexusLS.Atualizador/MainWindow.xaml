@@ -182,7 +182,7 @@
                         <TextBlock x:Name="TxtSubtituloPagina" Text="Ambiente central de gerenciamento e inicialização dos softwares Nexus" FontSize="12" Foreground="#64748B" Margin="0,2,0,0" />
                     </StackPanel>
 
-                    <!-- Badge Superior da Empresa / Licença -->
+                    <!-- Badge Superior da Empresa / Licença & Botão Sincronizar Git -->
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                         <Border x:Name="BrdTopoEmpresa" Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1"
                                 CornerRadius="20" Padding="14,6" VerticalAlignment="Center">
@@ -193,6 +193,15 @@
                                 <TextBlock x:Name="TxtTopoLicencaBadge" Text="Licença Autorizada" FontWeight="SemiBold" FontSize="11" Foreground="#16A34A" VerticalAlignment="Center" />
                             </StackPanel>
                         </Border>
+
+                        <Button x:Name="BtnSincronizarGit" Style="{StaticResource BotaoSecundario}"
+                                Padding="12,6" Margin="10,0,0,0" VerticalAlignment="Center"
+                                Click="BtnSincronizarTudo_Click" ToolTip="Verifica se os programas instalados conferem com a versão do GitHub e atualiza automaticamente">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock x:Name="TxtIconeSincronizarGit" Text="🔄" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                <TextBlock x:Name="TxtRotuloSincronizarGit" Text="Sincronizar Git" FontWeight="SemiBold" FontSize="11" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
                     </StackPanel>
                 </Grid>
             </Border>

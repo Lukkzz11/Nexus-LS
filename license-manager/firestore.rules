@@ -1,19 +1,183 @@
 rules_version = '2';
 
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// This security rules file assumes the following data structures:
+//
+// Collection: admins
+// Document ID: {email} (lowercase administrator email)
+// Fields:
+//   - email: string (required, <= 254 chars) - Administrator email
+//   - uid: string (optional, <= 128 chars) - Firebase Auth UID
+//   - role: string (optional, 'superadmin' | 'admin') - Admin role
+//   - ativo: bool (required) - Whether admin account is active
+//   - criadoEm: timestamp (optional, immutable) - Creation timestamp
+//
+// Collection: clientes
+// Document ID: {clienteId}
+// Fields:
+//   - id: string (required, <= 128 chars, immutable) - Client ID
+//   - nomeResponsavel: string (required, <= 200 chars) - Contact name
+//   - empresa: string (required, <= 200 chars) - Company name
+//   - documento: string (optional, <= 40 chars) - CPF/CNPJ
+//   - telefone: string (optional, <= 40 chars) - Phone number
+//   - email: string (required, <= 254 chars) - Contact email
+//   - observacoes: string (optional, <= 2000 chars) - Notes
+//   - totalLicencas: number (optional, >= 0) - Active license count
+//   - criadoEm: timestamp (optional, immutable) - Creation timestamp
+//   - atualizadoEm: timestamp (optional) - Last update timestamp
+//   - criadoPor: string (optional, <= 254 chars, immutable) - Creator email
+//
+// Collection: licencas
+// Document ID: {chave} (normalized license key)
+// Fields:
+//   - id: string (required, <= 128 chars) - Document ID / key
+//   - hashChave: string (optional, <= 128 chars) - SHA-256 hash of key
+//   - codigoFormatado: string (optional, <= 128 chars) - Formatted key
+//   - clienteId: string (optional, <= 128 chars) - Linked client ID
+//   - clienteNome: string (optional, <= 200 chars) - Client name
+//   - empresa: string (optional, <= 200 chars) - Company name
+//   - plano: string (optional, <= 60 chars) - License plan
+//   - dataInicio: string (optional, <= 40 chars) - Start date (YYYY-MM-DD)
+//   - dataVencimento: string (optional, <= 40 chars) - Expiration date (YYYY-MM-DD)
+//   - limiteDispositivos: number (optional, >= 1) - Max allowed devices
+//   - status: string (optional, <= 40 chars) - License status
+//   - maquina: string (optional, <= 600 chars) - Bound machine identifier (desktop client)
+//   - ativa: bool (optional) - Legacy active flag
+//   - cliente: string (optional, <= 200 chars) - Legacy client name
+//   - validade: string (optional, <= 40 chars) - Legacy expiration date
+//
+// Collection: dispositivos
+// Document ID: {dispositivoId} ({licencaId}_{identificadorDispositivo})
+// Fields:
+//   - licencaId: string (required, 1..128 chars, immutable) - Associated license ID
+//   - identificadorDispositivo: string (required, 1..256 chars, immutable) - Hardware ID
+//   - ativo: bool (required) - Whether the device binding is active
+//   - clienteId: string (optional, <= 128 chars) - Associated client ID
+//   - nomeDispositivo: string (optional, <= 256 chars) - Hostname / label
+//   - sistema: string (optional, <= 128 chars) - Application/OS identifier
+//   - ipUltimoAcesso: string (optional, <= 100 chars) - Last seen IP
+//   - primeiraAtivacao: timestamp (optional) - Initial activation timestamp
+//   - ultimaVerificacao: timestamp (optional) - Last check-in timestamp
+//   - removidoEm: timestamp (optional) - Removal timestamp
+//   - removidoPor: string (optional, <= 128 chars) - Who removed the device
+//
+// Collection: historico_auditoria
+// Document ID: {auditId}
+// Fields:
+//   - tipoAcao: string (required, 1..100 chars, immutable) - Action type
+//   - responsavel: string (required, 1..256 chars, immutable) - Actor identifier
+//   - licencaId: string (optional/nullable, <= 128 chars, immutable)
+//   - codigoLicenca: string (optional/nullable, <= 128 chars, immutable)
+//   - clienteId: string (optional/nullable, <= 128 chars, immutable)
+//   - clienteNome: string (optional/nullable, <= 200 chars, immutable)
+//   - detalhes: map (optional, immutable) - Audit metadata map
+//   - dataHora: timestamp (optional, immutable) - Event timestamp
+//
+// Legacy Collections: produtos/{produtoId}, meta/{docId}
+//   - Public read access for updater catalog/metadata; admin-only write access.
+//
+// ===============================================================
+
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function uidUnchanged() {
+      return !('uid' in request.resource.data) ||
+        request.resource.data.uid == request.auth.uid;
+    }
+
+    function uidNotModified() {
+      return !('uid' in request.resource.data) ||
+        request.resource.data.uid == resource.data.uid;
+    }
+
+    function isValidOptionalString(field, maxLen) {
+      return !(field in request.resource.data) ||
+        request.resource.data[field] == null ||
+        (request.resource.data[field] is string && request.resource.data[field].size() <= maxLen);
+    }
 
     // Helper: verifica se o usuário autenticado é administrador autorizado
     function ehAdmin() {
       return request.auth != null && (
         request.auth.token.admin == true ||
-        request.auth.token.email.lower() in [
-          'nexuslsatulizador@gmail.com',
-          'jarbasantonio201@gmail.com'
-        ] ||
-        exists(/databases/$(database)/documents/admins/$(request.auth.token.email.lower()))
+        (
+          request.auth.token.email != null && (
+            request.auth.token.email.lower() in [
+              'nexuslsatulizador@gmail.com',
+              'jarbasantonio201@gmail.com'
+            ] ||
+            exists(/databases/$(database)/documents/admins/$(request.auth.token.email.lower()))
+          )
+        )
       );
     }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    // Valida atualização restrita do campo 'maquina' pelo cliente desktop
+    function isValidClientMaquinaUpdate() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['maquina'])
+        && request.resource.data.maquina is string
+        && request.resource.data.maquina.size() <= 600;
+    }
+
+    // Valida criação e atualização de vínculo de dispositivo (create e update)
+    function isValidDispositivo(data) {
+      return data.licencaId is string
+        && data.licencaId.size() > 0
+        && data.licencaId.size() <= 128
+        && data.identificadorDispositivo is string
+        && data.identificadorDispositivo.size() > 0
+        && data.identificadorDispositivo.size() <= 256
+        && data.ativo is bool
+        && isValidOptionalString('clienteId', 128)
+        && isValidOptionalString('nomeDispositivo', 256)
+        && isValidOptionalString('sistema', 128)
+        && isValidOptionalString('ipUltimoAcesso', 100)
+        && isValidOptionalString('removidoPor', 128);
+    }
+
+    // Garante imutabilidade dos identificadores de vínculo em atualizações de dispositivos por não-admins
+    function isDispositivoIdentityUnchanged() {
+      return request.resource.data.licencaId == resource.data.licencaId
+        && request.resource.data.identificadorDispositivo == resource.data.identificadorDispositivo;
+    }
+
+    // Valida criação de registro de auditoria
+    function isValidAuditoria(data) {
+      return data.tipoAcao is string
+        && data.tipoAcao.size() > 0
+        && data.tipoAcao.size() <= 100
+        && data.responsavel is string
+        && data.responsavel.size() > 0
+        && data.responsavel.size() <= 256
+        && isValidOptionalString('licencaId', 128)
+        && isValidOptionalString('codigoLicenca', 128)
+        && isValidOptionalString('clienteId', 128)
+        && isValidOptionalString('clienteNome', 200);
+    }
+
+    // ===============================================================
+    // Collection Rules
+    // ===============================================================
 
     // 1. Coleção de Administradores
     match /admins/{email} {
@@ -26,27 +190,31 @@ service cloud.firestore {
     }
 
     // 3. Licenças comerciais
+    // O Atualizador consulta pelo ID exato da chave (get) e só pode atualizar o campo 'maquina'
     match /licencas/{chave} {
       allow read, write: if ehAdmin();
       allow get: if true;
       allow list: if ehAdmin();
-      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['maquina'])
-                    && (!('maquina' in resource.data) || resource.data.maquina == '');
+      allow update: if ehAdmin() || isValidClientMaquinaUpdate();
     }
 
     // 4. Dispositivos e computadores vinculados
+    // O Atualizador pode registrar/atualizar o próprio vínculo de dispositivo pelo ID {chave}_{hwid}
     match /dispositivos/{dispositivoId} {
       allow read, write: if ehAdmin();
+      allow get: if true;
+      allow create: if ehAdmin() || isValidDispositivo(request.resource.data);
+      allow update: if ehAdmin() || (isValidDispositivo(request.resource.data) && isDispositivoIdentityUnchanged());
     }
 
     // 5. Histórico e auditoria (imutável)
     match /historico_auditoria/{auditId} {
       allow read: if ehAdmin();
-      allow create: if ehAdmin();
+      allow create: if ehAdmin() || isValidAuditoria(request.resource.data);
       allow update, delete: if false;
     }
 
-    // Regras legadas para o catálogo
+    // 6. Regras legadas para o catálogo e metadados do Atualizador
     match /produtos/{produtoId} {
       allow read: if true;
       allow write: if ehAdmin();

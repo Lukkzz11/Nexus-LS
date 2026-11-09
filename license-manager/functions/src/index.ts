@@ -109,7 +109,7 @@ export const validateLicense = functions
     }
 
     try {
-      const { chave, dispositivoId, nomeDispositivo, sistema } = req.body || {};
+      const { acao, chave, dispositivoId, nomeDispositivo, sistema } = req.body || {};
 
       if (!chave || typeof chave !== "string") {
         res.status(400).json({
@@ -162,7 +162,42 @@ export const validateLicense = functions
       // Verificação de vínculo com cliente
       const clienteId = licencaData.clienteId || "";
       const clienteNome = licencaData.clienteNome || licencaData.cliente || "Cliente";
-      const empresa = licencaData.empresa || "";
+      const empresa = licencaData.empresaNome || licencaData.empresa || "";
+      const plano = licencaData.plano || "PERSONALIZADO";
+
+      if (acao === "desvincular") {
+        const dispIdSanitizado = dispositivoId.trim();
+        const dispDocRef = db.collection("dispositivos").doc(`${licencaRef.id}_${dispIdSanitizado}`);
+        const dispSnap = await dispDocRef.get();
+        if (dispSnap.exists && dispSnap.data()?.ativo === true) {
+          await dispDocRef.update({
+            ativo: false,
+            removidoEm: admin.firestore.FieldValue.serverTimestamp(),
+            removidoPor: "CLIENTE_ATUALIZADOR",
+          });
+          if (licencaData.maquina === dispIdSanitizado) {
+            await licencaRef.update({ maquina: "" });
+          }
+          await registrarAuditoria({
+            tipoAcao: "REMOCAO_DISPOSITIVO",
+            licencaId: licencaRef.id,
+            codigoLicenca: licencaData.codigoFormatado || chaveNormalizada,
+            clienteId,
+            clienteNome,
+            responsavel: `Atualizador (${dispIdSanitizado})`,
+            detalhes: {
+              dispositivoId: dispIdSanitizado,
+              motivo: "Removido voluntariamente pelo usuário no Atualizador",
+            },
+          });
+        }
+        res.status(200).json({
+          autorizado: false,
+          situacao: "DESVINCULADO",
+          mensagem: "Computador desvinculado com sucesso.",
+        });
+        return;
+      }
 
       // Verificação de status manual
       const statusAtual = (licencaData.status || (licencaData.ativa ? "ATIVA" : "BLOQUEADA")).toUpperCase();
@@ -341,6 +376,7 @@ export const validateLicense = functions
         codigoLicenca: licencaData.codigoFormatado || chaveNormalizada,
         cliente: clienteNome,
         empresa,
+        plano,
         dataInicio: licencaData.dataInicio || new Date().toISOString().split("T")[0],
         dataVencimento: validadeDate.toISOString().split("T")[0],
         diasRestantes,
@@ -348,6 +384,7 @@ export const validateLicense = functions
         dispositivoAutorizado: dispIdSanitizado,
         limiteDispositivos,
         dispositivosAtivos: totalAtivos,
+        dispositivosUsados: totalAtivos,
         mensagem:
           diasRestantes <= 15
             ? `Licença válida até ${validadeDate.toLocaleDateString("pt-BR")} (atenção: vence em ${diasRestantes} dias).`

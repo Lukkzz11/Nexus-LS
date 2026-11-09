@@ -1,14 +1,11 @@
 import React, { useState } from "react";
 import {
   ShieldCheck,
-  Server,
-  Key,
   Code2,
   Copy,
   Check,
-  Database,
   Terminal,
-  ExternalLink,
+  Smartphone,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { firebaseConfig } from "../../services/firebase";
@@ -74,12 +71,41 @@ if (data.autorizado)
             <p className="font-mono font-bold text-slate-900 mt-0.5">{firebaseConfig.projectId}</p>
           </div>
           <div>
-            <span className="text-[10px] uppercase font-bold text-slate-400">Região Cloud Functions</span>
-            <p className="font-mono font-bold text-slate-900 mt-0.5">southamerica-east1 (São Paulo)</p>
+            <span className="text-[10px] uppercase font-bold text-slate-400">URL Web / Celular</span>
+            <p className="font-mono font-bold text-blue-600 mt-0.5">https://nexus-ls.web.app</p>
           </div>
           <div>
             <span className="text-[10px] uppercase font-bold text-slate-400">Operador Atual</span>
             <p className="font-medium text-slate-800 mt-0.5">{user?.email || "Admin"}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Acesso pelo Celular (PWA / Web Mobile) */}
+      <div className="bg-blue-50/60 rounded-xl p-6 border border-blue-200/80 shadow-2xs space-y-3">
+        <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+          <Smartphone className="w-4 h-4 text-blue-600" />
+          <span>Versão Web para Celular (Android & iPhone)</span>
+        </h4>
+        <p className="text-xs text-slate-600 leading-relaxed">
+          Este painel possui layout 100% responsivo e suporte a <strong>PWA (Aplicativo Instalável)</strong>:
+          ao abrir no navegador do celular, você pode gerar chaves, colar o <strong>Código da Máquina (HWID)</strong> para já ativar o computador do cliente remotamente e enviar a chave pronta pelo <strong>WhatsApp</strong> com 1 toque.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 text-xs">
+          <div className="p-3 bg-white rounded-lg border border-blue-100">
+            <span className="font-bold text-slate-800 block mb-1">1. Acesso de Qualquer Lugar (4G/5G)</span>
+            <p className="text-slate-500">
+              Execute <code>Publicar-Web-Firebase.bat</code> na pasta{" "}
+              <code>C:\NexusLS\publicar\LicenseManager-Web</code> para publicar em{" "}
+              <strong>https://nexus-ls.web.app</strong>.
+            </p>
+          </div>
+          <div className="p-3 bg-white rounded-lg border border-blue-100">
+            <span className="font-bold text-slate-800 block mb-1">2. Acesso Imediato na Rede Wi-Fi</span>
+            <p className="text-slate-500">
+              Execute <code>Abrir-No-Celular-WiFi.bat</code> na pasta{" "}
+              <code>C:\NexusLS\publicar\LicenseManager-Web</code> para abrir instantaneamente no celular via Wi-Fi.
+            </p>
           </div>
         </div>
       </div>

@@ -141,7 +141,8 @@ public partial class ConfiguracoesViewModel
                 });
                 return;
             }
-            AbrirPortalWeb();
+            MensagemPreferencias = "O executável atualizador.exe não foi encontrado na pasta do sistema.";
+            MensagemPreferenciasEhErro = true;
         }
         catch (Exception ex)
         {
@@ -153,15 +154,7 @@ public partial class ConfiguracoesViewModel
     [RelayCommand]
     public void AbrirPortalWeb()
     {
-        try
-        {
-            var url = "https://github.com/Lukkzz11/Nexus-LS---Update";
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true });
-        }
-        catch (Exception ex)
-        {
-            MensagemPreferencias = "Não foi possível abrir o portal: " + ex.Message;
-            MensagemPreferenciasEhErro = true;
-        }
+        MensagemPreferencias = "Utilize o botão 'Abrir Atualizador / Ativador' para gerenciar sua licença e atualizações.";
+        MensagemPreferenciasEhErro = false;
     }
 }

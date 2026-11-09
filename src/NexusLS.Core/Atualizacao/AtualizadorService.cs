@@ -32,13 +32,60 @@ public class AtualizadorService
     public static string PastaPadrao() => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "NexusLS", "atualizacao");
 
-    public async Task<ResultadoVerificacao> VerificarAsync(CancellationToken ct = default)
+    public Task<ResultadoVerificacao> VerificarAsync(CancellationToken ct = default)
+        => VerificarAsync(caminhoArquivoInstalado: null, ct);
+
+    /// <summary>
+    /// Consulta se há versão mais nova publicada.
+    /// Se <paramref name="caminhoArquivoInstalado"/> for informado e existir, compara também a integridade SHA-256
+    /// do binário instalado contra o release do Git. Se os hashes baterem, reconhece que o programa já está com
+    /// os mesmos binários do Git, evitando falsos positivos de "nova versão disponível".
+    /// </summary>
+    public async Task<ResultadoVerificacao> VerificarAsync(string? caminhoArquivoInstalado, CancellationToken ct = default)
     {
         try
         {
             var ultima = await _fonte.UltimaAsync(ct).ConfigureAwait(false);
-            if (ultima is null || ultima.Versao <= _atual)
+            if (ultima is null)
                 return new ResultadoVerificacao(EstadoVerificacao.SemNovidade, _atual, null, "Você já está com a versão mais nova.");
+
+            // 1. Verificação por integridade SHA-256 do binário:
+            // Se o arquivo local informado existe e seu SHA-256 for idêntico ao do release do GitHub,
+            // o programa instalado já é exatamente o binário mais recente do Git (evita falso "nova versão disponível").
+            var arquivoParaConferir = caminhoArquivoInstalado;
+            if (string.IsNullOrWhiteSpace(arquivoParaConferir) || !File.Exists(arquivoParaConferir))
+            {
+                var processoAtual = Environment.ProcessPath;
+                if (!string.IsNullOrWhiteSpace(processoAtual) && File.Exists(processoAtual))
+                {
+                    arquivoParaConferir = processoAtual;
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(arquivoParaConferir) && File.Exists(arquivoParaConferir) && !string.IsNullOrWhiteSpace(ultima.Sha256))
+            {
+                try
+                {
+                    var hashLocal = await Sha256DoArquivoAsync(arquivoParaConferir, ct).ConfigureAwait(false);
+                    if (string.Equals(hashLocal, ultima.Sha256.Trim(), StringComparison.OrdinalIgnoreCase))
+                    {
+                        return new ResultadoVerificacao(
+                            EstadoVerificacao.SemNovidade,
+                            ultima.Versao,
+                            null,
+                            $"Você já está com a versão mais recente instalada (v{ultima.Versao} sincronizada com o GitHub).");
+                    }
+                }
+                catch
+                {
+                    // Falha ao ler ou calcular hash não bloqueia o fluxo principal
+                }
+            }
+
+            // 2. Verificação tradicional por número de versão
+            if (ultima.Versao <= _atual)
+                return new ResultadoVerificacao(EstadoVerificacao.SemNovidade, _atual, null, "Você já está com a versão mais nova.");
+
             return new ResultadoVerificacao(EstadoVerificacao.Disponivel, _atual, ultima, $"Versão {ultima.Versao} disponível.");
         }
         catch (Exception e) when (e is HttpRequestException or TaskCanceledException or OperationCanceledException or IOException or InvalidDataException or System.Text.Json.JsonException)
