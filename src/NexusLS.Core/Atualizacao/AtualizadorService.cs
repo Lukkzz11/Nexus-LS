@@ -52,13 +52,19 @@ public class AtualizadorService
     /// Baixa a versão e só devolve o caminho se o arquivo passou em todas as conferências. Se algo falha o arquivo
     /// parcial é apagado e nada muda no programa.
     /// </summary>
-    public async Task<string> BaixarAsync(InfoVersao versao, IProgress<double>? progresso = null, CancellationToken ct = default)
+    public Task<string> BaixarAsync(InfoVersao versao, IProgress<double>? progresso, CancellationToken ct)
+        => BaixarAsync(versao, progresso, "NexusLS", ct);
+
+    /// <summary>
+    /// Baixa a versão e só devolve o caminho se o arquivo passou em todas as conferências. Permite definir o prefixo do nome do arquivo.
+    /// </summary>
+    public async Task<string> BaixarAsync(InfoVersao versao, IProgress<double>? progresso = null, string prefixoArquivo = "NexusLS", CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(versao.Sha256))
             throw new RegraDeAtualizacaoException("Esta versão não traz a assinatura de conferência (SHA-256) e por segurança não será instalada.");
 
         Directory.CreateDirectory(_pasta);
-        var final = Path.Combine(_pasta, $"NexusLS-{versao.Versao}.exe");
+        var final = Path.Combine(_pasta, $"{prefixoArquivo}-{versao.Versao}.exe");
         var parcial = final + ".parte";
         ApagarSilencioso(parcial);
         ApagarSilencioso(final);
@@ -103,6 +109,21 @@ public class AtualizadorService
     public static void TrocarExecutavel(string executavelAtual, string novo)
     {
         if (!File.Exists(novo)) throw new RegraDeAtualizacaoException("O arquivo da atualização não foi encontrado.");
+
+        var pasta = Path.GetDirectoryName(executavelAtual);
+        if (!string.IsNullOrWhiteSpace(pasta) && !Directory.Exists(pasta))
+        {
+            Directory.CreateDirectory(pasta);
+        }
+
+        // Se o executável ainda não existe no computador de destino (ex: instalação inicial), apenas copia diretamente
+        if (!File.Exists(executavelAtual))
+        {
+            File.Copy(novo, executavelAtual, overwrite: true);
+            ApagarSilencioso(novo);
+            return;
+        }
+
         var antigo = executavelAtual + SufixoDoAntigo;
         ApagarSilencioso(antigo);
 

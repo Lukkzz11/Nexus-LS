@@ -1,5 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <ItemGroup>
+    <ProjectReference Include="..\NexusLS.Core\NexusLS.Core.csproj" />
+  </ItemGroup>
+
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>
@@ -8,7 +12,7 @@
     <UseWPF>true</UseWPF>
     <AssemblyName>Nexus-Setup</AssemblyName>
     <ApplicationIcon>nexus.ico</ApplicationIcon>
-    <Version>1.0.0</Version>
+    <Version>1.2.3</Version>
     <Product>Instalador do Nexus</Product>
     <AssemblyTitle>Instalador do Nexus</AssemblyTitle>
     <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>

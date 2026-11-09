@@ -12,7 +12,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <AssemblyName>atualizador</AssemblyName>
-    <Version>1.1.0</Version>
+    <Version>1.2.0</Version>
     <Product>Nexus LS Atualizador e Ativador</Product>
     <AssemblyTitle>Atualizador e Ativador Nexus LS</AssemblyTitle>
   </PropertyGroup>
