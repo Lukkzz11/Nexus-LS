@@ -10,6 +10,9 @@ namespace NexusLS.App.ViewModels;
 
 public record OpcaoLargura(string Texto, int Colunas);
 
+/// <summary>Um pedaço de linha da prévia do cupom, com o peso da letra já escolhido.</summary>
+public record SegmentoPrevia(string Texto, System.Windows.FontWeight Peso);
+
 /// <summary>Dados da loja e do cupom, com uma prévia do cupom que muda enquanto você digita.</summary>
 public partial class ConfiguracoesViewModel : ViewModelBase
 {
@@ -55,6 +58,8 @@ public partial class ConfiguracoesViewModel : ViewModelBase
     [ObservableProperty] private bool _perguntarTamanho = true;
     [ObservableProperty] private bool _abrirNoPdv;
     [ObservableProperty] private string _previa = "";
+    /// <summary>A mesma prévia, linha a linha, com os pedaços em negrito (é o que a tela desenha).</summary>
+    [ObservableProperty] private IReadOnlyList<IReadOnlyList<SegmentoPrevia>> _linhasPrevia = Array.Empty<IReadOnlyList<SegmentoPrevia>>();
     [ObservableProperty] private string _segmento = "";
     [ObservableProperty] private string _enderecoNumero = "";
     [ObservableProperty] private string _bairro = "";
@@ -311,7 +316,14 @@ public partial class ConfiguracoesViewModel : ViewModelBase
 
     private void AtualizarPrevia()
     {
-        try { Previa = MontadorCupom.Montar(VendaDePrevia(), ConfigDoFormulario()); }
+        try
+        {
+            Previa = MontadorCupom.Montar(VendaDePrevia(), ConfigDoFormulario());
+            LinhasPrevia = MontadorCupom.Estilizar(Previa)
+                .Select(l => (IReadOnlyList<SegmentoPrevia>)l.Select(s => new SegmentoPrevia(
+                    s.Texto.Length == 0 ? " " : s.Texto, s.Negrito ? System.Windows.FontWeights.Bold : System.Windows.FontWeights.Normal)).ToList())
+                .ToList();
+        }
         catch (RegraDeNegocioException) { /* campo numérico ainda incompleto: mantém a prévia anterior */ }
     }
 

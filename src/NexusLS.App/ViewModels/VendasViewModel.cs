@@ -13,22 +13,65 @@ public record DadosCancelamento(string Motivo, bool DevolverEstoque);
 /// <summary>Uma forma de pagamento no relatório do dia, com os textos prontos.</summary>
 public record LinhaFormaDoDia(string Forma, string Total, int Vendas);
 
+/// <summary>Uma escolha de cliente para a venda (<c>Id</c> nulo = consumidor final).</summary>
+public record OpcaoClienteVenda(int? Id, string Texto);
+
 public partial class VendasViewModel : ViewModelBase
 {
     private readonly VendaService _vendas;
     private readonly CupomService _cupons;
     private readonly CaixaService? _caixa;
+    private readonly ClienteService? _clientes;
     private int _versao;
+
+    /// <summary>Quem pode ser escolhido como cliente da venda (o primeiro é "Consumidor final", sem cliente).</summary>
+    public ObservableCollection<OpcaoClienteVenda> ClientesParaTroca { get; } = new();
+
+    [ObservableProperty] private OpcaoClienteVenda? _clienteEscolhido;
+
+    /// <summary>A troca de cliente só existe para venda não cancelada e quando o cadastro de clientes está ligado.</summary>
+    public bool PodeAlterarCliente => _clientes is not null && Selecionada is { Cancelada: false };
+
+    partial void OnSelecionadaChanged(Venda? value)
+    {
+        OnPropertyChanged(nameof(PodeAlterarCliente));
+        ClienteEscolhido = value is null ? null
+            : ClientesParaTroca.FirstOrDefault(o => o.Id == value.ClienteId) ?? ClientesParaTroca.FirstOrDefault();
+    }
+
+    private async Task CarregarClientesAsync(Venda? selecionada)
+    {
+        if (_clientes is null) return;
+        var lista = await _clientes.BuscarAsync(null);
+        ClientesParaTroca.Clear();
+        ClientesParaTroca.Add(new OpcaoClienteVenda(null, "Consumidor final (sem cliente)"));
+        foreach (var c in lista.OrderBy(c => c.Nome, StringComparer.CurrentCultureIgnoreCase))
+            ClientesParaTroca.Add(new OpcaoClienteVenda(c.Id, c.Nome));
+        if (selecionada?.Cliente is { } atual && ClientesParaTroca.All(o => o.Id != atual.Id))
+            ClientesParaTroca.Add(new OpcaoClienteVenda(atual.Id, atual.Nome));
+    }
+
+    [RelayCommand]
+    private Task AlterarClienteAsync() => ExecutarAsync(async () =>
+    {
+        if (Selecionada is not { Cancelada: false } venda || ClienteEscolhido is not { } escolha) return;
+        if (venda.ClienteId == escolha.Id) { MostrarSucesso("A venda já está com esse cliente."); return; }
+        await _vendas.AlterarClienteAsync(venda.Id, escolha.Id);
+        await CarregarAsync();
+        MostrarSucesso($"Venda #{venda.Id}: cliente alterado para {escolha.Texto}.");
+    });
 
     /// <summary>
     /// O Caixa reúne o dia (vendas, formas de pagamento) e o fechamento. O <paramref name="fechamento"/> é opcional
     /// para que os testes e as capturas continuem montando só a lista de vendas.
     /// </summary>
-    public VendasViewModel(VendaService vendas, CupomService cupons, CaixaService? caixa = null, FechamentoViewModel? fechamento = null)
+    public VendasViewModel(VendaService vendas, CupomService cupons, CaixaService? caixa = null, FechamentoViewModel? fechamento = null,
+        ClienteService? clientes = null)
     {
         _vendas = vendas;
         _cupons = cupons;
         _caixa = caixa;
+        _clientes = clientes;
         Fechamento = fechamento;
         _data = DateTime.Today; // campo direto: não dispara o carregamento duas vezes
         _ = CarregarAsync();
@@ -113,6 +156,9 @@ public partial class VendasViewModel : ViewModelBase
         var idSelecionado = Selecionada?.Id;
 
         var lista = await _vendas.ListarDoDiaAsync(Data ?? DateTime.Today);
+        if (versao != _versao) return;
+
+        await CarregarClientesAsync(lista.FirstOrDefault(v => v.Id == idSelecionado));
         if (versao != _versao) return;
 
         Vendas.Clear();

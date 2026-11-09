@@ -271,6 +271,52 @@ public class VendaService
         return venda;
     }
 
+    /// <summary>
+    /// Troca (ou tira) o cliente de uma venda já feita. Venda cancelada não muda. Venda a prazo precisa sempre de um
+    /// cliente, e só troca de cliente se ainda não recebeu pagamento (a dívida acompanha a venda para o novo cliente).
+    /// </summary>
+    public async Task<Venda> AlterarClienteAsync(int vendaId, int? novoClienteId)
+    {
+        await using var db = await _fabrica.CreateDbContextAsync();
+        var venda = await db.Vendas.FirstOrDefaultAsync(v => v.Id == vendaId)
+            ?? throw new RegraDeNegocioException("Venda não encontrada.");
+        if (venda.Cancelada)
+            throw new RegraDeNegocioException("Venda cancelada não pode mudar de cliente.");
+        if (venda.ClienteId == novoClienteId) return venda;
+
+        string? nomeNovo = null;
+        if (novoClienteId is int novo)
+        {
+            var cliente = await db.Clientes.AsNoTracking().FirstOrDefaultAsync(c => c.Id == novo)
+                ?? throw new RegraDeNegocioException("Cliente não encontrado.");
+            nomeNovo = cliente.Nome;
+        }
+
+        if (venda.FormaPagamento == FormaPagamento.APrazo)
+        {
+            if (novoClienteId is null)
+                throw new RegraDeNegocioException("Venda a prazo precisa de um cliente. Escolha quem vai pagar.");
+            if (venda.ClienteId is int antigo)
+            {
+                var titulo = (await ClienteService.ContaAsync(db, antigo)).Titulos.FirstOrDefault(t => t.VendaId == venda.Id);
+                if (titulo is { PagoCentavos: > 0 })
+                    throw new RegraDeNegocioException(
+                        $"Esta venda a prazo já recebeu {Dinheiro.Formatar(titulo.PagoCentavos)} em pagamentos e não pode mudar de cliente.");
+            }
+        }
+
+        var nomeAntigo = venda.ClienteId is int id
+            ? await db.Clientes.AsNoTracking().Where(c => c.Id == id).Select(c => c.Nome).FirstOrDefaultAsync()
+            : null;
+        venda.ClienteId = novoClienteId;
+        AtividadeService.Registrar(db, TipoAtividade.ClienteDaVendaAlterado,
+            $"Trocou o cliente da venda #{venda.Id}: {nomeAntigo ?? "Consumidor final"} → {nomeNovo ?? "Consumidor final"}",
+            $"Venda #{venda.Id}", await NomeDoOperadorAsync(db), _agora());
+        await db.SaveChangesAsync();
+        await db.Entry(venda).Reference(v => v.Cliente).LoadAsync();
+        return venda;
+    }
+
     /// <summary>Vendas de um dia (padrão: hoje), da mais recente para a mais antiga, incluindo as canceladas.</summary>
     public async Task<List<Venda>> ListarDoDiaAsync(DateTime? dia = null)
     {

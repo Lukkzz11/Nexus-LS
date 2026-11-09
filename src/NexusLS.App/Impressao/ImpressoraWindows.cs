@@ -68,11 +68,12 @@ public class ImpressoraWindows : IImpressoraCupom
         var fonte = Math.Clamp((largura - 2 * margem) / (loja.LarguraCupom * 0.55), 6, 14);
 
         var paragrafo = new Paragraph { Margin = new Thickness(0) };
-        var linhas = texto.Split('\n');
-        for (var i = 0; i < linhas.Length; i++)
+        var linhas = NexusLS.Core.Services.MontadorCupom.Estilizar(texto);
+        for (var i = 0; i < linhas.Count; i++)
         {
-            paragrafo.Inlines.Add(new Run(linhas[i]));
-            if (i < linhas.Length - 1) paragrafo.Inlines.Add(new LineBreak());
+            foreach (var s in linhas[i])
+                paragrafo.Inlines.Add(new Run(s.Texto) { FontWeight = s.Negrito ? FontWeights.Bold : FontWeights.Normal });
+            if (i < linhas.Count - 1) paragrafo.Inlines.Add(new LineBreak());
         }
 
         var documento = new FlowDocument

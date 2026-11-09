@@ -3,6 +3,9 @@ using NexusLS.Core.Models;
 
 namespace NexusLS.Core.Services;
 
+/// <summary>Um pedaço de uma linha do cupom, em negrito ou não.</summary>
+public record SegmentoCupom(string Texto, bool Negrito);
+
 /// <summary>
 /// Monta o texto do cupom NÃO FISCAL de uma venda, em colunas fixas (fonte de largura fixa), pronto para a
 /// impressora. Não imprime nada e não conhece o banco nem a janela: recebe a venda e os dados da loja.
@@ -88,6 +91,48 @@ public static class MontadorCupom
 
         for (var i = 0; i < Math.Clamp(loja.CupomLinhasFinais, 0, 15); i++) linhas.Add("");
         return string.Join("\n", linhas);
+    }
+
+    private static readonly string[] RotulosEmNegrito =
+    {
+        "Venda / Pedido:", "Data/Hora:", "Operador:", "Cliente:", "Tabela:", "Forma de Pagamento:", "Recebido:", "Subtotal:"
+    };
+
+    /// <summary>
+    /// O mesmo texto de <see cref="Montar"/>, dividido em pedaços com e sem negrito (nome da loja, CUPOM NÃO FISCAL,
+    /// rótulos, ITENS DA VENDA, TOTAL e TROCO). Só o peso da letra muda, então as colunas continuam alinhadas na prévia
+    /// e na impressora (fonte de largura fixa).
+    /// </summary>
+    public static List<List<SegmentoCupom>> Estilizar(string texto)
+    {
+        var resultado = new List<List<SegmentoCupom>>();
+        var jaAchouNome = false;
+        foreach (var linha in texto.Split('\n'))
+        {
+            var corte = linha.TrimStart();
+            var segmentos = new List<SegmentoCupom>();
+            if (!jaAchouNome && corte.Length > 0)
+            {
+                jaAchouNome = true;
+                segmentos.Add(new SegmentoCupom(linha, true));
+            }
+            else if (corte is "CUPOM NÃO FISCAL" or "ITENS DA VENDA" || corte.StartsWith("***", StringComparison.Ordinal)
+                     || corte.StartsWith("TOTAL A PAGAR:", StringComparison.Ordinal) || corte.StartsWith("TROCO:", StringComparison.Ordinal))
+            {
+                segmentos.Add(new SegmentoCupom(linha, true));
+            }
+            else if (RotulosEmNegrito.FirstOrDefault(r => linha.StartsWith(r, StringComparison.Ordinal)) is { } rotulo)
+            {
+                segmentos.Add(new SegmentoCupom(rotulo, true));
+                if (linha.Length > rotulo.Length) segmentos.Add(new SegmentoCupom(linha[rotulo.Length..], false));
+            }
+            else
+            {
+                segmentos.Add(new SegmentoCupom(linha, false));
+            }
+            resultado.Add(segmentos);
+        }
+        return resultado;
     }
 
     /// <summary>Mensagem de rodapé quando a loja não escreve a sua (a mesma do ERP PDV Life).</summary>

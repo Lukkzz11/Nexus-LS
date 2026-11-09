@@ -216,6 +216,16 @@
                             <TextBlock Text="{Binding TextoOperador}" Foreground="{StaticResource CorTextoSuave}" />
                             <TextBlock Text="{Binding TextoCliente}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,2,0,0" />
 
+                            <!-- Trocar o cliente de uma venda já feita (venda a prazo só troca se ainda não recebeu pagamento) -->
+                            <StackPanel Margin="0,8,0,0" Visibility="{Binding PodeAlterarCliente, Converter={StaticResource BoolVis}}">
+                                <TextBlock Text="Alterar cliente da venda" Foreground="{StaticResource CorTextoSuave}" FontSize="12" />
+                                <ComboBox ItemsSource="{Binding ClientesParaTroca}" DisplayMemberPath="Texto"
+                                          SelectedItem="{Binding ClienteEscolhido}" IsEditable="False" Padding="8,6" Margin="0,2,0,0"
+                                          AutomationProperties.Name="Cliente da venda" />
+                                <Button Content="Salvar cliente" Style="{StaticResource BotaoSecundario}" Margin="0,6,0,0"
+                                        HorizontalAlignment="Left" Command="{Binding AlterarClienteCommand}" />
+                            </StackPanel>
+
                             <ItemsControl ItemsSource="{Binding Selecionada.Itens}" Margin="0,12,0,0">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>

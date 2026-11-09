@@ -220,8 +220,25 @@
                             <StackPanel>
                                 <Image Source="{Binding LogoPrevia}" MaxHeight="64" MaxWidth="220" Stretch="Uniform" Margin="0,0,0,6"
                                        HorizontalAlignment="Center" AutomationProperties.Name="Logo na prévia do cupom" />
-                                <TextBlock Text="{Binding Previa}" FontFamily="Consolas" FontSize="12" Foreground="Black"
-                                           HorizontalAlignment="Center" AutomationProperties.Name="Prévia do cupom" />
+                                <!-- Uma linha por item; cada pedaço da linha pode estar em negrito (igual ao que sai na impressora) -->
+                                <ItemsControl ItemsSource="{Binding LinhasPrevia}" HorizontalAlignment="Center"
+                                              TextElement.FontFamily="Consolas" TextElement.FontSize="12" TextElement.Foreground="Black"
+                                              AutomationProperties.Name="Prévia do cupom">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <ItemsControl ItemsSource="{Binding}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <TextBlock Text="{Binding Texto}" FontWeight="{Binding Peso}" />
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
                             </StackPanel>
                         </Border>
                         <TextBlock Text="Os itens e valores acima são só de exemplo. Os dados da loja vêm do formulário."
