@@ -102,6 +102,16 @@ public sealed class Instalador
         return selecionados.Any(p => Process.GetProcessesByName(Path.GetFileNameWithoutExtension(p)).Length > 0);
     }
 
+    /// <summary>
+    /// True se o texto do arquivo .sha256 ("hash  nome") bate com o hash calculado do arquivo.
+    /// Mantido público porque é a regra de conferência usada também pelos testes do instalador.
+    /// </summary>
+    public static bool HashConfere(string textoSha, string hashDoArquivo)
+    {
+        var esperado = (textoSha ?? "").Trim().Split(' ', '\t', '\n', '\r')[0];
+        return esperado.Length == 64 && string.Equals(esperado, hashDoArquivo, StringComparison.OrdinalIgnoreCase);
+    }
+
     public async Task InstalarAsync(IProgress<(double Percentual, string Texto)> progresso, CancellationToken ct = default)
     {
         var programas = ObterProgramasSelecionados();

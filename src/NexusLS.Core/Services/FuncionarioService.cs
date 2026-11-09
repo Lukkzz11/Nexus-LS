@@ -1,7 +1,10 @@
+using System.Globalization;
 using System.Security.Cryptography;
 using Microsoft.EntityFrameworkCore;
 using NexusLS.Core.Data;
+using NexusLS.Core.Diagnostico;
 using NexusLS.Core.Models;
+using NexusLS.Core.Seguranca;
 
 namespace NexusLS.Core.Services;
 
@@ -25,19 +28,32 @@ public static class OperadorAtual
 /// </summary>
 public class FuncionarioService
 {
-    public const int MaxTentativas = 5;
-    public static readonly TimeSpan TempoDeBloqueio = TimeSpan.FromSeconds(30);
+    public const int MaxTentativas = TentativasLoginStore.MaxFalhas;
+    public static readonly TimeSpan TempoDeBloqueio = TentativasLoginStore.TempoDeBloqueio;
 
-    private const int Iteracoes = 100_000;
+    /// <summary>Iterações do formato novo. O formato antigo (sem versão) usava 100.000.</summary>
+    private const int IteracoesAtuais = 600_000;
+    private const int IteracoesLegado = 100_000;
+
+    /// <summary>Trava contra um hash adulterado pedir iterações absurdas e travar a máquina.</summary>
+    private const int MaxIteracoesAceitas = 10_000_000;
+
     private readonly IDbContextFactory<PdvDbContext> _fabrica;
     private readonly Func<DateTime> _agora;
-    private readonly Dictionary<int, (int Falhas, DateTime? BloqueadoAte)> _tentativas = new();
-    private readonly object _trava = new();
+    private readonly ITentativasLoginStore _tentativas;
 
-    public FuncionarioService(IDbContextFactory<PdvDbContext> fabrica, Func<DateTime>? agora = null)
+    /// <param name="tentativas">
+    /// Onde o bloqueio de PIN é guardado. Sem informar, usa o arquivo padrão em
+    /// %LOCALAPPDATA%\NexusLS\seguranca\tentativas.json (sobrevive a reiniciar o programa).
+    /// </param>
+    public FuncionarioService(
+        IDbContextFactory<PdvDbContext> fabrica,
+        Func<DateTime>? agora = null,
+        ITentativasLoginStore? tentativas = null)
     {
         _fabrica = fabrica;
         _agora = agora ?? (() => DateTime.Now);
+        _tentativas = tentativas ?? new TentativasLoginStore();
     }
 
     /// <summary>Se existe algum funcionário cadastrado, o programa pede o PIN ao abrir. Sem nenhum, abre direto (como sempre foi).</summary>
@@ -68,6 +84,7 @@ public class FuncionarioService
         };
         db.Funcionarios.Add(f);
         await db.SaveChangesAsync();
+        _tentativas.Limpar(f.Id); // funcionário novo nunca começa bloqueado por um id reaproveitado
         return (f, codigo);
     }
 
@@ -84,6 +101,7 @@ public class FuncionarioService
         AtividadeService.Registrar(db, TipoAtividade.FuncionarioCadastrado,
             $"Cadastrou o funcionário {f.Nome} ({f.PerfilTexto})", $"Funcionário {f.Nome}", agora: f.DataCadastro);
         await db.SaveChangesAsync();
+        _tentativas.Limpar(f.Id); // funcionário novo nunca começa bloqueado
         return f;
     }
 
@@ -112,7 +130,7 @@ public class FuncionarioService
         AtividadeService.Registrar(db, TipoAtividade.PinRedefinido,
             $"Redefiniu o PIN de {f.Nome}", $"Funcionário {f.Nome}", agora: _agora());
         await db.SaveChangesAsync();
-        lock (_trava) _tentativas.Remove(id);
+        _tentativas.Limpar(id);
     }
 
     public async Task DesativarAsync(int id)
@@ -147,27 +165,37 @@ public class FuncionarioService
     public async Task<Funcionario> AutenticarAsync(int id, string pin)
     {
         var agora = _agora();
-        lock (_trava)
-        {
-            if (_tentativas.TryGetValue(id, out var t) && t.BloqueadoAte is DateTime ate && ate > agora)
-                throw new RegraDeNegocioException($"Muitas tentativas erradas. Aguarde {(int)Math.Ceiling((ate - agora).TotalSeconds)} segundo(s).");
-        }
+        if (_tentativas.EstaBloqueado(id, agora, out var bloqueadoAte))
+            throw new RegraDeNegocioException($"Muitas tentativas erradas. Aguarde {(int)Math.Ceiling((bloqueadoAte - agora).TotalSeconds)} segundo(s).");
 
         await using var db = await _fabrica.CreateDbContextAsync();
-        var f = await db.Funcionarios.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id && x.Ativo)
+        var f = await db.Funcionarios.FirstOrDefaultAsync(x => x.Id == id && x.Ativo)
             ?? throw new RegraDeNegocioException("Funcionário não encontrado ou desativado.");
 
-        if (!Confere(pin ?? "", f.PinHash))
+        if (!Confere(pin ?? "", f.PinHash, out var legado))
         {
-            lock (_trava)
-            {
-                var falhas = (_tentativas.TryGetValue(id, out var t) ? t.Falhas : 0) + 1;
-                _tentativas[id] = falhas >= MaxTentativas ? (0, agora + TempoDeBloqueio) : (falhas, null);
-            }
+            _tentativas.RegistrarFalha(id, agora);
             throw new RegraDeNegocioException("PIN incorreto.");
         }
 
-        lock (_trava) _tentativas.Remove(id);
+        _tentativas.Limpar(id);
+
+        // Rehash transparente: o primeiro login certo de um hash antigo regrava no formato v2.
+        // O PIN continua o mesmo; só a forma de guardar fica mais forte.
+        if (legado)
+        {
+            try
+            {
+                f.PinHash = Hash(pin ?? "");
+                await db.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                // O PIN estava certo: uma falha ao regravar não pode barrar o login. Tenta de novo no próximo acerto.
+                RegistroDeLog.Aviso("Não foi possível regravar o PIN no formato novo; o login foi mantido.");
+            }
+        }
+
         return f;
     }
 
@@ -178,14 +206,14 @@ public class FuncionarioService
         var normalizado = NormalizarCodigo(codigo ?? "");
         await using var db = await _fabrica.CreateDbContextAsync();
         var admins = await db.Funcionarios.Where(f => f.Ativo && f.Perfil == PerfilFuncionario.Administrador && f.RecuperacaoHash != null).ToListAsync();
-        var dono = admins.FirstOrDefault(a => Confere(normalizado, a.RecuperacaoHash!))
+        var dono = admins.FirstOrDefault(a => Confere(normalizado, a.RecuperacaoHash!, out _))
             ?? throw new RegraDeNegocioException("Código de recuperação inválido.");
 
         var novo = NovoCodigoDeRecuperacao();
         dono.PinHash = Hash(novoPin);
-        dono.RecuperacaoHash = Hash(NormalizarCodigo(novo));
+        dono.RecuperacaoHash = Hash(NormalizarCodigo(novo)); // hash novo já nasce em v2
         await db.SaveChangesAsync();
-        lock (_trava) _tentativas.Remove(dono.Id);
+        _tentativas.Limpar(dono.Id);
         return (dono, novo);
     }
 
@@ -243,19 +271,47 @@ public class FuncionarioService
     private static string Hash(string segredo)
     {
         var sal = RandomNumberGenerator.GetBytes(16);
-        var hash = Rfc2898DeriveBytes.Pbkdf2(segredo, sal, Iteracoes, HashAlgorithmName.SHA256, 32);
-        return Convert.ToBase64String(sal) + ":" + Convert.ToBase64String(hash);
+        var hash = Rfc2898DeriveBytes.Pbkdf2(segredo, sal, IteracoesAtuais, HashAlgorithmName.SHA256, 32);
+        return $"v2:{IteracoesAtuais}:{Convert.ToBase64String(sal)}:{Convert.ToBase64String(hash)}";
     }
 
-    private static bool Confere(string segredo, string guardado)
+    /// <summary>
+    /// Aceita o formato novo <c>v2:{iteracoes}:{salBase64}:{hashBase64}</c> e o legado <c>{sal}:{hash}</c>
+    /// (100.000 iterações). Em <paramref name="legado"/> avisa quando o hash precisa ser regravado no login.
+    /// </summary>
+    private static bool Confere(string segredo, string guardado, out bool legado)
     {
+        legado = false;
+        if (string.IsNullOrEmpty(guardado)) return false;
+
         var partes = guardado.Split(':');
-        if (partes.Length != 2) return false;
+        int iteracoes;
+        string salTexto, hashTexto;
+
+        if (partes.Length == 4 && partes[0] == "v2")
+        {
+            if (!int.TryParse(partes[1], NumberStyles.None, CultureInfo.InvariantCulture, out iteracoes) ||
+                iteracoes is < 1 or > MaxIteracoesAceitas)
+                return false;
+            salTexto = partes[2];
+            hashTexto = partes[3];
+        }
+        else if (partes.Length == 2)
+        {
+            iteracoes = IteracoesLegado;
+            salTexto = partes[0];
+            hashTexto = partes[1];
+            legado = true;
+        }
+        else return false;
+
         try
         {
-            var sal = Convert.FromBase64String(partes[0]);
-            var esperado = Convert.FromBase64String(partes[1]);
-            var calculado = Rfc2898DeriveBytes.Pbkdf2(segredo, sal, Iteracoes, HashAlgorithmName.SHA256, esperado.Length);
+            var sal = Convert.FromBase64String(salTexto);
+            var esperado = Convert.FromBase64String(hashTexto);
+            if (sal.Length == 0 || esperado.Length == 0) return false;
+
+            var calculado = Rfc2898DeriveBytes.Pbkdf2(segredo, sal, iteracoes, HashAlgorithmName.SHA256, esperado.Length);
             return CryptographicOperations.FixedTimeEquals(calculado, esperado);
         }
         catch (FormatException)

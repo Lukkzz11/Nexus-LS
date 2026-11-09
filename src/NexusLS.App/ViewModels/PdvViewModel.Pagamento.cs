@@ -210,6 +210,20 @@ public partial class PdvViewModel
             return;
         }
 
+        // Caixa fechado: a venda ficaria fora de qualquer turno e não entraria no fechamento nem no relatório
+        // de caixa. Quando a tela tem o serviço de caixa (programa de verdade), exige um turno aberto.
+        // Nos testes de ViewModel sem caixa (_caixa nulo), a venda continua livre, como antes.
+        if (_caixa is not null)
+        {
+            var aberto = await _caixa.ObterAbertoAsync();
+            if (aberto is null)
+            {
+                await AtualizarCaixaAsync();
+                MostrarErro("Abra o caixa antes de finalizar a venda. Sem um turno aberto, a venda fica fora do fechamento.");
+                return;
+            }
+        }
+
         var venda = await _vendas.FinalizarAsync(_pagamento.ParaPedido(_carrinho, _descontoResolvido) with { ChaveUnica = _chaveVenda });
 
         var pagou = SelecaoPagamento.Nome(venda.FormaPagamento);

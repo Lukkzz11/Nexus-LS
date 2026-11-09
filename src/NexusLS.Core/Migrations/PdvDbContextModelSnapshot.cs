@@ -1014,6 +1014,8 @@ namespace NexusLS.Core.Migrations
                     b.HasIndex("Entidade", "EntidadeGuid")
                         .IsUnique();
 
+                    b.HasIndex("Estado", "AtualizadoEm");
+
                     b.HasIndex("Estado", "ProximaTentativa");
 
                     b.ToTable("FilaSincronizacao");
@@ -1389,7 +1391,7 @@ namespace NexusLS.Core.Migrations
                     b.HasIndex("Guid")
                         .IsUnique();
 
-                    b.HasIndex("TurnoId");
+                    b.HasIndex("TurnoId", "DataHora");
 
                     b.ToTable("MovimentosCaixa");
                 });
@@ -1524,6 +1526,8 @@ namespace NexusLS.Core.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ClienteId");
+
+                    b.HasIndex("DataHora");
 
                     b.HasIndex("Guid")
                         .IsUnique();
@@ -2026,6 +2030,8 @@ namespace NexusLS.Core.Migrations
 
                     b.HasIndex("Guid")
                         .IsUnique();
+
+                    b.HasIndex("DataHora", "Cancelada");
 
                     b.ToTable("Vendas");
                 });

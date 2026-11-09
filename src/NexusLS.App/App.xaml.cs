@@ -7,11 +7,12 @@ namespace NexusLS.App;
 
 public partial class App : Application
 {
-    /// <summary>Opções do banco compartilhadas pelo app (aponta para %LOCALAPPDATA%\NexusLS\pdv.db).</summary>
+    /// <summary>Opções do banco compartilhadas pelo app (aponta para %LOCALAPPDATA%\NexusLS\nexus.db).</summary>
     public static DbContextOptions<PdvDbContext> OpcoesBanco { get; } =
         new DbContextOptionsBuilder<PdvDbContext>()
-            // "Default Timeout": se o banco estiver ocupado, espera até 30 s em vez de falhar na hora com "banco bloqueado".
-            .UseSqlite($"Data Source={CaminhoBanco.Padrao()};Default Timeout=30")
+            // Conexão central: espera até 30 s se o banco estiver ocupado e liga as chaves estrangeiras em
+            // TODAS as conexões (o PRAGMA foreign_keys vale por conexão; o WAL é aplicado em PreparadorBanco).
+            .UseSqlite(CaminhoBanco.StringConexao())
             // Todo produto salvo entra na fila de sincronização na mesma transação (o envio é feito à parte).
             .AddInterceptors(new FilaSincronizacaoInterceptor(() => UsuarioUidAtual))
             .Options;
@@ -51,6 +52,10 @@ public partial class App : Application
     /// </summary>
     protected override void OnStartup(StartupEventArgs e)
     {
+        // Antes de qualquer coisa que possa falhar: erros não tratados passam a ir para o log local.
+        ConfigurarDiagnostico();
+        NexusLS.Core.Diagnostico.RegistroDeLog.Info("Nexus iniciando.");
+
         if (!ObterInstanciaUnica())
         {
             MessageBox.Show("O Nexus já está aberto neste computador. Use a janela que já existe.", "Nexus",
@@ -83,6 +88,29 @@ public partial class App : Application
 
         base.OnStartup(e);
         IniciarBackupAutomatico();
+        IniciarRetencao();
+    }
+
+    /// <summary>
+    /// Limpeza diária dos controles de sincronização e dos logs antigos. Roda em segundo plano, depois da
+    /// janela abrir, e nunca atrapalha a venda: se falhar, fica registrado e tenta de novo na próxima abertura.
+    /// </summary>
+    private static void IniciarRetencao()
+    {
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                var resultado = await Servicos.Retencao.AplicarAsync();
+                if (resultado.FilaApagada + resultado.LogsApagados > 0)
+                    NexusLS.Core.Diagnostico.RegistroDeLog.Info(
+                        $"Retenção: {resultado.FilaApagada} item(ns) de fila e {resultado.LogsApagados} log(s) antigo(s) removido(s).");
+            }
+            catch (Exception ex)
+            {
+                NexusLS.Core.Diagnostico.RegistroDeLog.Erro("Falha ao aplicar a retenção de dados antigos.", ex);
+            }
+        });
     }
 
     /// <summary>
@@ -107,6 +135,7 @@ public partial class App : Application
         }
         catch (Exception ex)
         {
+            NexusLS.Core.Diagnostico.RegistroDeLog.Erro("Falha ao abrir a tela de entrada.", ex);
             MessageBox.Show("Não foi possível abrir a tela de entrada: " + ex.Message, "Nexus", MessageBoxButton.OK, MessageBoxImage.Error);
             return false;
         }
@@ -121,6 +150,10 @@ public partial class App : Application
         InfoBackup? seguranca = null;
         try
         {
+            // WAL, timeout e chaves estrangeiras precisam existir ANTES de abrir o banco/migrar.
+            // É idempotente: pode rodar a cada abertura.
+            PreparadorBanco.Aplicar(CaminhoBanco.Padrao());
+
             using var db = new PdvDbContext(OpcoesBanco);
             var temDados = db.Database.GetAppliedMigrations().Any();
             if (temDados && db.Database.GetPendingMigrations().Any())
@@ -149,6 +182,7 @@ public partial class App : Application
         }
         catch (Exception ex)
         {
+            NexusLS.Core.Diagnostico.RegistroDeLog.Erro("Falha ao preparar/atualizar o banco de dados.", ex);
             var texto = "Não foi possível atualizar o banco de dados:" + Environment.NewLine + ex.Message;
             if (seguranca is not null)
             {
@@ -188,6 +222,7 @@ public partial class App : Application
         }
         catch (Exception ex)
         {
+            NexusLS.Core.Diagnostico.RegistroDeLog.Erro("Falha no backup automático.", ex);
             // Erro de backup nunca fica em silêncio; avisa uma vez por sessão para não atrapalhar a venda.
             if (_avisouFalhaBackup) return;
             _avisouFalhaBackup = true;

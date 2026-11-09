@@ -152,6 +152,8 @@ public class PdvDbContext : DbContext
             e.HasIndex(x => new { x.Entidade, x.EntidadeGuid }).IsUnique(); // uma linha por entidade: a fila nunca duplica
             e.Property(x => x.Entidade).HasMaxLength(40);
             e.HasIndex(x => new { x.Estado, x.ProximaTentativa });
+            // Retenção: apaga somente Enviado com AtualizadoEm antigo.
+            e.HasIndex(x => new { x.Estado, x.AtualizadoEm });
             e.Property(x => x.UltimoErro).HasMaxLength(500);
             e.Property(x => x.UsuarioUid).HasMaxLength(128);
         });
@@ -175,6 +177,8 @@ public class PdvDbContext : DbContext
             e.HasMany(v => v.Itens).WithOne().HasForeignKey(i => i.VendaId);
             e.HasOne(v => v.Cliente).WithMany().HasForeignKey(v => v.ClienteId).OnDelete(DeleteBehavior.Restrict);
             e.HasIndex(v => v.DataHora);
+            // Consultas do caixa/relatórios filtram período e ignoram (ou separam) canceladas.
+            e.HasIndex(v => new { v.DataHora, v.Cancelada });
             e.HasIndex(v => v.ChaveUnica).IsUnique().HasFilter("\"ChaveUnica\" IS NOT NULL");
             e.Property(v => v.Operador).HasMaxLength(80);
             e.Property(v => v.MotivoCancelamento).HasMaxLength(300);
@@ -233,6 +237,8 @@ public class PdvDbContext : DbContext
             e.Property(p => p.Operador).HasMaxLength(80);
             e.HasOne<Cliente>().WithMany().HasForeignKey(p => p.ClienteId).OnDelete(DeleteBehavior.Restrict);
             e.HasIndex(p => p.ClienteId);
+            // Recebimentos por período entram no resumo do caixa.
+            e.HasIndex(p => p.DataHora);
         });
 
         modelBuilder.Entity<Pedido>(e =>
@@ -392,6 +398,8 @@ public class PdvDbContext : DbContext
         {
             e.Property(m => m.Descricao).HasMaxLength(200);
             e.HasOne<TurnoCaixa>().WithMany().HasForeignKey(m => m.TurnoId).OnDelete(DeleteBehavior.Restrict);
+            // O resumo do turno lê os movimentos por turno, em ordem de horário.
+            e.HasIndex(m => new { m.TurnoId, m.DataHora });
         });
 
         modelBuilder.Entity<FechamentoCaixa>(e =>

@@ -3,6 +3,8 @@
 PDV (frente de caixa) e controle de estoque para loja de roupas e acessórios, feito em C# com .NET e WPF, para Windows.
 Funciona sem internet e sem login, com uma loja só. Todo o programa, o código e os comentários estão em português.
 
+**Versão atual:** 1.2.6.
+
 ## Telas
 
 O programa abre na tela **Início** (indicadores e atalhos); o menu lateral tem Início e mais três grupos:
@@ -203,6 +205,8 @@ dotnet run --project src/NexusLS.App
 
 Na primeira execução o banco é criado sozinho (`Database.Migrate()` ao abrir o programa).
 
+Hoje o projeto tem **mais de 1.300 testes automatizados**: as regras de negócio no `Core` e o fluxo das telas nos ViewModels (o PDV é testado tecla por tecla, sem abrir janela).
+
 ## Onde ficam os dados e como fazer backup
 
 Tudo fica em **um único arquivo** SQLite:
@@ -224,7 +228,7 @@ Normalmente `C:\Users\<seu usuário>\AppData\Local\NexusLS\nexus.db`. Para abrir
   - As preferências ficam em `%LOCALAPPDATA%\NexusLS\backup.json`, fora do banco.
 - **Restaurar:** em Configurações, escolha o backup na lista (ou nenhum, para procurar um arquivo) e clique em "Restaurar". O programa confere o arquivo, **guarda uma cópia dos dados atuais** (`pre-restauracao`), troca o banco e reinicia. Se o banco estiver em uso ou algo falhar, nada é alterado. Restaurar à mão continua possível: com o programa fechado, substitua o `nexus.db` (apague os `-wal` e `-shm` ao lado).
 - **Começar do zero:** em Configurações → **Apagar dados** (só administrador). Escolha **só o movimento** (vendas, caixa, pedidos, compras, financeiro e histórico de estoque; mantém produtos, clientes, fornecedores, funcionários e configurações) ou **tudo da loja** (também produtos, clientes e fornecedores), digite `APAGAR` e confirme. O programa faz antes um backup `pre-limpeza` (se o backup falhar, nada é apagado; esse backup nunca é apagado sozinho), apaga numa só transação, registra em Atividades e reinicia. Funcionários, configurações e a trilha de atividades nunca são apagados. Também dá para, com o programa fechado, apagar o `nexus.db`; um novo, vazio, é criado na próxima abertura.
-- **Vindo da versão antiga (PDV Simples):** na primeira abertura o programa copia `%LOCALAPPDATA%\PdvSimples\pdv.db` para `nexus.db`. O arquivo antigo não é apagado.
+- **Vindo da versão antiga (PDV Simples):** na primeira abertura o programa copia o banco antigo da pasta `%LOCALAPPDATA%\PdvSimples` para `nexus.db`. O arquivo antigo não é apagado.
 - A venda em andamento fica em `%LOCALAPPDATA%\NexusLS\rascunho.json` (pode ser apagado sem problema; ele só guarda o carrinho aberto).
 
 ## Gerar o executável

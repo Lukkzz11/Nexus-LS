@@ -47,6 +47,7 @@ public sealed class ContainerDeServicos
     public NexusLS.Core.Atualizacao.AtualizadorService Atualizador { get; }
     public NexusLS.App.ViewModels.AtualizacaoViewModel Atualizacao { get; }
     public LimpezaService Limpeza { get; }
+    public RetencaoService Retencao { get; }
     public NexusLS.Core.Sincronizacao.Firebase.ConfiguracaoFirebaseStore Firebase { get; }
     public NexusLS.Core.Sincronizacao.SincronizacaoRepositorio SincronizacaoRepo { get; }
     public NexusLS.Core.Sincronizacao.IDestinoCatalogo DestinoCatalogo { get; }
@@ -113,6 +114,7 @@ public sealed class ContainerDeServicos
         Atualizacao = new(Atualizador, NexusLS.App.AplicadorDeAtualizacao.AplicarEReiniciarAsync);
         Limpeza = new(fabrica,
             async () => (await Backup.FazerAsync(NexusLS.Core.Backup.MotivoBackup.PreLimpeza)).Caminho);
+        Retencao = new(fabrica);
         Firebase = new(NexusLS.Core.Sincronizacao.Firebase.ConfiguracaoFirebaseStore.CaminhoPadrao(), new NexusLS.App.Seguranca.ProtetorDpapi());
         SincronizacaoRepo = new(fabrica);
         DestinoCatalogo = new NexusLS.Core.Sincronizacao.Firebase.DestinoFirestoreConfiguravel(Firebase, _httpFirebase);

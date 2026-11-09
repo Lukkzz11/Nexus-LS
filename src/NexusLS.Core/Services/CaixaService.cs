@@ -1,3 +1,4 @@
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using NexusLS.Core.Data;
 using NexusLS.Core.Models;
@@ -44,6 +45,12 @@ public class CaixaService
     private readonly IDbContextFactory<PdvDbContext> _fabrica;
     private readonly Func<DateTime> _agora;
 
+    /// <summary>
+    /// Serializa abertura, fechamento e movimentos neste processo. O app já tem mutex de instância única,
+    /// então não existem duas cópias gravando no mesmo banco: a trava basta para o duplo clique/duas abas.
+    /// </summary>
+    private readonly SemaphoreSlim _trava = new(1, 1);
+
     public CaixaService(IDbContextFactory<PdvDbContext> fabrica, Func<DateTime>? agora = null)
     {
         _fabrica = fabrica;
@@ -61,19 +68,28 @@ public class CaixaService
         if (trocoInicialCentavos < 0)
             throw new RegraDeNegocioException("O troco inicial não pode ser negativo.");
 
-        await using var db = await _fabrica.CreateDbContextAsync();
-        if (await db.TurnosCaixa.AnyAsync(t => t.DataFechamento == null))
-            throw new RegraDeNegocioException("Já existe um caixa aberto. Feche-o antes de abrir outro.");
-
-        var turno = new TurnoCaixa
+        await _trava.WaitAsync();
+        try
         {
-            DataAbertura = _agora(),
-            TrocoInicialCentavos = trocoInicialCentavos,
-            Operador = await NomeDoOperadorAsync(db)
-        };
-        db.TurnosCaixa.Add(turno);
-        await db.SaveChangesAsync();
-        return turno;
+            await using var db = await _fabrica.CreateDbContextAsync();
+            // A checagem fica DENTRO da trava: dois cliques ao mesmo tempo não podem abrir dois turnos.
+            if (await db.TurnosCaixa.AnyAsync(t => t.DataFechamento == null))
+                throw new RegraDeNegocioException("Já existe um caixa aberto. Feche-o antes de abrir outro.");
+
+            var turno = new TurnoCaixa
+            {
+                DataAbertura = _agora(),
+                TrocoInicialCentavos = trocoInicialCentavos,
+                Operador = await NomeDoOperadorAsync(db)
+            };
+            db.TurnosCaixa.Add(turno);
+            await db.SaveChangesAsync();
+            return turno;
+        }
+        finally
+        {
+            _trava.Release();
+        }
     }
 
     public async Task<MovimentoCaixa> RegistrarMovimentoAsync(TipoMovimentoCaixa tipo, long valorCentavos, string? descricao)
@@ -84,29 +100,37 @@ public class CaixaService
         if (tipo is TipoMovimentoCaixa.Despesa or TipoMovimentoCaixa.EntradaAvulsa && (descricao?.Length ?? 0) < 3)
             throw new RegraDeNegocioException("Descreva o movimento (pelo menos 3 letras).");
 
-        await using var db = await _fabrica.CreateDbContextAsync();
-        var turno = await db.TurnosCaixa.FirstOrDefaultAsync(t => t.DataFechamento == null)
-                    ?? throw new RegraDeNegocioException("Abra o caixa antes de registrar movimentos.");
-
-        if (tipo is TipoMovimentoCaixa.Sangria or TipoMovimentoCaixa.Despesa)
+        await _trava.WaitAsync();
+        try
         {
-            var resumo = await CalcularAsync(db, turno);
-            if (valorCentavos > resumo.EsperadoDinheiroCentavos)
-                throw new RegraDeNegocioException(
-                    $"Não há tanto dinheiro no caixa (esperado: {Dinheiro.Formatar(resumo.EsperadoDinheiroCentavos)}).");
+            await using var db = await _fabrica.CreateDbContextAsync();
+            var turno = await db.TurnosCaixa.FirstOrDefaultAsync(t => t.DataFechamento == null)
+                        ?? throw new RegraDeNegocioException("Abra o caixa antes de registrar movimentos.");
+
+            if (tipo is TipoMovimentoCaixa.Sangria or TipoMovimentoCaixa.Despesa)
+            {
+                var resumo = await CalcularAsync(db, turno);
+                if (valorCentavos > resumo.EsperadoDinheiroCentavos)
+                    throw new RegraDeNegocioException(
+                        $"Não há tanto dinheiro no caixa (esperado: {Dinheiro.Formatar(resumo.EsperadoDinheiroCentavos)}).");
+            }
+
+            var movimento = new MovimentoCaixa
+            {
+                TurnoId = turno.Id,
+                DataHora = _agora(),
+                Tipo = tipo,
+                ValorCentavos = valorCentavos,
+                Descricao = descricao
+            };
+            db.MovimentosCaixa.Add(movimento);
+            await db.SaveChangesAsync();
+            return movimento;
         }
-
-        var movimento = new MovimentoCaixa
+        finally
         {
-            TurnoId = turno.Id,
-            DataHora = _agora(),
-            Tipo = tipo,
-            ValorCentavos = valorCentavos,
-            Descricao = descricao
-        };
-        db.MovimentosCaixa.Add(movimento);
-        await db.SaveChangesAsync();
-        return movimento;
+            _trava.Release();
+        }
     }
 
     public async Task<ResumoTurno> ResumoAsync(int turnoId)
@@ -127,69 +151,100 @@ public class CaixaService
         if (conferencia.DinheiroCentavos < 0 || conferencia.CartaoCentavos < 0 || conferencia.PixCentavos < 0)
             throw new RegraDeNegocioException("Os valores conferidos não podem ser negativos.");
 
-        await using var db = await _fabrica.CreateDbContextAsync();
-        var turno = await db.TurnosCaixa.FirstOrDefaultAsync(t => t.Id == turnoId)
-                    ?? throw new RegraDeNegocioException("Caixa não encontrado.");
-        var resumo = await CalcularAsync(db, turno);
-        var observacao = string.IsNullOrWhiteSpace(conferencia.Observacao) ? null : conferencia.Observacao.Trim();
-
-        var diferente = conferencia.DinheiroCentavos != resumo.EsperadoDinheiroCentavos
-                        || conferencia.CartaoCentavos != resumo.EsperadoCartaoCentavos
-                        || conferencia.PixCentavos != resumo.EsperadoPixCentavos;
-        var refazendo = !turno.Aberto;
-        if ((diferente || refazendo) && (observacao?.Length ?? 0) < 3)
-            throw new RegraDeNegocioException(refazendo
-                ? "Explique por que a conferência está sendo refeita (pelo menos 3 letras)."
-                : "Há diferença no caixa: informe uma observação (pelo menos 3 letras).");
-
-        var agora = _agora();
-        var ultimaVersao = await db.FechamentosCaixa.Where(f => f.TurnoId == turnoId)
-            .Select(f => (int?)f.Versao).MaxAsync() ?? 0;
-        var fechamento = new FechamentoCaixa
+        await _trava.WaitAsync();
+        try
         {
-            TurnoId = turnoId,
-            Versao = ultimaVersao + 1,
-            DataHora = agora,
-            Operador = await NomeDoOperadorAsync(db),
-            EsperadoDinheiroCentavos = resumo.EsperadoDinheiroCentavos,
-            ConferidoDinheiroCentavos = conferencia.DinheiroCentavos,
-            EsperadoCartaoCentavos = resumo.EsperadoCartaoCentavos,
-            ConferidoCartaoCentavos = conferencia.CartaoCentavos,
-            EsperadoPixCentavos = resumo.EsperadoPixCentavos,
-            ConferidoPixCentavos = conferencia.PixCentavos,
-            Observacao = observacao
-        };
-        db.FechamentosCaixa.Add(fechamento);
-        if (turno.Aberto) turno.DataFechamento = agora;
+            await using var db = await _fabrica.CreateDbContextAsync();
+            var turno = await db.TurnosCaixa.FirstOrDefaultAsync(t => t.Id == turnoId)
+                        ?? throw new RegraDeNegocioException("Caixa não encontrado.");
+            var resumo = await CalcularAsync(db, turno);
+            var observacao = string.IsNullOrWhiteSpace(conferencia.Observacao) ? null : conferencia.Observacao.Trim();
 
-        await db.SaveChangesAsync();
-        return fechamento;
+            var diferente = conferencia.DinheiroCentavos != resumo.EsperadoDinheiroCentavos
+                            || conferencia.CartaoCentavos != resumo.EsperadoCartaoCentavos
+                            || conferencia.PixCentavos != resumo.EsperadoPixCentavos;
+            var refazendo = !turno.Aberto;
+            if ((diferente || refazendo) && (observacao?.Length ?? 0) < 3)
+                throw new RegraDeNegocioException(refazendo
+                    ? "Explique por que a conferência está sendo refeita (pelo menos 3 letras)."
+                    : "Há diferença no caixa: informe uma observação (pelo menos 3 letras).");
+
+            var agora = _agora();
+            // A versão é calculada já dentro da trava. Ainda assim, outra cópia do app (fora deste processo)
+            // pode ter gravado a mesma versão entre a leitura e o SaveChanges — por isso o retry único abaixo.
+            var ultimaVersao = await db.FechamentosCaixa.Where(f => f.TurnoId == turnoId)
+                .Select(f => (int?)f.Versao).MaxAsync() ?? 0;
+            var fechamento = new FechamentoCaixa
+            {
+                TurnoId = turnoId,
+                Versao = ultimaVersao + 1,
+                DataHora = agora,
+                Operador = await NomeDoOperadorAsync(db),
+                EsperadoDinheiroCentavos = resumo.EsperadoDinheiroCentavos,
+                ConferidoDinheiroCentavos = conferencia.DinheiroCentavos,
+                EsperadoCartaoCentavos = resumo.EsperadoCartaoCentavos,
+                ConferidoCartaoCentavos = conferencia.CartaoCentavos,
+                EsperadoPixCentavos = resumo.EsperadoPixCentavos,
+                ConferidoPixCentavos = conferencia.PixCentavos,
+                Observacao = observacao
+            };
+            db.FechamentosCaixa.Add(fechamento);
+            if (turno.Aberto) turno.DataFechamento = agora;
+
+            try
+            {
+                await db.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex) when (EhConflitoDeVersao(ex))
+            {
+                // Alguém gravou a mesma (TurnoId, Versao) no meio do caminho: recalcula e tenta UMA vez.
+                // Qualquer outro erro continua subindo (não é mascarado).
+                fechamento.Versao = (await db.FechamentosCaixa.Where(f => f.TurnoId == turnoId)
+                    .Select(f => (int?)f.Versao).MaxAsync() ?? 0) + 1;
+                await db.SaveChangesAsync();
+            }
+
+            return fechamento;
+        }
+        finally
+        {
+            _trava.Release();
+        }
     }
+
+    /// <summary>Só o índice único (TurnoId, Versao) merece nova tentativa; o resto dos erros sobe normalmente.</summary>
+    private static bool EhConflitoDeVersao(DbUpdateException ex) =>
+        ex.InnerException is SqliteException { SqliteErrorCode: 19 } sqlite
+        && sqlite.Message.Contains("FechamentosCaixa.TurnoId", StringComparison.OrdinalIgnoreCase)
+        && sqlite.Message.Contains("FechamentosCaixa.Versao", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>Todas as conferências feitas, da mais recente para a mais antiga.</summary>
     public async Task<IReadOnlyList<FechamentoCaixa>> HistoricoAsync(int limite = 50)
     {
         await using var db = await _fabrica.CreateDbContextAsync();
-        var lista = await db.FechamentosCaixa.AsNoTracking().ToListAsync();
-        return lista.OrderByDescending(f => f.DataHora).ThenByDescending(f => f.Versao).Take(limite).ToList();
+        return await db.FechamentosCaixa.AsNoTracking()
+            .OrderByDescending(f => f.DataHora).ThenByDescending(f => f.Versao)
+            .Take(limite)
+            .ToListAsync();
     }
 
     /// <summary>O turno já fechado que contém este horário, ou nulo (usado para avisar ao cancelar venda de caixa fechado).</summary>
     public async Task<TurnoCaixa?> TurnoFechadoDoHorarioAsync(DateTime dataHora)
     {
         await using var db = await _fabrica.CreateDbContextAsync();
-        var lista = await db.TurnosCaixa.AsNoTracking().Where(t => t.DataFechamento != null).ToListAsync();
-        return lista.FirstOrDefault(t => t.DataAbertura <= dataHora && dataHora <= t.DataFechamento);
+        return await db.TurnosCaixa.AsNoTracking()
+            .Where(t => t.DataFechamento != null && t.DataAbertura <= dataHora && t.DataFechamento >= dataHora)
+            .FirstOrDefaultAsync();
     }
 
     private static async Task<ResumoTurno> CalcularAsync(PdvDbContext db, TurnoCaixa turno)
     {
         var fim = turno.DataFechamento ?? DateTime.MaxValue;
-        var vendas = (await db.Vendas.AsNoTracking()
-                .Select(v => new { v.DataHora, v.Cancelada, v.FormaPagamento, v.TotalCentavos })
-                .ToListAsync())
+        // O filtro de data vai para o SQL; só as colunas usadas são lidas.
+        var vendas = await db.Vendas.AsNoTracking()
             .Where(v => v.DataHora >= turno.DataAbertura && v.DataHora <= fim)
-            .ToList();
+            .Select(v => new { v.Cancelada, v.FormaPagamento, v.TotalCentavos })
+            .ToListAsync();
         var validas = vendas.Where(v => !v.Cancelada).ToList();
         long Soma(params FormaPagamento[] formas) => validas.Where(v => formas.Contains(v.FormaPagamento)).Sum(v => v.TotalCentavos);
 
@@ -198,8 +253,10 @@ public class CaixaService
         long Mov(TipoMovimentoCaixa t) => movimentos.Where(m => m.Tipo == t).Sum(m => m.ValorCentavos);
 
         // Dívidas de clientes pagas durante o turno também entram na gaveta, na maquininha ou no Pix.
-        var recebimentos = (await db.PagamentosCliente.AsNoTracking().ToListAsync())
-            .Where(p => p.DataHora >= turno.DataAbertura && p.DataHora <= fim).ToList();
+        var recebimentos = await db.PagamentosCliente.AsNoTracking()
+            .Where(p => p.DataHora >= turno.DataAbertura && p.DataHora <= fim)
+            .Select(p => new { p.Forma, p.ValorCentavos })
+            .ToListAsync();
         long Rec(params FormaPagamento[] formas) => recebimentos.Where(p => formas.Contains(p.Forma)).Sum(p => p.ValorCentavos);
 
         return new ResumoTurno(

@@ -13,15 +13,26 @@ public class ColecaoOperadorAtual { }
 public sealed class FuncionariosTests : IDisposable
 {
     private readonly BancoDeTeste _banco = new();
+    private readonly string _pastaTentativas = Path.Combine(Path.GetTempPath(), "nexus-funcionarios-testes-" + Guid.NewGuid().ToString("N"));
     private DateTime _agora = new(2026, 10, 20, 10, 0, 0);
     private readonly FuncionarioService _servico;
 
-    public FuncionariosTests() => _servico = new FuncionarioService(_banco.Fabrica, () => _agora);
+    public FuncionariosTests() => _servico = new FuncionarioService(
+        _banco.Fabrica, () => _agora,
+        new NexusLS.Core.Seguranca.TentativasLoginStore(Path.Combine(_pastaTentativas, "tentativas.json")));
 
     public void Dispose()
     {
         OperadorAtual.Nome = null;
         _banco.Dispose();
+        try
+        {
+            if (Directory.Exists(_pastaTentativas)) Directory.Delete(_pastaTentativas, true);
+        }
+        catch (Exception)
+        {
+            // pasta temporária presa: o Windows limpa depois.
+        }
     }
 
     private async Task<(Funcionario admin, string codigo)> AdminAsync() =>
