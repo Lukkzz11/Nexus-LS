@@ -6,12 +6,6 @@ namespace NexusLS.App.Views;
 
 public partial class EstoqueLojaView : UserControl
 {
-    private void ListaProdutos_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (DataContext is EstoqueLojaViewModel vm && sender is DataGrid grade)
-            vm.DefinirMarcados(grade.SelectedItems.OfType<NexusLS.Core.Models.Produto>().ToList());
-    }
-
     public EstoqueLojaView()
     {
         InitializeComponent();
@@ -19,6 +13,7 @@ public partial class EstoqueLojaView : UserControl
         {
             if (e.NewValue is not EstoqueLojaViewModel vm) return;
             // Caixas de janela ficam aqui na View, não no ViewModel.
+            vm.AbrirSeletorSemBaixa = produtos => new SeletorSemBaixaWindow(produtos) { Owner = Window.GetWindow(this) }.ShowDialog();
             vm.EscolherArquivoParaAbrir = () =>
             {
                 var dialogo = new Microsoft.Win32.OpenFileDialog

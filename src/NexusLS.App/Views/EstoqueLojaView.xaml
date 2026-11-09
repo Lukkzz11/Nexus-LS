@@ -37,12 +37,9 @@
                     <Button Content="Sem baixa (todos)" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,0"
                             AutomationProperties.Name="Marcar todos para vender sem baixa" ToolTip="Ativa a opção 'Vender sem baixa' em todos os produtos cadastrados de uma só vez."
                             Command="{Binding AtivarVenderSemBaixaEmTodosCommand}" />
-                    <Button Content="Sem baixa (marcados)" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,0"
-                            AutomationProperties.Name="Marcar os selecionados para vender sem baixa" ToolTip="Marque produtos na lista (Ctrl + clique ou Shift + clique) e ative 'Vender sem baixa' só neles."
-                            Command="{Binding MarcarSelecionadosVenderSemBaixaCommand}" />
-                    <Button Content="Contar estoque (marcados)" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,0"
-                            AutomationProperties.Name="Voltar os selecionados a contar estoque" ToolTip="Desliga 'Vender sem baixa' nos produtos marcados na lista."
-                            Command="{Binding DesmarcarSelecionadosVenderSemBaixaCommand}" />
+                    <Button Content="Escolher produtos..." Style="{StaticResource BotaoSecundario}" Margin="0,0,8,0"
+                            AutomationProperties.Name="Escolher produtos para vender sem baixa" ToolTip="Abre uma caixa para marcar, um a um, quais produtos vendem sem baixa de estoque (ou voltam a contar estoque)."
+                            Command="{Binding EscolherProdutosSemBaixaCommand}" />
                     <Button Content="Adicionar sobra" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,0"
                             AutomationProperties.Name="Adicionar sobra" ToolTip="Cadastra uma peça que sobrou: continua sendo estoque e vende no PDV, só fica separada na lista de Sobras."
                             Command="{Binding AdicionarSobraCommand}" />
@@ -85,9 +82,8 @@
             <Border Grid.Row="3" Style="{StaticResource Painel}" Padding="0">
                 <DataGrid ItemsSource="{Binding Produtos}"
                           SelectedItem="{Binding Selecionado, Mode=TwoWay}"
-                          SelectionChanged="ListaProdutos_SelectionChanged"
                           AutoGenerateColumns="False" IsReadOnly="True"
-                          SelectionMode="Extended" SelectionUnit="FullRow"
+                          SelectionMode="Single" SelectionUnit="FullRow"
                           CanUserAddRows="False" CanUserDeleteRows="False"
                           HeadersVisibility="Column" GridLinesVisibility="Horizontal"
                           HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0"
@@ -130,10 +126,7 @@
                 </DataGrid>
             </Border>
 
-            <TextBlock Grid.Row="4" FontWeight="SemiBold" Margin="0,14,0,6">
-                <Run Text="Histórico do produto selecionado" />
-                <Run Text="{Binding TextoMarcados, Mode=OneWay, StringFormat='   ·   {0}'}" Foreground="{StaticResource CorTextoSuave}" />
-            </TextBlock>
+            <TextBlock Grid.Row="4" Text="Histórico do produto selecionado" FontWeight="SemiBold" Margin="0,14,0,6" />
 
             <Border Grid.Row="5" Style="{StaticResource Painel}" Padding="0">
                 <DataGrid ItemsSource="{Binding Movimentacoes}"

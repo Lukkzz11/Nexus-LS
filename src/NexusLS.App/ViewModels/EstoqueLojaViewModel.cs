@@ -421,36 +421,16 @@ public partial class EstoqueLojaViewModel : ViewModelBase
         MostrarSucesso($"{alterados} produto(s) marcado(s) para vender sem baixa de estoque.");
     });
 
-    /// <summary>Produtos marcados na lista (Ctrl/Shift + clique). A View preenche.</summary>
-    public IReadOnlyList<Produto> Marcados { get; set; } = Array.Empty<Produto>();
+    /// <summary>Abre a caixa de escolha dos produtos (a View preenche; é modal).</summary>
+    public Action<ProdutoService> AbrirSeletorSemBaixa { get; set; } = _ => { };
 
-    [ObservableProperty] private string _textoMarcados = "";
-
-    private Task DefinirVenderSemBaixaNosMarcadosAsync(bool venderSemBaixa) => ExecutarAsync(async () =>
+    [RelayCommand]
+    private Task EscolherProdutosSemBaixaAsync() => ExecutarAsync(async () =>
     {
-        if (Marcados.Count == 0)
-            throw new RegraDeNegocioException("Marque os produtos na lista (Ctrl + clique ou Shift + clique) e tente de novo.");
-        var texto = venderSemBaixa ? "vender sem baixa de estoque" : "contar estoque normalmente";
-        if (!Confirmar($"Marcar {Marcados.Count} produto(s) para {texto}?")) return;
-
-        var alterados = await _produtos.DefinirVenderSemBaixaAsync(Marcados.Select(p => p.Id), venderSemBaixa);
+        AbrirSeletorSemBaixa(_produtos);
         await BuscarAsync();
         if (IdEditando is int id) await AtualizarDetalhesAsync(id);
-        MostrarSucesso($"{alterados} produto(s) agora {(venderSemBaixa ? "vendem sem baixa de estoque" : "contam estoque")}.");
     });
-
-    [RelayCommand]
-    private Task MarcarSelecionadosVenderSemBaixaAsync() => DefinirVenderSemBaixaNosMarcadosAsync(true);
-
-    [RelayCommand]
-    private Task DesmarcarSelecionadosVenderSemBaixaAsync() => DefinirVenderSemBaixaNosMarcadosAsync(false);
-
-    /// <summary>Atualiza o aviso "N selecionados" conforme a seleção da lista.</summary>
-    public void DefinirMarcados(IReadOnlyList<Produto> marcados)
-    {
-        Marcados = marcados;
-        TextoMarcados = marcados.Count > 1 ? $"{marcados.Count} produtos selecionados" : "";
-    }
 
     // ----- Nova referência a partir de uma base -----
     [ObservableProperty] private string _referenciaBase = "";
