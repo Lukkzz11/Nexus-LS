@@ -99,6 +99,18 @@ public class ReferenciaTamanhoEEnvioAutomaticoTests
     }
 
     [Fact]
+    public async Task Sugerir_referencia_segue_o_modelo_da_categoria()
+    {
+        using var banco = new BancoDeTeste();
+        var s = new ProdutoService(banco.Fabrica);
+        Assert.Equal("1401", await s.SugerirReferenciaAsync("bermuda"));   // categoria sem produtos: começa no modelo
+        Assert.Equal("0801", await s.SugerirReferenciaAsync("Short"));
+        await s.CadastrarAsync(new DadosProduto("Bermuda A", "1403", 1000, 500, 0, Referencia: "1403", Categoria: "Bermuda"));
+        Assert.Equal("1404", await s.SugerirReferenciaAsync("Bermuda"));
+        Assert.Equal(13, (await s.SugerirReferenciaAsync("Categoria nova")).Length); // sem modelo: código interno EAN-13
+    }
+
+    [Fact]
     public async Task Modelo_da_referencia_copia_dados_e_tamanhos_e_sugere_a_proxima()
     {
         using var banco = new BancoDeTeste();

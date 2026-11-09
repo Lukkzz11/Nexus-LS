@@ -9,7 +9,7 @@
     </UserControl.Resources>
 
     <UserControl.InputBindings>
-        <KeyBinding Key="N" Modifiers="Ctrl" Command="{Binding NovoCommand}" />
+        <KeyBinding Key="N" Modifiers="Ctrl" Command="{Binding NovoProdutoTelaCommand}" />
         <KeyBinding Key="S" Modifiers="Ctrl" Command="{Binding SalvarCommand}" />
     </UserControl.InputBindings>
 
@@ -37,12 +37,15 @@
                     <Button Content="Sem baixa (todos)" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,0"
                             AutomationProperties.Name="Marcar todos para vender sem baixa" ToolTip="Ativa a opção 'Vender sem baixa' em todos os produtos cadastrados de uma só vez."
                             Command="{Binding AtivarVenderSemBaixaEmTodosCommand}" />
+                    <Button Content="Novo produto (Ctrl+N)" Style="{StaticResource BotaoPrimario}" Margin="0,0,8,0"
+                            AutomationProperties.Name="Novo produto" ToolTip="Abre a tela de cadastro de produto novo."
+                            Command="{Binding NovoProdutoTelaCommand}" />
                     <Button Content="Escolher produtos..." Style="{StaticResource BotaoSecundario}" Margin="0,0,8,0"
                             AutomationProperties.Name="Escolher produtos para vender sem baixa" ToolTip="Abre uma caixa para marcar, um a um, quais produtos vendem sem baixa de estoque (ou voltam a contar estoque)."
                             Command="{Binding EscolherProdutosSemBaixaCommand}" />
                     <Button Content="Adicionar sobra" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,0"
                             AutomationProperties.Name="Adicionar sobra" ToolTip="Cadastra uma peça que sobrou: continua sendo estoque e vende no PDV, só fica separada na lista de Sobras."
-                            Command="{Binding AdicionarSobraCommand}" />
+                            Command="{Binding NovaSobraTelaCommand}" />
                     <Button Content="Exportar CSV" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,0"
                             AutomationProperties.Name="Exportar CSV" ToolTip="Salva o estoque inteiro (uma linha por tamanho) numa planilha CSV para o Excel."
                             Command="{Binding ExportarCsvCommand}" />

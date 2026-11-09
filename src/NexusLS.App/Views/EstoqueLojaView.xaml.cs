@@ -14,6 +14,12 @@ public partial class EstoqueLojaView : UserControl
             if (e.NewValue is not EstoqueLojaViewModel vm) return;
             // Caixas de janela ficam aqui na View, não no ViewModel.
             vm.AbrirSeletorSemBaixa = produtos => new SeletorSemBaixaWindow(produtos) { Owner = Window.GetWindow(this) }.ShowDialog();
+            vm.AbrirNovoProduto = (produtos, estoque, margem, minimo, sobra) =>
+            {
+                var janela = new NovoProdutoWindow(produtos, estoque, margem, minimo, sobra) { Owner = Window.GetWindow(this) };
+                janela.ShowDialog();
+                return janela.Criado;
+            };
             vm.EscolherArquivoParaAbrir = () =>
             {
                 var dialogo = new Microsoft.Win32.OpenFileDialog
