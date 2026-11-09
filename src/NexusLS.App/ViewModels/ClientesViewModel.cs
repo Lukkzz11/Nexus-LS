@@ -83,6 +83,14 @@ public partial class ClientesViewModel : ViewModelBase
     [ObservableProperty] private string _telefone = "";
     [ObservableProperty] private string _observacao = "";
     [ObservableProperty] private string _limiteTexto = "";
+    [ObservableProperty] private string _cidade = "";
+    [ObservableProperty] private string _estado = "";
+    [ObservableProperty] private string _endereco = "";
+    [ObservableProperty] private string _numero = "";
+    [ObservableProperty] private string _bairro = "";
+    [ObservableProperty] private string _complemento = "";
+    [ObservableProperty] private string _cep = "";
+    [ObservableProperty] private string _inscricaoEstadual = "";
 
     // ----- Crédito do cliente (saldo a favor) -----
     [ObservableProperty] private string _creditoAtualTexto = "R$ 0,00";
@@ -182,6 +190,7 @@ public partial class ClientesViewModel : ViewModelBase
         Telefone = "";
         Observacao = "";
         LimiteTexto = "";
+        Cidade = Estado = Endereco = Numero = Bairro = Complemento = Cep = InscricaoEstadual = "";
         CreditoAtualTexto = Dinheiro.Formatar(0);
         NovoCreditoTexto = "";
         CreditoMotivo = "";
@@ -203,7 +212,8 @@ public partial class ClientesViewModel : ViewModelBase
         long limite = 0;
         if (!string.IsNullOrWhiteSpace(LimiteTexto) && !Dinheiro.TentarConverter(LimiteTexto, out limite))
             throw new RegraDeNegocioException("Limite de crédito inválido. Digite um valor como 500,00 (vazio = sem limite).");
-        var dados = new DadosCliente(Nome, Documento, Telefone, Observacao, limite, RazaoSocial, Email, _clientes.ExigirDocumentoNaTela);
+        var dados = new DadosCliente(Nome, Documento, Telefone, Observacao, limite, RazaoSocial, Email, _clientes.ExigirDocumentoNaTela,
+            Cidade, Estado, Endereco, Numero, Bairro, Complemento, Cep, InscricaoEstadual);
 
         if (IdEditando is int id)
         {
@@ -244,6 +254,9 @@ public partial class ClientesViewModel : ViewModelBase
         Email = cliente.Email ?? "";
         Telefone = cliente.Telefone ?? "";
         Observacao = cliente.Observacao ?? "";
+        Cidade = cliente.Cidade ?? ""; Estado = cliente.Estado ?? ""; Endereco = cliente.Endereco ?? "";
+        Numero = cliente.Numero ?? ""; Bairro = cliente.Bairro ?? ""; Complemento = cliente.Complemento ?? "";
+        Cep = cliente.Cep ?? ""; InscricaoEstadual = cliente.InscricaoEstadual ?? "";
         LimiteTexto = cliente.LimiteCreditoCentavos > 0 ? Dinheiro.FormatarParaEdicao(cliente.LimiteCreditoCentavos) : "";
         ClienteAtivo = cliente.Ativo;
         Mensagem = "";

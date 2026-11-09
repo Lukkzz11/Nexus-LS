@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -89,7 +89,8 @@ public partial class VendasViewModel : ViewModelBase
         {
             if (Selecionada is not { } v) return "";
             if (v.Cliente is { } c)
-                return $"Cliente: {c.Nome}" + (string.IsNullOrWhiteSpace(c.Telefone) ? "" : $"  ·  {c.Telefone}");
+                return $"Cliente: {c.Nome}" + (string.IsNullOrWhiteSpace(c.Telefone) ? "" : $"  ·  {c.Telefone}")
+                    + (string.IsNullOrWhiteSpace(c.Cidade) ? "" : $"  ·  {c.Cidade}{(string.IsNullOrWhiteSpace(c.Estado) ? "" : "/" + c.Estado)}");
             return v.FormaPagamento == FormaPagamento.APrazo ? "Cliente: (não identificado)" : "Cliente: Consumidor final";
         }
     }

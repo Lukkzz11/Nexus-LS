@@ -106,6 +106,12 @@
                     </Button>
 
                     <TextBlock Text="ESTOQUE" Style="{StaticResource SecaoMenu}" Visibility="{Binding VerSecaoEstoque, Converter={StaticResource BoolVis}}" />
+                    <Button Tag="ResumoEstoque" Visibility="{Binding VerEstoque, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Resumo do estoque" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaResumoEstoqueCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="DataBarVertical24" Style="{StaticResource IconeDoMenu}" />
+                            <TextBlock Text="Resumo do estoque" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
                     <Button Tag="EstoqueDaLoja" Visibility="{Binding VerEstoque, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Estoque da loja" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaEstoqueCommand}">
                         <StackPanel Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="Box24" Style="{StaticResource IconeDoMenu}" />

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using NexusLS.Core.Models;
 
 namespace NexusLS.Core.Data;
@@ -116,6 +116,7 @@ public class PdvDbContext : DbContext
             e.Property(p => p.Referencia).HasMaxLength(60);
             e.Property(p => p.CodigoInterno).HasMaxLength(20);
             e.Property(p => p.Categoria).HasMaxLength(60);
+            e.Property(p => p.Cores).HasMaxLength(200);
             e.HasIndex(p => p.CodigoInterno).IsUnique().HasFilter("\"CodigoInterno\" IS NOT NULL");
             // Código de barras não pode repetir, mas vários produtos podem ficar sem código (nulo).
             e.HasIndex(p => p.CodigoBarras).IsUnique().HasFilter("\"CodigoBarras\" IS NOT NULL");
@@ -195,6 +196,14 @@ public class PdvDbContext : DbContext
             e.Property(c => c.Telefone).HasMaxLength(30);
             e.Property(c => c.Email).HasMaxLength(150);
             e.Property(c => c.Observacao).HasMaxLength(500);
+            e.Property(c => c.InscricaoEstadual).HasMaxLength(30);
+            e.Property(c => c.Cep).HasMaxLength(12);
+            e.Property(c => c.Endereco).HasMaxLength(200);
+            e.Property(c => c.Numero).HasMaxLength(20);
+            e.Property(c => c.Complemento).HasMaxLength(100);
+            e.Property(c => c.Bairro).HasMaxLength(100);
+            e.Property(c => c.Cidade).HasMaxLength(100);
+            e.Property(c => c.Estado).HasMaxLength(2);
             e.HasIndex(c => c.Nome);
         });
 

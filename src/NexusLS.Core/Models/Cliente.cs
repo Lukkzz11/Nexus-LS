@@ -21,6 +21,32 @@ public class Cliente : EntidadeSincronizavel
     public string? Email { get; set; }
     public string? Observacao { get; set; }
 
+    /// <summary>Inscrição estadual (cliente com CNPJ). Opcional.</summary>
+    public string? InscricaoEstadual { get; set; }
+
+    // Endereço (tudo opcional)
+    public string? Cep { get; set; }
+    public string? Endereco { get; set; }
+    public string? Numero { get; set; }
+    public string? Complemento { get; set; }
+    public string? Bairro { get; set; }
+    public string? Cidade { get; set; }
+
+    /// <summary>Sigla do estado (UF), ex.: "SP".</summary>
+    public string? Estado { get; set; }
+
+    /// <summary>Endereço em uma linha: "Rua X, 10 - Centro, Cidade/UF". Vazio se nada foi preenchido.</summary>
+    public string EnderecoCompleto
+    {
+        get
+        {
+            var rua = string.Join(", ", new[] { Endereco, Numero }.Where(x => !string.IsNullOrWhiteSpace(x)));
+            var cidadeUf = string.Join("/", new[] { Cidade, Estado }.Where(x => !string.IsNullOrWhiteSpace(x)));
+            var partes = new[] { rua, Complemento, Bairro, cidadeUf, Cep }.Where(x => !string.IsNullOrWhiteSpace(x));
+            return string.Join(" - ", partes);
+        }
+    }
+
     /// <summary>Cliente desativado some da busca, mas continua nas vendas antigas.</summary>
     public bool Ativo { get; set; } = true;
 

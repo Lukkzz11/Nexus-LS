@@ -230,7 +230,11 @@
                                                  AutomationProperties.Name="Categoria" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="2">
-                                        <TextBlock Text="Código interno" Style="{StaticResource Rotulo}" />
+                                        <TextBlock Text="Cores (separe por vírgula)" Style="{StaticResource Rotulo}" />
+                                        <TextBox Text="{Binding Cores, UpdateSourceTrigger=PropertyChanged}"
+                                                 ToolTip="Ex.: Preto, Branco, Azul. Só informativo: o estoque é por tamanho."
+                                                 AutomationProperties.Name="Cores" />
+                                        <TextBlock Text="Código interno" Style="{StaticResource Rotulo}" Margin="0,8,0,0" />
                                         <TextBox Text="{Binding CodigoInterno, Mode=OneWay}" IsReadOnly="True"
                                                  ToolTip="Gerado pelo sistema (INT-000001...)" />
                                     </StackPanel>
@@ -339,6 +343,18 @@
                                                                 ElementStyle="{StaticResource ColunaNumero}" />
                                         </DataGrid.Columns>
                                     </DataGrid>
+
+                                    <TextBlock Text="Grade pronta (cadastra todos os tamanhos de uma vez)" Style="{StaticResource Rotulo}" Margin="0,10,0,0" />
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <ComboBox ItemsSource="{Binding GradesProntas}" SelectedItem="{Binding GradeEscolhida}" DisplayMemberPath="Nome"
+                                                  MinHeight="34" AutomationProperties.Name="Grade pronta" />
+                                        <Button Grid.Column="1" Content="Adicionar grade" Margin="8,0,0,0"
+                                                Style="{StaticResource BotaoSecundario}" Command="{Binding AdicionarGradeProntaCommand}" />
+                                    </Grid>
 
                                     <Grid Margin="0,10,0,0">
                                         <Grid.ColumnDefinitions>

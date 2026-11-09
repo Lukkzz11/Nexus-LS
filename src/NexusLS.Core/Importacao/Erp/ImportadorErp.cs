@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json.Nodes;
@@ -254,6 +254,10 @@ public sealed class ImportadorErp
         cli!.Nome = nome;
         cli.Documento = Texto(c, "documento");
         cli.Telefone = Texto(c, "telefone");
+        cli.Cidade = Texto(c, "cidade") ?? cli.Cidade;
+        cli.Estado = (Texto(c, "estado") ?? cli.Estado)?.Trim().ToUpperInvariant();
+        cli.Endereco = Texto(c, "endereco") ?? cli.Endereco;
+        cli.InscricaoEstadual = Texto(c, "inscricaoEstadual") ?? cli.InscricaoEstadual;
         cli.LimiteCreditoCentavos = Centavos(c, "limiteCredito");
         cli.Ativo = Booleano(c, "ativo") ?? true;
 

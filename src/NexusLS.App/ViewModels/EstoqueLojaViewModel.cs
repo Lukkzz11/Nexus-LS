@@ -231,6 +231,13 @@ public partial class EstoqueLojaViewModel : ViewModelBase
 
     // ----- Grade de tamanhos e ajuste -----
     [ObservableProperty] private string _novoTamanho = "";
+
+    /// <summary>Cores do produto, separadas por vírgula (informativas).</summary>
+    [ObservableProperty] private string _cores = "";
+
+    /// <summary>As grades prontas (letras, calça/bermuda, camisa de botão) e a escolhida para cadastrar de uma vez.</summary>
+    public IReadOnlyList<GradeDeTamanho> GradesProntas => GradesDeTamanho.Todas;
+    [ObservableProperty] private GradeDeTamanho? _gradeEscolhida;
     [ObservableProperty] private ProdutoTamanho? _tamanhoSelecionado;
     [ObservableProperty] private OpcaoAjuste _tipoSelecionado;
     [ObservableProperty] private string _quantidadeTexto = "";
@@ -431,6 +438,7 @@ public partial class EstoqueLojaViewModel : ViewModelBase
         PrecoAtacado = "";
         PrecoCusto = "";
         Categoria = "";
+        Cores = "";
         CodigoInterno = "";
         VenderSemBaixa = false;
         Sobra = false;
@@ -515,7 +523,7 @@ public partial class EstoqueLojaViewModel : ViewModelBase
         var minimo = LerInteiro(EstoqueMinimo, "Estoque mínimo");
         var inicial = EhNovo ? LerInteiro(EstoqueInicial, "Estoque inicial") : 0;
 
-        return (new DadosProduto(Nome, CodigoBarras, venda, custo, minimo, Referencia, atacado, Categoria, VenderSemBaixa, Sobra), inicial);
+        return (new DadosProduto(Nome, CodigoBarras, venda, custo, minimo, Referencia, atacado, Categoria, VenderSemBaixa, Sobra, Cores), inicial);
     }
 
     private static int LerInteiro(string texto, string campo)
@@ -536,6 +544,7 @@ public partial class EstoqueLojaViewModel : ViewModelBase
         CodigoBarras = produto.CodigoBarras ?? "";
         Referencia = produto.Referencia ?? "";
         Categoria = produto.Categoria ?? "";
+        Cores = produto.Cores ?? "";
         CodigoInterno = produto.CodigoInterno ?? "";
         VenderSemBaixa = produto.VenderSemBaixa;
         Sobra = produto.Sobra;
@@ -565,6 +574,22 @@ public partial class EstoqueLojaViewModel : ViewModelBase
         NovoTamanho = "";
         await AtualizarDetalhesAsync(id, nomeParaSelecionar: criado.Tamanho);
         MostrarSucesso($"Tamanho {criado.Tamanho} adicionado. Agora lance o estoque dele em \"Ajuste de estoque\".");
+    });
+
+    /// <summary>Cadastra de uma vez todos os tamanhos da grade escolhida (os que já existem ficam como estão).</summary>
+    [RelayCommand]
+    private Task AdicionarGradeProntaAsync() => ExecutarAsync(async () =>
+    {
+        if (IdEditando is not int id)
+            throw new RegraDeNegocioException("Salve o produto antes de cadastrar os tamanhos.");
+        if (GradeEscolhida is not { } grade)
+            throw new RegraDeNegocioException("Escolha a grade (letras, calça e bermuda ou camisa de botão).");
+
+        var criados = await _produtos.AdicionarGradeAsync(id, grade.Tamanhos);
+        await AtualizarDetalhesAsync(id, nomeParaSelecionar: criados.FirstOrDefault()?.Tamanho);
+        MostrarSucesso(criados.Count == 0
+            ? "Todos os tamanhos dessa grade já estavam cadastrados."
+            : $"{criados.Count} tamanho(s) adicionado(s) ({grade.Nome}). Lance o estoque de cada um em \"Ajuste de estoque\".");
     });
 
     [RelayCommand]

@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using NexusLS.Core.Data;
 using NexusLS.Core.Models;
@@ -306,7 +306,9 @@ public sealed class MontadorOperacional : IMontadorDocumentos
         return await Montar<Cliente>(db, guids, "clientes", (c, _) => new()
         {
             ["nome"] = c.Nome, ["documento"] = c.Documento, ["telefone"] = c.Telefone, ["observacao"] = c.Observacao,
-            ["ativo"] = c.Ativo, ["cadastradoEm"] = Utc(c.DataCadastro), ["limiteCreditoCentavos"] = c.LimiteCreditoCentavos
+            ["ativo"] = c.Ativo, ["cadastradoEm"] = Utc(c.DataCadastro), ["limiteCreditoCentavos"] = c.LimiteCreditoCentavos,
+            ["cidade"] = c.Cidade, ["estado"] = c.Estado, ["endereco"] = c.Endereco, ["numero"] = c.Numero, ["bairro"] = c.Bairro,
+            ["complemento"] = c.Complemento, ["cep"] = c.Cep, ["inscricaoEstadual"] = c.InscricaoEstadual
         });
     }
 

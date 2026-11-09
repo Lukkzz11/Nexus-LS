@@ -30,6 +30,7 @@ public class ProdutoService
             Nome = dados.Nome.Trim(),
             CodigoInterno = await ProximoCodigoInternoAsync(db),
             Categoria = Limpar(dados.Categoria),
+            Cores = NormalizarCores(dados.Cores),
             VenderSemBaixa = dados.VenderSemBaixa,
             Sobra = dados.Sobra,
             CodigoBarras = codigo,
@@ -73,6 +74,7 @@ public class ProdutoService
 
         produto.Nome = dados.Nome.Trim();
         produto.Categoria = Limpar(dados.Categoria);
+        produto.Cores = NormalizarCores(dados.Cores);
         produto.VenderSemBaixa = dados.VenderSemBaixa;
         produto.Sobra = dados.Sobra;
         produto.CodigoInterno ??= await ProximoCodigoInternoAsync(db); // produtos antigos ganham o código ao serem editados
@@ -243,6 +245,38 @@ public class ProdutoService
     }
 
     /// <summary>Acrescenta um tamanho (ex.: "M", "38") com estoque zero. O nome é guardado em maiúsculas.</summary>
+    /// <summary>"preto,  branco ,PRETO" vira "preto, branco": tira espaços, repetidos e itens vazios. Nulo se não sobrar nada.</summary>
+    public static string? NormalizarCores(string? texto)
+    {
+        var cores = (texto ?? "").Split(new[] { ',', ';', '/' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Distinct(StringComparer.CurrentCultureIgnoreCase).ToList();
+        return cores.Count == 0 ? null : string.Join(", ", cores);
+    }
+
+    /// <summary>
+    /// Cadastra de uma vez a grade pronta (PP..G10, 36..70 ou 1..10). Tamanhos que o produto já tem ficam como estão, com o
+    /// estoque deles. Devolve só os que foram criados (com estoque zero; o estoque entra por ajuste).
+    /// </summary>
+    public async Task<List<ProdutoTamanho>> AdicionarGradeAsync(int produtoId, IEnumerable<string> tamanhos)
+    {
+        await using var db = await _fabrica.CreateDbContextAsync();
+        if (!await db.Produtos.AnyAsync(p => p.Id == produtoId))
+            throw new RegraDeNegocioException("Produto não encontrado.");
+
+        var existentes = (await db.TamanhosProduto.Where(t => t.ProdutoId == produtoId).Select(t => t.Tamanho).ToListAsync())
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var criados = new List<ProdutoTamanho>();
+        foreach (var t in tamanhos.Select(NormalizarTamanho).Distinct())
+        {
+            if (existentes.Contains(t)) continue;
+            var novo = new ProdutoTamanho { ProdutoId = produtoId, Tamanho = t, Estoque = 0 };
+            db.TamanhosProduto.Add(novo);
+            criados.Add(novo);
+        }
+        if (criados.Count > 0) await db.SaveChangesAsync();
+        return criados;
+    }
+
     public async Task<ProdutoTamanho> AdicionarTamanhoAsync(int produtoId, string tamanho)
     {
         var nome = NormalizarTamanho(tamanho);

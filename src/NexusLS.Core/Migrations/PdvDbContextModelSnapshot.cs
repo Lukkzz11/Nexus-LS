@@ -329,6 +329,22 @@ namespace NexusLS.Core.Migrations
                     b.Property<DateTime>("AtualizadoEm")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Bairro")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Cep")
+                        .HasMaxLength(12)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Cidade")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Complemento")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
                     b.Property<long>("CreditoCentavos")
                         .HasColumnType("INTEGER");
 
@@ -343,7 +359,19 @@ namespace NexusLS.Core.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Endereco")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Estado")
+                        .HasMaxLength(2)
+                        .HasColumnType("TEXT");
+
                     b.Property<Guid>("Guid")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("InscricaoEstadual")
+                        .HasMaxLength(30)
                         .HasColumnType("TEXT");
 
                     b.Property<long>("LimiteCreditoCentavos")
@@ -352,6 +380,10 @@ namespace NexusLS.Core.Migrations
                     b.Property<string>("Nome")
                         .IsRequired()
                         .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Numero")
+                        .HasMaxLength(20)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Observacao")
@@ -1636,6 +1668,10 @@ namespace NexusLS.Core.Migrations
 
                     b.Property<string>("CodigoInterno")
                         .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Cores")
+                        .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
                     b.Property<int>("EstoqueAtual")

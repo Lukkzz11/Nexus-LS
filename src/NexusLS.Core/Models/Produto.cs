@@ -1,4 +1,4 @@
-﻿namespace NexusLS.Core.Models;
+namespace NexusLS.Core.Models;
 
 /// <summary>
 /// Um produto vendido na loja. Todos os valores em dinheiro ficam em CENTAVOS (long),
@@ -34,6 +34,9 @@ public class Produto : IEntidadeSincronizavel
 
     /// <summary>Grupo do produto (ex.: Camisetas, Bonés), usado nos relatórios.</summary>
     public string? Categoria { get; set; }
+
+    /// <summary>Cores do produto, separadas por vírgula ("Preto, Branco"). Só informativas: o estoque é por tamanho.</summary>
+    public string? Cores { get; set; }
 
     /// <summary>Preço de varejo.</summary>
     public long PrecoVendaCentavos { get; set; }

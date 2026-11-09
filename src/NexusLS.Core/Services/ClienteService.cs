@@ -10,7 +10,9 @@ namespace NexusLS.Core.Services;
 /// do caixa, só com o nome) o documento continua opcional e é guardado como veio.
 /// </summary>
 public record DadosCliente(string Nome, string? Documento = null, string? Telefone = null, string? Observacao = null, long LimiteCreditoCentavos = 0,
-    string? RazaoSocial = null, string? Email = null, bool ExigirDocumento = false);
+    string? RazaoSocial = null, string? Email = null, bool ExigirDocumento = false,
+    string? Cidade = null, string? Estado = null, string? Endereco = null, string? Numero = null, string? Bairro = null,
+    string? Complemento = null, string? Cep = null, string? InscricaoEstadual = null);
 
 /// <summary>Um ajuste de crédito com tudo que o histórico mostra.</summary>
 public record AjusteDeCredito(long SaldoAnteriorCentavos, long SaldoNovoCentavos, string Motivo, string? Operador, DateTime Quando);
@@ -348,6 +350,14 @@ public class ClienteService
         cliente.Email = Limpar(dados.Email);
         cliente.Observacao = Limpar(dados.Observacao);
         cliente.LimiteCreditoCentavos = dados.LimiteCreditoCentavos;
+        cliente.Cidade = Limpar(dados.Cidade);
+        cliente.Estado = Limpar(dados.Estado)?.ToUpperInvariant();
+        cliente.Endereco = Limpar(dados.Endereco);
+        cliente.Numero = Limpar(dados.Numero);
+        cliente.Bairro = Limpar(dados.Bairro);
+        cliente.Complemento = Limpar(dados.Complemento);
+        cliente.Cep = Limpar(dados.Cep);
+        cliente.InscricaoEstadual = Limpar(dados.InscricaoEstadual);
     }
 
     private static string? Limpar(string? texto) => string.IsNullOrWhiteSpace(texto) ? null : texto.Trim();

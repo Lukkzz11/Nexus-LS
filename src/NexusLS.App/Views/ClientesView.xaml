@@ -219,7 +219,63 @@
                                     </StackPanel>
                                 </Grid>
 
-                                <TextBlock Text="Limite para vendas a prazo (vazio = sem limite)" Style="{StaticResource Rotulo}" />
+                                <TextBlock Text="Inscrição estadual (CNPJ)" Style="{StaticResource Rotulo}" />
+                                <TextBox Text="{Binding InscricaoEstadual, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Inscrição estadual" />
+
+                                <TextBlock Text="Endereço" Style="{StaticResource TituloCartao}" Margin="0,14,0,0" />
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="12" />
+                                        <ColumnDefinition Width="110" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Rua / avenida" Style="{StaticResource Rotulo}" />
+                                        <TextBox Text="{Binding Endereco, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Rua" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Número" Style="{StaticResource Rotulo}" />
+                                        <TextBox Text="{Binding Numero, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Número" />
+                                    </StackPanel>
+                                </Grid>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="12" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Bairro" Style="{StaticResource Rotulo}" />
+                                        <TextBox Text="{Binding Bairro, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Bairro" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Complemento" Style="{StaticResource Rotulo}" />
+                                        <TextBox Text="{Binding Complemento, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Complemento" />
+                                    </StackPanel>
+                                </Grid>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="12" />
+                                        <ColumnDefinition Width="80" />
+                                        <ColumnDefinition Width="12" />
+                                        <ColumnDefinition Width="140" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Cidade" Style="{StaticResource Rotulo}" />
+                                        <TextBox Text="{Binding Cidade, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Cidade" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Estado (UF)" Style="{StaticResource Rotulo}" />
+                                        <TextBox Text="{Binding Estado, UpdateSourceTrigger=PropertyChanged}" MaxLength="2" CharacterCasing="Upper" AutomationProperties.Name="Estado" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="4">
+                                        <TextBlock Text="CEP" Style="{StaticResource Rotulo}" />
+                                        <TextBox Text="{Binding Cep, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="CEP" />
+                                    </StackPanel>
+                                </Grid>
+
+                                <TextBlock Text="Limite para vendas a prazo (vazio = sem limite)" Style="{StaticResource Rotulo}" Margin="0,10,0,0" />
                                 <TextBox Text="{Binding LimiteTexto, UpdateSourceTrigger=PropertyChanged}"
                                          AutomationProperties.Name="Limite de crédito" />
 

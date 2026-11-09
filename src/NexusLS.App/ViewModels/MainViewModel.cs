@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NexusLS.App.Seguranca;
@@ -7,7 +7,7 @@ using NexusLS.Core.Models;
 namespace NexusLS.App.ViewModels;
 
 /// <summary>Os itens do menu lateral. O nome do item é também o "Tag" do botão: assim o menu destaca o da tela aberta.</summary>
-public enum ItemMenu { Inicio, Pdv, VendaCliente, Caixa, Pedidos, MaisVendidos, Desempenho, EstoqueDaLoja, Fabrica, CalculadoraPrecos, Compras, Fornecedores, Etiquetas, Clientes, Agenda, EditorCatalogo, Financeiro, ContasESaldos, Relatorios, CatalogoOnline, Funcionarios, Atividades, Configuracoes }
+public enum ItemMenu { Inicio, Pdv, VendaCliente, Caixa, Pedidos, MaisVendidos, Desempenho, EstoqueDaLoja, ResumoEstoque, Fabrica, CalculadoraPrecos, Compras, Fornecedores, Etiquetas, Clientes, Agenda, EditorCatalogo, Financeiro, ContasESaldos, Relatorios, CatalogoOnline, Funcionarios, Atividades, Configuracoes }
 
 /// <summary>
 /// ViewModel = a "lógica da tela". Ele guarda os dados que a tela mostra e os comandos dos botões,
@@ -65,6 +65,7 @@ public partial class MainViewModel : ObservableObject
             case ItemMenu.MaisVendidos: IrParaMaisVendidos(); break;
             case ItemMenu.Desempenho: IrParaDesempenho(); break;
             case ItemMenu.EstoqueDaLoja: IrParaEstoque(); break;
+            case ItemMenu.ResumoEstoque: IrParaResumoEstoque(); break;
             case ItemMenu.Fabrica: IrParaFabrica(); break;
             case ItemMenu.CalculadoraPrecos: IrParaCalculadoraPrecos(); break;
             case ItemMenu.Compras: IrParaCompras(); break;
@@ -100,6 +101,7 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand] private void IrParaMaisVendidos() => Abrir(new MaisVendidosViewModel(_servicos.Relatorios), ItemMenu.MaisVendidos);
 
     // Estoque
+    [RelayCommand] private void IrParaResumoEstoque() => Abrir(new ResumoEstoqueViewModel(_servicos.Produtos, _servicos.Relatorios), ItemMenu.ResumoEstoque);
     [RelayCommand] private void IrParaEstoque() => Abrir(new EstoqueLojaViewModel(_servicos.Produtos, _servicos.Estoque, _servicos.Fotos, _servicos.Configuracao,
         ajustesCatalogo: new NexusLS.Core.Vitrine.AjustesProdutoStore(NexusLS.Core.Vitrine.AjustesProdutoStore.CaminhoPadrao())), ItemMenu.EstoqueDaLoja);
     [RelayCommand] private void IrParaFabrica() => Abrir(new FabricaViewModel(_servicos.Producao), ItemMenu.Fabrica);
@@ -164,7 +166,7 @@ public partial class MainViewModel : ObservableObject
         ItemMenu.Caixa => Sessao.Pode(Permissao.Caixa),
         ItemMenu.Pedidos => Sessao.Pode(Permissao.Vender),
         ItemMenu.MaisVendidos or ItemMenu.Desempenho or ItemMenu.Relatorios => Sessao.Pode(Permissao.Relatorios),
-        ItemMenu.EstoqueDaLoja or ItemMenu.Etiquetas or ItemMenu.CalculadoraPrecos or ItemMenu.Fabrica => Sessao.Pode(Permissao.Estoque),
+        ItemMenu.EstoqueDaLoja or ItemMenu.ResumoEstoque or ItemMenu.Etiquetas or ItemMenu.CalculadoraPrecos or ItemMenu.Fabrica => Sessao.Pode(Permissao.Estoque),
         ItemMenu.Compras or ItemMenu.Fornecedores => Sessao.Pode(Permissao.Compras),
         ItemMenu.Clientes => Sessao.Pode(Permissao.Clientes),
         ItemMenu.Agenda => true,

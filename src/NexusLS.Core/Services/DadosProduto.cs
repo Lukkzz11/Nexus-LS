@@ -1,4 +1,4 @@
-﻿namespace NexusLS.Core.Services;
+namespace NexusLS.Core.Services;
 
 /// <summary>
 /// Dados que o operador preenche no cadastro. É um "record": uma classe curta e imutável,
@@ -16,4 +16,5 @@ public record DadosProduto(
     long PrecoAtacadoCentavos = 0,
     string? Categoria = null,
     bool VenderSemBaixa = false,
-    bool Sobra = false);
+    bool Sobra = false,
+    string? Cores = null);
