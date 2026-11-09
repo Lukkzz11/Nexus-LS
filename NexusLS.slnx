@@ -4,6 +4,7 @@
     <Project Path="src/NexusLS.Atualizador/NexusLS.Atualizador.csproj" />
     <Project Path="src/NexusLS.BarTender/NexusLS.BarTender.csproj" />
     <Project Path="src/NexusLS.Core/NexusLS.Core.csproj" />
+    <Project Path="src/NexusLS.Setup/NexusLS.Setup.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/NexusLS.App.Tests/NexusLS.App.Tests.csproj" />
