@@ -12,7 +12,17 @@ public static class CodigoBarrasTamanho
     {
         var baseCodigo = codigoDoProduto?.Trim();
         if (string.IsNullOrEmpty(baseCodigo)) return null;
-        return ordem < 1 ? baseCodigo : baseCodigo + ordem.ToString(CultureInfo.InvariantCulture);
+        return ordem < 1 || !UsaNumeroDoTamanho(baseCodigo) ? baseCodigo : baseCodigo + ordem.ToString(CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>
+    /// Um EAN-13 (13 dígitos, de fabricante ou interno do Nexus) identifica o produto inteiro e não leva número de tamanho:
+    /// colar um dígito nele geraria um código inválido. A regra vale para os códigos curtos de referência (5555 → 55551).
+    /// </summary>
+    public static bool UsaNumeroDoTamanho(string? codigoDoProduto)
+    {
+        var c = codigoDoProduto?.Trim();
+        return !string.IsNullOrEmpty(c) && !(c.Length == 13 && c.All(char.IsAsciiDigit));
     }
 }
 

@@ -63,6 +63,14 @@ public class ReferenciaTamanhoEEnvioAutomaticoTests
     }
 
     [Fact]
+    public void Ean13_nao_recebe_numero_de_tamanho()
+    {
+        Assert.Equal("7891234567895", CodigoBarrasTamanho.Montar("7891234567895", 2));
+        Assert.Equal("55552", CodigoBarrasTamanho.Montar("5555", 2));
+        Assert.Equal("5555", CodigoBarrasTamanho.Montar("5555", 0));
+    }
+
+    [Fact]
     public async Task Codigo_lido_com_numero_do_tamanho_acha_produto_e_tamanho_e_o_codigo_exato_nao_e_confundido()
     {
         using var banco = new BancoDeTeste();

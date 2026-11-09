@@ -138,7 +138,7 @@ public class ProdutoService
         var candidatos = await db.Produtos.AsNoTracking()
             .Where(p => p.Ativo && p.CodigoBarras != null && prefixos.Contains(p.CodigoBarras))
             .ToListAsync();
-        foreach (var produto in candidatos.OrderByDescending(p => p.CodigoBarras!.Length))
+        foreach (var produto in candidatos.Where(p => CodigoBarrasTamanho.UsaNumeroDoTamanho(p.CodigoBarras)).OrderByDescending(p => p.CodigoBarras!.Length))
         {
             var resto = codigo[produto.CodigoBarras!.Length..];
             if (!int.TryParse(resto, NumberStyles.None, CultureInfo.InvariantCulture, out var ordem) || ordem < 1) continue;
