@@ -57,6 +57,31 @@ public static class ValidadorDocumento
         };
     }
 
+    /// <summary>
+    /// Máscara enquanto se digita: até 11 dígitos vira CPF ("123.456.7"), de 12 a 14 vira CNPJ ("12.345.678/0001"); o que
+    /// passar de 14 dígitos é cortado. Letras e símbolos são descartados.
+    /// </summary>
+    public static string FormatarDigitando(string? texto)
+    {
+        var d = SoDigitos(texto);
+        if (d.Length > 14) d = d[..14];
+        if (d.Length <= 11)
+        {
+            return d.Length switch
+            {
+                <= 3 => d,
+                <= 6 => $"{d[..3]}.{d[3..]}",
+                <= 9 => $"{d[..3]}.{d[3..6]}.{d[6..]}",
+                _ => $"{d[..3]}.{d[3..6]}.{d[6..9]}-{d[9..]}"
+            };
+        }
+        return d.Length switch
+        {
+            <= 12 => $"{d[..2]}.{d[2..5]}.{d[5..8]}/{d[8..]}",
+            _ => $"{d[..2]}.{d[2..5]}.{d[5..8]}/{d[8..12]}-{d[12..]}"
+        };
+    }
+
     private static bool TodosIguais(string d) => d.All(c => c == d[0]);
 
     private static int Digito(string d, int quantos, int pesoInicial)

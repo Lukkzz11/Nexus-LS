@@ -6,6 +6,16 @@ namespace NexusLS.App.Views;
 
 public partial class ClientesView : UserControl
 {
+    /// <summary>Ao digitar o CPF/CNPJ, os pontos, a barra e o traço entram sozinhos (o cursor fica no fim).</summary>
+    private void Documento_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (sender is not TextBox caixa) return;
+        var formatado = NexusLS.Core.Services.ValidadorDocumento.FormatarDigitando(caixa.Text);
+        if (formatado == caixa.Text) return;
+        caixa.Text = formatado;
+        caixa.CaretIndex = formatado.Length;
+    }
+
     public ClientesView()
     {
         InitializeComponent();

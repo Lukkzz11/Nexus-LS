@@ -34,6 +34,7 @@ public sealed class ConexaoBancoWindow : Window
     private readonly TextBlock _erpChaveEstado = new() { FontSize = 11, Opacity = 0.7, Margin = new Thickness(0, -6, 0, 10), TextWrapping = TextWrapping.Wrap };
     private readonly Button _testar = new() { Content = "Testar conexão", Padding = new Thickness(16, 8, 16, 8), MinWidth = 140, HorizontalAlignment = HorizontalAlignment.Left };
     private readonly TextBlock _erpAviso = new() { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 10, 0, 0), MinHeight = 20 };
+    private readonly Button _colar = new() { Content = "Colar configuração do Firebase", Padding = new Thickness(14, 7, 14, 7), HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 0, 0, 14) };
     private readonly TextBlock _aviso = new() { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 10, 0, 0), MinHeight = 20 };
 
     public ConexaoBancoWindow(ConfiguracaoFirebaseStore firebase, ConfiguracaoOperacionalStore operacional,
@@ -43,7 +44,7 @@ public sealed class ConexaoBancoWindow : Window
         _operacional = operacional;
         _erp = erp ?? PadraoDoPrograma(s => s.ErpConfig);
         _contaErp = contaErp ?? PadraoDoPrograma(s => s.ContaErp);
-        Title = "Nexus — Conectar banco de dados";
+        Title = "Nexus — Conexão com a nuvem (Firebase)";
         Width = 560;
         MaxHeight = 800;
         SizeToContent = SizeToContent.Height;
@@ -64,9 +65,9 @@ public sealed class ConexaoBancoWindow : Window
 
         foreach (var item in new[]
         {
-            "ERP PDV Life — mesmo banco da loja (somente leitura)",
-            "Catálogo online do Nexus (projeto próprio)",
-            "Nuvem operacional do Nexus (vendas; projeto próprio)"
+            "Importar do ERP PDV Life (somente leitura)",
+            "Catálogo online (projeto próprio da loja)",
+            "Nuvem das vendas (projeto próprio da loja)"
         }) _conta.Items.Add(item);
         _conta.SelectedIndex = erpConfigurado || (string.IsNullOrWhiteSpace(f.ProjectId) && string.IsNullOrWhiteSpace(o.ProjectId)) ? 0 : 1;
         _conta.SelectionChanged += (_, _) => MostrarPainel();
@@ -103,9 +104,10 @@ public sealed class ConexaoBancoWindow : Window
             Margin = new Thickness(26, 22, 26, 22),
             Children =
             {
-                Titulo("Conectar banco de dados"),
-                Texto("Escolha a conta do Firebase que o programa deve usar. Os dados ficam só neste computador."),
-                Rotulo("Conta / projeto"), _conta,
+                Titulo("Conexão com a nuvem"),
+                Texto("Cada loja usa o seu próprio projeto Firebase. Escolha a conexão, cole a configuração do projeto (a que o console do Firebase mostra) ou digite os campos. Os dados ficam só neste computador."),
+                Rotulo("Qual conexão configurar"), _conta,
+                _colar,
                 _painelErp, _painelCatalogo, _painelOperacional,
                 new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 16, 0, 0), Children = { salvar, cancelar } },
                 _aviso
@@ -114,6 +116,7 @@ public sealed class ConexaoBancoWindow : Window
         Content = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Content = painel };
         MostrarPainel();
         salvar.Click += (_, _) => Salvar();
+        _colar.Click += (_, _) => ColarConfiguracao();
         _testar.Click += async (_, _) => await TestarAsync();
         cancelar.Click += (_, _) => DialogResult = false;
     }
@@ -163,6 +166,26 @@ public sealed class ConexaoBancoWindow : Window
             Mensagem(_erpAviso, ex.Message, erro: true);
         }
         finally { _testar.IsEnabled = true; }
+    }
+
+    /// <summary>Lê o firebaseConfig da área de transferência e preenche os campos da conexão escolhida (nada é gravado ainda).</summary>
+    private void ColarConfiguracao()
+    {
+        string? texto = null;
+        try { texto = Clipboard.GetText(); } catch (System.Runtime.InteropServices.ExternalException) { }
+        var c = ConfiguracaoColada.Ler(texto);
+        if (!c.TemAlgo)
+        {
+            Mensagem(_aviso, "Não achei a configuração do Firebase na área de transferência. Copie o trecho \"firebaseConfig\" do console e tente de novo.", erro: true);
+            return;
+        }
+
+        var (projeto, chave) = _conta.SelectedIndex switch { 0 => (_erpProjeto, null), 1 => (_projeto, _chave), _ => (_opProjeto, _opChave) };
+        if (!string.IsNullOrWhiteSpace(c.ProjectId)) projeto.Text = c.ProjectId;
+        if (chave is not null && !string.IsNullOrWhiteSpace(c.ApiKey)) chave.Text = c.ApiKey;
+        else if (_conta.SelectedIndex == 0 && !string.IsNullOrWhiteSpace(c.ApiKey)) _erpChave.Password = c.ApiKey;
+        if (_conta.SelectedIndex == 1 && !string.IsNullOrWhiteSpace(c.Bucket)) _bucket.Text = c.Bucket;
+        Mensagem(_aviso, $"Configuração colada (projeto {c.ProjectId}). Confira os campos e clique em Salvar.", erro: false);
     }
 
     private void Salvar()

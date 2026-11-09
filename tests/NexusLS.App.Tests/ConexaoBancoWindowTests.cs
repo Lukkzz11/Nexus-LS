@@ -10,7 +10,7 @@ using NexusLS.Core.Sincronizacao.Operacional;
 
 namespace NexusLS.App.Tests;
 
-/// <summary>A janela "Conectar banco de dados" vem preenchida com o projeto do ERP (erp.json) sem mostrar a chave nem a senha.</summary>
+/// <summary>A janela "Conexão com a nuvem" vem preenchida com o projeto do ERP (erp.json) sem mostrar a chave nem a senha.</summary>
 public sealed class ConexaoBancoWindowTests : IDisposable
 {
     private const string ChaveSecreta = "CHAVE-QUE-NAO-PODE-APARECER";
@@ -64,7 +64,7 @@ public sealed class ConexaoBancoWindowTests : IDisposable
             estadoChave = Todos<TextBlock>(janela).Select(t => t.Text).FirstOrDefault(t => t.StartsWith("Chave da API salva"));
         });
 
-        Assert.StartsWith("ERP PDV Life", combo);
+        Assert.StartsWith("Importar do ERP PDV Life", combo);
         Assert.Contains("pdv---lifesurf", textos);
         Assert.Contains("lifesurf-principal", textos);
         Assert.DoesNotContain(textos, t => t.Contains(ChaveSecreta));

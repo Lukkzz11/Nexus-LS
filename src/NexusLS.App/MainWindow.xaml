@@ -222,11 +222,11 @@
                     </StackPanel>
 
                     <StackPanel Margin="18,18,14,0">
-                        <TextBlock Text="Banco de dados" Style="{StaticResource SecaoMenu}" Margin="0,0,0,2" />
+                        <TextBlock Text="Nuvem (Firebase)" Style="{StaticResource SecaoMenu}" Margin="0,0,0,2" />
                         <TextBlock Text="{Binding BancoTexto}" TextWrapping="Wrap" FontSize="13" AutomationProperties.Name="Situação do banco de dados" />
-                        <Button Content="Conectar banco de dados" Style="{StaticResource BotaoSecundario}" Margin="0,8,0,0" Padding="12,6" FontSize="13"
+                        <Button Content="Conexão com a nuvem" Style="{StaticResource BotaoSecundario}" Margin="0,8,0,0" Padding="12,6" FontSize="13"
                                 HorizontalAlignment="Left" Command="{Binding AbrirConexaoBancoDeDadosCommand}"
-                                ToolTip="Escolher a conta do Firebase usada pelo programa" />
+                                ToolTip="Configurar o projeto Firebase desta loja" />
                     </StackPanel>
 
                     <StackPanel Margin="18,18,14,0" Visibility="{Binding TemUsuario, Converter={StaticResource BoolVis}}">

@@ -180,6 +180,7 @@
                                     <StackPanel>
                                         <TextBlock Text="CPF ou CNPJ *" Style="{StaticResource Rotulo}" />
                                         <TextBox Text="{Binding Documento, UpdateSourceTrigger=PropertyChanged}"
+                                                 TextChanged="Documento_TextChanged"
                                                  AutomationProperties.Name="CPF ou CNPJ" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="2">

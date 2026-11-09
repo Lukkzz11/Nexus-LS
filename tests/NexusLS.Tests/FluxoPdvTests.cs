@@ -385,3 +385,28 @@ public class EscolhaNaBuscaTests
         Assert.Equal("Camisa 789 Polo", (await produtos.EscolherParaVendaAsync("789"))!.Nome);
     }
 }
+
+public class MascaraDocumentoETestes
+{
+    [Theory]
+    [InlineData("7", "7")]
+    [InlineData("72920", "729.20")]
+    [InlineData("729200", "729.200")]
+    [InlineData("7292004", "729.200.4")]
+    [InlineData("72920041487", "729.200.414-87")]
+    [InlineData("729.200.414-87", "729.200.414-87")]
+    [InlineData("123456789012", "12.345.678/9012")]
+    [InlineData("12345678000195", "12.345.678/0001-95")]
+    [InlineData("12345678000195999", "12.345.678/0001-95")]
+    public void Mascara_enquanto_digita(string digitado, string esperado) =>
+        Assert.Equal(esperado, NexusLS.Core.Services.ValidadorDocumento.FormatarDigitando(digitado));
+
+    [Fact]
+    public void Config_colada_do_console_do_firebase_e_lida()
+    {
+        var c = NexusLS.Core.Sincronizacao.Firebase.ConfiguracaoColada.Ler(
+            "const firebaseConfig = {\n  apiKey: \"AIzaXYZ\",\n  projectId: \"loja-abc\",\n  storageBucket: \"loja-abc.firebasestorage.app\"\n};");
+        Assert.Equal(("AIzaXYZ", "loja-abc", "loja-abc.firebasestorage.app"), (c.ApiKey, c.ProjectId, c.Bucket));
+        Assert.False(NexusLS.Core.Sincronizacao.Firebase.ConfiguracaoColada.Ler("nada aqui").TemAlgo);
+    }
+}
