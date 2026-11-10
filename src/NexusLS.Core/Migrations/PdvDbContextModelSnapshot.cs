@@ -2036,6 +2036,62 @@ namespace NexusLS.Core.Migrations
                     b.ToTable("Vendas");
                 });
 
+            modelBuilder.Entity("NexusLS.Core.Pagamentos.CobrancaPixRegistro", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("AtualizadaEm")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ChaveVenda")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CopiaECola")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CriadaEm")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ExpiraEm")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Gateway")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("IdExterno")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("QrCodeBase64")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("ValorCentavos")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("VendaId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChaveVenda")
+                        .IsUnique();
+
+                    b.HasIndex("CriadaEm");
+
+                    b.ToTable("CobrancasPix");
+                });
+
             modelBuilder.Entity("NexusLS.Core.Models.AjusteCreditoCliente", b =>
                 {
                     b.HasOne("NexusLS.Core.Models.Cliente", "Cliente")

@@ -42,6 +42,9 @@ public partial class MainViewModel : ObservableObject
         Zoom = _servicos.Preferencias.Carregar().ZoomPercentual / 100.0;
         _pdv = new(_servicos.Produtos, _servicos.Vendas, _servicos.Rascunho, _servicos.Clientes, _servicos.Cupons,
             configuracao: _servicos.Configuracao, caixa: _servicos.Caixa);
+        _pdv.Pix = _servicos.Pix;
+        _pdv.PixRepo = _servicos.PixRepo;
+        _pdv.PixAutomaticoAtivo = () => _servicos.PagamentosConfig.Ler().TarifaMercadoPago().Ativo;
         // Abre na tela Início (indicadores e atalhos). Quem preferir o PDV direto liga isso em Configurações.
         // Task.Run: lê a configuração fora da thread da tela, sem risco de travar a abertura.
         var abrirNoPdv = Task.Run(() => _servicos.Configuracao.ObterAsync()).GetAwaiter().GetResult().AbrirNoPdv;

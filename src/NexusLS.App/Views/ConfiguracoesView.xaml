@@ -333,6 +333,8 @@
                                     Command="{Binding AbrirPastaDeDadosCommand}" />
                             <Button Content="Abrir Atualizador / Ativador" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,6"
                                     Command="{Binding AbrirAtualizadorCommand}" />
+                            <Button Content="Configurações de Pagamento (Pix)" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,6"
+                                    Click="AbrirConfigPagamento" />
                             <Button Content="Portal Web" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,6" Visibility="Collapsed"
                                     Command="{Binding AbrirPortalWebCommand}" />
                         </WrapPanel>

@@ -41,6 +41,12 @@ public partial class PdvView : UserControl
                 MessageBox.Show(Window.GetWindow(this), mensagem, "Nexus",
                     MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
             vm.FocoSolicitado += AoPedirFoco;
+            vm.CobrarPix = (chave, valor) =>
+            {
+                var janela = new PixCobrancaWindow(App.Servicos.Pix, chave, valor) { Owner = Window.GetWindow(this) };
+                janela.ShowDialog();
+                return Task.FromResult(janela.Aprovado);
+            };
             _ = vm.AtualizarCaixaAsync();
         }
         Focar(AlvoFoco.Busca);

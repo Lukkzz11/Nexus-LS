@@ -20,6 +20,9 @@ public sealed class ContainerDeServicos
     public VendaService Vendas { get; }
     public NexusLS.Core.Etiquetas.ModeloEtiquetaStore ModelosEtiqueta { get; }
     public CaixaService Caixa { get; }
+    public NexusLS.Core.Pagamentos.ConfiguracaoPagamentosStore PagamentosConfig { get; }
+    public NexusLS.Core.Pagamentos.RepositorioPixSqlite PixRepo { get; }
+    public NexusLS.Core.Pagamentos.ServicoPix Pix { get; }
     public ClienteService Clientes { get; }
     public TituloPrazoService TitulosPrazo { get; }
     public ConfiguracaoService Configuracao { get; }
@@ -81,6 +84,17 @@ public sealed class ContainerDeServicos
         Vendas = new(fabrica);
         ModelosEtiqueta = new(NexusLS.Core.Etiquetas.ModeloEtiquetaStore.CaminhoPadrao());
         Caixa = new(fabrica);
+        PagamentosConfig = new(NexusLS.Core.Pagamentos.ConfiguracaoPagamentosStore.CaminhoPadrao(), new NexusLS.App.Seguranca.ProtetorDpapi());
+        PixRepo = new(fabrica);
+        var httpPix = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(20) };
+        Pix = new(
+            new NexusLS.Core.Pagamentos.IGatewayPix[]
+            {
+                new NexusLS.Core.Pagamentos.MercadoPagoGateway(httpPix, () => PagamentosConfig.Token(),
+                    () => PagamentosConfig.Ler().EmailPagador, () => PagamentosConfig.Ler().ValidadeMinutos)
+            },
+            PixRepo,
+            () => new[] { PagamentosConfig.Ler().TarifaMercadoPago() });
         Clientes = new(fabrica) { ExigirDocumentoNaTela = true };
         TitulosPrazo = new(fabrica);
         Configuracao = new(fabrica);

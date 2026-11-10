@@ -44,8 +44,8 @@ public sealed class ImportarCsvTests : IDisposable
 
         await _vm.ImportarCsvCommand.ExecuteAsync(null);
 
-        Assert.Contains("2 produto(s) serão cadastrados", perguntado);
-        Assert.Contains("2 produto(s) importado(s)", _vm.Mensagem);
+        Assert.Contains("2 produto(s) serão comparados com o estoque", perguntado);
+        Assert.Contains("2 novo(s)", _vm.Mensagem);
         Assert.False(_vm.MensagemEhErro);
         Assert.Equal(2, _vm.Produtos.Count);
         Assert.True(_vm.PodeImportar);
@@ -96,9 +96,8 @@ public sealed class ImportarCsvTests : IDisposable
 
         await _vm.ImportarCsvCommand.ExecuteAsync(null);
 
-        Assert.Contains("1 produto(s) importado(s)", _vm.Mensagem);
         Assert.Contains("Linha 4", relatorio);                 // sem preço
-        Assert.Contains("Meia", relatorio);                    // já existia
+        Assert.Contains("sem mudança", _vm.Mensagem);          // Meia já existia igual: nada foi alterado
     }
 }
 

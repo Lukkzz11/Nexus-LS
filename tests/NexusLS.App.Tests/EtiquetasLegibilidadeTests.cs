@@ -90,7 +90,7 @@ public sealed class EtiquetasLegibilidadeTests : IDisposable
         Assert.False(_vm.MensagemEhErro, _vm.Mensagem);
         Assert.Equal("Joias (60,5 × 40 mm)".Replace(',', System.Globalization.CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator[0]),
             _vm.FormatoSelecionado.Nome);
-        Assert.Equal(4, _vm.Formatos.Count);
+        Assert.Equal(5, _vm.Formatos.Count);
         Assert.Single(new EtiquetasViewModel(_produtos, _modelos).Formatos, f => f.Nome.StartsWith("Joias"));
     }
 
@@ -103,7 +103,7 @@ public sealed class EtiquetasLegibilidadeTests : IDisposable
         await _vm.SalvarModeloCommand.ExecuteAsync(null);
 
         Assert.True(_vm.MensagemEhErro);
-        Assert.Equal(3, _vm.Formatos.Count);
+        Assert.Equal(4, _vm.Formatos.Count);
     }
 
     [Fact]
@@ -119,7 +119,7 @@ public sealed class EtiquetasLegibilidadeTests : IDisposable
 
         await _vm.RemoverModeloCommand.ExecuteAsync(null);
 
-        Assert.Equal(3, _vm.Formatos.Count);
+        Assert.Equal(4, _vm.Formatos.Count);
         Assert.False(_vm.PodeRemoverModelo);
         Assert.Empty(_modelos.Carregar());
     }

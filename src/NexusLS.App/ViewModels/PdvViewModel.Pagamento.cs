@@ -229,7 +229,28 @@ public partial class PdvViewModel
             }
         }
 
+        // Pix automático: a venda só é gravada depois que o gateway confirma o pagamento (QR gerado não é venda paga).
+        var chavePix = "pdv-" + _chaveVenda.ToString("N");
+        var pixAutomatico = _pagamento.Forma == FormaPagamento.Pix && Pix is not null && CobrarPix is not null && PixAutomaticoAtivo();
+        if (pixAutomatico)
+        {
+            bool aprovado;
+            try { aprovado = await CobrarPix!(chavePix, _pagamento.TotalCentavos); }
+            catch (Exception ex) when (ex is InvalidOperationException or System.Net.Http.HttpRequestException)
+            {
+                MostrarErro("Não foi possível gerar o Pix: " + ex.Message + " Use Dinheiro/cartão ou tente de novo.");
+                return;
+            }
+            if (!aprovado)
+            {
+                MostrarErro("Pix não confirmado. A venda não foi finalizada.");
+                return;
+            }
+        }
+
         var venda = await _vendas.FinalizarAsync(_pagamento.ParaPedido(_carrinho, _descontoResolvido) with { ChaveUnica = _chaveVenda });
+
+        if (pixAutomatico && PixRepo is not null) await PixRepo.VincularVendaAsync(chavePix, venda.Id);
 
         var pagou = SelecaoPagamento.Nome(venda.FormaPagamento);
         if (venda.FormaPagamento == FormaPagamento.CartaoCredito && venda.Parcelas > 1) pagou += $" em {venda.Parcelas}x";

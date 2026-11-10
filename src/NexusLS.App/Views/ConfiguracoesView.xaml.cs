@@ -50,4 +50,8 @@ public partial class ConfiguracoesView : UserControl
             && CaixaSegredoGoogle.Password != vm.GoogleSegredoNovo)
             CaixaSegredoGoogle.Password = vm.GoogleSegredoNovo;
     }
+
+    private void AbrirConfigPagamento(object sender, System.Windows.RoutedEventArgs e) =>
+        new ConfiguracaoPagamentosWindow(App.Servicos.PagamentosConfig, App.Servicos.PixRepo)
+        { Owner = System.Windows.Window.GetWindow(this) }.ShowDialog();
 }

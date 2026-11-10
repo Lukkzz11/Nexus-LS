@@ -22,6 +22,7 @@ public class PdvDbContext : DbContext
     public DbSet<AjusteCreditoCliente> AjustesCreditoCliente => Set<AjusteCreditoCliente>();
     public DbSet<TurnoCaixa> TurnosCaixa => Set<TurnoCaixa>();
     public DbSet<MovimentoCaixa> MovimentosCaixa => Set<MovimentoCaixa>();
+    public DbSet<NexusLS.Core.Pagamentos.CobrancaPixRegistro> CobrancasPix => Set<NexusLS.Core.Pagamentos.CobrancaPixRegistro>();
     public DbSet<FechamentoCaixa> FechamentosCaixa => Set<FechamentoCaixa>();
     public DbSet<SincronizacaoProduto> SincronizacaoProdutos => Set<SincronizacaoProduto>();
     public DbSet<SincronizacaoLog> SincronizacaoLogs => Set<SincronizacaoLog>();
@@ -392,6 +393,15 @@ public class PdvDbContext : DbContext
             e.Property(t => t.Operador).HasMaxLength(80);
             e.Ignore(t => t.Aberto);
             e.HasIndex(t => t.DataAbertura);
+        });
+
+        modelBuilder.Entity<NexusLS.Core.Pagamentos.CobrancaPixRegistro>(e =>
+        {
+            e.Property(c => c.ChaveVenda).HasMaxLength(80);
+            e.Property(c => c.Gateway).HasMaxLength(30);
+            e.Property(c => c.IdExterno).HasMaxLength(60);
+            e.HasIndex(c => c.ChaveVenda).IsUnique();
+            e.HasIndex(c => c.CriadaEm);
         });
 
         modelBuilder.Entity<MovimentoCaixa>(e =>

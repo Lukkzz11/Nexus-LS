@@ -86,6 +86,14 @@ public partial class PdvViewModel : ViewModelBase, IEditorCarrinho
     /// <summary>A tela define como perguntar "tem certeza?" ao operador (assim o ViewModel não depende de MessageBox).</summary>
     public Func<string, bool> Confirmar { get; set; } = _ => true;
 
+    /// <summary>Pix automático: serviço de cobrança (nulo = Pix manual, como sempre foi).</summary>
+    public NexusLS.Core.Pagamentos.ServicoPix? Pix { get; set; }
+    public NexusLS.Core.Pagamentos.RepositorioPixSqlite? PixRepo { get; set; }
+    /// <summary>Quando o Mercado Pago está ligado e com token. Decidido a cada venda, para valer assim que a configuração muda.</summary>
+    public Func<bool> PixAutomaticoAtivo { get; set; } = () => false;
+    /// <summary>Mostra o QR Code e espera a confirmação. Devolve verdadeiro só se o gateway aprovou.</summary>
+    public Func<string, long, Task<bool>>? CobrarPix { get; set; }
+
     /// <summary>O ViewModel pede para a tela mover o cursor (a tela é quem sabe mexer no foco).</summary>
     public event Action<AlvoFoco>? FocoSolicitado;
 
