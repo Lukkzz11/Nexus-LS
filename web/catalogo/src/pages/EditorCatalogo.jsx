@@ -11,7 +11,7 @@ const ABAS = [
   ["editor", "Editor visual da vitrine"]
 ];
 
-// Tela do Nexus LS no mesmo formato da tela "Editar Catálogo & Vitrine Online" do ERP: cabeçalho, duas abas
+// Tela do Nexus LS próprio do Nexus ("Editar Catálogo & Vitrine Online"): cabeçalho, duas abas
 // (mercadorias e dados da loja | editor visual) e os produtos do estoque local. Nada daqui fala com o Firebase.
 export default function EditorCatalogo() {
   const [dados, setDados] = useState(null);

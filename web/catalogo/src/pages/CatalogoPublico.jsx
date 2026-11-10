@@ -67,7 +67,7 @@ import {
 import { CIDADE_UF_PADRAO } from "../config/localizacao";
 
 const LOTE_VITRINE = 24;
-const chaveJanelaVitrine = (tenantId) => `lifesurf_vitrine_visiveis_${tenantId}`;
+const chaveJanelaVitrine = (tenantId) => `nexus_vitrine_visiveis_${tenantId}`;
 
 function lerJanelaVitrine(tenantId) {
   try {
@@ -90,7 +90,7 @@ function enviarAoEditor(mensagem) {
 export default function CatalogoPublico() {
   const { isAuthenticated } = useAuth();
   const { companyId } = useParams();
-  const tenantId = companyId || "lifesurf";
+  const tenantId = companyId || "nexus";
 
   // Pré-visualização dentro do Editor visual (?preview=1): recebe a configuração por mensagem, sem salvar
   const navigate = useNavigate();
@@ -190,16 +190,16 @@ export default function CatalogoPublico() {
     };
     // Outra aba salvou: só interessa a chave do catálogo desta loja
     const aoMudarArmazenamento = (e) => {
-      if (e.key && e.key !== `lifesurf_catalog_products_${tenantId}`) return;
+      if (e.key && e.key !== `nexus_catalog_products_${tenantId}`) return;
       aoAtualizarCatalogo();
     };
 
-    window.addEventListener("lifesurf:catalog_updated", aoAtualizarCatalogo);
+    window.addEventListener("nexus:catalog_updated", aoAtualizarCatalogo);
     window.addEventListener("storage", aoMudarArmazenamento);
 
     return () => {
       ativo = false;
-      window.removeEventListener("lifesurf:catalog_updated", aoAtualizarCatalogo);
+      window.removeEventListener("nexus:catalog_updated", aoAtualizarCatalogo);
       window.removeEventListener("storage", aoMudarArmazenamento);
     };
     // emPrevia não entra: só decide a leitura do cache e não muda durante a vida da página
@@ -288,14 +288,14 @@ export default function CatalogoPublico() {
     const aoReceber = (e) => {
       if (e.origin !== window.location.origin || e.source !== window.parent) return;
       const dados = e.data;
-      if (dados?.type === "lifesurf:vitrine-preview") setPreviewVitrine(dados.vitrine);
-      if (dados?.type === "lifesurf:highlight" && typeof dados.id === "string") setBlocoSelecionado(dados.id);
+      if (dados?.type === "nexus:vitrine-preview") setPreviewVitrine(dados.vitrine);
+      if (dados?.type === "nexus:highlight" && typeof dados.id === "string") setBlocoSelecionado(dados.id);
     };
     window.addEventListener("message", aoReceber);
     // Ajuste de produto no editor (visível, destaque, promoção): atualiza a lista sem recarregar a prévia
     const aoMudarProdutos = (e) => setProdutos(produtosVisiveisDe(e.detail));
     window.parent.addEventListener("nexus:produtos", aoMudarProdutos);
-    enviarAoEditor({ type: "lifesurf:preview-ready" });
+    enviarAoEditor({ type: "nexus:preview-ready" });
     return () => {
       window.removeEventListener("message", aoReceber);
       window.parent.removeEventListener("nexus:produtos", aoMudarProdutos);
@@ -600,7 +600,7 @@ export default function CatalogoPublico() {
       data-tema={vitrineCfg.tema.modelo}
       data-fonte={vitrineCfg.tema.tipografia.fonte === "sistema" ? undefined : "custom"}
     >
-      {/* 0. BARRA DE ADMINISTRAÇÃO (QUANDO LOGADO NO ERP) */}
+      {/* 0. BARRA DE ADMINISTRAÇÃO (QUANDO LOGADO NO NEXUS) */}
       {isAuthenticated && !emPrevia && (
         <div className="bg-neutral-900 border-b border-neutral-800 px-4 py-2 flex flex-wrap items-center justify-between text-xs text-neutral-300 gap-2 sticky top-0 z-50 shadow-sm">
           <div className="flex items-center gap-2">
@@ -753,7 +753,7 @@ export default function CatalogoPublico() {
                   imageSide={b.imageSide}
                   produtos={produtos}
                   onCta={acaoDoBotaoBanner}
-                  onDoubleClick={(slideId) => emPrevia && enviarAoEditor({ type: "lifesurf:frame-banner", slideId })}
+                  onDoubleClick={(slideId) => emPrevia && enviarAoEditor({ type: "nexus:frame-banner", slideId })}
                 />
               );
             }
@@ -955,7 +955,7 @@ export default function CatalogoPublico() {
               <div
                 key={b.id}
                 data-bloco={b.id}
-                onClick={emPrevia ? () => enviarAoEditor({ type: "lifesurf:select-block", id: b.id }) : undefined}
+                onClick={emPrevia ? () => enviarAoEditor({ type: "nexus:select-block", id: b.id }) : undefined}
                 className={cn(
                   "mx-auto w-full",
                   WIDTH_CLASSES[b.width],

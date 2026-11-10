@@ -160,7 +160,7 @@ export function quantidadeNaSacola(sacola, item) {
 
 /* ---- Sacola guardada no navegador (por empresa), para a vitrine e a página do produto compartilharem ---- */
 
-const chaveSacola = (tenantId) => `lifesurf_sacola_catalogo_${tenantId}`;
+const chaveSacola = (tenantId) => `nexus_sacola_catalogo_${tenantId}`;
 
 export function lerSacola(tenantId) {
   try {
@@ -184,7 +184,7 @@ export function salvarSacola(tenantId, itens) {
 
 /* ---- Voltar ao catálogo sem perder filtros e posição ---- */
 
-const chaveVoltar = (tenantId) => `lifesurf_catalogo_voltar_${tenantId}`;
+const chaveVoltar = (tenantId) => `nexus_catalogo_voltar_${tenantId}`;
 
 export function guardarPontoDeRetorno(tenantId, { search = "", rolagem = 0 } = {}) {
   try {

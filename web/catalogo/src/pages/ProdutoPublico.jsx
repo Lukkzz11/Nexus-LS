@@ -44,7 +44,7 @@ import { cn } from "../utils/cn";
  */
 export default function ProdutoPublico() {
   const { companyId, produtoId } = useParams();
-  const tenantId = companyId || "lifesurf";
+  const tenantId = companyId || "nexus";
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();

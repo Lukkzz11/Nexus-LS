@@ -131,21 +131,21 @@ function Previa({ tenantId, vitrine, selecionado, largura, onSelecionar, onEnqua
   // A configuração segue por mensagem (sem recarregar o iframe) depois de uma pausa curta
   useEffect(() => {
     if (!pronta) return undefined;
-    const t = setTimeout(() => enviar({ type: "lifesurf:vitrine-preview", vitrine }), 60);
+    const t = setTimeout(() => enviar({ type: "nexus:vitrine-preview", vitrine }), 60);
     return () => clearTimeout(t);
   }, [vitrine, pronta, enviar]);
 
   useEffect(() => {
-    if (pronta) enviar({ type: "lifesurf:highlight", id: selecionado });
+    if (pronta) enviar({ type: "nexus:highlight", id: selecionado });
   }, [selecionado, pronta, enviar]);
 
   useEffect(() => {
     const aoReceber = (e) => {
       if (e.origin !== window.location.origin || e.source !== frameRef.current?.contentWindow) return;
       const d = e.data;
-      if (d?.type === "lifesurf:preview-ready") setPronta(true);
-      if (d?.type === "lifesurf:select-block" && typeof d.id === "string") onSelecionar(d.id);
-      if (d?.type === "lifesurf:frame-banner") onEnquadrar(typeof d.slideId === "string" ? d.slideId : undefined);
+      if (d?.type === "nexus:preview-ready") setPronta(true);
+      if (d?.type === "nexus:select-block" && typeof d.id === "string") onSelecionar(d.id);
+      if (d?.type === "nexus:frame-banner") onEnquadrar(typeof d.slideId === "string" ? d.slideId : undefined);
     };
     window.addEventListener("message", aoReceber);
     return () => window.removeEventListener("message", aoReceber);

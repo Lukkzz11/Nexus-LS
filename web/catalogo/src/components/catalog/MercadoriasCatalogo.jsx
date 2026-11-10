@@ -225,7 +225,7 @@ function ModalMercadoria({ produto, aoFechar }) {
   );
 }
 
-/** Célula do preço promocional: edita ao clicar (Enter salva, Esc cancela), como a edição rápida do ERP. */
+/** Célula do preço promocional: edita ao clicar (Enter salva, Esc cancela). */
 function PromoRapida({ produto }) {
   const [valor, setValor] = useState(textoPromo(produto.precoPromocional));
   const confirmar = async () => {
@@ -263,7 +263,7 @@ function PromoRapida({ produto }) {
 
 const semAcento = (t) => String(t || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
-/** A aba "Mercadorias e dados da loja" do ERP, adaptada ao estoque local do Nexus. */
+/** A aba "Mercadorias e dados da loja", feita sobre o estoque local do Nexus. */
 export default function MercadoriasCatalogo({ produtos, vitrine, empresa, aoEditarLoja }) {
   const [busca, setBusca] = useState("");
   const [filtroCategoria, setFiltroCategoria] = useState("TODAS");
