@@ -154,3 +154,14 @@ public class PixPersistenciaTests : IDisposable
         Assert.False(c.TarifaMercadoPago().Ativo);
     }
 }
+
+public class PixMotivoTests
+{
+    [Fact]
+    public void Motivo_vem_do_corpo_do_mercado_pago_ou_da_dica_do_codigo()
+    {
+        Assert.Contains("invalid access token", MercadoPagoGateway.MotivoDaRecusa("{\"message\":\"invalid access token\",\"status\":401}", System.Net.HttpStatusCode.Unauthorized));
+        Assert.Contains("Payer email forbidden", MercadoPagoGateway.MotivoDaRecusa("{\"message\":\"x\",\"cause\":[{\"description\":\"Payer email forbidden\"}]}", System.Net.HttpStatusCode.BadRequest));
+        Assert.Contains("Access Token", MercadoPagoGateway.MotivoDaRecusa("", System.Net.HttpStatusCode.Unauthorized));
+    }
+}

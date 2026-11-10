@@ -52,7 +52,7 @@ public sealed class MercadoPagoGateway : IGatewayPix
         using var resposta = await _http.SendAsync(pedido, ct).ConfigureAwait(false);
         var texto = await resposta.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
         if (!resposta.IsSuccessStatusCode)
-            throw new HttpRequestException($"Mercado Pago recusou a cobrança ({(int)resposta.StatusCode}).");
+            throw new HttpRequestException($"Mercado Pago recusou a cobrança ({(int)resposta.StatusCode}). {MotivoDaRecusa(texto, resposta.StatusCode)}".Trim());
 
         using var doc = JsonDocument.Parse(texto);
         var raiz = doc.RootElement;
@@ -82,12 +82,38 @@ public sealed class MercadoPagoGateway : IGatewayPix
             using var pedido = Pedido(HttpMethod.Get, "/users/me");
             using var resposta = await _http.SendAsync(pedido, ct).ConfigureAwait(false);
             if (resposta.IsSuccessStatusCode) return (true, "Conexão com o Mercado Pago funcionando.");
-            return (false, resposta.StatusCode == System.Net.HttpStatusCode.Unauthorized
-                ? "O Mercado Pago não aceitou o token. Confira se é o Access Token da aplicação."
-                : $"O Mercado Pago respondeu com erro {(int)resposta.StatusCode}.");
+            var corpo = await resposta.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+            return (false, $"O Mercado Pago respondeu com erro {(int)resposta.StatusCode}. {MotivoDaRecusa(corpo, resposta.StatusCode)}".Trim());
         }
         catch (InvalidOperationException e) { return (false, e.Message); }
         catch (Exception e) when (e is HttpRequestException or TaskCanceledException) { return (false, "Sem conexão com o Mercado Pago."); }
+    }
+
+    /// <summary>Extrai o motivo que o Mercado Pago devolveu (message / cause), sem nunca incluir o token. Cai numa dica por código HTTP.</summary>
+    public static string MotivoDaRecusa(string corpo, System.Net.HttpStatusCode codigo)
+    {
+        string? motivo = null;
+        try
+        {
+            using var doc = JsonDocument.Parse(corpo);
+            var r = doc.RootElement;
+            if (r.ValueKind == JsonValueKind.Object)
+            {
+                if (r.TryGetProperty("message", out var m) && m.ValueKind == JsonValueKind.String) motivo = m.GetString();
+                if (r.TryGetProperty("cause", out var c) && c.ValueKind == JsonValueKind.Array && c.GetArrayLength() > 0
+                    && c[0].TryGetProperty("description", out var d) && d.ValueKind == JsonValueKind.String)
+                    motivo = (motivo is null ? "" : motivo + " — ") + d.GetString();
+            }
+        }
+        catch (JsonException) { /* corpo não é JSON */ }
+
+        if (!string.IsNullOrWhiteSpace(motivo)) return "Motivo: " + motivo + ".";
+        return codigo switch
+        {
+            System.Net.HttpStatusCode.Unauthorized => "O token não foi aceito: use o Access Token (não a Public Key) da mesma conta, salve e use \"Testar conexão\".",
+            System.Net.HttpStatusCode.Forbidden => "A conta não tem permissão para criar Pix (confira se tem chave Pix cadastrada e se a aplicação está ativa).",
+            _ => "",
+        };
     }
 
     /// <summary>Só "approved" é pago. Qualquer status desconhecido continua pendente (nunca aprova por engano).</summary>
