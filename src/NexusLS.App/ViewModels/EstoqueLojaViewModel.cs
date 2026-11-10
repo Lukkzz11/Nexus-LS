@@ -120,19 +120,20 @@ public partial class EstoqueLojaViewModel : ViewModelBase
                 return;
             }
 
-            var resumo = $"{analise.Produtos.Count} produto(s) serão cadastrados." +
+            var resumo = $"{analise.Produtos.Count} produto(s) serão comparados com o estoque: os novos são cadastrados e os que já existem só são atualizados no que mudou." +
                          $"{Environment.NewLine}Colunas reconhecidas: {string.Join(", ", analise.ColunasReconhecidas)}." +
                          (analise.Problemas.Count > 0 ? $"{Environment.NewLine}{Environment.NewLine}{analise.Problemas.Count} linha(s) com problema NÃO serão importadas:{Detalhes(analise.Problemas)}" : "") +
-                         $"{Environment.NewLine}{Environment.NewLine}Produtos que já existem não são alterados. Importar agora?";
+                         $"{Environment.NewLine}{Environment.NewLine}O estoque de produto que já existe não é alterado. Importar agora?";
             if (!ConfirmarImportacao(resumo)) { MostrarSucesso("Importação cancelada. Nada foi cadastrado."); return; }
 
             var resultado = await new ImportadorProdutos(_produtos, _estoque).ImportarAsync(analise);
             await BuscarAsync();
 
             var linhas = analise.Problemas.Concat(resultado.Ignorados).ToList();
-            MostrarSucesso($"{resultado.Importados} produto(s) importado(s)" + (linhas.Count > 0 ? $"; {linhas.Count} linha(s) não entraram." : "."));
+            var resumoFinal = $"{resultado.Importados} novo(s), {resultado.Atualizados} atualizado(s), {resultado.SemMudanca} sem mudança";
+            MostrarSucesso(resumoFinal + (linhas.Count > 0 ? $"; {linhas.Count} linha(s) não entraram." : "."));
             if (linhas.Count > 0)
-                InformarImportacao($"{resultado.Importados} produto(s) importado(s).{Environment.NewLine}Não entraram:{Detalhes(linhas)}");
+                InformarImportacao($"{resumoFinal}.{Environment.NewLine}Não entraram:{Detalhes(linhas)}");
         }
         finally
         {

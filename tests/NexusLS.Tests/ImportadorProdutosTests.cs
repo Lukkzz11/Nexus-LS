@@ -134,7 +134,7 @@ public sealed class ImportadorProdutosTests : IDisposable
     }
 
     [Fact]
-    public async Task Produto_que_ja_existe_nao_e_alterado_e_o_resto_entra()
+    public async Task Produto_que_ja_existe_e_atualizado_so_no_que_mudou_sem_mexer_no_estoque()
     {
         await _produtos.CadastrarAsync(new DadosProduto("Boné", "555", 2000, 800, 1), 4);
         var a = ImportadorProdutos.Analisar(Csv("Nome;Código;Preço;Estoque", "Boné;555;99,00;50", "Meia;111;10;2"));
@@ -142,13 +142,16 @@ public sealed class ImportadorProdutosTests : IDisposable
         var r = await _importador.ImportarAsync(a);
 
         Assert.Equal(1, r.Importados);
-        Assert.Contains("código de barras", Assert.Single(r.Ignorados).Motivo);
+        Assert.Equal(1, r.Atualizados);
+        Assert.Empty(r.Ignorados);
         var bone = (await _produtos.BuscarAsync("Boné")).Single();
-        Assert.Equal((2000L, 4), (bone.PrecoVendaCentavos, bone.EstoqueAtual)); // intacto
+        Assert.Equal(9900L, bone.PrecoVendaCentavos);   // preço atualizado
+        Assert.Equal(800L, bone.PrecoCustoCentavos);    // custo ausente no arquivo: mantido
+        Assert.Equal(4, bone.EstoqueAtual);             // estoque existente intacto
     }
 
     [Fact]
-    public async Task Importar_duas_vezes_o_mesmo_arquivo_nao_duplica()
+    public async Task Importar_duas_vezes_o_mesmo_arquivo_nao_duplica_nem_muda_nada()
     {
         var a = ImportadorProdutos.Analisar(Csv("Nome;Preço;Estoque", "Meia;10;2", "Cinto;30;1"));
 
@@ -156,7 +159,23 @@ public sealed class ImportadorProdutosTests : IDisposable
         var segunda = await _importador.ImportarAsync(a);
 
         Assert.Equal(0, segunda.Importados);
-        Assert.Equal(2, segunda.Ignorados.Count);
+        Assert.Equal(0, segunda.Atualizados);
+        Assert.Equal(2, segunda.SemMudanca);
         Assert.Equal(2, (await _produtos.BuscarAsync(null)).Count);
+    }
+
+    [Fact]
+    public async Task Produto_existente_ganha_so_os_tamanhos_que_faltavam()
+    {
+        var p = await _produtos.CadastrarAsync(new DadosProduto("Camisa", "777", 5000, 2000, 0), 0);
+        await _produtos.AdicionarTamanhoAsync(p.Id, "M");
+        var a = ImportadorProdutos.Analisar(Csv("Nome;Código;Preço;Tamanho;Estoque", "Camisa;777;50;M;9", "Camisa;777;50;G;3"));
+
+        var r = await _importador.ImportarAsync(a);
+
+        Assert.Equal(1, r.Atualizados);
+        var grade = await _produtos.ListarTamanhosAsync(p.Id);
+        Assert.Equal(0, grade.Single(t => t.Tamanho == "M").Estoque);  // já existia: não mexe
+        Assert.Equal(3, grade.Single(t => t.Tamanho == "G").Estoque);
     }
 }

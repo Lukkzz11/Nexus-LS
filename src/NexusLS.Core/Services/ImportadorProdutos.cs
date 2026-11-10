@@ -26,7 +26,7 @@ public record AnaliseImportacao(
     public bool PodeImportar => ErroDoArquivo is null && Produtos.Count > 0;
 }
 
-public record ResultadoImportacao(int Importados, IReadOnlyList<ProblemaImportacao> Ignorados);
+public record ResultadoImportacao(int Importados, IReadOnlyList<ProblemaImportacao> Ignorados, int Atualizados = 0, int SemMudanca = 0);
 
 /// <summary>
 /// Importa produtos de um arquivo CSV (o Excel salva assim: "CSV (separado por vírgulas)" ou "CSV UTF-8").
@@ -245,31 +245,62 @@ public class ImportadorProdutos
     // ---------- gravação ----------
 
     /// <summary>
-    /// Cadastra um por um. Produto que já existe (mesmo código de barras, ou mesmo nome e referência) é ignorado com o
-    /// motivo, sem alterar o que já está cadastrado. O estoque entra como movimentação de entrada ("Importação de CSV").
+    /// Compara com a base: produto novo é cadastrado; produto que já existe (mesmo código de barras, mesma referência,
+    /// ou mesmo nome) é atualizado SÓ no que mudou (preços, nome, categoria, mínimo, referência, código) e ganha os
+    /// tamanhos que faltavam. Campos vazios/zero no arquivo não apagam o que já existe, e o estoque de produto
+    /// existente não é alterado (evita contar duas vezes). O estoque dos novos entra como "Importação de CSV".
     /// </summary>
     public async Task<ResultadoImportacao> ImportarAsync(
         AnaliseImportacao analise, IProgress<int>? progresso = null, CancellationToken ct = default)
     {
         var importados = 0;
+        var atualizados = 0;
+        var semMudanca = 0;
         var ignorados = new List<ProblemaImportacao>();
         var feitos = 0;
+
+        var existentes = await _produtos.ListarComTamanhosAsync();
 
         foreach (var p in analise.Produtos)
         {
             ct.ThrowIfCancellationRequested();
             try
             {
-                var produto = await _produtos.CadastrarAsync(p.Dados, 0);
-                if (p.EstoqueSemTamanho > 0)
-                    await _estoque.AjustarAsync(produto.Id, TipoMovimentacao.Entrada, p.EstoqueSemTamanho, "Importação de CSV");
-                foreach (var (tamanho, estoque) in p.Tamanhos)
+                var atual = Achar(existentes, p.Dados);
+                if (atual is null)
                 {
-                    await _produtos.AdicionarTamanhoAsync(produto.Id, tamanho);
-                    if (estoque > 0)
-                        await _estoque.AjustarAsync(produto.Id, TipoMovimentacao.Entrada, estoque, "Importação de CSV", tamanho);
+                    var produto = await _produtos.CadastrarAsync(p.Dados, 0);
+                    if (p.EstoqueSemTamanho > 0)
+                        await _estoque.AjustarAsync(produto.Id, TipoMovimentacao.Entrada, p.EstoqueSemTamanho, "Importação de CSV");
+                    foreach (var (tamanho, estoque) in p.Tamanhos)
+                    {
+                        await _produtos.AdicionarTamanhoAsync(produto.Id, tamanho);
+                        if (estoque > 0)
+                            await _estoque.AjustarAsync(produto.Id, TipoMovimentacao.Entrada, estoque, "Importação de CSV", tamanho);
+                    }
+                    importados++;
+                    existentes.Add(produto);
                 }
-                importados++;
+                else
+                {
+                    var mudou = false;
+                    var novos = Mesclar(atual, p.Dados);
+                    if (novos is not null)
+                    {
+                        await _produtos.EditarAsync(atual.Id, novos);
+                        mudou = true;
+                    }
+                    var jaTem = atual.Tamanhos.Select(t => t.Tamanho.ToUpperInvariant()).ToHashSet();
+                    foreach (var (tamanho, estoque) in p.Tamanhos)
+                    {
+                        if (jaTem.Contains(tamanho.ToUpperInvariant())) continue;
+                        await _produtos.AdicionarTamanhoAsync(atual.Id, tamanho);
+                        if (estoque > 0)
+                            await _estoque.AjustarAsync(atual.Id, TipoMovimentacao.Entrada, estoque, "Importação de CSV", tamanho);
+                        mudou = true;
+                    }
+                    if (mudou) atualizados++; else semMudanca++;
+                }
             }
             catch (RegraDeNegocioException ex)
             {
@@ -277,6 +308,50 @@ public class ImportadorProdutos
             }
             progresso?.Report(++feitos);
         }
-        return new ResultadoImportacao(importados, ignorados);
+        return new ResultadoImportacao(importados, ignorados, atualizados, semMudanca);
+    }
+
+    private static Produto? Achar(List<Produto> base_, DadosProduto d)
+    {
+        static string N(string? t) => (t ?? "").Trim().Replace(" ", "").ToLowerInvariant();
+        if (!string.IsNullOrWhiteSpace(d.CodigoBarras))
+        {
+            var c = d.CodigoBarras.Trim();
+            var porCodigo = base_.FirstOrDefault(x => x.CodigoBarras == c || x.CodigoInterno == c);
+            if (porCodigo is not null) return porCodigo;
+        }
+        if (!string.IsNullOrWhiteSpace(d.Referencia))
+        {
+            var r = N(d.Referencia);
+            var porRef = base_.FirstOrDefault(x => N(x.Referencia) == r);
+            if (porRef is not null) return porRef;
+        }
+        var nome = N(d.Nome);
+        return base_.FirstOrDefault(x => N(x.Nome) == nome && (string.IsNullOrWhiteSpace(d.Referencia) || N(x.Referencia) == N(d.Referencia)));
+    }
+
+    /// <summary>Os dados já cadastrados com o que veio no arquivo por cima; nulo se nada mudou.</summary>
+    private static DadosProduto? Mesclar(Produto atual, DadosProduto csv)
+    {
+        var novo = new DadosProduto(
+            csv.Nome.Trim(),
+            string.IsNullOrWhiteSpace(csv.CodigoBarras) ? atual.CodigoBarras : csv.CodigoBarras.Trim(),
+            csv.PrecoVendaCentavos,
+            csv.PrecoCustoCentavos > 0 ? csv.PrecoCustoCentavos : atual.PrecoCustoCentavos,
+            csv.EstoqueMinimo > 0 ? csv.EstoqueMinimo : atual.EstoqueMinimo,
+            string.IsNullOrWhiteSpace(csv.Referencia) ? atual.Referencia : csv.Referencia.Trim(),
+            csv.PrecoAtacadoCentavos > 0 ? csv.PrecoAtacadoCentavos : atual.PrecoAtacadoCentavos,
+            string.IsNullOrWhiteSpace(csv.Categoria) ? atual.Categoria : csv.Categoria.Trim(),
+            atual.VenderSemBaixa, atual.Sobra, atual.Cores);
+
+        var igual = novo.Nome == atual.Nome
+                    && novo.CodigoBarras == atual.CodigoBarras
+                    && novo.PrecoVendaCentavos == atual.PrecoVendaCentavos
+                    && novo.PrecoCustoCentavos == atual.PrecoCustoCentavos
+                    && novo.EstoqueMinimo == atual.EstoqueMinimo
+                    && novo.Referencia == atual.Referencia
+                    && novo.PrecoAtacadoCentavos == atual.PrecoAtacadoCentavos
+                    && novo.Categoria == atual.Categoria;
+        return igual ? null : novo;
     }
 }
