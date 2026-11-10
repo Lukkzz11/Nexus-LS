@@ -983,7 +983,11 @@ public partial class MainWindow : Window
             var arquivoBaixado = await _atualizador.BaixarAsync(_versaoDisponivel, progresso, "NexusLS");
             TxtStatusGeral.Text = "Download concluído e conferido com assinatura SHA-256.";
 
-            FecharProcessoNexusLSSeguro();
+            if (!FecharProcessoSeguro("NexusLS"))
+            {
+                AvisarQueNaoFechou("Nexus LS");
+                return;
+            }
 
             var exeAlvo = TxtCaminhoExe.Text.Trim();
             if (File.Exists(exeAlvo))
@@ -1028,8 +1032,17 @@ public partial class MainWindow : Window
         {
             try
             {
-                FecharProcessoNexusLSSeguro();
-                File.Copy(backup, exeAlvo, overwrite: true);
+                if (!FecharProcessoSeguro("NexusLS"))
+                {
+                    AvisarQueNaoFechou("Nexus LS");
+                    return;
+                }
+
+                // Mesma troca segura da atualização: copia para um intermediário e renomeia (nunca deixa pela metade).
+                var pastaExe = Path.GetDirectoryName(Path.GetFullPath(exeAlvo)) ?? AppContext.BaseDirectory;
+                var intermediario = Path.Combine(pastaExe, "restaurar-" + Guid.NewGuid().ToString("N") + ".exe");
+                File.Copy(backup, intermediario, overwrite: true);
+                AtualizadorService.TrocarExecutavel(exeAlvo, intermediario);
                 CarregarStatusVersao();
                 TxtStatusGeral.Text = "Versão anterior restaurada com sucesso.";
                 MessageBox.Show(this, "Versão anterior restaurada com sucesso!", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -1053,14 +1066,24 @@ public partial class MainWindow : Window
         {
             try
             {
-                FecharProcessoNexusLSSeguro();
+                if (!FecharProcessoSeguro("NexusLS"))
+                {
+                    AvisarQueNaoFechou("Nexus LS");
+                    return;
+                }
+
                 var exeAlvo = TxtCaminhoExe.Text.Trim();
                 if (File.Exists(exeAlvo))
                 {
                     var backup = Path.Combine(Path.GetDirectoryName(exeAlvo)!, "NexusLS.anterior.exe");
                     File.Copy(exeAlvo, backup, overwrite: true);
                 }
-                File.Copy(ofd.FileName, exeAlvo, overwrite: true);
+
+                // O arquivo escolhido é copiado para um intermediário: a troca não apaga o original do operador.
+                var pastaExe = Path.GetDirectoryName(Path.GetFullPath(exeAlvo)) ?? AppContext.BaseDirectory;
+                var intermediario = Path.Combine(pastaExe, "novo-" + Guid.NewGuid().ToString("N") + ".exe");
+                File.Copy(ofd.FileName, intermediario, overwrite: true);
+                AtualizadorService.TrocarExecutavel(exeAlvo, intermediario);
                 CarregarStatusVersao();
                 TxtStatusGeral.Text = "Executável atualizado com sucesso a partir de: " + ofd.FileName;
                 MessageBox.Show(this, "Executável atualizado com sucesso!", "Atualizado", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -1174,9 +1197,10 @@ public partial class MainWindow : Window
             var arquivoBaixado = await _atualizadorBarTender.BaixarAsync(_versaoDisponivelBarTender, progresso, "NexusBarTender");
             TxtStatusGeral.Text = "Download do BarTender concluído com verificação SHA-256.";
 
-            foreach (var p in Process.GetProcessesByName("NexusBarTender"))
+            if (!FecharProcessoSeguro("NexusBarTender"))
             {
-                try { p.Kill(); p.WaitForExit(3000); } catch { }
+                AvisarQueNaoFechou("Nexus BarTender");
+                return;
             }
 
             var exeAlvo = TxtCaminhoBarTenderExe.Text.Trim();
@@ -1223,12 +1247,16 @@ public partial class MainWindow : Window
         {
             try
             {
-                foreach (var p in Process.GetProcessesByName("NexusBarTender"))
+                if (!FecharProcessoSeguro("NexusBarTender"))
                 {
-                    try { p.Kill(); p.WaitForExit(3000); } catch { }
+                    AvisarQueNaoFechou("Nexus BarTender");
+                    return;
                 }
 
-                File.Copy(backup, exeAlvo, overwrite: true);
+                var pastaExe = Path.GetDirectoryName(Path.GetFullPath(exeAlvo)) ?? AppContext.BaseDirectory;
+                var intermediario = Path.Combine(pastaExe, "restaurar-" + Guid.NewGuid().ToString("N") + ".exe");
+                File.Copy(backup, intermediario, overwrite: true);
+                AtualizadorService.TrocarExecutavel(exeAlvo, intermediario);
                 CarregarStatusVersaoBarTender();
                 MessageBox.Show(this, "Versão anterior do BarTender restaurada com sucesso!", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
             }
@@ -1254,9 +1282,10 @@ public partial class MainWindow : Window
                 var destino = TxtCaminhoBarTenderExe.Text.Trim();
                 if (string.IsNullOrWhiteSpace(destino)) destino = @"C:\NexusLS\publicar\NexusBarTender.exe";
 
-                foreach (var p in Process.GetProcessesByName("NexusBarTender"))
+                if (!FecharProcessoSeguro("NexusBarTender"))
                 {
-                    try { p.Kill(); p.WaitForExit(3000); } catch { }
+                    AvisarQueNaoFechou("Nexus BarTender");
+                    return;
                 }
 
                 if (File.Exists(destino))
@@ -1265,7 +1294,10 @@ public partial class MainWindow : Window
                     File.Copy(destino, backup, overwrite: true);
                 }
 
-                File.Copy(d.FileName, destino, overwrite: true);
+                var pastaExe = Path.GetDirectoryName(Path.GetFullPath(destino)) ?? AppContext.BaseDirectory;
+                var intermediario = Path.Combine(pastaExe, "novo-" + Guid.NewGuid().ToString("N") + ".exe");
+                File.Copy(d.FileName, intermediario, overwrite: true);
+                AtualizadorService.TrocarExecutavel(destino, intermediario);
                 CarregarStatusVersaoBarTender();
                 MessageBox.Show(this, "Executável do BarTender atualizado com sucesso!", "Atualizado", MessageBoxButton.OK, MessageBoxImage.Information);
             }
@@ -1276,25 +1308,52 @@ public partial class MainWindow : Window
         }
     }
 
-    private static void FecharProcessoNexusLSSeguro()
+    /// <summary>
+    /// Pede para o programa fechar (como clicar no X). Espere até ele sair e NÃO mata o processo:
+    /// encerrar o Nexus à força no meio de uma gravação é justamente o que estraga o banco. Se ele não
+    /// fechar (por exemplo, com o caixa aberto, que o programa bloqueia de propósito), o chamador avisa e desiste.
+    /// </summary>
+    private static bool FecharProcessoSeguro(string nomeDoProcesso)
     {
-        try
+        var processos = Process.GetProcessesByName(nomeDoProcesso);
+        if (processos.Length == 0) return true;
+
+        foreach (var p in processos)
         {
-            foreach (var p in Process.GetProcessesByName("NexusLS"))
+            try { p.CloseMainWindow(); }
+            catch { }
+        }
+
+        var limite = DateTime.UtcNow.AddSeconds(20);
+        while (DateTime.UtcNow < limite)
+        {
+            var vivos = 0;
+            foreach (var p in processos)
             {
-                try
-                {
-                    if (p.CloseMainWindow())
-                    {
-                        if (p.WaitForExit(4000)) continue;
-                    }
-                    p.Kill();
-                    p.WaitForExit(3000);
-                }
+                try { if (!p.HasExited) vivos++; }
                 catch { }
             }
+            if (vivos == 0) return true;
+            Thread.Sleep(500);
         }
-        catch { }
+
+        foreach (var p in processos)
+        {
+            try { if (!p.HasExited) return false; }
+            catch { }
+        }
+        return true;
+    }
+
+    /// <summary>Avisa que o programa não fechou e que nada foi trocado.</summary>
+    private void AvisarQueNaoFechou(string nomeAmigavel)
+    {
+        TxtStatusGeral.Text = $"Atualização cancelada: feche o {nomeAmigavel} e tente de novo.";
+        MessageBox.Show(this,
+            $"O {nomeAmigavel} não fechou, então nada foi trocado.\n\n" +
+            "Feche o programa (confira se há uma tela com o caixa aberto pedindo para fechar) e clique em instalar de novo.\n\n" +
+            "O atualizador não encerra o programa à força para não corromper o banco de dados.",
+            "Nexus Atualizador", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     // ==================== DIAGNÓSTICO E SUPORTE ====================

@@ -149,8 +149,10 @@ public class AtualizadorService
     }
 
     /// <summary>
-    /// Troca o executável: o Windows não deixa apagar nem sobrescrever um programa em uso, mas deixa RENOMEAR. Então o
-    /// atual vira <c>.antigo</c>, o novo ocupa o nome certo e, se qualquer passo falhar, tudo volta como estava.
+    /// Troca o executável: o Windows não deixa apagar nem sobrescrever um programa em uso, mas deixa RENOMEAR.
+    /// Primeiro o arquivo novo é COPIADO para um nome de passagem ao lado (o programa em uso continua inteiro);
+    /// só no fim os dois são renomeados. Copiar direto por cima do nome certo deixava o programa pela metade
+    /// por alguns segundos — e quem abrisse o Nexus nesse instante via "assets/nexus.ico não encontrado".
     /// Quem chama inicia o novo e fecha este.
     /// </summary>
     public static void TrocarExecutavel(string executavelAtual, string novo)
@@ -163,28 +165,41 @@ public class AtualizadorService
             Directory.CreateDirectory(pasta);
         }
 
-        // Se o executável ainda não existe no computador de destino (ex: instalação inicial), apenas copia diretamente
-        if (!File.Exists(executavelAtual))
-        {
-            File.Copy(novo, executavelAtual, overwrite: true);
-            ApagarSilencioso(novo);
-            return;
-        }
-
-        var antigo = executavelAtual + SufixoDoAntigo;
-        ApagarSilencioso(antigo);
-
-        File.Move(executavelAtual, antigo);
+        var passagem = executavelAtual + ".novo";
+        ApagarSilencioso(passagem);
         try
         {
-            File.Copy(novo, executavelAtual, overwrite: false);
+            // Cópia demorada (o programa tem centenas de MB) feita sem tocar no programa que está no lugar.
+            File.Copy(novo, passagem, overwrite: true);
+            if (new FileInfo(passagem).Length != new FileInfo(novo).Length)
+                throw new RegraDeAtualizacaoException("A cópia da atualização ficou incompleta. Nada foi trocado.");
+
+            if (!File.Exists(executavelAtual))
+            {
+                // Instalação inicial: o novo só precisa ocupar o nome.
+                File.Move(passagem, executavelAtual);
+            }
+            else
+            {
+                var antigo = executavelAtual + SufixoDoAntigo;
+                ApagarSilencioso(antigo);
+                File.Move(executavelAtual, antigo);
+                try
+                {
+                    // Duas renomeações no mesmo disco: instantâneas, sem instante com arquivo pela metade.
+                    File.Move(passagem, executavelAtual);
+                }
+                catch
+                {
+                    // Não conseguiu colocar o novo: devolve o programa de sempre ao lugar.
+                    File.Move(antigo, executavelAtual);
+                    throw;
+                }
+            }
         }
-        catch
+        finally
         {
-            // Não conseguiu colocar o novo: devolve o programa de sempre ao lugar.
-            ApagarSilencioso(executavelAtual);
-            File.Move(antigo, executavelAtual);
-            throw;
+            ApagarSilencioso(passagem);
         }
         ApagarSilencioso(novo);
     }
@@ -193,6 +208,7 @@ public class AtualizadorService
     public static void LimparRestos(string executavelAtual, string? pastaDownload = null)
     {
         ApagarSilencioso(executavelAtual + SufixoDoAntigo);
+        ApagarSilencioso(executavelAtual + ".novo"); // sobra de uma troca interrompida no meio da cópia
         if (pastaDownload is not null && Directory.Exists(pastaDownload))
             foreach (var f in Directory.EnumerateFiles(pastaDownload, "NexusLS-*.exe*"))
                 ApagarSilencioso(f);

@@ -381,4 +381,34 @@ public sealed class AtualizadorTests : IDisposable
         Assert.Equal(2000, new FileInfo(exe + AtualizadorService.SufixoDoAntigo).Length);
         Assert.Equal(3000, new FileInfo(exe).Length);
     }
+
+    [Fact]
+    public void Troca_descarta_a_copia_pela_metade_de_uma_troca_interrompida()
+    {
+        // Se o programa foi fechado no meio da cópia, sobra um "NexusLS.exe.novo". Ele não pode ser usado:
+        // a próxima troca joga a sobra fora e põe o arquivo novo de verdade no lugar.
+        var exe = Path.Combine(_pasta, "NexusLS.exe");
+        var novo = Path.Combine(_pasta, "novo.exe");
+        File.WriteAllBytes(exe, Programa(2000));
+        File.WriteAllBytes(exe + ".novo", Programa(1200)); // cópia interrompida
+        File.WriteAllBytes(novo, Programa(3000));
+
+        AtualizadorService.TrocarExecutavel(exe, novo);
+
+        Assert.Equal(3000, new FileInfo(exe).Length);
+        Assert.False(File.Exists(exe + ".novo"));
+    }
+
+    [Fact]
+    public void LimparRestos_apaga_a_sobra_da_copia_pela_metade()
+    {
+        var exe = Path.Combine(_pasta, "NexusLS.exe");
+        File.WriteAllBytes(exe, Programa(2000));
+        File.WriteAllBytes(exe + ".novo", Programa(1200));
+
+        AtualizadorService.LimparRestos(exe);
+
+        Assert.False(File.Exists(exe + ".novo"));
+        Assert.True(File.Exists(exe));
+    }
 }

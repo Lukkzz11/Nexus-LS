@@ -151,8 +151,13 @@ public partial class App : Application
         try
         {
             // WAL, timeout e chaves estrangeiras precisam existir ANTES de abrir o banco/migrar.
-            // É idempotente: pode rodar a cada abertura.
-            PreparadorBanco.Aplicar(CaminhoBanco.Padrao());
+            // É idempotente: pode rodar a cada abertura. Se o SQLite disser que a imagem está corrompida (o que
+            // acontece depois de um fechamento abrupto), os diários -wal/-shm são postos de lado em vez de apagados.
+            var caminhoDoBanco = CaminhoBanco.Padrao();
+            var postosDeLado = PreparadorBanco.AplicarComRecuperacao(caminhoDoBanco);
+            if (postosDeLado is not null)
+                NexusLS.Core.Diagnostico.RegistroDeLog.Aviso(
+                    "Banco aberto após recuperação: diário inválido posto de lado em " + postosDeLado);
 
             using var db = new PdvDbContext(OpcoesBanco);
             var temDados = db.Database.GetAppliedMigrations().Any();
