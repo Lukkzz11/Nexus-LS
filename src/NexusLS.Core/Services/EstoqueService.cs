@@ -97,6 +97,18 @@ public class EstoqueService
             .ToListAsync();
     }
 
+    /// <summary>Todas as movimentações entre duas datas (incluídas), da mais antiga para a mais nova.</summary>
+    public async Task<List<MovimentacaoEstoque>> ListarMovimentacoesPeriodoAsync(DateTime de, DateTime ate)
+    {
+        var inicio = de.Date;
+        var fim = ate.Date.AddDays(1);
+        await using var db = await _fabrica.CreateDbContextAsync();
+        return await db.Movimentacoes.AsNoTracking()
+            .Where(m => m.DataHora >= inicio && m.DataHora < fim)
+            .OrderBy(m => m.DataHora).ThenBy(m => m.Id)
+            .ToListAsync();
+    }
+
     public async Task<List<MovimentacaoEstoque>> ListarMovimentacoesAsync(int produtoId)
     {
         await using var db = await _fabrica.CreateDbContextAsync();

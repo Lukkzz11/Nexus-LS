@@ -1,13 +1,21 @@
 <UserControl x:Class="NexusLS.App.Views.ResumoEstoqueView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:v="clr-namespace:NexusLS.App.Views"
+             xmlns:conv="clr-namespace:NexusLS.App.Converters">
     <UserControl.Resources>
+        <conv:ChaveParaPincelConverter x:Key="Pincel" />
+
         <!-- Uma barra: nome e valor em cima, barra embaixo -->
         <DataTemplate x:Key="Barra">
-            <StackPanel Margin="0,0,0,8">
+            <StackPanel Margin="0,0,0,8" ToolTip="{Binding Valor}" Background="Transparent">
                 <Grid>
-                    <TextBlock Text="{Binding Rotulo}" TextTrimming="CharacterEllipsis" Margin="0,0,130,0" />
-                    <TextBlock Text="{Binding Valor}" HorizontalAlignment="Right" FontWeight="SemiBold" />
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="{Binding Rotulo}" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Grid.Column="1" Text="{Binding Valor}" FontWeight="SemiBold" FontSize="12" Margin="12,0,0,0" />
                 </Grid>
                 <ProgressBar Minimum="0" Maximum="100" Value="{Binding Percentual, Mode=OneWay}" Height="10" Margin="0,3,0,0">
                     <ProgressBar.Style>
@@ -23,9 +31,31 @@
                 </ProgressBar>
             </StackPanel>
         </DataTemplate>
+
+        <!-- Fatia da rosca e a legenda dela (mesmo desenho do Relatórios) -->
+        <DataTemplate x:Key="FatiaDesenho">
+            <Path Data="{Binding Caminho}" Fill="{Binding ChaveCor, Converter={StaticResource Pincel}}" Stroke="{StaticResource CorPainel}"
+                  StrokeThickness="1" ToolTip="{Binding Legenda}" />
+        </DataTemplate>
+        <DataTemplate x:Key="FatiaLegenda">
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Border Width="12" Height="12" CornerRadius="2" Background="{Binding ChaveCor, Converter={StaticResource Pincel}}" Margin="0,0,8,0" VerticalAlignment="Center" />
+                <TextBlock Text="{Binding Legenda}" TextTrimming="CharacterEllipsis" FontSize="12" VerticalAlignment="Center" />
+            </StackPanel>
+        </DataTemplate>
+
         <Style x:Key="Numero" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="26" />
+            <Setter Property="FontSize" Value="24" />
             <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+        <Style x:Key="TituloGrafico" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style x:Key="SubGrafico" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />
+            <Setter Property="Margin" Value="0,2,0,10" />
         </Style>
         <Style x:Key="AvisoVazio" TargetType="TextBlock">
             <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />
@@ -36,25 +66,78 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="0,0,12,24">
             <TextBlock Text="Resumo do estoque" FontSize="22" FontWeight="SemiBold" />
-            <TextBlock Text="O que tem, o que mais sai e o que está acabando." Foreground="{StaticResource CorTextoSuave}" Margin="0,2,0,12" />
+            <TextBlock Text="O que tem, onde está, o que mais sai e o que está acabando." Foreground="{StaticResource CorTextoSuave}" Margin="0,2,0,12" />
 
-            <UniformGrid Columns="3" Margin="0,0,0,12">
-                <Border Style="{StaticResource Painel}" Margin="0,0,8,8"><StackPanel><TextBlock Text="Produtos ativos" Style="{StaticResource Rotulo}" /><TextBlock Text="{Binding ProdutosAtivos}" Style="{StaticResource Numero}" /></StackPanel></Border>
-                <Border Style="{StaticResource Painel}" Margin="0,0,8,8"><StackPanel><TextBlock Text="Peças em estoque" Style="{StaticResource Rotulo}" /><TextBlock Text="{Binding PecasEmEstoque}" Style="{StaticResource Numero}" /></StackPanel></Border>
-                <Border Style="{StaticResource Painel}" Margin="0,0,0,8"><StackPanel><TextBlock Text="Valor em estoque (custo)" Style="{StaticResource Rotulo}" /><TextBlock Text="{Binding ValorCusto}" Style="{StaticResource Numero}" /></StackPanel></Border>
-                <Border Style="{StaticResource Painel}" Margin="0,0,8,0"><StackPanel><TextBlock Text="Valor em estoque (venda)" Style="{StaticResource Rotulo}" /><TextBlock Text="{Binding ValorVenda}" Style="{StaticResource Numero}" /></StackPanel></Border>
-                <Border Style="{StaticResource Painel}" Margin="0,0,8,0"><StackPanel><TextBlock Text="Estoque baixo" Style="{StaticResource Rotulo}" /><TextBlock Text="{Binding QtdBaixo}" Style="{StaticResource Numero}" Foreground="{StaticResource CorAtencaoBorda}" /></StackPanel></Border>
-                <Border Style="{StaticResource Painel}"><StackPanel><TextBlock Text="Esgotados" Style="{StaticResource Rotulo}" /><TextBlock Text="{Binding QtdEsgotado}" Style="{StaticResource Numero}" Foreground="{StaticResource CorPerigo}" /></StackPanel></Border>
-            </UniformGrid>
+            <!-- Cartões de totais -->
+            <v:GradeDeCartoes LarguraMinima="170" MaximoColunas="6" Espaco="12" IgualarAltura="True" Margin="0,0,0,12">
+                <Border Style="{StaticResource Painel}"><StackPanel><TextBlock Text="Peças em estoque" Style="{StaticResource Rotulo}" /><TextBlock Text="{Binding PecasEmEstoque}" Style="{StaticResource Numero}" /><TextBlock Text="{Binding ProdutosAtivos, StringFormat='{}{0} produto(s) ativo(s)'}" Style="{StaticResource SubGrafico}" Margin="0,2,0,0" /></StackPanel></Border>
+                <Border Style="{StaticResource Painel}"><StackPanel><TextBlock Text="Valor de custo" Style="{StaticResource Rotulo}" /><TextBlock Text="{Binding ValorCusto}" Style="{StaticResource Numero}" /></StackPanel></Border>
+                <Border Style="{StaticResource Painel}"><StackPanel><TextBlock Text="Valor de venda" Style="{StaticResource Rotulo}" /><TextBlock Text="{Binding ValorVenda}" Style="{StaticResource Numero}" /></StackPanel></Border>
+                <Border Style="{StaticResource Painel}"><StackPanel><TextBlock Text="Lucro potencial" Style="{StaticResource Rotulo}" /><TextBlock Text="{Binding LucroPotencial}" Style="{StaticResource Numero}" Foreground="{StaticResource CorSerie2}" /></StackPanel></Border>
+                <Border Style="{StaticResource Painel}"><StackPanel><TextBlock Text="Abaixo do mínimo" Style="{StaticResource Rotulo}" /><TextBlock Text="{Binding QtdAbaixoMinimo}" Style="{StaticResource Numero}" Foreground="{StaticResource CorAtencaoBorda}" /><TextBlock Style="{StaticResource SubGrafico}" Margin="0,2,0,0"><Run Text="{Binding QtdBaixo, Mode=OneWay}" /><Run Text=" baixo(s) · " /><Run Text="{Binding QtdEsgotado, Mode=OneWay}" /><Run Text=" esgotado(s)" /></TextBlock></StackPanel></Border>
+            </v:GradeDeCartoes>
 
-            <UniformGrid Columns="2">
-                <Border Style="{StaticResource Painel}" Margin="0,0,8,8">
+            <v:GradeDeCartoes LarguraMinima="440" MaximoColunas="2" Espaco="12" IgualarAltura="True">
+                <!-- Linha: entradas x saídas -->
+                <Border Style="{StaticResource Painel}">
                     <StackPanel>
                         <DockPanel>
                             <ComboBox DockPanel.Dock="Right" ItemsSource="{Binding OpcoesDias}" SelectedItem="{Binding Dias}" Width="70" ToolTip="Período em dias" />
-                            <TextBlock Text="O que mais sai" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" />
+                            <TextBlock Text="Entradas x saídas de estoque" Style="{StaticResource TituloGrafico}" VerticalAlignment="Center" />
                         </DockPanel>
-                        <TextBlock Text="{Binding PeriodoTexto}" Foreground="{StaticResource CorTextoSuave}" FontSize="12" Margin="0,2,0,10" />
+                        <TextBlock Text="{Binding PeriodoTexto}" Style="{StaticResource SubGrafico}" />
+                        <Grid Height="130" AutomationProperties.Name="Gráfico de linha de entradas e saídas de estoque">
+                            <Grid.Style>
+                                <Style TargetType="Grid">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Movimentacoes.Vazia}" Value="True"><Setter Property="Visibility" Value="Collapsed" /></DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Grid.Style>
+                            <Border BorderBrush="{StaticResource CorBorda}" BorderThickness="0,0,0,1" />
+                            <Border BorderBrush="{StaticResource CorBorda}" BorderThickness="0,1,0,0" VerticalAlignment="Top" Opacity="0.6" />
+                            <Viewbox Stretch="Fill" Margin="4,6">
+                                <Canvas Width="300" Height="100">
+                                    <Path Data="{Binding Movimentacoes.CaminhoSaidas}" Stroke="{StaticResource CorSerie4}" StrokeThickness="2" StrokeLineJoin="Round" />
+                                    <Path Data="{Binding Movimentacoes.CaminhoEntradas}" Stroke="{StaticResource CorSerie2}" StrokeThickness="2" StrokeLineJoin="Round" />
+                                </Canvas>
+                            </Viewbox>
+                        </Grid>
+                        <Grid Margin="0,4,0,0">
+                            <Grid.Style>
+                                <Style TargetType="Grid">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Movimentacoes.Vazia}" Value="True"><Setter Property="Visibility" Value="Collapsed" /></DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Grid.Style>
+                            <TextBlock Text="{Binding Movimentacoes.PrimeiroRotulo}" FontSize="11" Foreground="{StaticResource CorTextoSuave}" />
+                            <TextBlock Text="{Binding Movimentacoes.Escala}" FontSize="11" Foreground="{StaticResource CorTextoSuave}" HorizontalAlignment="Center" />
+                            <TextBlock Text="{Binding Movimentacoes.UltimoRotulo}" FontSize="11" Foreground="{StaticResource CorTextoSuave}" HorizontalAlignment="Right" />
+                        </Grid>
+                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                            <Border Width="12" Height="12" CornerRadius="2" Background="{StaticResource CorSerie2}" Margin="0,0,6,0" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding Movimentacoes.TotalEntradas, StringFormat='Entradas: {0}'}" FontSize="12" Margin="0,0,16,0" />
+                            <Border Width="12" Height="12" CornerRadius="2" Background="{StaticResource CorSerie4}" Margin="0,0,6,0" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding Movimentacoes.TotalSaidas, StringFormat='Saídas: {0}'}" FontSize="12" />
+                        </StackPanel>
+                        <TextBlock Text="Nenhuma movimentação de estoque no período.">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource AvisoVazio}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Movimentacoes.Vazia}" Value="True"><Setter Property="Visibility" Value="Visible" /></DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
+                <!-- O que mais sai -->
+                <Border Style="{StaticResource Painel}">
+                    <StackPanel>
+                        <TextBlock Text="O que mais sai" Style="{StaticResource TituloGrafico}" />
+                        <TextBlock Text="Peças vendidas no mesmo período" Style="{StaticResource SubGrafico}" />
                         <ItemsControl ItemsSource="{Binding MaisSaem}" ItemTemplate="{StaticResource Barra}" />
                         <TextBlock Text="Nenhuma venda no período.">
                             <TextBlock.Style>
@@ -67,21 +150,82 @@
                         </TextBlock>
                     </StackPanel>
                 </Border>
-                <Border Style="{StaticResource Painel}" Margin="0,0,0,8">
+
+                <!-- Rosca: participação por categoria -->
+                <Border Style="{StaticResource Painel}">
                     <StackPanel>
-                        <TextBlock Text="Estoque por categoria" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10" />
+                        <TextBlock Text="Participação por categoria" Style="{StaticResource TituloGrafico}" />
+                        <TextBlock Text="Parte de cada categoria no valor de custo do estoque" Style="{StaticResource SubGrafico}" />
+                        <Viewbox Height="170" Margin="0,0,0,8">
+                            <Grid Width="200" Height="200">
+                                <ItemsControl ItemsSource="{Binding PizzaCategorias}" ItemTemplate="{StaticResource FatiaDesenho}" Width="200" Height="200">
+                                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                </ItemsControl>
+                                <Ellipse Width="108" Height="108" Fill="{StaticResource CorPainel}" />
+                            </Grid>
+                        </Viewbox>
+                        <ItemsControl ItemsSource="{Binding PizzaCategorias}" ItemTemplate="{StaticResource FatiaLegenda}" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Rosca: sobras x normal -->
+                <Border Style="{StaticResource Painel}">
+                    <StackPanel>
+                        <TextBlock Text="Estoque normal x sobras" Style="{StaticResource TituloGrafico}" />
+                        <TextBlock Text="Valor de custo das sobras da loja contra o resto" Style="{StaticResource SubGrafico}" />
+                        <Viewbox Height="170" Margin="0,0,0,8">
+                            <Grid Width="200" Height="200">
+                                <ItemsControl ItemsSource="{Binding PizzaSobras}" ItemTemplate="{StaticResource FatiaDesenho}" Width="200" Height="200">
+                                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                </ItemsControl>
+                                <Ellipse Width="108" Height="108" Fill="{StaticResource CorPainel}" />
+                            </Grid>
+                        </Viewbox>
+                        <ItemsControl ItemsSource="{Binding PizzaSobras}" ItemTemplate="{StaticResource FatiaLegenda}" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Barras por categoria -->
+                <Border Style="{StaticResource Painel}">
+                    <StackPanel>
+                        <TextBlock Text="Estoque por categoria" Style="{StaticResource TituloGrafico}" />
+                        <TextBlock Text="Peças, valor de custo e valor de venda" Style="{StaticResource SubGrafico}" />
                         <ItemsControl ItemsSource="{Binding PorCategoria}" ItemTemplate="{StaticResource Barra}" />
                     </StackPanel>
                 </Border>
-                <Border Style="{StaticResource Painel}" Margin="0,0,8,0">
+
+                <!-- Barras por tamanho -->
+                <Border Style="{StaticResource Painel}">
                     <StackPanel>
-                        <TextBlock Text="Onde tem mais estoque" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10" />
+                        <TextBlock Text="Peças por tamanho" Style="{StaticResource TituloGrafico}" />
+                        <TextBlock Text="Quantas peças existem em cada tamanho" Style="{StaticResource SubGrafico}" />
+                        <ItemsControl ItemsSource="{Binding PorTamanho}" ItemTemplate="{StaticResource Barra}" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Top por valor -->
+                <Border Style="{StaticResource Painel}">
+                    <StackPanel>
+                        <TextBlock Text="Produtos com mais valor em estoque" Style="{StaticResource TituloGrafico}" />
+                        <TextBlock Text="Valor de custo parado em cada produto" Style="{StaticResource SubGrafico}" />
+                        <ItemsControl ItemsSource="{Binding MaioresValores}" ItemTemplate="{StaticResource Barra}" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Top por peças -->
+                <Border Style="{StaticResource Painel}">
+                    <StackPanel>
+                        <TextBlock Text="Onde tem mais estoque" Style="{StaticResource TituloGrafico}" />
+                        <TextBlock Text="Produtos com mais peças" Style="{StaticResource SubGrafico}" />
                         <ItemsControl ItemsSource="{Binding MaioresEstoques}" ItemTemplate="{StaticResource Barra}" />
                     </StackPanel>
                 </Border>
+
+                <!-- Abaixo do mínimo -->
                 <Border Style="{StaticResource Painel}">
                     <StackPanel>
-                        <TextBlock Text="Estoque baixo ou esgotado" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10" />
+                        <TextBlock Text="Estoque baixo ou esgotado" Style="{StaticResource TituloGrafico}" />
+                        <TextBlock Text="Estoque atual como parte do mínimo" Style="{StaticResource SubGrafico}" />
                         <ItemsControl ItemsSource="{Binding EstoqueBaixo}" ItemTemplate="{StaticResource Barra}" />
                         <TextBlock Text="Nenhum produto abaixo do mínimo.">
                             <TextBlock.Style>
@@ -94,7 +238,7 @@
                         </TextBlock>
                     </StackPanel>
                 </Border>
-            </UniformGrid>
+            </v:GradeDeCartoes>
             <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" />
         </StackPanel>
     </ScrollViewer>
