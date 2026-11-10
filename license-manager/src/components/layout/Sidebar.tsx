@@ -9,12 +9,14 @@ import {
   Shield,
   LogOut,
   X,
+  SearchCheck,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 
 export type TabId =
   | "dashboard"
   | "licencas"
+  | "verificar"
   | "clientes"
   | "dispositivos"
   | "auditoria"
@@ -61,6 +63,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
       icon: KeyRound,
       badge: counts?.vencendo ? counts.vencendo : counts?.licencasAtivas,
       badgeColor: counts?.vencendo ? "bg-amber-100 text-amber-800" : "bg-slate-100 text-slate-700",
+    },
+    {
+      id: "verificar",
+      label: "Verificar Chave",
+      icon: SearchCheck,
     },
     {
       id: "clientes",

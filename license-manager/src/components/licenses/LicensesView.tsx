@@ -23,6 +23,7 @@ interface LicensesViewProps {
   onDesbloquear: (licencaId: string) => Promise<void>;
   onCancelar: (licencaId: string) => Promise<void>;
   onVerDispositivos: (licenca: Licenca) => void;
+  onVerificarChave?: () => void;
 }
 
 export const LicensesView: React.FC<LicensesViewProps> = ({
@@ -33,6 +34,7 @@ export const LicensesView: React.FC<LicensesViewProps> = ({
   onDesbloquear,
   onCancelar,
   onVerDispositivos,
+  onVerificarChave,
 }) => {
   const [busca, setBusca] = useState("");
   const [filtroStatus, setFiltroStatus] = useState<StatusLicenca | "TODAS">("TODAS");
@@ -114,7 +116,7 @@ export const LicensesView: React.FC<LicensesViewProps> = ({
             />
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <select
               value={filtroPlano}
               onChange={(e) => setFiltroPlano(e.target.value as any)}
@@ -127,6 +129,14 @@ export const LicensesView: React.FC<LicensesViewProps> = ({
               <option value="anual">Anual (365d)</option>
               <option value="personalizado">Personalizado</option>
             </select>
+
+            <button
+              onClick={onVerificarChave}
+              className="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg shadow-2xs transition shrink-0"
+            >
+              <Search className="w-4 h-4 text-slate-500" />
+              <span>Verificar chave</span>
+            </button>
 
             <button
               onClick={onOpenNovaLicenca}

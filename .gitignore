@@ -495,3 +495,6 @@ src/NexusLS.LicenseManager/wwwroot/
 
 # Web Updater sub-repository
 atualizador-web/
+
+# Worktrees temporárias criadas por agentes
+.claude/

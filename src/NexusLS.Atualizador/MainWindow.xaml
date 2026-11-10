@@ -603,6 +603,12 @@
                                 <Button x:Name="BtnAtivarChave" Style="{StaticResource BotaoPrimario}" Margin="0,0,10,10" Padding="18,10" Click="BtnAtivarChave_Click">
                                     <TextBlock Text="✓  Ativar / Validar Licença" FontWeight="SemiBold" />
                                 </Button>
+                                <Button x:Name="BtnConsultarChave" Style="{StaticResource BotaoSecundario}" Margin="0,0,10,10" Padding="16,10" Click="BtnConsultarChave_Click">
+                                    <TextBlock Text="🔍  Consultar Chave" FontWeight="SemiBold" />
+                                </Button>
+                                <Button x:Name="BtnTestarConexao" Style="{StaticResource BotaoSecundario}" Margin="0,0,10,10" Padding="16,10" Click="BtnTestarConexao_Click">
+                                    <TextBlock Text="🌐  Testar Conexão" FontWeight="SemiBold" />
+                                </Button>
                                 <Button x:Name="BtnRevalidarLicenca" Style="{StaticResource BotaoSecundario}" Margin="0,0,10,10" Padding="16,10" Click="BtnRevalidarLicenca_Click">
                                     <TextBlock Text="🔄  Sincronizar Status" FontWeight="SemiBold" />
                                 </Button>

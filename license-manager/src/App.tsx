@@ -16,6 +16,7 @@ import { ClientsView } from "./components/clients/ClientsView";
 import { DevicesView } from "./components/devices/DevicesView";
 import { AuditView } from "./components/audit/AuditView";
 import { UpdaterSimulatorView } from "./components/simulator/UpdaterSimulatorView";
+import { VerifyKeyView } from "./components/verify/VerifyKeyView";
 import { SettingsView } from "./components/config/SettingsView";
 
 import { GenerateLicenseModal } from "./components/licenses/GenerateLicenseModal";
@@ -227,8 +228,11 @@ export function App() {
               onDesbloquear={handleDesbloquear}
               onCancelar={handleCancelar}
               onVerDispositivos={handleAbrirDispositivos}
+              onVerificarChave={() => setCurrentTab("verificar")}
             />
           )}
+
+          {currentTab === "verificar" && <VerifyKeyView licencas={licencas} />}
 
           {currentTab === "clientes" && (
             <ClientsView

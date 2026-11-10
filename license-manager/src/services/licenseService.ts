@@ -757,6 +757,179 @@ async function registrarAuditoriaLocal(dados: Omit<HistoricoAuditoria, "id" | "d
 }
 
 // ----------------------------------------------------------------------------
+// VERIFICAÇÃO DE CHAVE (SOMENTE LEITURA)
+// ----------------------------------------------------------------------------
+export interface ResultadoVerificacaoChave {
+  conectado: boolean;
+  latenciaMs: number;
+  encontrada: boolean;
+  situacao: StatusLicenca | "NAO_ENCONTRADA" | "ERRO";
+  chave: string;
+  cliente?: string;
+  empresa?: string;
+  plano?: string;
+  dataInicio?: string;
+  dataVencimento?: string;
+  diasRestantes?: number;
+  limiteDispositivos?: number;
+  dispositivosAtivos?: number;
+  maquinas: string[];
+  mensagem: string;
+  observacoes?: string;
+  motivoBloqueio?: string | null;
+}
+
+/**
+ * Consulta uma chave de licença no Firestore em modo SOMENTE LEITURA.
+ * Nunca grava, ativa, vincula máquina ou altera documentos.
+ */
+export async function verificarChaveLicenca(chave: string): Promise<ResultadoVerificacaoChave> {
+  const chaveNorm = normalizarChave(chave);
+
+  if (!/^[A-Z0-9-]{6,64}$/.test(chaveNorm)) {
+    return {
+      conectado: true,
+      latenciaMs: 0,
+      encontrada: false,
+      situacao: "NAO_ENCONTRADA",
+      chave: chaveNorm,
+      maquinas: [],
+      mensagem: "Chave inválida: use de 6 a 64 letras, números ou hífens.",
+    };
+  }
+
+  const inicio = performance.now();
+
+  try {
+    let licData: any = null;
+    let licId = "";
+
+    // 1) Busca direta pelo ID do documento (a chave costuma ser o próprio ID).
+    const docSnap = await getDoc(doc(db, "licencas", chaveNorm));
+    if (docSnap.exists()) {
+      licData = docSnap.data();
+      licId = docSnap.id;
+    } else {
+      // 2) Fallback pela hash SHA-256 da chave.
+      const hash = await calcularHashChave(chaveNorm);
+      const q = query(collection(db, "licencas"), where("hashChave", "==", hash), limit(1));
+      const snapshot = await getDocs(q);
+      if (!snapshot.empty) {
+        licData = snapshot.docs[0].data();
+        licId = snapshot.docs[0].id;
+      }
+    }
+
+    if (!licData) {
+      return {
+        conectado: true,
+        latenciaMs: Math.round(performance.now() - inicio),
+        encontrada: false,
+        situacao: "NAO_ENCONTRADA",
+        chave: chaveNorm,
+        maquinas: [],
+        mensagem: "Licença não encontrada. Confira a chave digitada.",
+      };
+    }
+
+    const { status, diasRestantes } = calcularStatusReal(licData);
+    const maquinas = extrairMaquinasCampo(licData.maquina);
+    const dispositivos = await listarDispositivosPorLicenca(licId);
+    const dispositivosAtivos = Math.max(dispositivos.length, maquinas.length);
+    const dataVencimento = licData.dataVencimento || licData.validade || "";
+
+    let mensagem: string;
+    switch (status) {
+      case "ATIVA":
+        mensagem = `Licença válida até ${dataVencimento}.`;
+        break;
+      case "VENCENDO":
+        mensagem = `Licença válida até ${dataVencimento}, mas vence em ${diasRestantes} dia(s). Renove em breve.`;
+        break;
+      case "VENCIDA":
+        mensagem = `Licença vencida desde ${dataVencimento}. Renove o plano para continuar.`;
+        break;
+      case "BLOQUEADA":
+        mensagem = licData.motivoBloqueio
+          ? `Licença bloqueada administrativamente: ${licData.motivoBloqueio}.`
+          : "Licença bloqueada administrativamente.";
+        break;
+      case "CANCELADA":
+        mensagem = licData.motivoCancelamento
+          ? `Licença cancelada definitivamente: ${licData.motivoCancelamento}.`
+          : "Licença cancelada definitivamente.";
+        break;
+      case "PENDENTE":
+        mensagem =
+          "Licença pendente de ativação: ainda não há computador vinculado a esta chave.";
+        break;
+      default:
+        mensagem = `Situação atual da licença: ${status}.`;
+        break;
+    }
+
+    return {
+      conectado: true,
+      latenciaMs: Math.round(performance.now() - inicio),
+      encontrada: true,
+      situacao: status,
+      chave: licData.codigoFormatado || licId || chaveNorm,
+      cliente: licData.clienteNome || licData.cliente || "Cliente",
+      empresa: licData.empresa || "",
+      plano: licData.plano || "",
+      dataInicio: licData.dataInicio || "",
+      dataVencimento,
+      diasRestantes,
+      limiteDispositivos: Number(licData.limiteDispositivos || 1),
+      dispositivosAtivos,
+      maquinas,
+      mensagem,
+      observacoes: licData.observacoes || "",
+      motivoBloqueio: licData.motivoBloqueio || null,
+    };
+  } catch (error) {
+    console.error("Erro ao verificar chave de licença:", error);
+    return {
+      conectado: false,
+      latenciaMs: Math.round(performance.now() - inicio),
+      encontrada: false,
+      situacao: "ERRO",
+      chave: chaveNorm,
+      maquinas: [],
+      mensagem:
+        "Sem conexão com o servidor de licenças. Verifique a internet e tente novamente.",
+    };
+  }
+}
+
+/**
+ * Testa a conexão com o Firestore sem gravar nada.
+ * Um documento inexistente (NotFound) também conta como servidor online.
+ */
+export async function testarConexaoLicenca(): Promise<{
+  online: boolean;
+  latenciaMs: number;
+  mensagem: string;
+}> {
+  const inicio = performance.now();
+  try {
+    await getDoc(doc(db, "licencas", "NEXUS-0000-0000-0000"));
+    return {
+      online: true,
+      latenciaMs: Math.round(performance.now() - inicio),
+      mensagem: "Servidor de licenças online.",
+    };
+  } catch (error) {
+    console.warn("Falha no teste de conexão com o servidor de licenças:", error);
+    return {
+      online: false,
+      latenciaMs: Math.round(performance.now() - inicio),
+      mensagem: "Sem conexão com o servidor de licenças.",
+    };
+  }
+}
+
+// ----------------------------------------------------------------------------
 // SIMULADOR / TESTADOR DE VALIDAÇÃO DO ATUALIZADOR
 // ----------------------------------------------------------------------------
 export async function simularValidacaoAtualizador(params: {

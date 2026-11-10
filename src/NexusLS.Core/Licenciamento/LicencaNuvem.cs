@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Globalization;
 using System.Net;
 using System.Runtime.InteropServices;
@@ -24,10 +25,16 @@ public record ResultadoLicencaNuvem(
     int? DispositivosUsados = null,
     int? LimiteDispositivos = null,
     DateTime? DataInicio = null,
-    DateTime? VerificadaEm = null)
+    DateTime? VerificadaEm = null,
+    IReadOnlyList<string>? MaquinasVinculadas = null,
+    bool? EsteComputadorVinculado = null,
+    bool? TemVagaNesteComputador = null)
 {
     public bool Ativa => Estado is EstadoLicencaNuvem.Valida or EstadoLicencaNuvem.Vencendo;
 }
+
+/// <summary>Resultado da checagem de conectividade com o serviço de licenças.</summary>
+public record ResultadoConexaoLicenca(bool Online, long LatenciaMs, string Mensagem);
 
 /// <summary>Documento "licencas/{chave}" como o site/License Manager de licenças grava.</summary>
 public record DocumentoLicenca(
@@ -424,13 +431,15 @@ public class ServicoLicencaNuvem
     private static readonly Regex PadraoChave = new("^[A-Za-z0-9\\-]{6,64}$", RegexOptions.Compiled);
 
     private readonly IFonteLicenca _fonte;
+    private readonly IFonteLicenca? _fonteConsulta;
     private readonly string _caminho;
     private readonly Func<DateTime> _agora;
     private readonly Func<string> _maquina;
 
-    public ServicoLicencaNuvem(IFonteLicenca fonte, string caminho, Func<DateTime>? agora = null, Func<string>? maquina = null)
+    public ServicoLicencaNuvem(IFonteLicenca fonte, string caminho, Func<DateTime>? agora = null, Func<string>? maquina = null, IFonteLicenca? fonteConsulta = null)
     {
         _fonte = fonte;
+        _fonteConsulta = fonteConsulta;
         _caminho = caminho;
         _agora = agora ?? (() => DateTime.Now);
         _maquina = maquina ?? Services.LicencaService.CodigoDaMaquina;
@@ -516,6 +525,110 @@ public class ServicoLicencaNuvem
         catch (FalhaDeConexaoLicencaException ex)
         {
             return new(EstadoLicencaNuvem.SemConexao, chave, "", null, null, ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Consulta somente leitura de uma chave: mostra a situação, os dados da licença e se este computador já está
+    /// vinculado ou se há vaga. Não grava nada na nuvem nem no computador (não vincula, não salva, não remove).
+    /// </summary>
+    public async Task<ResultadoLicencaNuvem> ConsultarAsync(string chave, CancellationToken ct = default)
+    {
+        chave = (chave ?? "").Trim().ToUpperInvariant();
+        if (!PadraoChave.IsMatch(chave))
+            return new(EstadoLicencaNuvem.ChaveInvalida, chave, "", null, null, "Chave inválida: use de 6 a 64 letras, números ou hífens.");
+        try
+        {
+            var doc = await (_fonteConsulta ?? _fonte).ObterAsync(chave, ct).ConfigureAwait(false);
+            if (doc is null)
+                return new(EstadoLicencaNuvem.NaoEncontrada, chave, "", null, null, "Licença não encontrada. Confira a chave digitada.");
+
+            var aqui = _maquina();
+            var maquinas = ExtrairMaquinas(doc.Maquina);
+            var curinga = maquinas.Contains("*", StringComparer.OrdinalIgnoreCase);
+            var jaVinculada = curinga || maquinas.Contains(aqui, StringComparer.OrdinalIgnoreCase);
+            var limite = Math.Max(1, doc.LimiteDispositivos ?? 1);
+            var temVaga = !jaVinculada && maquinas.Count < limite;
+            var usados = doc.DispositivosUsados ?? maquinas.Count;
+            var inicio = TentarValidade(doc.DataInicio, out var di) ? di : (DateTime?)null;
+            var verificadaEm = _agora();
+
+            var situacaoVinculo = jaVinculada
+                ? " Este computador já está vinculado a esta licença."
+                : temVaga
+                    ? $" Há vaga para ativar a licença neste computador ({usados} de {limite} em uso)."
+                    : $" O limite de {limite} computador(es) desta licença foi atingido.";
+
+            if (!doc.Ativa)
+            {
+                var detalhe = !string.IsNullOrWhiteSpace(doc.MotivoBloqueio) ? doc.MotivoBloqueio : "Esta licença foi bloqueada ou cancelada. Fale com o fornecedor.";
+                return new(EstadoLicencaNuvem.Bloqueada, chave, doc.Cliente, null, null, detalhe + situacaoVinculo,
+                    Empresa: doc.Empresa, Plano: doc.Plano, DispositivosUsados: usados, LimiteDispositivos: limite,
+                    DataInicio: inicio, VerificadaEm: verificadaEm, MaquinasVinculadas: maquinas,
+                    EsteComputadorVinculado: jaVinculada, TemVagaNesteComputador: temVaga);
+            }
+
+            if (!TentarValidade(doc.Validade, out var validade))
+                return new(EstadoLicencaNuvem.ChaveInvalida, chave, doc.Cliente, null, null, "A licença não tem uma validade válida no sistema." + situacaoVinculo,
+                    Empresa: doc.Empresa, Plano: doc.Plano, DispositivosUsados: usados, LimiteDispositivos: limite,
+                    DataInicio: inicio, VerificadaEm: verificadaEm, MaquinasVinculadas: maquinas,
+                    EsteComputadorVinculado: jaVinculada, TemVagaNesteComputador: temVaga);
+
+            var dias = (int)(validade.Date - verificadaEm.Date).TotalDays;
+            EstadoLicencaNuvem estado;
+            string mensagem;
+            if (dias < 0)
+            {
+                estado = EstadoLicencaNuvem.Vencida;
+                mensagem = $"Licença de {doc.Cliente} venceu em {validade:dd/MM/yyyy}.";
+            }
+            else if (dias <= DiasDeAviso)
+            {
+                estado = EstadoLicencaNuvem.Vencendo;
+                mensagem = $"Licença de {doc.Cliente} vence em {dias} dia(s) ({validade:dd/MM/yyyy}).";
+            }
+            else
+            {
+                estado = EstadoLicencaNuvem.Valida;
+                mensagem = $"Licença de {doc.Cliente}, válida até {validade:dd/MM/yyyy}.";
+            }
+
+            return new(estado, chave, doc.Cliente, validade, dias, mensagem + situacaoVinculo,
+                Empresa: doc.Empresa, Plano: doc.Plano, DispositivosUsados: usados, LimiteDispositivos: limite,
+                DataInicio: inicio, VerificadaEm: verificadaEm, MaquinasVinculadas: maquinas,
+                EsteComputadorVinculado: jaVinculada, TemVagaNesteComputador: temVaga);
+        }
+        catch (FalhaDeConexaoLicencaException ex)
+        {
+            return new(EstadoLicencaNuvem.SemConexao, chave, "", null, null, ex.Message);
+        }
+    }
+
+    /// <summary>Testa a conectividade com o serviço de licenças usando uma chave fictícia (nada é gravado).</summary>
+    public async Task<ResultadoConexaoLicenca> TestarConexaoAsync(CancellationToken ct = default)
+    {
+        var relogio = Stopwatch.StartNew();
+        try
+        {
+            // Chave proposital inexistente: se o servidor responde "não encontrada", ele está acessível.
+            await (_fonteConsulta ?? _fonte).ObterAsync("NEXUS-0000-0000-0000", ct).ConfigureAwait(false);
+            relogio.Stop();
+            return new(true, relogio.ElapsedMilliseconds, "Servidor de licenças online.");
+        }
+        catch (FalhaDeConexaoLicencaException ex)
+        {
+            relogio.Stop();
+            return new(false, relogio.ElapsedMilliseconds, ex.Message);
+        }
+        catch (OperationCanceledException)
+        {
+            relogio.Stop();
+            return new(false, relogio.ElapsedMilliseconds, "O teste de conexão foi cancelado.");
+        }
+        catch (Exception ex)
+        {
+            relogio.Stop();
+            return new(false, relogio.ElapsedMilliseconds, $"Não foi possível falar com o servidor de licenças: {ex.Message}");
         }
     }
 

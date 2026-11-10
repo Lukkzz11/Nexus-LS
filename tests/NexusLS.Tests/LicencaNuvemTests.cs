@@ -22,8 +22,8 @@ public class LicencaNuvemTests : IDisposable
         { Desvinculada = maquina; return Task.CompletedTask; }
     }
 
-    private ServicoLicencaNuvem Novo(FonteFalsa f, string maquina = "MAQ1")
-        => new(f, Path.Combine(_pasta, "l.json"), () => _agora, () => maquina);
+    private ServicoLicencaNuvem Novo(FonteFalsa f, string maquina = "MAQ1", IFonteLicenca? fonteConsulta = null)
+        => new(f, Path.Combine(_pasta, "l.json"), () => _agora, () => maquina, fonteConsulta);
 
     public void Dispose() { if (Directory.Exists(_pasta)) Directory.Delete(_pasta, true); }
 
@@ -219,6 +219,99 @@ public class LicencaNuvemTests : IDisposable
         var r3Novo = await pc3.AtivarAsync("NEXUS-8K29-XP41-MZ73");
         Assert.Equal(EstadoLicencaNuvem.Valida, r3Novo.Estado);
         Assert.Equal("PC-CAIXA-02,PC-GERENCIA-03", f.Doc.Maquina);
+    }
+
+    [Fact]
+    public async Task Consultar_chave_valida_nao_vincula_na_nuvem_nem_salva_no_computador()
+    {
+        var f = new FonteFalsa { Doc = new("Loja Sol", "2027-05-01", true, "", null) };
+        var consulta = new FonteFalsa { Doc = f.Doc };
+        var s = Novo(f, "MAQ1", consulta);
+        var arquivoLocal = Path.Combine(_pasta, "l.json");
+
+        var r = await s.ConsultarAsync(" abc-123456 ");
+
+        Assert.Equal(EstadoLicencaNuvem.Valida, r.Estado);
+        Assert.Equal("ABC-123456", r.Chave);
+        Assert.Equal("Loja Sol", r.Cliente);
+        Assert.NotNull(r.VerificadaEm);
+        Assert.Null(f.Registrada);
+        Assert.Null(consulta.Registrada);
+        Assert.False(File.Exists(arquivoLocal));
+        Assert.Equal(EstadoLicencaNuvem.NaoEncontrada, s.AvaliarLocal().Estado);
+        Assert.False(r.EsteComputadorVinculado);
+        Assert.True(r.TemVagaNesteComputador);
+        Assert.Empty(r.MaquinasVinculadas!);
+        Assert.Contains("vaga", r.Mensagem, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Consultar_identifica_computador_ja_vinculado_e_limite_atingido()
+    {
+        var f = new FonteFalsa { Doc = new("Loja Sol", "2027-05-01", true, "MAQ1,MAQ2", null, LimiteDispositivos: 2) };
+        var r = await Novo(f, "MAQ1", new FonteFalsa { Doc = f.Doc }).ConsultarAsync("ABC-123456");
+        Assert.Equal(EstadoLicencaNuvem.Valida, r.Estado);
+        Assert.True(r.EsteComputadorVinculado);
+        Assert.False(r.TemVagaNesteComputador);
+        Assert.Equal(2, r.MaquinasVinculadas!.Count);
+        Assert.Contains("já está vinculado", r.Mensagem, StringComparison.OrdinalIgnoreCase);
+
+        var outro = await Novo(f, "MAQ9", new FonteFalsa { Doc = f.Doc }).ConsultarAsync("ABC-123456");
+        Assert.Equal(EstadoLicencaNuvem.Valida, outro.Estado);
+        Assert.False(outro.EsteComputadorVinculado);
+        Assert.False(outro.TemVagaNesteComputador);
+        Assert.Contains("limite", outro.Mensagem, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Consultar_vencendo_vencida_bloqueada_inexistente_e_formato_invalido()
+    {
+        var vencendo = await Novo(new FonteFalsa { Doc = new("X", "2026-11-20", true, "*", null) })
+            .ConsultarAsync("ABC-123456");
+        Assert.Equal(EstadoLicencaNuvem.Vencendo, vencendo.Estado);
+        Assert.Equal(15, vencendo.DiasRestantes);
+
+        var vencida = await Novo(new FonteFalsa { Doc = new("X", "2026-11-04", true, "*", null) })
+            .ConsultarAsync("ABC-123456");
+        Assert.Equal(EstadoLicencaNuvem.Vencida, vencida.Estado);
+
+        var bloqueada = await Novo(new FonteFalsa { Doc = new("X", "2027-05-01", false, "*", null, MotivoBloqueio: "Pagamento pendente") })
+            .ConsultarAsync("ABC-123456");
+        Assert.Equal(EstadoLicencaNuvem.Bloqueada, bloqueada.Estado);
+        Assert.Contains("Pagamento pendente", bloqueada.Mensagem);
+
+        var inexistente = await Novo(new FonteFalsa()).ConsultarAsync("ABC-123456");
+        Assert.Equal(EstadoLicencaNuvem.NaoEncontrada, inexistente.Estado);
+        Assert.Equal("Licença não encontrada. Confira a chave digitada.", inexistente.Mensagem);
+
+        var invalida = await Novo(new FonteFalsa()).ConsultarAsync("../x");
+        Assert.Equal(EstadoLicencaNuvem.ChaveInvalida, invalida.Estado);
+
+        var semNet = await Novo(new FonteFalsa(), "MAQ1", new FonteFalsa { SemInternet = true })
+            .ConsultarAsync("ABC-123456");
+        Assert.Equal(EstadoLicencaNuvem.SemConexao, semNet.Estado);
+    }
+
+    [Fact]
+    public async Task Consultar_validade_ilegivel_e_chave_invalida()
+    {
+        var r = await Novo(new FonteFalsa { Doc = new("X", "amanhã", true, "*", null) })
+            .ConsultarAsync("ABC-123456");
+        Assert.Equal(EstadoLicencaNuvem.ChaveInvalida, r.Estado);
+    }
+
+    [Fact]
+    public async Task Testar_conexao_online_e_offline()
+    {
+        var online = await Novo(new FonteFalsa()).TestarConexaoAsync();
+        Assert.True(online.Online);
+        Assert.True(online.LatenciaMs >= 0);
+        Assert.Contains("online", online.Mensagem, StringComparison.OrdinalIgnoreCase);
+
+        var offline = await Novo(new FonteFalsa(), "MAQ1", new FonteFalsa { SemInternet = true }).TestarConexaoAsync();
+        Assert.False(offline.Online);
+        Assert.True(offline.LatenciaMs >= 0);
+        Assert.Equal("sem net", offline.Mensagem);
     }
 
     private ServicoLicencaNuvem Novo2(IFonteLicenca f) => new(f, Path.Combine(_pasta, "l2.json"), () => _agora, () => "MAQ1");

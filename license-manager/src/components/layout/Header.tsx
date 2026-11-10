@@ -26,6 +26,10 @@ export const Header: React.FC<HeaderProps> = ({
       title: "Gerenciamento de Licenças",
       subtitle: "Geração de chaves, renovações, suspensões e controle de planos",
     },
+    verificar: {
+      title: "Verificar Chave",
+      subtitle: "Consulta de validade e conexão de uma chave de licença",
+    },
     clientes: {
       title: "Clientes & Empresas",
       subtitle: "Base comercial de contratantes autorizados do sistema Nexus LS",

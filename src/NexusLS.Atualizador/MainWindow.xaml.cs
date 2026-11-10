@@ -26,7 +26,8 @@ public partial class MainWindow : Window
         new FonteLicencaComReserva(
             new FonteLicencaCloudFunction(HttpCompartilhado),
             new FonteLicencaFirestore(HttpCompartilhado)),
-        ServicoLicencaNuvem.CaminhoPadrao());
+        ServicoLicencaNuvem.CaminhoPadrao(),
+        fonteConsulta: new FonteLicencaFirestore(HttpCompartilhado));
 
     private static HttpClient CriarHttpClient()
     {
@@ -734,6 +735,106 @@ public partial class MainWindow : Window
         {
             BtnAtivarChave.IsEnabled = true;
             BtnRevalidarLicenca.IsEnabled = true;
+        }
+    }
+
+    private async void BtnConsultarChave_Click(object sender, RoutedEventArgs e)
+    {
+        var chave = TxtChaveLicenca.Text.Trim().ToUpperInvariant();
+        if (string.IsNullOrWhiteSpace(chave))
+        {
+            MessageBox.Show(this, "Digite ou cole a chave da licença antes de consultar.", "Chave Obrigatória", MessageBoxButton.OK, MessageBoxImage.Information);
+            TxtChaveLicenca.Focus();
+            return;
+        }
+
+        BtnConsultarChave.IsEnabled = false;
+        BtnAtivarChave.IsEnabled = false;
+        BtnRevalidarLicenca.IsEnabled = false;
+        TxtStatusGeral.Text = "Consultando a chave no servidor central Nexus LS (somente leitura)...";
+        try
+        {
+            var r = await _licenca.ConsultarAsync(chave);
+
+            TxtResultadoLicenca.Text = r.Mensagem;
+            TxtResultadoLicenca.Foreground = r.Estado switch
+            {
+                EstadoLicencaNuvem.Valida or EstadoLicencaNuvem.Vencendo => (SolidColorBrush)FindResource("CorPositivo"),
+                EstadoLicencaNuvem.SemConexao => (SolidColorBrush)FindResource("CorAviso"),
+                _ => (SolidColorBrush)FindResource("CorPerigo")
+            };
+
+            // Atualiza apenas o bloco de detalhes: o estado da licença ativa/header continua o mesmo.
+            TxtLicencaCliente.Text = string.IsNullOrWhiteSpace(r.Cliente) ? "—" : r.Cliente;
+            TxtLicencaEmpresa.Text = string.IsNullOrWhiteSpace(r.Empresa) ? "—" : r.Empresa;
+            TxtLicencaPlano.Text = string.IsNullOrWhiteSpace(r.Plano) ? "—" : r.Plano.ToUpperInvariant();
+            TxtLicencaValidade.Text = r.Validade is { } v
+                ? $"{v:dd/MM/yyyy}" + (r.DiasRestantes is { } d ? $" ({d} dia(s) restantes)" : "")
+                : "—";
+
+            if (r.DispositivosUsados.HasValue && r.LimiteDispositivos.HasValue)
+            {
+                var vinculo = r.EsteComputadorVinculado == true
+                    ? " • este computador vinculado"
+                    : r.TemVagaNesteComputador == true
+                        ? " • há vaga neste computador"
+                        : " • limite atingido";
+                TxtLicencaDispositivos.Text = $"{r.DispositivosUsados} de {r.LimiteDispositivos} computador(es){vinculo}";
+            }
+            else
+            {
+                TxtLicencaDispositivos.Text = "—";
+            }
+
+            TxtLicencaVerificacao.Text = r.VerificadaEm is { } ver ? $"{ver:dd/MM/yyyy HH:mm} (Consulta)" : "—";
+
+            if (r.MaquinasVinculadas is { } maquinas)
+            {
+                var lista = maquinas.Count > 0 ? string.Join(", ", maquinas) : "nenhum computador vinculado";
+                TxtLicencaDetalhe.Text = $"{r.Mensagem}\nComputadores vinculados: {lista}.";
+            }
+            else
+            {
+                TxtLicencaDetalhe.Text = r.Mensagem;
+            }
+
+            TxtStatusGeral.Text = "Consulta concluída (somente leitura, nada foi vinculado).";
+        }
+        finally
+        {
+            BtnConsultarChave.IsEnabled = true;
+            BtnAtivarChave.IsEnabled = true;
+            BtnRevalidarLicenca.IsEnabled = true;
+        }
+    }
+
+    private async void BtnTestarConexao_Click(object sender, RoutedEventArgs e)
+    {
+        BtnTestarConexao.IsEnabled = false;
+        TxtStatusGeral.Text = "Testando a conexão com o serviço de licenças...";
+        try
+        {
+            var r = await _licenca.TestarConexaoAsync();
+            if (r.Online)
+            {
+                TxtResultadoLicenca.Text = $"Servidor online em {r.LatenciaMs} ms.";
+                TxtResultadoLicenca.Foreground = (SolidColorBrush)FindResource("CorPositivo");
+                TxtSidebarConexao.Text = "Conectado";
+                DotStatusConexao.Fill = (SolidColorBrush)FindResource("CorPositivo");
+                TxtStatusGeral.Text = "Serviço de licenças acessível.";
+            }
+            else
+            {
+                TxtResultadoLicenca.Text = $"Sem conexão: {r.Mensagem}";
+                TxtResultadoLicenca.Foreground = (SolidColorBrush)FindResource("CorPerigo");
+                TxtSidebarConexao.Text = "Offline";
+                DotStatusConexao.Fill = (SolidColorBrush)FindResource("CorAviso");
+                TxtStatusGeral.Text = "Não foi possível falar com o serviço de licenças.";
+            }
+        }
+        finally
+        {
+            BtnTestarConexao.IsEnabled = true;
         }
     }
 
