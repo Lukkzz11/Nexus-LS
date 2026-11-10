@@ -139,6 +139,7 @@ public sealed class NovoProdutoWindow : Window
             (Rotulado("Preço de atacado (R$)", _atacado, "Opcional. Usado nas vendas de atacado."), 1)));
         var calc = new StackPanel { Orientation = Orientation.Horizontal };
         calc.Children.Add(Botao("Calcular preço de venda", (_, _) => CalcularPreco(), false));
+        calc.Children.Add(Botao("Calculadora de custo", (_, _) => AbrirCalculadoraCusto(), false));
         calc.Children.Add(new TextBlock { Text = "Margem (%)", VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(6, 0, 6, 0) });
         calc.Children.Add(_margem);
         p.Children.Add(calc);
@@ -262,6 +263,16 @@ public sealed class NovoProdutoWindow : Window
             Avisar("Preço de varejo calculado. Confira antes de salvar.", false);
         }
         catch (RegraDeNegocioException ex) { Avisar(ex.Message, true); }
+    }
+
+    private void AbrirCalculadoraCusto()
+    {
+        var janela = new CalculadoraCustoWindow { Owner = this };
+        if (janela.ShowDialog() == true && janela.CustoCentavos is { } c)
+        {
+            _custo.Text = Dinheiro.FormatarParaEdicao(c);
+            Avisar("Custo por unidade preenchido pela calculadora.", false);
+        }
     }
 
     private async Task GerarCodigoAsync()
