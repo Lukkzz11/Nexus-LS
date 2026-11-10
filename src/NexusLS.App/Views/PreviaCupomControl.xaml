@@ -23,7 +23,7 @@
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <TextBlock Text="{Binding Texto}" FontWeight="{Binding Peso}" />
+                                        <TextBlock Text="{Binding Texto}" FontWeight="{Binding Peso}" FontSize="{Binding Tamanho}" />
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>

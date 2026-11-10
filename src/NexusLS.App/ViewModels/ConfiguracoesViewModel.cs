@@ -26,8 +26,8 @@ public sealed partial class OpcaoModeloCupom : CommunityToolkit.Mvvm.ComponentMo
     }
 }
 
-/// <summary>Um pedaço de linha da prévia do cupom, com o peso da letra já escolhido.</summary>
-public record SegmentoPrevia(string Texto, System.Windows.FontWeight Peso);
+/// <summary>Um pedaço de linha da prévia do cupom, com o peso e o tamanho da letra já escolhidos.</summary>
+public record SegmentoPrevia(string Texto, System.Windows.FontWeight Peso, double Tamanho = 12);
 
 /// <summary>Dados da loja e do cupom, com uma prévia do cupom que muda enquanto você digita.</summary>
 public partial class ConfiguracoesViewModel : ViewModelBase
@@ -110,7 +110,7 @@ public partial class ConfiguracoesViewModel : ViewModelBase
     private void AtualizarLogo()
     {
         TemLogo = _logoBytes is not null;
-        LogoPrevia = CupomMostrarLogo ? LogoCupom.EmCinza(_logoBytes) : null;
+        LogoPrevia = CupomMostrarLogo ? LogoCupom.ParaImpressao(_logoBytes) : null;
     }
 
     [RelayCommand]
@@ -402,14 +402,36 @@ public partial class ConfiguracoesViewModel : ViewModelBase
     {
         try
         {
-            Previa = MontadorCupom.Montar(VendaDePrevia(), ConfigDoFormulario());
-            LinhasPrevia = MontadorCupom.Estilizar(Previa)
-                .Select(l => (IReadOnlyList<SegmentoPrevia>)l.Select(s => new SegmentoPrevia(
-                    s.Texto.Length == 0 ? " " : s.Texto, s.Negrito ? System.Windows.FontWeights.Bold : System.Windows.FontWeights.Normal)).ToList())
-                .ToList();
+            var loja = ConfigDoFormulario();
+            Previa = MontadorCupom.Montar(VendaDePrevia(), loja);
+            var largura = Math.Clamp(loja.LarguraCupom, ConfiguracaoService.LarguraMinima, ConfiguracaoService.LarguraMaxima);
+            LinhasPrevia = MontadorCupom.Estilizar(Previa).Select(l => LinhaDaPrevia(l, largura)).ToList();
         }
         catch (RegraDeNegocioException) { /* campo numérico ainda incompleto: mantém a prévia anterior */ }
     }
+
+    /// <summary>
+    /// Uma linha da prévia. O nome da loja sai em letra maior (até 17), mas os espaços de centralização encolhem na
+    /// mesma medida: a linha continua com a largura do papel e o nome fica no meio, como na impressora.
+    /// </summary>
+    private static IReadOnlyList<SegmentoPrevia> LinhaDaPrevia(List<SegmentoCupom> linha, int largura)
+    {
+        var nome = linha.FirstOrDefault(s => s.Grande)?.Texto.Trim() ?? "";
+        if (nome.Length == 0)
+            return linha.Select(s => new SegmentoPrevia(s.Texto.Length == 0 ? " " : s.Texto, Peso(s.Negrito))).ToList();
+
+        var tamanho = Math.Max(12, Math.Min(17, 12.0 * largura / nome.Length));
+        // O nome maior ocupa mais colunas; o que sobra da largura do papel vira espaço dos dois lados.
+        var espaco = Math.Max(0, (int)Math.Round((largura - nome.Length * tamanho / 12) / 2));
+        return new List<SegmentoPrevia>
+        {
+            new(new string(' ', espaco), System.Windows.FontWeights.Normal),
+            new(nome, System.Windows.FontWeights.Bold, tamanho)
+        };
+    }
+
+    private static System.Windows.FontWeight Peso(bool negrito) =>
+        negrito ? System.Windows.FontWeights.Bold : System.Windows.FontWeights.Normal;
 
     /// <summary>A venda de exemplo, com o nome do operador que está no formulário.</summary>
     private Venda VendaDePrevia()

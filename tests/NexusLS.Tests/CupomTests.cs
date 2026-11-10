@@ -200,6 +200,20 @@ public class MontadorCupomTests
             Assert.All(Linhas(cupom), l => Assert.True(l.Length <= ConfiguracaoService.LarguraMaxima));
         }
     }
+
+    [Fact]
+    public void Nome_da_loja_sai_marcado_como_maior_e_a_caixa_usa_traco_continuo()
+    {
+        var loja = Loja();
+        loja.CupomTituloEmCaixa = true;
+
+        var linhas = MontadorCupom.Estilizar(MontadorCupom.Montar(Venda(), loja));
+
+        Assert.Contains(linhas[0], s => s.Grande && s.Texto.Contains("LOJA DO ZÉ")); // a primeira linha é o nome da loja
+        Assert.Contains(linhas, l => l.Any(s => s.Texto.Contains("│ CUPOM")));
+        Assert.Contains(linhas, l => l.Any(s => s.Texto.Contains("┌")));
+        Assert.All(linhas, l => Assert.False(l.Any(s => s.Texto.Contains("+--"))));
+    }
 }
 
 public class CupomServiceTests

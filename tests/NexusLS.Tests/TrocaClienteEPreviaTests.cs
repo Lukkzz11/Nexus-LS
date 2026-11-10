@@ -65,6 +65,7 @@ public class TrocaClienteEPreviaTests
 
         Assert.Equal(texto, string.Join("\n", linhas.Select(l => string.Concat(l.Select(s => s.Texto)))));
         Assert.True(linhas[0].All(s => s.Negrito));                                                  // nome da loja
+        Assert.True(linhas[0].All(s => s.Grande));                                                   // em letra maior
         Assert.Contains(linhas, l => l.Any(s => s.Negrito && s.Texto.Contains("CUPOM NÃO FISCAL")));
         Assert.Contains(linhas, l => l.Any(s => s.Negrito && s.Texto == "Operador:") && l.Any(s => !s.Negrito));
         Assert.Contains(linhas, l => l.All(s => s.Negrito) && l.Any(s => s.Texto.StartsWith("TOTAL A PAGAR:")));

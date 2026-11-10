@@ -7,8 +7,9 @@ namespace NexusLS.App.Impressao;
 
 /// <summary>
 /// Prepara e desenha o logo do cupom. Ao enviar, a imagem é reduzida (no máximo 384 x 160 pontos), colocada sobre
-/// fundo branco e guardada como PNG. Na prévia e na impressão ela vai em tons de cinza, que é como a térmica imprime
-/// (o ERP faz o mesmo com um filtro de cinza). A impressão passa pelo driver do Windows, como o texto do cupom.
+/// fundo branco e guardada como PNG. Na prévia e na impressão ela vai em preto e branco puro, com limiar: é o que a
+/// térmica sabe imprimir, e o logo sai chapado em vez de pontilhado. A impressão passa pelo driver do Windows, como
+/// o texto do cupom.
 /// </summary>
 public static class LogoCupom
 {
@@ -50,8 +51,32 @@ public static class LogoCupom
         return saida.ToArray();
     }
 
-    /// <summary>A imagem em tons de cinza, como sai na impressora. Nulo se não houver logo.</summary>
-    public static BitmapSource? EmCinza(byte[]? png)
+    /// <summary>
+    /// Tom de cinza a partir do qual o pixel vira preto na impressão (0 a 255). A térmica só sabe imprimir preto ou
+    /// branco: com limiar, o logo sai chapado em vez de pontilhado.
+    /// </summary>
+    public const byte LimiarPreto = 160;
+
+    /// <summary>A imagem em preto e branco puro (sem tons de cinza), como a térmica imprime. Nulo se não houver logo.</summary>
+    public static BitmapSource? ParaImpressao(byte[]? png)
+    {
+        var cinza = EmCinza(png);
+        if (cinza is null) return null;
+
+        var largura = cinza.PixelWidth;
+        var altura = cinza.PixelHeight;
+        var pixels = new byte[largura * altura];
+        cinza.CopyPixels(pixels, largura, 0);
+        for (var i = 0; i < pixels.Length; i++)
+            pixels[i] = pixels[i] < LimiarPreto ? (byte)0 : (byte)255;
+
+        var puro = BitmapSource.Create(largura, altura, cinza.DpiX, cinza.DpiY, PixelFormats.Gray8, null, pixels, largura);
+        puro.Freeze();
+        return puro;
+    }
+
+    /// <summary>A imagem em tons de cinza, antes do limiar. Nulo se não houver logo.</summary>
+    private static BitmapSource? EmCinza(byte[]? png)
     {
         if (png is not { Length: > 0 }) return null;
         using var fluxo = new MemoryStream(png);

@@ -32,7 +32,7 @@ public class CupomExtrasTests
             l.CupomTextoGarantia = "Troca em 7 dias com a etiqueta.";
         });
         Assert.Contains("Ref: CAM-001", c);
-        Assert.Contains("| CUPOM NÃO FISCAL |", c);
+        Assert.Contains("│ CUPOM NÃO FISCAL │", c);
         Assert.Contains("Troca em 7 dias com a etiqueta.", c);
         Assert.Contains("Assinatura do cliente", c);
         Assert.True(c.IndexOf("Troca em 7 dias", StringComparison.Ordinal) < c.IndexOf("Assinatura do cliente", StringComparison.Ordinal));

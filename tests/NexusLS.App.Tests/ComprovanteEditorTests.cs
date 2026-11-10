@@ -106,7 +106,7 @@ public sealed class ComprovanteEditorTests : IDisposable
         Assert.DoesNotContain("ITENS DA VENDA", vm.Previa);
 
         Capturador.Rodar(() => vm.Modelos[0].Escolhido = true);
-        Assert.Contains("| CUPOM NÃO FISCAL |", vm.Previa);
+        Assert.Contains("│ CUPOM NÃO FISCAL │", vm.Previa);
         Assert.Contains("ITENS DA VENDA", vm.Previa);
         Assert.NotEqual(life, vm.Previa);
 

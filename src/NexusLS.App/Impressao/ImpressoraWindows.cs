@@ -66,15 +66,44 @@ public class ImpressoraWindows : IImpressoraCupom
 
         // Consolas tem cada letra com ~0,55 da altura da fonte: escolhe o tamanho para a linha cheia caber na bobina.
         var fonte = Math.Clamp((largura - 2 * margem) / (loja.LarguraCupom * 0.55), 6, 14);
+        var disponivel = largura - 2 * margem;
 
+        var blocos = new List<Block>();
         var paragrafo = new Paragraph { Margin = new Thickness(0) };
-        var linhas = NexusLS.Core.Services.MontadorCupom.Estilizar(texto);
-        for (var i = 0; i < linhas.Count; i++)
+        foreach (var linha in NexusLS.Core.Services.MontadorCupom.Estilizar(texto))
         {
-            foreach (var s in linhas[i])
-                paragrafo.Inlines.Add(new Run(s.Texto) { FontWeight = s.Negrito ? FontWeights.Bold : FontWeights.Normal });
-            if (i < linhas.Count - 1) paragrafo.Inlines.Add(new LineBreak());
+            // Nome da loja: linha própria, centralizada e com letra maior (sem os espaços de centralização, que
+            // no tamanho maior empurrariam o nome para fora da bobina).
+            if (linha.Any(s => s.Grande))
+            {
+                if (paragrafo.Inlines.Count > 0)
+                {
+                    blocos.Add(paragrafo);
+                    paragrafo = new Paragraph { Margin = new Thickness(0) };
+                }
+
+                var nome = string.Concat(linha.Select(s => s.Texto)).Trim();
+                // Não passa de 1,4x e diminui se o nome for comprido, para nunca sair do papel.
+                var tamanho = Math.Max(fonte, Math.Min(fonte * 1.4, disponivel / (Math.Max(1, nome.Length) * 0.55)));
+                blocos.Add(new Paragraph(new Run(nome) { FontWeight = FontWeights.Bold, FontSize = tamanho })
+                {
+                    Margin = new Thickness(0),
+                    TextAlignment = TextAlignment.Center
+                });
+                continue;
+            }
+
+            foreach (var s in linha)
+                paragrafo.Inlines.Add(new Run(s.Texto)
+                {
+                    FontWeight = s.Negrito ? FontWeights.Bold : FontWeights.Normal,
+                    // As demais linhas mantêm o tamanho para as colunas continuarem alinhadas.
+                    FontSize = fonte
+                });
+            paragrafo.Inlines.Add(new LineBreak());
         }
+        if (paragrafo.Inlines.LastOrDefault() is LineBreak) paragrafo.Inlines.Remove(paragrafo.Inlines.Last());
+        if (paragrafo.Inlines.Count > 0) blocos.Add(paragrafo);
 
         var documento = new FlowDocument
         {
@@ -85,8 +114,9 @@ public class ImpressoraWindows : IImpressoraCupom
             ColumnWidth = largura,
             PageHeight = altura
         };
-        // Logo no topo, centralizado e em tons de cinza (como o ERP). Vai pelo driver do Windows, junto com o texto.
-        if (loja.CupomMostrarLogo && LogoCupom.EmCinza(loja.LogoCupom) is { } logo)
+        // Logo no topo, centralizado e em preto e branco puro (a térmica não imprime cinza). Vai pelo driver do Windows,
+        // junto com o texto.
+        if (loja.CupomMostrarLogo && LogoCupom.ParaImpressao(loja.LogoCupom) is { } logo)
         {
             var largLogo = Math.Min(logo.PixelWidth, (largura - 2 * margem) * 0.7);
             documento.Blocks.Add(new BlockUIContainer(new System.Windows.Controls.Image
@@ -98,7 +128,7 @@ public class ImpressoraWindows : IImpressoraCupom
                 Margin = new Thickness(0, 0, 0, 4)
             }));
         }
-        documento.Blocks.Add(paragrafo);
+        foreach (var bloco in blocos) documento.Blocks.Add(bloco);
 
         dialogo.PrintDocument(((IDocumentPaginatorSource)documento).DocumentPaginator, "Cupom Nexus");
     }

@@ -14,8 +14,8 @@ public enum ModeloCupom
     Comprovante = 2
 }
 
-/// <summary>Um pedaço de uma linha do cupom, em negrito ou não.</summary>
-public record SegmentoCupom(string Texto, bool Negrito);
+/// <summary>Um pedaço de uma linha do cupom, em negrito ou não. Grande = nome da loja, que sai maior no papel.</summary>
+public record SegmentoCupom(string Texto, bool Negrito, bool Grande = false);
 
 /// <summary>
 /// Monta o texto do cupom NÃO FISCAL de uma venda, em colunas fixas (fonte de largura fixa), pronto para a
@@ -47,10 +47,11 @@ public static class MontadorCupom
         var titulo = modelo == ModeloCupom.Comprovante ? "COMPROVANTE DE VENDA" : "CUPOM NÃO FISCAL";
         if (loja.CupomTituloEmCaixa)
         {
-            var miolo = $"| {titulo} |";
-            linhas.AddRange(Centralizar("+" + new string('-', miolo.Length - 2) + "+", largura));
+            // Caixa desenhada com traço contínuo: o "-" da fonte de largura fixa sai picado (parece pontilhado).
+            var miolo = $"│ {titulo} │";
+            linhas.AddRange(Centralizar("┌" + new string('─', miolo.Length - 2) + "┐", largura));
             linhas.AddRange(Centralizar(miolo, largura));
-            linhas.AddRange(Centralizar("+" + new string('-', miolo.Length - 2) + "+", largura));
+            linhas.AddRange(Centralizar("└" + new string('─', miolo.Length - 2) + "┘", largura));
         }
         else linhas.AddRange(Centralizar(titulo, largura));
         if (modelo == ModeloCupom.Comprovante) linhas.AddRange(Centralizar($"(NÃO FISCAL)  Nº {venda.Id:000000}", largura));
@@ -149,7 +150,8 @@ public static class MontadorCupom
 
     /// <summary>
     /// O mesmo texto de <see cref="Montar"/>, dividido em pedaços com e sem negrito (nome da loja, CUPOM NÃO FISCAL,
-    /// rótulos, ITENS DA VENDA, TOTAL e TROCO). Só o peso da letra muda, então as colunas continuam alinhadas na prévia
+    /// rótulos, ITENS DA VENDA, TOTAL e TROCO). O nome da loja vai marcado como <see cref="SegmentoCupom.Grande"/>,
+    /// porque sai em letra maior. Nas demais linhas só o peso muda, então as colunas continuam alinhadas na prévia
     /// e na impressora (fonte de largura fixa).
     /// </summary>
     public static List<List<SegmentoCupom>> Estilizar(string texto)
@@ -163,11 +165,12 @@ public static class MontadorCupom
             if (!jaAchouNome && corte.Length > 0)
             {
                 jaAchouNome = true;
-                segmentos.Add(new SegmentoCupom(linha, true));
+                segmentos.Add(new SegmentoCupom(linha, true, Grande: true));
             }
             else if (corte is "CUPOM NÃO FISCAL" or "ITENS DA VENDA" || corte.StartsWith("***", StringComparison.Ordinal)
-                     || corte.StartsWith("+--", StringComparison.Ordinal) || corte.StartsWith("| CUPOM", StringComparison.Ordinal)
-                     || corte.StartsWith("COMPROVANTE DE VENDA", StringComparison.Ordinal) || corte.StartsWith("| COMPROVANTE", StringComparison.Ordinal)
+                     || corte.StartsWith("┌", StringComparison.Ordinal) || corte.StartsWith("└", StringComparison.Ordinal)
+                     || corte.StartsWith("│ CUPOM", StringComparison.Ordinal)
+                     || corte.StartsWith("COMPROVANTE DE VENDA", StringComparison.Ordinal) || corte.StartsWith("│ COMPROVANTE", StringComparison.Ordinal)
                      || corte.StartsWith("Total da Nota:", StringComparison.Ordinal)
                      || corte.StartsWith("TOTAL A PAGAR:", StringComparison.Ordinal) || corte.StartsWith("TROCO:", StringComparison.Ordinal))
             {
