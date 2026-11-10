@@ -193,4 +193,98 @@ public class ReferenciaTamanhoEEnvioAutomaticoTests
         Assert.True(depois > antes);
 
     }
+
+    [Fact]
+    public void Resolver_prefere_ean13_depois_referencia_e_usa_a_ordem_cadastrada()
+    {
+        var produto = new Produto
+        {
+            Nome = "Camisa",
+            Referencia = "5555",
+            CodigoInterno = "INT-000001",
+            Tamanhos = new List<ProdutoTamanho>
+            {
+                new() { Tamanho = Tamanhos.SemTamanho, Ordem = 0 },
+                new() { Tamanho = "P", Ordem = 7 },
+                new() { Tamanho = "M", Ordem = 9 }
+            }
+        };
+
+        Assert.Equal("55557", CodigoBarrasTamanho.Resolver(produto, "P"));
+        Assert.Equal("55559", CodigoBarrasTamanho.Resolver(produto, "M"));
+        Assert.Equal("5555", CodigoBarrasTamanho.Resolver(produto, Tamanhos.SemTamanho));
+        Assert.Equal("5555", CodigoBarrasTamanho.Resolver(produto, null));
+
+        produto.CodigoBarras = "7891234567895"; // EAN-13 identifica o produto inteiro: não recebe sufixo
+        Assert.Equal("7891234567895", CodigoBarrasTamanho.Resolver(produto, "P"));
+    }
+
+    [Fact]
+    public void Resolver_usa_codigo_curto_quando_nao_ha_referencia_e_codigo_interno_como_ultimo_recurso()
+    {
+        var produto = new Produto { Nome = "Camisa", CodigoBarras = "12345", CodigoInterno = "INT-000001" };
+        Assert.Equal("123452", CodigoBarrasTamanho.Resolver(produto, "2"));
+
+        produto.CodigoBarras = null;
+        Assert.Equal("INT-0000012", CodigoBarrasTamanho.Resolver(produto, "2"));
+    }
+
+    [Fact]
+    public void Validar_aponta_codigo_vazio_acento_e_barras_finas_demais()
+    {
+        Assert.Contains(CodigoBarrasTamanho.Validar(null, 50), e => e.Contains("sem código"));
+        Assert.Contains(CodigoBarrasTamanho.Validar("CAMISÉ", 50), e => e.Contains("acento"));
+        Assert.Contains(CodigoBarrasTamanho.Validar("55551", 20), e => e.Contains("0,25"));
+        Assert.Empty(CodigoBarrasTamanho.Validar("55551", 50));
+    }
+
+    [Fact]
+    public void Ordem_generica_segue_a_sequencia_natural_e_sem_codigo_devolve_nulo()
+    {
+        Assert.Equal(1, CodigoBarrasTamanho.ObterOrdemGenerica("PP"));
+        Assert.Equal(2, CodigoBarrasTamanho.ObterOrdemGenerica("P"));
+        Assert.Equal(3, CodigoBarrasTamanho.ObterOrdemGenerica("M"));
+        Assert.Equal(4, CodigoBarrasTamanho.ObterOrdemGenerica("G"));
+        Assert.Equal(0, CodigoBarrasTamanho.ObterOrdemGenerica(Tamanhos.SemTamanho));
+
+        Assert.Null(CodigoBarrasTamanho.Resolver(new Produto { Nome = "Sem codigo" }, "P"));
+    }
+
+    [Fact]
+    public void Ordem_zero_no_cadastro_nao_ganha_sufixo()
+    {
+        var produto = new Produto
+        {
+            Nome = "Camisa",
+            Referencia = "5555",
+            Tamanhos = new List<ProdutoTamanho> { new() { Tamanho = "P", Ordem = 0 } }
+        };
+
+        Assert.Equal(0, CodigoBarrasTamanho.ObterOrdem(produto, "P"));
+        Assert.Equal("5555", CodigoBarrasTamanho.Resolver(produto, "P"));
+    }
+
+    [Fact]
+    public async Task Etiqueta_e_leitor_do_PDV_concordam_quando_a_referencia_difere_do_codigo_curto()
+    {
+        using var banco = new BancoDeTeste();
+        var s = new ProdutoService(banco.Fabrica);
+        var p = await s.CadastrarAsync(new DadosProduto("Camisa", "12345", 5000, 2000, 0, Referencia: "5555"));
+        await s.AdicionarGradeAsync(p.Id, new[] { "P", "M" });
+
+        var grade = await s.ListarTamanhosAsync(p.Id);
+        Assert.Equal("55551", grade.Single(t => t.Tamanho == "P").CodigoBarras);
+
+        var achou = await s.ObterPorCodigoDeTamanhoAsync("55551");
+        Assert.Equal("P", achou!.Value.Tamanho.Tamanho);
+
+        // Etiqueta antiga (código curto + ordem) continua sendo reconhecida.
+        Assert.Equal("M", (await s.ObterPorCodigoDeTamanhoAsync("123452"))!.Value.Tamanho.Tamanho);
+    }
+
+    [Fact]
+    public void Campo_zpl_escapa_caracteres_de_comando()
+    {
+        Assert.Equal("^FH^FDA_5EB_7EC_5F^FS", NexusLS.Core.Etiquetas.CampoZpl.Montar("A^B~C_"));
+    }
 }

@@ -8,6 +8,9 @@ namespace NexusLS.BarTender.ViewModels;
 
 public partial class ProdutoItemViewModel : ObservableObject
 {
+    /// <summary>Opção da lista de tamanhos que manda imprimir uma etiqueta para cada tamanho da grade.</summary>
+    public const string TodosOsTamanhos = "Todos os tamanhos";
+
     public Produto Produto { get; }
 
     [ObservableProperty]
@@ -15,6 +18,9 @@ public partial class ProdutoItemViewModel : ObservableObject
 
     [ObservableProperty]
     private string? _codigoBarras;
+
+    [ObservableProperty]
+    private string _tamanhoSelecionado = Tamanhos.SemTamanho;
 
     [ObservableProperty]
     private int _quantidadeAdicionar = 1;
@@ -27,6 +33,19 @@ public partial class ProdutoItemViewModel : ObservableObject
 
     [ObservableProperty]
     private string _dimensoesEtiquetaPersonalizada = "50 × 30 mm";
+
+    /// <summary>Tamanhos que podem ir para a fila. Produto com grade ganha a opção "Todos os tamanhos".</summary>
+    public IReadOnlyList<string> OpcoesTamanho { get; }
+
+    /// <summary>Verdadeiro quando o produto tem pelo menos um tamanho de verdade (P, M, G, 38...).</summary>
+    public bool TemGrade { get; }
+
+    /// <summary>Código da etiqueta no tamanho escolhido (EAN-13, ou referência + número do tamanho).</summary>
+    public string CodigoBarrasExibicao =>
+        CodigoBarrasTamanho.Resolver(Produto, TamanhoParaCodigo) ?? "—";
+
+    private string? TamanhoParaCodigo =>
+        string.Equals(TamanhoSelecionado, TodosOsTamanhos, StringComparison.OrdinalIgnoreCase) ? "" : TamanhoSelecionado;
 
     [RelayCommand]
     public void IncrementarQtd() => QuantidadeAdicionar++;
@@ -56,8 +75,45 @@ public partial class ProdutoItemViewModel : ObservableObject
     {
         Produto = produto;
         _codigoBarras = produto.CodigoBarras;
+
+        var tamanhos = (produto.Tamanhos ?? new List<ProdutoTamanho>())
+            .Where(t => !string.IsNullOrWhiteSpace(t.Tamanho))
+            .OrderBy(t => t.Ordem > 0 ? t.Ordem : int.MaxValue)
+            .ThenBy(t => t.Tamanho)
+            .Select(t => t.Tamanho.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        var reais = tamanhos
+            .Where(t => !string.Equals(t, Tamanhos.SemTamanho, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        TemGrade = reais.Count > 0;
+        if (TemGrade)
+        {
+            var opcoes = new List<string> { TodosOsTamanhos };
+            opcoes.AddRange(reais);
+
+            // "Sem tamanho" só aparece quando há estoque nele: senão seria só ruído na lista.
+            var semTamanho = produto.Tamanhos?.FirstOrDefault(t =>
+                !string.IsNullOrWhiteSpace(t.Tamanho) &&
+                string.Equals(t.Tamanho.Trim(), Tamanhos.SemTamanho, StringComparison.OrdinalIgnoreCase));
+            if (semTamanho is { Estoque: > 0 }) opcoes.Add(Tamanhos.SemTamanho);
+
+            OpcoesTamanho = opcoes;
+            _tamanhoSelecionado = TodosOsTamanhos;
+        }
+        else
+        {
+            OpcoesTamanho = new[] { Tamanhos.SemTamanho };
+            _tamanhoSelecionado = Tamanhos.SemTamanho;
+        }
+
         AtualizarInfoEtiqueta();
     }
+
+    partial void OnTamanhoSelecionadoChanged(string value) =>
+        OnPropertyChanged(nameof(CodigoBarrasExibicao));
 
     public void AtualizarInfoEtiqueta()
     {
@@ -73,5 +129,6 @@ public partial class ProdutoItemViewModel : ObservableObject
         Produto.CodigoBarras = novoCodigo;
         OnPropertyChanged(nameof(TemCodigoBarras));
         OnPropertyChanged(nameof(StatusCodigoTexto));
+        OnPropertyChanged(nameof(CodigoBarrasExibicao));
     }
 }

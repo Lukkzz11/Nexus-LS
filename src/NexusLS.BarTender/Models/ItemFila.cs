@@ -17,7 +17,12 @@ public partial class ItemFila : ObservableObject
     public string Nome => Produto.Nome;
     public string? Referencia => Produto.Referencia;
     public string? CodigoInterno => Produto.CodigoInterno;
-    public string? CodigoBarras => Produto.CodigoBarras;
+
+    /// <summary>Código que vai impresso: EAN-13 do produto ou referência/código interno + número do tamanho.</summary>
+    public string? CodigoBarras => CodigoBarrasTamanho.Resolver(Produto, Tamanho);
+
+    public string TamanhoExibicao => string.IsNullOrWhiteSpace(Tamanho) ? Tamanhos.SemTamanho : Tamanho;
+
     public long PrecoVarejoCentavos => Produto.PrecoVendaCentavos;
     public long PrecoAtacadoCentavos => Produto.PrecoAtacadoCentavos;
 
@@ -28,6 +33,27 @@ public partial class ItemFila : ObservableObject
     {
         Produto = produto;
         _quantidade = Math.Max(1, quantidade);
-        _tamanho = tamanho;
+        _tamanho = NormalizarTamanho(tamanho);
+    }
+
+    partial void OnTamanhoChanged(string value)
+    {
+        var normalizado = NormalizarTamanho(value);
+        if (!string.Equals(normalizado, value, StringComparison.Ordinal))
+        {
+            _tamanho = normalizado;
+            OnPropertyChanged(nameof(Tamanho));
+        }
+
+        OnPropertyChanged(nameof(CodigoBarras));
+        OnPropertyChanged(nameof(TamanhoExibicao));
+    }
+
+    private static string NormalizarTamanho(string? tamanho)
+    {
+        var limpo = tamanho?.Trim();
+        return string.IsNullOrEmpty(limpo) || string.Equals(limpo, Tamanhos.SemTamanho, StringComparison.OrdinalIgnoreCase)
+            ? ""
+            : limpo;
     }
 }

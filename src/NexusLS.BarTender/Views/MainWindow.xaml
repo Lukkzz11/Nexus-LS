@@ -335,6 +335,20 @@
                                 </DataGridTemplateColumn>
 
                                 <DataGridTextColumn Header="Categoria" Binding="{Binding Categoria, TargetNullValue='—'}" Width="1.5*" IsReadOnly="True" />
+
+                                <!-- Tamanho que vai para a fila (a etiqueta sai por tamanho) -->
+                                <DataGridTemplateColumn Header="Tamanho" Width="1.15*" SortMemberPath="TamanhoSelecionado">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <ComboBox ItemsSource="{Binding OpcoesTamanho}"
+                                                      SelectedItem="{Binding TamanhoSelecionado, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                      Height="28" MinWidth="104" FontSize="11.5"
+                                                      VerticalContentAlignment="Center"
+                                                      ToolTip="Tamanho que entra na fila. &quot;Todos os tamanhos&quot; cria uma etiqueta para cada tamanho da grade." />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
                                 <DataGridTextColumn Header="Preço Varejo" Binding="{Binding PrecoVarejoFormatado}" Width="1.2*" IsReadOnly="True" />
                                 <DataGridTextColumn Header="Preço Atacado" Binding="{Binding PrecoAtacadoFormatado}" Width="1.2*" IsReadOnly="True" />
 
@@ -541,6 +555,7 @@
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
+                                <DataGridTextColumn Header="Tamanho" Binding="{Binding TamanhoExibicao}" Width="1*" IsReadOnly="True" />
                                 <DataGridTextColumn Header="Preço Varejo" Binding="{Binding PrecoVarejoFormatado}" Width="1.5*" IsReadOnly="True" />
 
                                 <DataGridTemplateColumn Header="Quantidade de Etiquetas" Width="2.2*">

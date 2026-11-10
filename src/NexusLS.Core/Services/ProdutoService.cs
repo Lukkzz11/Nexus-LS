@@ -136,11 +136,27 @@ public class ProdutoService
 
         var prefixos = Enumerable.Range(1, codigo.Length - 1).Select(i => codigo[..i]).ToList();
         var candidatos = await db.Produtos.AsNoTracking()
-            .Where(p => p.Ativo && p.CodigoBarras != null && prefixos.Contains(p.CodigoBarras))
+            .Where(p => p.Ativo &&
+                ((p.CodigoBarras != null && prefixos.Contains(p.CodigoBarras)) ||
+                 (p.Referencia != null && prefixos.Contains(p.Referencia))))
             .ToListAsync();
-        foreach (var produto in candidatos.Where(p => CodigoBarrasTamanho.UsaNumeroDoTamanho(p.CodigoBarras)).OrderByDescending(p => p.CodigoBarras!.Length))
+
+        // Aceita o código novo (referência + ordem, igual ao que a etiqueta imprime) e também o antigo
+        // (código de barras do produto + ordem), para as etiquetas já impressas continuarem funcionando.
+        var tentativas = candidatos
+            .SelectMany(p => new[] { CodigoBarrasTamanho.BaseDoCodigo(p), p.CodigoBarras, p.Referencia }
+                .Where(b => !string.IsNullOrWhiteSpace(b))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Select(b => (Produto: p, Base: b!)))
+            .Where(x => x.Base.Length < codigo.Length &&
+                        CodigoBarrasTamanho.UsaNumeroDoTamanho(x.Base) &&
+                        codigo.StartsWith(x.Base, StringComparison.Ordinal))
+            .OrderByDescending(x => x.Base.Length);
+
+        foreach (var tentativa in tentativas)
         {
-            var resto = codigo[produto.CodigoBarras!.Length..];
+            var produto = tentativa.Produto;
+            var resto = codigo[tentativa.Base.Length..];
             if (!int.TryParse(resto, NumberStyles.None, CultureInfo.InvariantCulture, out var ordem) || ordem < 1) continue;
             var tamanho = await db.TamanhosProduto.AsNoTracking().FirstOrDefaultAsync(t => t.ProdutoId == produto.Id && t.Ordem == ordem);
             if (tamanho is null) continue;
@@ -354,7 +370,8 @@ public class ProdutoService
             .Where(t => t.ProdutoId == produtoId)
             .OrderBy(t => t.Id)
             .ToListAsync();
-        var codigo = await db.Produtos.AsNoTracking().Where(p => p.Id == produtoId).Select(p => p.CodigoBarras).FirstOrDefaultAsync();
+        var produto = await db.Produtos.AsNoTracking().FirstOrDefaultAsync(p => p.Id == produtoId);
+        var codigo = CodigoBarrasTamanho.BaseDoCodigo(produto);
         foreach (var t in lista) t.CodigoBarras = t.EhSemTamanho ? null : CodigoBarrasTamanho.Montar(codigo, t.Ordem);
         return lista;
     }
