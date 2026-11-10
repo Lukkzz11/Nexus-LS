@@ -292,4 +292,30 @@ public class BarTenderTests : IDisposable
         Assert.Contains(Tamanhos.SemTamanho, vm.OpcoesTamanho);
         Assert.Equal("5555", vm.CodigoBarrasExibicao);
     }
+
+    [Fact]
+    public void ProdutoItemViewModel_SoComReferencia_JaContaComoComCodigo()
+    {
+        // A etiqueta monta referência + número do tamanho: o produto tem código mesmo sem EAN gravado.
+        var comReferencia = new ProdutoItemViewModel(new Produto
+        {
+            Nome = "CAMISETA",
+            Referencia = "5555",
+            Tamanhos = new List<ProdutoTamanho> { new() { Tamanho = "M", Ordem = 3 } }
+        });
+        comReferencia.TamanhoSelecionado = "M";
+
+        Assert.True(comReferencia.TemCodigoBarras);
+        Assert.Equal("Com Código", comReferencia.StatusCodigoTexto);
+        Assert.Equal("55553", comReferencia.CodigoBarrasExibicao);
+
+        var soCodigoInterno = new ProdutoItemViewModel(new Produto { Nome = "BONE", CodigoInterno = "INT-000007" });
+        Assert.True(soCodigoInterno.TemCodigoBarras);
+        Assert.Equal("INT-000007", soCodigoInterno.CodigoBarrasExibicao);
+
+        var semNada = new ProdutoItemViewModel(new Produto { Nome = "SEM CODIGO" });
+        Assert.False(semNada.TemCodigoBarras);
+        Assert.Equal("Sem Código", semNada.StatusCodigoTexto);
+        Assert.Equal("—", semNada.CodigoBarrasExibicao);
+    }
 }

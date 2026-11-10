@@ -68,7 +68,11 @@ public partial class ProdutoItemViewModel : ObservableObject
     public string PrecoVarejoFormatado => Dinheiro.Formatar(PrecoVendaCentavos);
     public string PrecoAtacadoFormatado => PrecoAtacadoCentavos > 0 ? Dinheiro.Formatar(PrecoAtacadoCentavos) : "-";
 
-    public bool TemCodigoBarras => !string.IsNullOrWhiteSpace(CodigoBarras);
+    /// <summary>
+    /// Verdadeiro quando a etiqueta sai com código: EAN-13, referência (+ número do tamanho), código de barras curto
+    /// ou código interno — a mesma ordem que a etiqueta e o PDV usam.
+    /// </summary>
+    public bool TemCodigoBarras => !string.IsNullOrWhiteSpace(CodigoBarrasTamanho.BaseDoCodigo(Produto));
     public string StatusCodigoTexto => TemCodigoBarras ? "Com Código" : "Sem Código";
 
     public ProdutoItemViewModel(Produto produto)

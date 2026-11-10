@@ -406,12 +406,12 @@ public partial class MainViewModel : ObservableObject
         var semCodigo = TodosProdutos.Where(p => !p.TemCodigoBarras).ToList();
         if (semCodigo.Count == 0)
         {
-            MessageBox.Show("Todos os produtos cadastrados já possuem código de barras!", "Nexus BarTender", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("Todos os produtos já têm código na etiqueta (EAN-13, referência + tamanho, código curto ou interno).", "Nexus BarTender", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
         var confirmacao = MessageBox.Show(
-            $"Foram encontrados {semCodigo.Count} produtos sem código de barras.\n\n" +
+            $"Foram encontrados {semCodigo.Count} produtos sem nenhum código: nem EAN-13, nem referência, nem código interno.\n\n" +
             "Deseja gerar códigos EAN-13 únicos para todos eles e gravar diretamente no banco de dados do Nexus LS?",
             "Confirmação - Geração em Lote",
             MessageBoxButton.YesNo,

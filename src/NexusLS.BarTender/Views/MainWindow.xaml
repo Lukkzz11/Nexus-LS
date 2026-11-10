@@ -357,7 +357,8 @@
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Border Background="{Binding TemCodigoBarras, Converter={StaticResource StatusCodigoFundoConverter}}"
-                                                    CornerRadius="{StaticResource RaioPequeno}" Padding="8,3" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                                    CornerRadius="{StaticResource RaioPequeno}" Padding="8,3" HorizontalAlignment="Left" VerticalAlignment="Center"
+                                                    ToolTip="Código que sai na etiqueta neste tamanho: EAN-13, referência + número do tamanho, código curto ou código interno.">
                                                 <TextBlock Text="{Binding CodigoBarrasExibicao}"
                                                            Foreground="{Binding TemCodigoBarras, Converter={StaticResource StatusCodigoCorConverter}}"
                                                            FontWeight="SemiBold" FontSize="11.5" />
