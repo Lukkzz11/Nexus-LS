@@ -165,3 +165,60 @@ public class PixMotivoTests
         Assert.Contains("Access Token", MercadoPagoGateway.MotivoDaRecusa("", System.Net.HttpStatusCode.Unauthorized));
     }
 }
+
+public class MercadoPagoGatewayHttpTests
+{
+    private sealed class Falso : HttpMessageHandler
+    {
+        public HttpRequestMessage? Pedido; public string? Corpo;
+        public System.Net.HttpStatusCode Codigo = System.Net.HttpStatusCode.Created; public string Resposta = "";
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage r, CancellationToken ct)
+        {
+            Pedido = r; Corpo = r.Content is null ? null : await r.Content.ReadAsStringAsync(ct);
+            return new HttpResponseMessage(Codigo) { Content = new StringContent(Resposta) };
+        }
+    }
+
+    private static MercadoPagoGateway Gateway(Falso f) => new(new HttpClient(f), () => "TOKEN-X", () => "cliente@teste.com");
+
+    [Fact]
+    public async Task Cria_cobranca_com_o_corpo_certo_e_le_qr_code_e_status()
+    {
+        var f = new Falso { Resposta = "{\"id\":123456,\"status\":\"pending\",\"date_of_expiration\":\"2026-11-10T20:00:00.000-03:00\",\"point_of_interaction\":{\"transaction_data\":{\"qr_code\":\"0002012658\",\"qr_code_base64\":\"QUJD\"}}}" };
+        var c = await Gateway(f).CriarAsync(3000, "Venda", "pdv-abc");
+
+        Assert.Equal(HttpMethod.Post, f.Pedido!.Method);
+        Assert.Equal("https://api.mercadopago.com/v1/payments", f.Pedido.RequestUri!.ToString());
+        Assert.Equal("Bearer", f.Pedido.Headers.Authorization!.Scheme);
+        Assert.Equal("TOKEN-X", f.Pedido.Headers.Authorization.Parameter);
+        Assert.Equal("pdv-abc", f.Pedido.Headers.GetValues("X-Idempotency-Key").Single());
+        using var corpo = System.Text.Json.JsonDocument.Parse(f.Corpo!);
+        Assert.Equal(30m, corpo.RootElement.GetProperty("transaction_amount").GetDecimal());
+        Assert.Equal("pix", corpo.RootElement.GetProperty("payment_method_id").GetString());
+        Assert.Equal("cliente@teste.com", corpo.RootElement.GetProperty("payer").GetProperty("email").GetString());
+
+        Assert.Equal("123456", c.IdExterno);
+        Assert.Equal("0002012658", c.CopiaECola);
+        Assert.Equal("QUJD", c.QrCodeBase64);
+        Assert.Equal(StatusPix.Pendente, c.Status);
+    }
+
+    [Fact]
+    public async Task Recusa_mostra_o_motivo_sem_vazar_o_token()
+    {
+        var f = new Falso { Codigo = System.Net.HttpStatusCode.Unauthorized, Resposta = "{\"message\":\"Unauthorized use of live credentials\",\"error\":\"unauthorized\",\"status\":401}" };
+        var e = await Assert.ThrowsAsync<HttpRequestException>(() => Gateway(f).CriarAsync(3000, "Venda", "k"));
+        Assert.Contains("401", e.Message);
+        Assert.Contains("PRODUÇÃO", e.Message);
+        Assert.DoesNotContain("TOKEN-X", e.Message);
+    }
+
+    [Fact]
+    public async Task Consulta_aprovado_e_testar_conexao()
+    {
+        var f = new Falso { Codigo = System.Net.HttpStatusCode.OK, Resposta = "{\"id\":1,\"status\":\"approved\"}" };
+        Assert.Equal(StatusPix.Aprovado, await Gateway(f).ConsultarAsync("1"));
+        Assert.Equal("https://api.mercadopago.com/v1/payments/1", f.Pedido!.RequestUri!.ToString());
+        Assert.True((await Gateway(f).TestarAsync()).Ok);
+    }
+}

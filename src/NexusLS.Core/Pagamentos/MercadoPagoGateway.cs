@@ -107,6 +107,8 @@ public sealed class MercadoPagoGateway : IGatewayPix
         }
         catch (JsonException) { /* corpo não é JSON */ }
 
+        if (motivo is not null && motivo.Contains("live credentials", StringComparison.OrdinalIgnoreCase))
+            return "Motivo: " + motivo + ". Esse token é de PRODUÇÃO e a conta não pode usá-lo assim. Para testar, use o Access Token de uma conta de teste (vendedor) criada em Contas de teste no painel do Mercado Pago; para cobrar de verdade, a aplicação precisa estar ativada para produção.";
         if (!string.IsNullOrWhiteSpace(motivo)) return "Motivo: " + motivo + ".";
         return codigo switch
         {
