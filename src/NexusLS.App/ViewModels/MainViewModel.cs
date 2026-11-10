@@ -101,7 +101,7 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand] private void IrParaMaisVendidos() => Abrir(new MaisVendidosViewModel(_servicos.Relatorios), ItemMenu.MaisVendidos);
 
     // Estoque
-    [RelayCommand] private void IrParaResumoEstoque() => Abrir(new ResumoEstoqueViewModel(_servicos.Produtos, _servicos.Relatorios), ItemMenu.ResumoEstoque);
+    [RelayCommand] private void IrParaResumoEstoque() => Abrir(new ResumoEstoqueViewModel(_servicos.Produtos, _servicos.Relatorios, estoque: _servicos.Estoque), ItemMenu.ResumoEstoque);
     [RelayCommand] private void IrParaEstoque() => Abrir(new EstoqueLojaViewModel(_servicos.Produtos, _servicos.Estoque, _servicos.Fotos, _servicos.Configuracao,
         ajustesCatalogo: new NexusLS.Core.Vitrine.AjustesProdutoStore(NexusLS.Core.Vitrine.AjustesProdutoStore.CaminhoPadrao())), ItemMenu.EstoqueDaLoja);
     [RelayCommand] private void IrParaFabrica() => Abrir(new FabricaViewModel(_servicos.Producao), ItemMenu.Fabrica);
