@@ -133,19 +133,17 @@ public class DesenhoEtiquetaService
             yAtual += txtVarejo.Height + 2;
         }
 
-        // 5. Código de Barras (ao fundo/rodapé)
+        // 5. Código de Barras (ao fundo/rodapé) — sempre pela regra única do Core (referência + tamanho)
         if (config.MostrarCodigoBarras)
         {
-            var codigo = !string.IsNullOrWhiteSpace(produto.CodigoBarras)
-                ? produto.CodigoBarras
-                : (!string.IsNullOrWhiteSpace(produto.CodigoInterno) ? produto.CodigoInterno : "2000000000018");
+            var codigo = CodigoBarrasTamanho.Resolver(produto, tamanho);
 
             var espacoRestante = alturaDip - margemY - yAtual;
             if (espacoRestante > 14 && Code128.PodeCodificar(codigo))
             {
                 var alturaBarras = Math.Clamp(espacoRestante - 12, 10, alturaDip * 0.28);
                 var yBarras = alturaDip - margemY - alturaBarras - 11;
-                DesenharBarrasCode128(dc, codigo, margemX, areaUtilLargura, yBarras, alturaBarras);
+                DesenharBarrasCode128(dc, codigo!, margemX, areaUtilLargura, yBarras, alturaBarras);
             }
         }
     }
@@ -234,7 +232,7 @@ public class DesenhoEtiquetaService
         return rtb;
     }
 
-    public static string GerarZpl(Produto produto, ConfiguracaoEtiqueta config, int quantidade = 1)
+    public static string GerarZpl(Produto produto, ConfiguracaoEtiqueta config, int quantidade = 1, string? tamanho = null)
     {
         var formato = config.Formato.FormatoCore;
         // 203 DPI (8 dots/mm) padrão térmico Zebra / Argox / Elgin
@@ -276,15 +274,15 @@ public class DesenhoEtiquetaService
 
         y += 46;
 
-        // Código de Barras Code 128
+        // Código de Barras Code 128 — regra única do Core (referência + número do tamanho)
         if (config.MostrarCodigoBarras)
         {
-            var codigo = !string.IsNullOrWhiteSpace(produto.CodigoBarras)
-                ? produto.CodigoBarras
-                : (!string.IsNullOrWhiteSpace(produto.CodigoInterno) ? produto.CodigoInterno : "2000000000018");
-
-            var alturaBarrasDots = Math.Max(30, alturaDots - y - 35);
-            sb.AppendLine($"^FO30,{y}^BY2,2,{alturaBarrasDots}^BCN,{alturaBarrasDots},Y,N,N^FD{codigo}^FS");
+            var codigo = CodigoBarrasTamanho.Resolver(produto, tamanho);
+            if (Code128.PodeCodificar(codigo))
+            {
+                var alturaBarrasDots = Math.Max(30, alturaDots - y - 35);
+                sb.AppendLine($"^FO30,{y}^BY2,2,{alturaBarrasDots}^BCN,{alturaBarrasDots},Y,N,N{CampoZpl.Montar(codigo)}");
+            }
         }
 
         sb.AppendLine($"^PQ{Math.Max(1, quantidade)}");

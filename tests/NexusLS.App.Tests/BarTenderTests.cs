@@ -181,4 +181,115 @@ public class BarTenderTests : IDisposable
         item.Quantidade = 10;
         Assert.Equal(10, item.Quantidade);
     }
+
+    [Fact]
+    public void ItemFila_UsaReferenciaMaisNumeroDoTamanho()
+    {
+        var produto = new Produto
+        {
+            Nome = "CAMISETA BÁSICA",
+            Referencia = "5555",
+            CodigoInterno = "INT-000001",
+            Tamanhos = new List<ProdutoTamanho>
+            {
+                new() { Tamanho = Tamanhos.SemTamanho, Ordem = 0 },
+                new() { Tamanho = "P", Ordem = 1 },
+                new() { Tamanho = "M", Ordem = 2 }
+            }
+        };
+
+        Assert.Equal("55551", new ItemFila(produto, 1, "P").CodigoBarras);
+        Assert.Equal("55552", new ItemFila(produto, 1, "M").CodigoBarras);
+        Assert.Equal("5555", new ItemFila(produto, 1, "").CodigoBarras);
+
+        var item = new ItemFila(produto, 1, "P");
+        item.Tamanho = "M";
+        Assert.Equal("55552", item.CodigoBarras);
+        Assert.Equal("M", item.TamanhoExibicao);
+    }
+
+    [Fact]
+    public void DesenhoEtiqueta_GerarZpl_UsaReferenciaMaisNumeroDoTamanho()
+    {
+        var config = new ConfiguracaoEtiqueta();
+        var produto = new Produto
+        {
+            Nome = "CAMISETA BÁSICA",
+            Referencia = "5555",
+            CodigoInterno = "INT-000001",
+            Tamanhos = new List<ProdutoTamanho>
+            {
+                new() { Tamanho = "P", Ordem = 1 },
+                new() { Tamanho = "M", Ordem = 2 }
+            }
+        };
+
+        var zpl = DesenhoEtiquetaService.GerarZpl(produto, config, 1, "M");
+        Assert.Contains("^FD55552^FS", zpl);
+
+        var semCodigo = DesenhoEtiquetaService.GerarZpl(new Produto { Nome = "SEM CODIGO" }, config);
+        Assert.DoesNotContain("2000000000018", semCodigo);
+    }
+
+    [Fact]
+    public void ProdutoItemViewModel_ExpandeAGradeEmOpcoesDeTamanho()
+    {
+        var produto = new Produto
+        {
+            Nome = "CAMISETA BÁSICA",
+            Referencia = "5555",
+            Tamanhos = new List<ProdutoTamanho>
+            {
+                new() { Tamanho = Tamanhos.SemTamanho, Ordem = 0 },
+                new() { Tamanho = "P", Ordem = 1 },
+                new() { Tamanho = "M", Ordem = 2 }
+            }
+        };
+
+        var vm = new ProdutoItemViewModel(produto);
+
+        Assert.True(vm.TemGrade);
+        Assert.Equal(ProdutoItemViewModel.TodosOsTamanhos, vm.TamanhoSelecionado);
+        Assert.Contains("P", vm.OpcoesTamanho);
+        Assert.Contains("M", vm.OpcoesTamanho);
+        Assert.DoesNotContain(Tamanhos.SemTamanho, vm.OpcoesTamanho);
+
+        vm.TamanhoSelecionado = "M";
+        Assert.Equal("55552", vm.CodigoBarrasExibicao);
+    }
+
+    [Fact]
+    public void ItemFila_NormalizaSemTamanho_NoConstrutor_E_NoSetter()
+    {
+        var produto = new Produto { Nome = "CAMISETA", Referencia = "5555" };
+
+        var item = new ItemFila(produto, 1, "Sem tamanho");
+        Assert.Equal("", item.Tamanho);
+        Assert.Equal(Tamanhos.SemTamanho, item.TamanhoExibicao);
+
+        item.Tamanho = "Sem tamanho";
+        Assert.Equal("", item.Tamanho);
+        Assert.Equal("5555", item.CodigoBarras);
+    }
+
+    [Fact]
+    public void ProdutoItemViewModel_MostraSemTamanho_QuandoHaEstoqueNele()
+    {
+        var produto = new Produto
+        {
+            Nome = "CAMISETA",
+            Referencia = "5555",
+            Tamanhos = new List<ProdutoTamanho>
+            {
+                new() { Tamanho = Tamanhos.SemTamanho, Ordem = 0, Estoque = 3 },
+                new() { Tamanho = "P", Ordem = 1 }
+            }
+        };
+
+        var vm = new ProdutoItemViewModel(produto);
+
+        Assert.True(vm.TemGrade);
+        Assert.Contains(Tamanhos.SemTamanho, vm.OpcoesTamanho);
+        Assert.Equal("5555", vm.CodigoBarrasExibicao);
+    }
 }

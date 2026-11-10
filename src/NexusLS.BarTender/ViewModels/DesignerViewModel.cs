@@ -1727,7 +1727,10 @@ public partial class DesignerViewModel : ObservableObject
                 CodigoInterno = "0001"
             };
 
-            var itemTeste = new ItemFila(prod, 1, "G");
+            var tamanhoTeste = !string.IsNullOrWhiteSpace(TamanhoParaTeste) && TamanhoParaTeste != "Sem tamanho"
+                ? TamanhoParaTeste
+                : "";
+            var itemTeste = new ItemFila(prod, 1, tamanhoTeste);
 
             var sucesso = ImpressaoService.ImprimirDesign(new[] { itemTeste }, Modelo, NomeLoja);
             if (sucesso)

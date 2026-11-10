@@ -10,10 +10,12 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
 using NexusLS.BarTender.Models;
+using NexusLS.BarTender.Models.Designer;
 using NexusLS.BarTender.Services;
 using NexusLS.Core.Atualizacao;
 using NexusLS.Core.Licenciamento;
 using NexusLS.Core.Models;
+using NexusLS.Core.Services;
 
 namespace NexusLS.BarTender.ViewModels;
 
@@ -21,6 +23,7 @@ public partial class MainViewModel : ObservableObject
 {
     private readonly BancoDadosService _dbService;
     private readonly ServicoLicencaNuvem _licencaNuvem;
+    private ProdutoItemViewModel? _produtoDaAssinatura;
 
     [ObservableProperty]
     private string _licencaTexto = "Verificando licença...";
@@ -258,8 +261,20 @@ public partial class MainViewModel : ObservableObject
 
     partial void OnProdutoSelecionadoChanged(ProdutoItemViewModel? value)
     {
+        if (_produtoDaAssinatura != null)
+            _produtoDaAssinatura.PropertyChanged -= ProdutoSelecionado_PropertyChanged;
+        _produtoDaAssinatura = value;
+        if (_produtoDaAssinatura != null)
+            _produtoDaAssinatura.PropertyChanged += ProdutoSelecionado_PropertyChanged;
+
         AtualizarPreview();
         DesignerVM.DefinirProduto(value?.Produto, Config.NomeLoja);
+    }
+
+    private void ProdutoSelecionado_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ProdutoItemViewModel.TamanhoSelecionado))
+            AtualizarPreview();
     }
 
     [RelayCommand]
@@ -434,15 +449,8 @@ public partial class MainViewModel : ObservableObject
     {
         if (ProdutoSelecionado == null) return;
 
-        var existente = FilaImpressao.FirstOrDefault(i => i.Produto.Id == ProdutoSelecionado.Id);
-        if (existente != null)
-        {
-            existente.Quantidade++;
-        }
-        else
-        {
-            FilaImpressao.Add(new ItemFila(ProdutoSelecionado.Produto, 1));
-        }
+        foreach (var tamanho in TamanhosParaAdicionar(ProdutoSelecionado))
+            AdicionarNaFila(ProdutoSelecionado.Produto, tamanho, 1);
 
         AtualizarTotaisFila();
     }
@@ -454,17 +462,8 @@ public partial class MainViewModel : ObservableObject
         if (filtrados.Count == 0) return;
 
         foreach (var p in filtrados)
-        {
-            var existente = FilaImpressao.FirstOrDefault(i => i.Produto.Id == p.Id);
-            if (existente != null)
-            {
-                existente.Quantidade++;
-            }
-            else
-            {
-                FilaImpressao.Add(new ItemFila(p.Produto, 1));
-            }
-        }
+            foreach (var tamanho in TamanhosParaAdicionar(p))
+                AdicionarNaFila(p.Produto, tamanho, 1);
 
         AtualizarTotaisFila();
     }
@@ -475,29 +474,49 @@ public partial class MainViewModel : ObservableObject
         var filtrados = ProdutosView.Cast<ProdutoItemViewModel>().ToList();
         if (filtrados.Count == 0) return;
 
-        var adicionados = 0;
-        var totalEtiquetas = 0;
+        var linhas = 0;
 
         foreach (var p in filtrados)
         {
-            var qtd = p.EstoqueAtual > 0 ? p.EstoqueAtual : 1;
-            var existente = FilaImpressao.FirstOrDefault(i => i.Produto.Id == p.Id);
-            if (existente != null)
+            var tamanhos = TamanhosParaAdicionar(p);
+            var porTamanho = TemGrade(p.Produto) &&
+                string.Equals(p.TamanhoSelecionado, ProdutoItemViewModel.TodosOsTamanhos, StringComparison.OrdinalIgnoreCase);
+            var adicionou = 0;
+
+            // Numa puxada da grade inteira, a fila do produto passa a refletir só os tamanhos com estoque.
+            if (porTamanho)
             {
-                existente.Quantidade = qtd;
+                var permitidos = new HashSet<string>(tamanhos, StringComparer.OrdinalIgnoreCase);
+                foreach (var existente in FilaImpressao.Where(i => i.Produto.Id == p.Id).ToList())
+                    if (!permitidos.Contains(existente.Tamanho ?? ""))
+                        FilaImpressao.Remove(existente);
             }
-            else
+
+            foreach (var tamanho in tamanhos)
             {
-                FilaImpressao.Add(new ItemFila(p.Produto, qtd));
+                var cadastrado = LocalizarTamanho(p.Produto, tamanho);
+                var estoque = cadastrado?.Estoque ?? p.EstoqueAtual;
+
+                // Numa grade inteira, tamanho zerado não gera etiqueta.
+                if (porTamanho && estoque <= 0) continue;
+
+                DefinirNaFila(p.Produto, tamanho, Math.Max(1, estoque));
+                adicionou++;
+                linhas++;
             }
-            adicionados++;
-            totalEtiquetas += qtd;
+
+            // Produto sem grade continua com o comportamento antigo: nunca fica zerado na fila.
+            if (adicionou == 0 && !porTamanho)
+            {
+                DefinirNaFila(p.Produto, "", 1);
+                linhas++;
+            }
         }
 
         AtualizarTotaisFila();
 
         MessageBox.Show(
-            $"Fila atualizada com base no estoque!\n\n{adicionados} produtos adicionados/atualizados, totalizando {totalEtiquetas} etiquetas.",
+            $"Fila atualizada com base no estoque!\n\n{linhas} linha(s) na fila, totalizando {TotalEtiquetasFila} etiquetas.",
             "Nexus BarTender",
             MessageBoxButton.OK,
             MessageBoxImage.Information);
@@ -566,17 +585,148 @@ public partial class MainViewModel : ObservableObject
     {
         if (produtoItem == null) return;
         var qtd = Math.Max(1, produtoItem.QuantidadeAdicionar);
-        var itemExistente = FilaImpressao.FirstOrDefault(i => i.Produto.Id == produtoItem.Id);
-        if (itemExistente != null)
-        {
-            itemExistente.Quantidade += qtd;
-        }
-        else
-        {
-            FilaImpressao.Add(new ItemFila(produtoItem.Produto, qtd));
-        }
+
+        foreach (var tamanho in TamanhosParaAdicionar(produtoItem))
+            AdicionarNaFila(produtoItem.Produto, tamanho, qtd);
+
         AtualizarTotaisFila();
     }
+
+    /// <summary>Produto tem pelo menos um tamanho de verdade (P, M, G, 38...), além de "Sem tamanho".</summary>
+    private static bool TemGrade(Produto produto) =>
+        produto.Tamanhos?.Any(t => !EhSemTamanho(t.Tamanho)) == true;
+
+    private static bool EhSemTamanho(string? tamanho) =>
+        string.IsNullOrWhiteSpace(tamanho) ||
+        string.Equals(tamanho.Trim(), Tamanhos.SemTamanho, StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>Tamanhos reais da grade, na ordem cadastrada (a mesma que forma o código de barras).</summary>
+    private static List<string> TamanhosDaGrade(Produto produto)
+    {
+        var lista = (produto.Tamanhos ?? new List<ProdutoTamanho>())
+            .Where(t => !EhSemTamanho(t.Tamanho))
+            .OrderBy(t => t.Ordem > 0 ? t.Ordem : int.MaxValue)
+            .ThenBy(t => t.Tamanho)
+            .Select(t => t.Tamanho.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        // Se o produto também tem estoque "Sem tamanho", ele entra no fim (código sem número de tamanho).
+        if (produto.Tamanhos?.Any(t => EhSemTamanho(t.Tamanho) && t.Estoque > 0) == true)
+            lista.Add("");
+
+        return lista;
+    }
+
+    /// <summary>
+    /// O que deve entrar na fila para este produto: o tamanho escolhido na tela ou, quando está em
+    /// "Todos os tamanhos", um item por tamanho da grade.
+    /// </summary>
+    private static IReadOnlyList<string> TamanhosParaAdicionar(ProdutoItemViewModel item)
+    {
+        var escolhido = item.TamanhoSelecionado?.Trim() ?? "";
+        if (escolhido.Length > 0 &&
+            !string.Equals(escolhido, ProdutoItemViewModel.TodosOsTamanhos, StringComparison.OrdinalIgnoreCase))
+        {
+            return new[] { EhSemTamanho(escolhido) ? "" : escolhido };
+        }
+
+        var grade = TamanhosDaGrade(item.Produto);
+        return grade.Count > 0 ? grade : new[] { "" };
+    }
+
+    /// <summary>Linha da grade que corresponde ao tamanho ("" e "Sem tamanho" são a mesma linha).</summary>
+    private static ProdutoTamanho? LocalizarTamanho(Produto produto, string tamanho) =>
+        produto.Tamanhos?.FirstOrDefault(t =>
+            EhSemTamanho(tamanho) ? EhSemTamanho(t.Tamanho)
+                : string.Equals(t.Tamanho?.Trim(), tamanho.Trim(), StringComparison.OrdinalIgnoreCase));
+
+    private ItemFila? LocalizarNaFila(Produto produto, string tamanho) =>
+        FilaImpressao.FirstOrDefault(i =>
+            i.Produto.Id == produto.Id &&
+            string.Equals(i.Tamanho ?? "", tamanho ?? "", StringComparison.OrdinalIgnoreCase));
+
+    private ItemFila AdicionarNaFila(Produto produto, string tamanho, int quantidade)
+    {
+        var existente = LocalizarNaFila(produto, tamanho);
+        if (existente != null)
+        {
+            existente.Quantidade += Math.Max(1, quantidade);
+            return existente;
+        }
+
+        var novo = new ItemFila(produto, quantidade, tamanho);
+        FilaImpressao.Add(novo);
+        return novo;
+    }
+
+    private void DefinirNaFila(Produto produto, string tamanho, int quantidade)
+    {
+        var existente = LocalizarNaFila(produto, tamanho);
+        if (existente != null)
+            existente.Quantidade = Math.Max(1, quantidade);
+        else
+            FilaImpressao.Add(new ItemFila(produto, quantidade, tamanho));
+    }
+
+    /// <summary>
+    /// Confere a fila antes de mandar para a impressora: código vazio, acento/caractere inválido, barras finas
+    /// demais para a etiqueta e código repetido entre itens diferentes. Devolve false se a pessoa desistir.
+    /// </summary>
+    private bool ValidarFilaAntesDeImprimir()
+    {
+        var larguraMm = UsarModeloDesigner && DesignerVM.Modelo is { LarguraMm: > 0 } modelo
+            ? modelo.LarguraMm
+            : Config.Formato.FormatoCore.EtiquetaLarguraMm;
+
+        if (UsarModeloDesigner && DesignerVM.Modelo is { } modeloDesign)
+        {
+            // No Estúdio o código pode ocupar só uma parte da etiqueta: vale a menor largura de elemento.
+            var larguraModelo = modeloDesign.LarguraMm > 0 ? modeloDesign.LarguraMm : larguraMm;
+            var menorElemento = modeloDesign.Elementos
+                .Where(e => e.Tipo == TipoElemento.CodigoBarras && e.Visivel && e.Largura > 0)
+                .Select(e => e.Largura)
+                .DefaultIfEmpty(larguraModelo)
+                .Min();
+            larguraMm = Math.Min(larguraModelo, menorElemento);
+        }
+        var problemas = new List<string>();
+        var codigos = new Dictionary<string, int>(StringComparer.Ordinal);
+
+        foreach (var item in FilaImpressao)
+        {
+            var codigo = item.CodigoBarras;
+            var erros = CodigoBarrasTamanho.Validar(codigo, larguraMm);
+            if (erros.Count > 0)
+                problemas.Add($"{item.Nome} [{item.TamanhoExibicao}]: {string.Join(", ", erros)}");
+
+            if (!string.IsNullOrWhiteSpace(codigo))
+                codigos[codigo] = codigos.GetValueOrDefault(codigo) + 1;
+        }
+
+        // EAN-13 é o código do produto inteiro: repetir entre tamanhos é esperado. Nos códigos curtos, repetir é erro.
+        var repetidos = codigos
+            .Where(c => c.Value > 1 && !EhEan13(c.Key))
+            .Select(c => c.Key)
+            .Take(10)
+            .ToList();
+        if (repetidos.Count > 0)
+            problemas.Add($"código repetido em mais de um item: {string.Join(", ", repetidos)}");
+
+        if (problemas.Count == 0) return true;
+
+        var detalhe = string.Join("\n• ", problemas.Take(12));
+        if (problemas.Count > 12) detalhe += $"\n• ... e mais {problemas.Count - 12} problema(s).";
+
+        return MessageBox.Show(
+            $"Confira antes de imprimir:\n\n• {detalhe}\n\nDeseja imprimir mesmo assim?",
+            "Revisão da fila de impressão",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning) == MessageBoxResult.Yes;
+    }
+
+    private static bool EhEan13(string codigo) =>
+        codigo.Length == 13 && codigo.All(char.IsAsciiDigit);
 
     [RelayCommand]
     public void Imprimir()
@@ -586,6 +736,8 @@ public partial class MainViewModel : ObservableObject
             MessageBox.Show("Adicione produtos à fila de impressão antes de imprimir.", "Nexus BarTender", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
+
+        if (!ValidarFilaAntesDeImprimir()) return;
 
         try
         {
@@ -692,8 +844,18 @@ public partial class MainViewModel : ObservableObject
                 PrecoAtacadoCentavos = 9990
             };
 
-            PreviewImagem = DesenhoEtiquetaService.RenderizarBitmap(prod, "M", Config, escalaDpi: 2.5);
-            ZplCodigo = DesenhoEtiquetaService.GerarZpl(prod, Config);
+            var tamanhoPreview = "M";
+            var selecionado = ProdutoSelecionado;
+            if (selecionado is not null)
+            {
+                if (string.Equals(selecionado.TamanhoSelecionado, ProdutoItemViewModel.TodosOsTamanhos, StringComparison.OrdinalIgnoreCase))
+                    tamanhoPreview = TamanhosDaGrade(selecionado.Produto).FirstOrDefault(t => t.Length > 0) ?? "";
+                else
+                    tamanhoPreview = EhSemTamanho(selecionado.TamanhoSelecionado) ? "" : selecionado.TamanhoSelecionado;
+            }
+
+            PreviewImagem = DesenhoEtiquetaService.RenderizarBitmap(prod, tamanhoPreview, Config, escalaDpi: 2.5);
+            ZplCodigo = DesenhoEtiquetaService.GerarZpl(prod, Config, 1, tamanhoPreview);
             AtualizarTotaisFila();
         }
         catch

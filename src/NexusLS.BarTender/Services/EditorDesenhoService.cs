@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using NexusLS.BarTender.Models.Designer;
+using NexusLS.Core.Etiquetas;
 using NexusLS.Core.Models;
 using NexusLS.Core.Services;
 
@@ -259,9 +260,7 @@ public class EditorDesenhoService
     {
         var codigo = ResolverCodigo(el, produto, tamanho);
         if (string.IsNullOrWhiteSpace(codigo))
-        {
-            codigo = "7891234567890";
-        }
+            return;
 
         var alturaTexto = el.MostrarTextoLegivel && el.TipoCodigo != TipoSimboloCodigo.QrCode ? 10.0 : 0.0;
         var alturaBarras = Math.Max(6.0, alt - alturaTexto);
@@ -339,7 +338,7 @@ public class EditorDesenhoService
                 VariavelEtiqueta.PrecoAtacado => produto.PrecoAtacadoCentavos > 0 ? Dinheiro.Formatar(produto.PrecoAtacadoCentavos) : "",
                 VariavelEtiqueta.Referencia => produto.Referencia ?? "",
                 VariavelEtiqueta.Tamanho => tamanho ?? "",
-                VariavelEtiqueta.CodigoBarras => produto.CodigoBarras ?? produto.CodigoInterno ?? "",
+                VariavelEtiqueta.CodigoBarras => CodigoBarrasTamanho.Resolver(produto, tamanho) ?? "",
                 VariavelEtiqueta.CodigoInterno => produto.CodigoInterno ?? "",
                 VariavelEtiqueta.NomeLoja => nomeLoja,
                 _ => baseTexto
@@ -349,18 +348,8 @@ public class EditorDesenhoService
         var precoVenda = Dinheiro.FormatarParaEdicao(produto.PrecoVendaCentavos);
         var precoAtacado = produto.PrecoAtacadoCentavos > 0 ? Dinheiro.FormatarParaEdicao(produto.PrecoAtacadoCentavos) : "";
 
-        // Suporte à regra Nexus de código de barras com sufixo de tamanho
-        string codigoFormatado;
-        var codBase = produto.CodigoBarras ?? produto.Referencia ?? produto.CodigoInterno;
-        if (!string.IsNullOrWhiteSpace(codBase) && !string.IsNullOrWhiteSpace(tamanho) && CodigoBarrasTamanho.UsaNumeroDoTamanho(codBase))
-        {
-            var ordem = ObterOrdemTamanhoProduto(produto, tamanho);
-            codigoFormatado = CodigoBarrasTamanho.Montar(codBase, ordem) ?? codBase;
-        }
-        else
-        {
-            codigoFormatado = produto.CodigoBarras ?? produto.CodigoInterno ?? "";
-        }
+        // Regra única do Core: EAN-13 do produto, senão referência, senão código curto, senão código interno + número do tamanho.
+        var codigoFormatado = CodigoBarrasTamanho.Resolver(produto, tamanho) ?? "";
 
         // Suporte a substituição inline {Nome}, {Preco}, {Ref}, etc.
         return baseTexto
@@ -388,28 +377,18 @@ public class EditorDesenhoService
         if (produto == null)
         {
             var codPadrao = !string.IsNullOrWhiteSpace(el.ValorCodigo) ? el.ValorCodigo : "7891234567890";
-            if (!string.IsNullOrWhiteSpace(tamanho) && CodigoBarrasTamanho.UsaNumeroDoTamanho(codPadrao))
-            {
-                var ordemPadrao = ObterOrdemTamanhoGenerica(tamanho);
-                return CodigoBarrasTamanho.Montar(codPadrao, ordemPadrao) ?? codPadrao;
-            }
-            return codPadrao;
+            return CodigoBarrasTamanho.Montar(codPadrao, CodigoBarrasTamanho.ObterOrdemGenerica(tamanho)) ?? codPadrao;
         }
 
         if (el.Variavel == VariavelEtiqueta.CodigoInterno && !string.IsNullOrWhiteSpace(produto.CodigoInterno))
         {
+            // O código interno é um identificador do produto inteiro: não recebe número de tamanho.
             return produto.CodigoInterno;
         }
 
         if (el.Variavel == VariavelEtiqueta.Referencia && !string.IsNullOrWhiteSpace(produto.Referencia))
         {
-            var refBase = produto.Referencia;
-            if (!string.IsNullOrWhiteSpace(tamanho))
-            {
-                var ordemRef = ObterOrdemTamanhoProduto(produto, tamanho);
-                return CodigoBarrasTamanho.Montar(refBase, ordemRef) ?? refBase;
-            }
-            return refBase;
+            return CodigoBarrasTamanho.ResolverReferencia(produto, tamanho) ?? produto.Referencia;
         }
 
         if (el.Variavel == VariavelEtiqueta.NomeProduto && !string.IsNullOrWhiteSpace(produto.Nome))
@@ -422,69 +401,13 @@ public class EditorDesenhoService
             return (produto.PrecoVendaCentavos / 100.0).ToString("F2");
         }
 
-        // Padrão: Código de barras do produto (ou referência / código interno como fallback)
-        var codigoBase = !string.IsNullOrWhiteSpace(produto.CodigoBarras)
-            ? produto.CodigoBarras
-            : (!string.IsNullOrWhiteSpace(produto.Referencia) ? produto.Referencia : produto.CodigoInterno);
+        // Padrão: código oficial do produto/tamanho (EAN-13, referência, código curto ou código interno).
+        var codigoBase = CodigoBarrasTamanho.Resolver(produto, tamanho);
+        if (!string.IsNullOrWhiteSpace(codigoBase)) return codigoBase;
 
-        if (!string.IsNullOrWhiteSpace(codigoBase))
-        {
-            // Regra oficial Nexus: se houver tamanho e o código base não for EAN-13 completo, acrescenta o número do tamanho
-            if (!string.IsNullOrWhiteSpace(tamanho) && CodigoBarrasTamanho.UsaNumeroDoTamanho(codigoBase))
-            {
-                var ordem = ObterOrdemTamanhoProduto(produto, tamanho);
-                return CodigoBarrasTamanho.Montar(codigoBase, ordem) ?? codigoBase;
-            }
-            return codigoBase;
-        }
-
-        return !string.IsNullOrWhiteSpace(el.ValorCodigo) ? el.ValorCodigo : "7891234567890";
-    }
-
-    public static int ObterOrdemTamanhoProduto(Produto produto, string tamanho)
-    {
-        if (produto.Tamanhos != null && produto.Tamanhos.Count > 0)
-        {
-            var match = produto.Tamanhos.FirstOrDefault(t =>
-                string.Equals(t.Tamanho, tamanho, StringComparison.OrdinalIgnoreCase));
-            if (match != null && match.Ordem > 0)
-            {
-                return match.Ordem;
-            }
-        }
-        return ObterOrdemTamanhoGenerica(tamanho);
-    }
-
-    public static int ObterOrdemTamanhoGenerica(string tamanho)
-    {
-        if (int.TryParse(tamanho, out var n) && n > 0 && n <= 99)
-        {
-            return n;
-        }
-
-        return tamanho.Trim().ToUpperInvariant() switch
-        {
-            "PP" => 1,
-            "P" => 2,
-            "M" => 3,
-            "G" => 4,
-            "GG" => 5,
-            "XG" => 6,
-            "XXG" => 7,
-            "G1" => 5,
-            "G2" => 6,
-            "G3" => 7,
-            "34" => 1,
-            "36" => 2,
-            "38" => 3,
-            "40" => 4,
-            "42" => 5,
-            "44" => 6,
-            "46" => 7,
-            "48" => 8,
-            "50" => 9,
-            _ => 1
-        };
+        // Produto real sem nenhum código: não inventa um EAN que não é dele (a fila avisa antes de imprimir).
+        if (!string.IsNullOrWhiteSpace(el.ValorCodigo)) return el.ValorCodigo;
+        return produto is null ? "7891234567890" : "";
     }
 
     public static BitmapSource RenderizarBitmap(
@@ -557,16 +480,18 @@ public class EditorDesenhoService
 
                 case TipoElemento.CodigoBarras:
                     var cod = ResolverCodigo(el, produto, tamanho);
+                    if (string.IsNullOrWhiteSpace(cod)) break;
                     if (el.TipoCodigo == TipoSimboloCodigo.QrCode)
                     {
                         var mag = Math.Clamp(altDots / 25, 2, 8);
-                        sb.AppendLine($"^FO{xDots},{yDots}^BQ{orientacaoZpl},2,{mag}^FDQA,{cod}^FS");
+                        sb.AppendLine($"^FO{xDots},{yDots}^BQ{orientacaoZpl},2,{mag}{CampoZpl.Montar($"QA,{cod}")}");
                     }
                     else
                     {
+                        if (!Code128.PodeCodificar(cod)) break;
                         var hBarras = Math.Max(20, altDots - 20);
                         var legivel = el.MostrarTextoLegivel ? "Y" : "N";
-                        sb.AppendLine($"^FO{xDots},{yDots}^BC{orientacaoZpl},{hBarras},{legivel},N,N^FD{cod}^FS");
+                        sb.AppendLine($"^FO{xDots},{yDots}^BC{orientacaoZpl},{hBarras},{legivel},N,N{CampoZpl.Montar(cod)}");
                     }
                     break;
 
