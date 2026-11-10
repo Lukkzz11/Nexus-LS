@@ -102,8 +102,21 @@
                     </StackPanel>
                 </Grid>
 
-                <TextBlock Grid.Row="1" Text="Buscar produto (F2): nome, referência ou código de barras · Enter escolhe"
-                           Foreground="{StaticResource CorTextoSuave}" FontSize="13" Margin="0,0,0,4" />
+                <StackPanel Grid.Row="1">
+                    <!-- Caixa fechado: abre aqui mesmo, sem sair do PDV -->
+                    <Border Style="{StaticResource FaixaAviso}" Margin="0,0,0,10"
+                            Visibility="{Binding CaixaFechado, Converter={StaticResource BoolVis}}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="O caixa está fechado. Troco na gaveta agora:" VerticalAlignment="Center" Margin="0,0,10,0" />
+                            <TextBox Width="130" AutomationProperties.Name="Troco inicial"
+                                     Text="{Binding TrocoAberturaTexto, UpdateSourceTrigger=PropertyChanged}" />
+                            <Button Content="Abrir caixa" Style="{StaticResource BotaoPrimario}" Margin="10,0,0,0" Padding="16,6"
+                                    Command="{Binding AbrirCaixaCommand}" />
+                        </StackPanel>
+                    </Border>
+                    <TextBlock Text="Buscar produto (F2): nome, referência ou código de barras · Enter escolhe"
+                               Foreground="{StaticResource CorTextoSuave}" FontSize="13" Margin="0,0,0,4" />
+                </StackPanel>
 
                 <Grid Grid.Row="2">
                     <TextBox x:Name="CaixaBusca" FontSize="28" Padding="12,10"

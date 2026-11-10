@@ -222,6 +222,11 @@ public partial class PdvViewModel
                 MostrarErro("Abra o caixa antes de finalizar a venda. Sem um turno aberto, a venda fica fora do fechamento.");
                 return;
             }
+            if (aberto.DataAbertura.Date < DateTime.Today)
+            {
+                MostrarErro($"O caixa aberto em {aberto.DataAbertura:dd/MM} é de um dia anterior. Feche-o (conferência) e abra o de hoje antes de vender.");
+                return;
+            }
         }
 
         var venda = await _vendas.FinalizarAsync(_pagamento.ParaPedido(_carrinho, _descontoResolvido) with { ChaveUnica = _chaveVenda });

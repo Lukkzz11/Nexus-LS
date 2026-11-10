@@ -133,6 +133,33 @@ public partial class PdvViewModel : ViewModelBase, IEditorCarrinho
         }
     }
 
+    /// <summary>Troco que o operador coloca na gaveta ao abrir o caixa direto pelo PDV.</summary>
+    [ObservableProperty] private string _trocoAberturaTexto = "";
+    public bool CaixaFechado => TemCaixa && !CaixaAberto;
+    partial void OnCaixaAbertoChanged(bool value) => OnPropertyChanged(nameof(CaixaFechado));
+
+    [RelayCommand]
+    private async Task AbrirCaixaAsync()
+    {
+        if (_caixa is null) return;
+        long troco = 0;
+        if (!string.IsNullOrWhiteSpace(TrocoAberturaTexto) && !Dinheiro.TentarConverter(TrocoAberturaTexto, out troco))
+        {
+            MostrarErro("Troco inicial inválido. Digite um valor como 50,00.");
+            return;
+        }
+        try
+        {
+            await _caixa.AbrirAsync(troco);
+            TrocoAberturaTexto = "";
+        }
+        catch (RegraDeNegocioException ex)
+        {
+            MostrarErro(ex.Message);
+        }
+        await AtualizarCaixaAsync();
+    }
+
     public bool TemResultados => Resultados.Count > 0;
     /// <summary>"Enter para finalizar": aparece na busca vazia quando já há itens (como no ERP).</summary>
     public bool DicaFinalizar => Busca.Length == 0 && !_carrinho.Vazio;

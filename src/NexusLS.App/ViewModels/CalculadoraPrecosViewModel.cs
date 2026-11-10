@@ -114,6 +114,12 @@ public partial class CalculadoraPrecosViewModel : ViewModelBase
     [RelayCommand]
     private Task CalcularPrecoAsync() => ExecutarAsync(() =>
     {
+        ResultadoPreco = MontarResultadoPreco();
+        return Task.CompletedTask;
+    });
+
+    private string MontarResultadoPreco()
+    {
         _precoCalculado = null;
         var s = Precificar(MontarParametros(comMargem: true), TerminarEm90);
         var sb = new StringBuilder();
@@ -127,9 +133,24 @@ public partial class CalculadoraPrecosViewModel : ViewModelBase
             if (eq is long e) sb.AppendLine($"Preço de equilíbrio (lucro zero): {R(e)}");
             sb.AppendLine("Lucro estimado é uma estimativa para decidir preço, não o lucro líquido contábil.");
         }
-        ResultadoPreco = sb.ToString().TrimEnd();
-        return Task.CompletedTask;
-    });
+        return sb.ToString().TrimEnd();
+    }
+
+    private static readonly HashSet<string> CamposDoPreco = new()
+    {
+        nameof(CustoCompra), nameof(FreteReais), nameof(EmbalagemReais), nameof(OutrosCustosPct), nameof(ImpostosPct),
+        nameof(ComissaoPct), nameof(OutrasVariaveisPct), nameof(OutrasVariaveisReais), nameof(FixasPct), nameof(FixasMensais),
+        nameof(PecasPorMes), nameof(MargemPct), nameof(TaxaPagamentoPct), nameof(TerminarEm90)
+    };
+
+    /// <summary>Depois do primeiro cálculo, mudar qualquer valor (custo, frete, margem...) recalcula o preço na hora.</summary>
+    protected override void OnPropertyChanged(System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        base.OnPropertyChanged(e);
+        if (e.PropertyName is null || !CamposDoPreco.Contains(e.PropertyName) || string.IsNullOrEmpty(ResultadoPreco)) return;
+        try { ResultadoPreco = MontarResultadoPreco(); }
+        catch (RegraDeNegocioException) { /* número ainda incompleto no campo: mantém o resultado anterior */ }
+    }
 
     [RelayCommand]
     private Task CalcularPromocaoAsync() => ExecutarAsync(() =>

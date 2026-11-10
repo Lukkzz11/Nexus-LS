@@ -8,6 +8,8 @@ namespace NexusLS.App;
 /// </summary>
 public partial class MainWindow : FluentWindow
 {
+    private bool _semTravaDeCaixa;
+
     public MainWindow()
     {
         InitializeComponent();
@@ -31,6 +33,7 @@ public partial class MainWindow : FluentWindow
                     System.Windows.MessageBoxButton.OK,
                     System.Windows.MessageBoxImage.Warning);
                 vm.AbrirAtualizador();
+                _semTravaDeCaixa = true;   // licença inválida: sai de qualquer jeito
                 Close();
             });
         };
@@ -40,6 +43,25 @@ public partial class MainWindow : FluentWindow
             var timerLicenca = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMinutes(15) };
             timerLicenca.Tick += async (_, _) => await vm.VerificarLicencaNuvemAsync();
             timerLicenca.Start();
+        };
+        // Fechar o app com o caixa aberto não é permitido: leva o operador para a conferência do caixa.
+        Closing += (_, e) =>
+        {
+            if (_semTravaDeCaixa) return;
+            try
+            {
+                var aberto = Task.Run(() => App.Servicos.Caixa.ObterAbertoAsync()).GetAwaiter().GetResult();
+                if (aberto is null) return;
+                e.Cancel = true;
+                System.Windows.MessageBox.Show(this,
+                    "O caixa ainda está aberto. Feche o caixa (conferência do dia) antes de sair do Nexus.",
+                    "Fechar o caixa", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+                vm.IrParaCaixaCommand.Execute(null);
+            }
+            catch (Exception)
+            {
+                // Sem conseguir consultar o caixa, nunca prende o operador dentro do programa.
+            }
         };
         vm.AbrirConexaoBanco = () => new Views.ConexaoBancoWindow(App.Servicos.Firebase, App.Servicos.Operacional) { Owner = this }.ShowDialog() == true;
         vm.AtualizarBanco();
