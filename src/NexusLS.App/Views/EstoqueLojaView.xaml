@@ -1,4 +1,4 @@
-<UserControl x:Class="NexusLS.App.Views.EstoqueLojaView"
+﻿<UserControl x:Class="NexusLS.App.Views.EstoqueLojaView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
@@ -31,50 +31,44 @@
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <Grid Margin="0,0,0,14">
-                <TextBlock Text="Estoque da loja" Style="{StaticResource TituloTela}" />
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                    <Button Content="Sem baixa (todos)" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,0"
+            <StackPanel Margin="0,0,0,10">
+                <TextBlock Text="Estoque da loja" Style="{StaticResource TituloTela}" Margin="0,0,0,10" />
+                <WrapPanel Orientation="Horizontal">
+                    <Button Content="Sem baixa (todos)" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,8"
                             AutomationProperties.Name="Marcar todos para vender sem baixa" ToolTip="Ativa a opção 'Vender sem baixa' em todos os produtos cadastrados de uma só vez."
                             Command="{Binding AtivarVenderSemBaixaEmTodosCommand}" />
-                    <Button Content="Novo produto (Ctrl+N)" Style="{StaticResource BotaoPrimario}" Margin="0,0,8,0"
+                    <Button Content="Novo produto (Ctrl+N)" Style="{StaticResource BotaoPrimario}" Margin="0,0,8,8"
                             AutomationProperties.Name="Novo produto" ToolTip="Abre a tela de cadastro de produto novo."
                             Command="{Binding NovoProdutoTelaCommand}" />
-                    <Button Content="Escolher produtos..." Style="{StaticResource BotaoSecundario}" Margin="0,0,8,0"
+                    <Button Content="Escolher produtos..." Style="{StaticResource BotaoSecundario}" Margin="0,0,8,8"
                             AutomationProperties.Name="Escolher produtos para vender sem baixa" ToolTip="Abre uma caixa para marcar, um a um, quais produtos vendem sem baixa de estoque (ou voltam a contar estoque)."
                             Command="{Binding EscolherProdutosSemBaixaCommand}" />
-                    <Button Content="Adicionar sobra" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,0"
+                    <Button Content="Adicionar sobra" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,8"
                             AutomationProperties.Name="Adicionar sobra" ToolTip="Cadastra uma peça que sobrou: continua sendo estoque e vende no PDV, só fica separada na lista de Sobras."
                             Command="{Binding NovaSobraTelaCommand}" />
-                    <Button Content="Exportar CSV" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,0"
+                    <Button Content="Exportar CSV" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,8"
                             AutomationProperties.Name="Exportar CSV" ToolTip="Salva o estoque inteiro (uma linha por tamanho) numa planilha CSV para o Excel."
                             Command="{Binding ExportarCsvCommand}" />
                     <Button Content="Importar CSV" Style="{StaticResource BotaoSecundario}"
                             AutomationProperties.Name="Importar CSV" ToolTip="Cadastra vários produtos de uma planilha (CSV). Produtos que já existem não são alterados."
-                            IsEnabled="{Binding PodeImportar}" Command="{Binding ImportarCsvCommand}" />
-                </StackPanel>
-            </Grid>
+                            Margin="0,0,0,8" IsEnabled="{Binding PodeImportar}" Command="{Binding ImportarCsvCommand}" />
+                </WrapPanel>
+            </StackPanel>
 
-            <Grid Grid.Row="1" Margin="0,0,0,10">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+            <StackPanel Grid.Row="1" Margin="0,0,0,10">
                 <TextBox Text="{Binding Busca, UpdateSourceTrigger=PropertyChanged}"
-                         ToolTip="Buscar por nome, referência ou código de barras" />
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="16,0,0,0" VerticalAlignment="Center">
-                    <RadioButton Content="Todos" GroupName="VisaoEstoque" IsChecked="{Binding VisaoTodos, Mode=TwoWay}" Margin="0,0,8,0" />
-                    <RadioButton Content="Estoque" GroupName="VisaoEstoque" IsChecked="{Binding VisaoEstoqueNormal, Mode=TwoWay}" Margin="0,0,8,0" />
+                         ToolTip="Buscar por nome, referência ou código de barras" Margin="0,0,0,8" />
+                <WrapPanel>
+                    <RadioButton Content="Todos" GroupName="VisaoEstoque" IsChecked="{Binding VisaoTodos, Mode=TwoWay}" Margin="0,0,12,4" VerticalAlignment="Center" />
+                    <RadioButton Content="Estoque" GroupName="VisaoEstoque" IsChecked="{Binding VisaoEstoqueNormal, Mode=TwoWay}" Margin="0,0,12,4" VerticalAlignment="Center" />
                     <RadioButton Content="{Binding TextoSobras}" GroupName="VisaoEstoque" IsChecked="{Binding VisaoSobras, Mode=TwoWay}"
-                                 AutomationProperties.Name="Sobras" />
-                </StackPanel>
-                <CheckBox Grid.Column="2" Content="Abaixo do mínimo" Margin="16,0,0,0" VerticalAlignment="Center"
-                          IsChecked="{Binding SomenteAbaixoDoMinimo}" />
-                <CheckBox Grid.Column="3" Content="Mostrar inativos" Margin="16,0,0,0" VerticalAlignment="Center"
-                          IsChecked="{Binding MostrarInativos}" />
-            </Grid>
+                                 AutomationProperties.Name="Sobras" Margin="0,0,20,4" VerticalAlignment="Center" />
+                    <CheckBox Content="Abaixo do mínimo" Margin="0,0,16,4" VerticalAlignment="Center"
+                              IsChecked="{Binding SomenteAbaixoDoMinimo}" />
+                    <CheckBox Content="Mostrar inativos" Margin="0,0,0,4" VerticalAlignment="Center"
+                              IsChecked="{Binding MostrarInativos}" />
+                </WrapPanel>
+            </StackPanel>
 
             <Border Grid.Row="2" Background="{StaticResource CorAlerta}" CornerRadius="6" Padding="12,8"
                     Margin="0,0,0,10"
