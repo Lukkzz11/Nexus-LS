@@ -53,6 +53,7 @@ public partial class MainWindow : Window
 
         // Faz checagem automática e não bloqueante do Git vs Instalado na inicialização
         _ = VerificarAtualizacoesGitBackgroundAsync();
+        _ = AutoAtualizarAtualizadorAsync();
 
         // Processar argumentos de linha de comando se houver
         var args = Environment.GetCommandLineArgs();
