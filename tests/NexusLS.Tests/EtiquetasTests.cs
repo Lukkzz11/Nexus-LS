@@ -197,3 +197,35 @@ public class DiagramadorEtiquetasTests
         Assert.Equal(7, DiagramadorEtiquetas.TotalDeEtiquetas(new[] { Item("A", 3), Item("B", 4) }));
     }
 }
+
+public class PerfilDePapelTests
+{
+    [Fact]
+    public void Bobina_em_fileiras_soma_margens_etiquetas_e_espacos()
+    {
+        var f = FormatoEtiqueta.BobinaEmFileiras(3, 33, 22, espacoHorizontalMm: 3, espacoVerticalMm: 2, margemLateralMm: 1.5);
+        Assert.Equal(3 * 33 + 2 * 3 + 3, f.PaginaLarguraMm, 3);   // 108 mm de papel
+        Assert.Equal(3, f.EtiquetasPorPagina);
+        Assert.Empty(f.Validar(larguraMaximaDaImpressoraMm: 110));
+    }
+
+    [Fact]
+    public void Papel_mais_largo_que_a_impressora_ou_medidas_invalidas_sao_recusados()
+    {
+        var f = FormatoEtiqueta.BobinaEmFileiras(3, 33, 22);
+        Assert.Contains(f.Validar(100), e => e.Contains("impressora"));
+        var ruim = f with { EtiquetaLarguraMm = 60 };   // 3 × 60 não cabe no papel de 108 mm
+        Assert.Contains(ruim.Validar(), e => e.Contains("largura do papel"));
+        Assert.Throws<ArgumentException>(() => FormatoEtiqueta.BobinaEmFileiras(0, 30, 20));
+    }
+
+    [Fact]
+    public void Tres_colunas_enchem_a_fileira_da_esquerda_para_a_direita()
+    {
+        var itens = new[] { new ItemEtiqueta(1, "Camisa", "M", 5000, "123", 4) };
+        var paginas = DiagramadorEtiquetas.Paginar(itens, FormatoEtiqueta.Bobina3Colunas33x22);
+        Assert.Equal(2, paginas.Count);
+        Assert.Equal(3, paginas[0].Count);
+        Assert.True(paginas[0][1].XMm > paginas[0][0].XMm);
+    }
+}

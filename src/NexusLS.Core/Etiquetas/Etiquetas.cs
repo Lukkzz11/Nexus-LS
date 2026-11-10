@@ -28,8 +28,46 @@ public record FormatoEtiqueta(
     public static readonly FormatoEtiqueta FolhaA4Tres_por_Sete = new(
         "Folha A4 · 3 × 7 (63,5 × 38,1 mm)", 210, 297, 3, 7, 63.5, 38.1, 7.2, 15.15, 2.5, 0);
 
+    /// <summary>
+    /// Bobina com etiquetas em fileiras (1, 2 ou 3 lado a lado): a "página" é uma fileira, com a largura total do papel
+    /// (margens + etiquetas + espaços entre elas) e a altura da etiqueta mais o espaço até a próxima fileira.
+    /// </summary>
+    public static FormatoEtiqueta BobinaEmFileiras(int colunas, double larguraMm, double alturaMm,
+        double espacoHorizontalMm = 3, double espacoVerticalMm = 2, double margemLateralMm = 1.5)
+    {
+        if (colunas < 1) throw new ArgumentException("Informe pelo menos 1 coluna.", nameof(colunas));
+        var papel = margemLateralMm * 2 + colunas * larguraMm + (colunas - 1) * espacoHorizontalMm;
+        var nome = colunas == 1
+            ? $"Bobina {larguraMm:0.#} × {alturaMm:0.#} mm (uma por vez)"
+            : $"Bobina {colunas} colunas · {larguraMm:0.#} × {alturaMm:0.#} mm (papel {papel:0.#} mm)";
+        return new FormatoEtiqueta(nome, papel, alturaMm + espacoVerticalMm, colunas, 1, larguraMm, alturaMm,
+            margemLateralMm, 0, espacoHorizontalMm, 0);
+    }
+
+    public static readonly FormatoEtiqueta Bobina2Colunas50x30 = BobinaEmFileiras(2, 50, 30);
+    public static readonly FormatoEtiqueta Bobina3Colunas33x22 = BobinaEmFileiras(3, 33, 22);
+    public static readonly FormatoEtiqueta Bobina3Colunas30x20 = BobinaEmFileiras(3, 30, 20);
+    public static readonly FormatoEtiqueta Bobina2Colunas40x25 = BobinaEmFileiras(2, 40, 25);
+
+    /// <summary>Confere se as medidas fazem sentido e cabem no papel. Lista vazia = formato válido.</summary>
+    public IReadOnlyList<string> Validar(double? larguraMaximaDaImpressoraMm = null)
+    {
+        var erros = new List<string>();
+        if (Colunas < 1 || Linhas < 1) erros.Add("O formato precisa de pelo menos 1 coluna e 1 linha.");
+        if (EtiquetaLarguraMm <= 0 || EtiquetaAlturaMm <= 0) erros.Add("A etiqueta precisa ter largura e altura maiores que zero.");
+        if (MargemEsquerdaMm < 0 || MargemSuperiorMm < 0 || EspacoHorizontalMm < 0 || EspacoVerticalMm < 0)
+            erros.Add("Margens e espaços não podem ser negativos.");
+        var usadoX = MargemEsquerdaMm + Colunas * EtiquetaLarguraMm + (Colunas - 1) * EspacoHorizontalMm;
+        var usadoY = MargemSuperiorMm + Linhas * EtiquetaAlturaMm + (Linhas - 1) * EspacoVerticalMm;
+        if (usadoX > PaginaLarguraMm + 0.01) erros.Add($"As {Colunas} coluna(s) ocupam {usadoX:0.#} mm, mais que a largura do papel ({PaginaLarguraMm:0.#} mm).");
+        if (usadoY > PaginaAlturaMm + 0.01) erros.Add($"As {Linhas} linha(s) ocupam {usadoY:0.#} mm, mais que a altura do papel ({PaginaAlturaMm:0.#} mm).");
+        if (larguraMaximaDaImpressoraMm is double max && PaginaLarguraMm > max + 0.01)
+            erros.Add($"O papel ({PaginaLarguraMm:0.#} mm) é mais largo que a impressora aceita ({max:0.#} mm).");
+        return erros;
+    }
+
     public static IReadOnlyList<FormatoEtiqueta> Todos { get; } =
-        new[] { Bobina50x30, Bobina40x25, FolhaA4Tres_por_Sete };
+        new[] { Bobina50x30, Bobina40x25, Bobina2Colunas50x30, FolhaA4Tres_por_Sete };
 }
 
 /// <summary>Uma etiqueta a imprimir: o que aparece nela e quantas cópias.</summary>
