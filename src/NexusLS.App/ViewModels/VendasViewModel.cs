@@ -22,6 +22,7 @@ public partial class VendasViewModel : ViewModelBase
     private readonly CupomService _cupons;
     private readonly CaixaService? _caixa;
     private readonly ClienteService? _clientes;
+    private readonly ConfiguracaoService? _configuracao;
     private int _versao;
 
     /// <summary>Quem pode ser escolhido como cliente da venda (o primeiro é "Consumidor final", sem cliente).</summary>
@@ -66,12 +67,13 @@ public partial class VendasViewModel : ViewModelBase
     /// para que os testes e as capturas continuem montando só a lista de vendas.
     /// </summary>
     public VendasViewModel(VendaService vendas, CupomService cupons, CaixaService? caixa = null, FechamentoViewModel? fechamento = null,
-        ClienteService? clientes = null)
+        ClienteService? clientes = null, ConfiguracaoService? configuracao = null)
     {
         _vendas = vendas;
         _cupons = cupons;
         _caixa = caixa;
         _clientes = clientes;
+        _configuracao = configuracao;
         Fechamento = fechamento;
         _data = DateTime.Today; // campo direto: não dispara o carregamento duas vezes
         _ = CarregarAsync();
@@ -192,6 +194,24 @@ public partial class VendasViewModel : ViewModelBase
     /// <summary>Salva os itens vendidos no dia num CSV (uma linha por item), para abrir no Excel.</summary>
     [RelayCommand]
     private Task ExportarItensAsync() => ExportarAsync("itens", ExportadorCsv.Itens);
+
+    /// <summary>
+    /// Baixa o relatório do dia em PDF: totais, formas de pagamento e a lista das vendas (o mesmo que a tela mostra).
+    /// </summary>
+    [RelayCommand]
+    private Task RelatorioDoDiaEmPdfAsync() => ExecutarAsync(async () =>
+    {
+        if (Vendas.Count == 0)
+            throw new RegraDeNegocioException("Não há vendas neste dia para gerar o relatório.");
+
+        var dia = Data ?? DateTime.Today;
+        var caminho = EscolherArquivoParaSalvar(RelatorioDiaPdf.NomeDoArquivo(dia));
+        if (caminho is null) return; // a pessoa desistiu na caixa "Salvar como"
+
+        var nomeLoja = _configuracao is null ? "Nexus LS" : (await _configuracao.ObterAsync()).NomeLoja;
+        await File.WriteAllBytesAsync(caminho, RelatorioDiaPdf.Gerar(Vendas.ToList(), dia, nomeLoja));
+        MostrarSucesso($"Relatório salvo: {caminho}");
+    });
 
     private Task ExportarAsync(string tipo, Func<IEnumerable<Venda>, string> gerar) => ExecutarAsync(() =>
     {

@@ -76,6 +76,9 @@
                         <Button Content="Exportar itens (CSV)" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0"
                                 Padding="12,6" Command="{Binding ExportarItensCommand}"
                                 ToolTip="Uma linha por item vendido, para abrir no Excel" />
+                        <Button Content="Relatório do dia (PDF)" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0"
+                                Padding="12,6" Command="{Binding RelatorioDoDiaEmPdfCommand}"
+                                ToolTip="Totais, formas de pagamento e a lista das vendas do dia, prontos para imprimir ou guardar" />
                     </StackPanel>
 
                     <!-- Relatório do dia -->

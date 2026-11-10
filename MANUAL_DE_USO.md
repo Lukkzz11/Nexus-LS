@@ -39,7 +39,7 @@ Menu **Vendas > Venda Cliente**: escolha o cliente (a lista mostra quanto cada u
 
 ## 3. Caixa
 
-- **Caixa:** lista as vendas do dia, imprime/reimprime cupom, gera **Nota em PDF**, exporta CSV e **cancela venda** (sempre com motivo; pode devolver os itens ao estoque). Nada é apagado: cancelar deixa o registro.
+- **Caixa:** lista as vendas do dia, imprime/reimprime cupom, gera **Nota em PDF** (da venda) e **Relatório do dia em PDF** (totais, formas de pagamento e a lista das vendas), exporta CSV e **cancela venda** (sempre com motivo; pode devolver os itens ao estoque). Nada é apagado: cancelar deixa o registro.
 - **Fechamento de caixa:** confira dinheiro, cartão e Pix contra o esperado. Se houver diferença, a observação é obrigatória. Para corrigir, faça uma nova versão: a anterior continua no histórico.
 - **Movimentos:** sangria, reforço, despesa paga pela gaveta e entrada avulsa ficam ligados ao turno.
 
