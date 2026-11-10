@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json.Nodes;
@@ -221,13 +221,27 @@ public sealed class ImportadorErp
             foreach (var (tam, qtd) in g) grade[tam.Trim()] = Math.Max(0, (int)Math.Round(Numero(qtd)));
         if (grade.Count == 0) grade[Tamanhos.SemTamanho] = Math.Max(0, (int)Math.Round(Numero(c["estoqueTotal"])));
 
-        foreach (var antigo in p.Tamanhos.Where(t => !grade.ContainsKey(t.Tamanho) && !t.EhSemTamanho).ToList())
-            antigo.Estoque = 0; // tamanho que sumiu no ERP: zera (não apaga, pode haver venda no histórico)
+        // Cada mudança de saldo vira uma movimentação (o extrato do produto precisa explicar de onde veio o estoque).
+        void Registrar(ProdutoTamanho linha, int novoSaldo)
+        {
+            var delta = novoSaldo - linha.Estoque;
+            linha.Estoque = novoSaldo;
+            if (delta == 0) return;
+            db.Movimentacoes.Add(new MovimentacaoEstoque
+            {
+                Produto = p, DataHora = _agora().ToLocalTime(), Tipo = novo ? TipoMovimentacao.Entrada : TipoMovimentacao.Correcao,
+                Quantidade = delta, Tamanho = linha.Tamanho, Motivo = novo ? "Importação do ERP (estoque inicial)" : "Importação do ERP (saldo atualizado)"
+            });
+        }
+
+        var temTamanhoReal = grade.Keys.Any(k => !string.Equals(k, Tamanhos.SemTamanho, StringComparison.OrdinalIgnoreCase));
+        foreach (var antigo in p.Tamanhos.Where(t => !grade.ContainsKey(t.Tamanho) && (!t.EhSemTamanho || temTamanhoReal)).ToList())
+            Registrar(antigo, 0); // tamanho que sumiu no ERP (ou "Sem tamanho" quando o ERP já tem grade): zera, não apaga, pode haver venda no histórico
         foreach (var (tam, qtd) in grade)
         {
             var linha = p.Tamanhos.FirstOrDefault(t => t.Tamanho == tam);
-            if (linha is null) p.Tamanhos.Add(new ProdutoTamanho { Tamanho = tam, Estoque = qtd });
-            else linha.Estoque = qtd;
+            if (linha is null) { linha = new ProdutoTamanho { Tamanho = tam, Estoque = 0 }; p.Tamanhos.Add(linha); }
+            Registrar(linha, qtd);
         }
         if (!p.Tamanhos.Any(t => t.EhSemTamanho)) p.Tamanhos.Add(new ProdutoTamanho { Tamanho = Tamanhos.SemTamanho, Estoque = 0 }); // todo produto tem esta linha
         p.EstoqueAtual = p.Tamanhos.Sum(t => t.Estoque);

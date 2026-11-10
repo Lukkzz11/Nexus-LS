@@ -165,6 +165,39 @@ public sealed class ImportadorErpTests : IDisposable
     }
 
     [Fact]
+    public async Task Importacao_de_produto_registra_movimentacao_por_tamanho_e_zera_sem_tamanho_antigo()
+    {
+        ProdutoNoErp("p1", "Camiseta", "2026-10-30T10:00:00Z");
+        var imp = Importador();
+        await imp.ImportarAsync();
+        int id;
+        await using (var db0 = _banco.CriarContexto())
+        {
+            var p0 = await db0.Produtos.Include(x => x.Tamanhos).SingleAsync();
+            id = p0.Id;
+            var movs0 = await db0.Movimentacoes.Where(m => m.ProdutoId == id).ToListAsync();
+            Assert.Equal(8, movs0.Sum(m => m.Quantidade));
+            Assert.All(movs0, m => { Assert.Equal(TipoMovimentacao.Entrada, m.Tipo); Assert.False(string.IsNullOrEmpty(m.Tamanho)); Assert.False(string.IsNullOrEmpty(m.Motivo)); });
+            p0.Tamanhos.Single(t => t.EhSemTamanho).Estoque = 4; // estoque antigo sem tamanho
+            p0.EstoqueAtual = 12;
+            await db0.SaveChangesAsync();
+        }
+        _agora = _agora.AddHours(1);
+        _fonte.Por("produtos", "p1", """{"nome":"Camiseta","precoVarejo":70,"gradeTamanhos":{"P":1,"M":9},"atualizadoEm":"2026-10-31T12:30:00Z"}""");
+
+        await imp.ImportarAsync();
+
+        await using var db = _banco.CriarContexto();
+        var p = await db.Produtos.Include(x => x.Tamanhos).SingleAsync();
+        Assert.Equal(10, p.EstoqueAtual);
+        Assert.Equal(0, p.Tamanhos.Single(t => t.EhSemTamanho).Estoque);
+        Assert.Equal(p.EstoqueAtual, p.Tamanhos.Sum(t => t.Estoque));
+        var movs = await db.Movimentacoes.Where(m => m.ProdutoId == id).ToListAsync();
+        Assert.Equal(p.EstoqueAtual, movs.Sum(m => m.Quantidade) + 4); // as movimentações explicam o saldo (o 4 foi editado direto no banco do teste)
+        Assert.Contains(movs, m => m.Tipo == TipoMovimentacao.Correcao && m.Tamanho == Tamanhos.SemTamanho && m.Quantidade == -4);
+    }
+
+    [Fact]
     public async Task Venda_cancelada_depois_no_ERP_vira_cancelada_aqui()
     {
         ProdutoNoErp("p1", "Camiseta", "2026-10-30T10:00:00Z");
