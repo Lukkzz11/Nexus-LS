@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NexusLS.App.Impressao;
@@ -32,6 +33,7 @@ public record SegmentoPrevia(string Texto, System.Windows.FontWeight Peso, doubl
 /// <summary>Dados da loja e do cupom, com uma prévia do cupom que muda enquanto você digita.</summary>
 public partial class ConfiguracoesViewModel : ViewModelBase
 {
+    private static readonly CultureInfo PtBr = CultureInfo.GetCultureInfo("pt-BR");
     private readonly ConfiguracaoService _configuracao;
     private readonly CupomService _cupons;
 

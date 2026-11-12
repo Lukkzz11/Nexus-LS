@@ -7,6 +7,12 @@ namespace NexusLS.App;
 
 public partial class App : Application
 {
+    /// <summary>
+    /// Antes de qualquer tela existir: o programa fala pt-BR, independente do "Formato regional"
+    /// do Windows. Sem isto, num Windows em inglês os números sairiam com ponto ("2.5 metros").
+    /// </summary>
+    public App() => CulturaBr.Aplicar();
+
     /// <summary>Opções do banco compartilhadas pelo app (aponta para %LOCALAPPDATA%\NexusLS\nexus.db).</summary>
     public static DbContextOptions<PdvDbContext> OpcoesBanco { get; } =
         new DbContextOptionsBuilder<PdvDbContext>()

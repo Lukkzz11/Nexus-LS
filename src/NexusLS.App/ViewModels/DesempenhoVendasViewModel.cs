@@ -182,11 +182,11 @@ public partial class DesempenhoVendasViewModel : ViewModelBase
         Indicadores.Add(Montar("Peças vendidas", r.Atual.Pecas.ToString(PtBr), Variacao(r.Atual.Pecas, r.Antes.Pecas)));
         Indicadores.Add(Montar("Ticket médio", Dinheiro.Formatar(r.Atual.TicketMedioCentavos), Variacao(r.Atual.TicketMedioCentavos, r.Antes.TicketMedioCentavos)));
         Indicadores.Add(r.Atual.LucroCentavos is long lucro
-            ? Montar("Lucro estimado", $"{Dinheiro.Formatar(lucro)} ({r.Atual.MargemPct:0.#}%)",
+            ? Montar("Lucro estimado", $"{Dinheiro.Formatar(lucro)} ({r.Atual.MargemPct?.ToString("0.#", PtBr)}%)",
                 r.Antes.LucroCentavos is long antes ? Variacao(lucro, antes) : null)
             : new Indicador("Lucro estimado", "—", "", false, false));
         AvisoLucro = r.Atual.LucroCentavos is null && r.Atual.Vendas > 0
-            ? $"O lucro não é mostrado porque o custo é conhecido em só {r.Atual.CoberturaCusto * 100:0}% do valor vendido. Cadastre o custo dos produtos."
+            ? $"O lucro não é mostrado porque o custo é conhecido em só {(r.Atual.CoberturaCusto * 100).ToString("0", PtBr)}% do valor vendido. Cadastre o custo dos produtos."
             : "";
 
         Preencher(VendasNoTempo, r.Serie.Select(p => (p.Rotulo, (decimal)p.FaturamentoCentavos, $"{Dinheiro.Formatar(p.FaturamentoCentavos)} · {p.Vendas} venda(s)")));
@@ -209,7 +209,7 @@ public partial class DesempenhoVendasViewModel : ViewModelBase
     });
 
     private static Indicador Montar(string titulo, string valor, decimal? variacao) => variacao is decimal v
-        ? new Indicador(titulo, valor, $"{(v > 0 ? "▲" : v < 0 ? "▼" : "=")} {Math.Abs(v):0.#}% sobre o período anterior", v > 0, v < 0)
+        ? new Indicador(titulo, valor, $"{(v > 0 ? "▲" : v < 0 ? "▼" : "=")} {Math.Abs(v).ToString("0.#", PtBr)}% sobre o período anterior", v > 0, v < 0)
         : new Indicador(titulo, valor, "sem base de comparação", false, false);
 
     private static decimal? Variacao(long atual, long anterior) => DesempenhoVendas.Variacao(atual, anterior);

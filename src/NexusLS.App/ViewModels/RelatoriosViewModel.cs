@@ -143,7 +143,7 @@ public partial class RelatoriosViewModel : ViewModelBase
         L("(+/−) Abatimentos/acréscimos em títulos a prazo", d.AjustesTitulosCentavos, recuo: true);
         L("= Receita líquida", d.ReceitaLiquidaCentavos, destaque: true);
         L("(−) Custo das mercadorias vendidas", d.CustoMercadoriasCentavos, recuo: true);
-        Dre.Add(new LinhaDre($"= Lucro bruto (margem {d.MargemBrutaPercentual:0.#}%)", R(d.LucroBrutoCentavos), true, false, d.LucroBrutoCentavos < 0));
+        Dre.Add(new LinhaDre($"= Lucro bruto (margem {d.MargemBrutaPercentual.ToString("0.#", PtBr)}%)", R(d.LucroBrutoCentavos), true, false, d.LucroBrutoCentavos < 0));
         L("(+) Outras receitas", d.OutrasReceitasCentavos, recuo: true);
         L("(−) Despesas operacionais", d.DespesasOperacionaisCentavos, recuo: true);
         foreach (var c in d.DespesasPorCategoria) L(c.Categoria, c.TotalCentavos, recuo: true);

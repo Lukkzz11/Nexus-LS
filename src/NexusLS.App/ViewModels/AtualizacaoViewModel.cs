@@ -3,6 +3,7 @@ using System.Net.Http;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NexusLS.Core.Atualizacao;
+using NexusLS.Core.Services;
 
 namespace NexusLS.App.ViewModels;
 
@@ -113,7 +114,7 @@ public partial class AtualizacaoViewModel : ViewModelBase
             var progresso = new Progress<double>(p =>
             {
                 ProgressoPercentual = p * 100;
-                ProgressoTexto = $"Baixando... {p:P0}";
+                ProgressoTexto = $"Baixando... {TextoBr.Numero(p * 100, "0")}%";
             });
             arquivo = await _servico.BaixarAsync(_nova, progresso, _cancelar.Token);
         }

@@ -323,7 +323,7 @@ public partial class EstoqueLojaViewModel : ViewModelBase
         }
         var margem = CalculadoraPreco.Margem(venda, custo);
         var markup = CalculadoraPreco.Markup(venda, custo);
-        TextoMargem = $"Margem {margem:0.##}% (lucro sobre o preço) · Markup {markup:0.##}% (lucro sobre o custo)"
+        TextoMargem = $"Margem {margem?.ToString("0.##", TextoBr.Cultura)}% (lucro sobre o preço) · Markup {markup?.ToString("0.##", TextoBr.Cultura)}% (lucro sobre o custo)"
                       + (venda < custo ? " · ATENÇÃO: preço abaixo do custo!" : "");
     }
 

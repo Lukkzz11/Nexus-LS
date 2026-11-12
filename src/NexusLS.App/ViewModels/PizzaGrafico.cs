@@ -11,6 +11,7 @@ public record FatiaDesenhada(string Rotulo, string Legenda, string Caminho, stri
 public static class PizzaGrafico
 {
     public const double Raio = 100;
+    private static readonly CultureInfo PtBr = CultureInfo.GetCultureInfo("pt-BR");
     private static readonly string[] Cores = { "CorSerie1", "CorSerie2", "CorSerie3", "CorSerie4", "CorSerie5", "CorSerie6", "CorSerie7" };
     public const string CorOutros = "CorSerieOutros";
 
@@ -22,7 +23,7 @@ public static class PizzaGrafico
         {
             var f = fatias[i];
             var cor = f.Rotulo == Participacao.RotuloOutros ? CorOutros : Cores[i % Cores.Length];
-            var legenda = $"{f.Rotulo} · {Dinheiro.Formatar(f.ValorCentavos)} · {f.Percentual:0.#}%";
+            var legenda = $"{f.Rotulo} · {Dinheiro.Formatar(f.ValorCentavos)} · {f.Percentual.ToString("0.#", PtBr)}%";
             resultado.Add(new FatiaDesenhada(f.Rotulo, legenda, Caminho(inicio, f.Fracao), cor));
             inicio += f.Fracao;
         }

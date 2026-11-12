@@ -72,7 +72,7 @@ public partial class ConfiguracoesViewModel
     }
 
     public static string FormatarTamanho(long bytes) =>
-        bytes < 1024 * 1024 ? $"{Math.Max(1, bytes / 1024)} KB" : $"{bytes / 1024.0 / 1024.0:0.#} MB";
+        bytes < 1024 * 1024 ? $"{Math.Max(1, bytes / 1024)} KB" : $"{TextoBr.Numero(bytes / 1024.0 / 1024.0, "0.#")} MB";
 
     /// <summary>O zoom vale na hora e fica guardado; o resto das preferências só com o botão Salvar.</summary>
     partial void OnZoomSelecionadoChanged(OpcaoZoom? value)

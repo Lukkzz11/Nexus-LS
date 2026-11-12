@@ -25,7 +25,7 @@ public record ItemBackup(InfoBackup Info)
     };
 
     private static string TamanhoTexto(long bytes) =>
-        bytes >= 1_048_576 ? $"{bytes / 1_048_576.0:0.0} MB" : $"{Math.Max(1, bytes / 1024)} KB";
+        bytes >= 1_048_576 ? $"{TextoBr.Numero(bytes / 1_048_576.0, "0.0")} MB" : $"{Math.Max(1, bytes / 1024)} KB";
 }
 
 /// <summary>Parte "Backup" da tela de Configurações (preferências, backup manual, lista e restauração).</summary>

@@ -23,8 +23,8 @@ public sealed record LinhaMateria(MateriaPrima Materia)
 {
     public string Nome => Materia.Nome;
     public string Tipo => Materia.Tipo;
-    public string Estoque => $"{Materia.EstoqueAtual:0.###} {Materia.Unidade}";
-    public string Minimo => $"{Materia.EstoqueMinimo:0.###}";
+    public string Estoque => $"{Materia.EstoqueAtual.ToString("0.###", TextoBr.Cultura)} {Materia.Unidade}";
+    public string Minimo => Materia.EstoqueMinimo.ToString("0.###", TextoBr.Cultura);
     public string Custo => Dinheiro.Formatar(Materia.CustoUnitarioCentavos);
     public string Situacao => Materia.AbaixoDoMinimo ? "Abaixo do mínimo" : "";
 }
@@ -35,7 +35,7 @@ public sealed record LinhaPerda(PerdaProducao Perda)
     public string Ordem => Perda.OrdemCodigo ?? "Geral";
     public string Motivo => FabricaViewModel.NomeMotivo(Perda.Motivo);
     public string Material => Perda.MaterialNome;
-    public string Quantidade => $"{Perda.Quantidade:0.###} {Perda.Unidade}";
+    public string Quantidade => $"{Perda.Quantidade.ToString("0.###", TextoBr.Cultura)} {Perda.Unidade}";
     public string Custo => Dinheiro.Formatar(Perda.CustoEstimadoCentavos);
 }
 
@@ -280,7 +280,7 @@ public partial class FabricaViewModel : ViewModelBase
         var r = await _servico.AjustarEstoqueMateriaAsync(m.Id, sinal * qtd);
         MpMovimento = "";
         await CarregarAsync();
-        MostrarSucesso($"\"{r.Nome}\": agora {r.EstoqueAtual:0.###} {r.Unidade}.");
+        MostrarSucesso($"\"{r.Nome}\": agora {r.EstoqueAtual.ToString("0.###", PtBr)} {r.Unidade}.");
     });
 
     [RelayCommand]
@@ -310,6 +310,6 @@ public partial class FabricaViewModel : ViewModelBase
         PdQuantidade = PdCusto = PdObservacao = PdMaterialLivre = "";
         PdMateria = null; PdOrdem = null;
         await CarregarAsync();
-        MostrarSucesso($"Perda registrada: {perda.Quantidade:0.###} {perda.Unidade} de {perda.MaterialNome} ({Dinheiro.Formatar(perda.CustoEstimadoCentavos)}).");
+        MostrarSucesso($"Perda registrada: {perda.Quantidade.ToString("0.###", PtBr)} {perda.Unidade} de {perda.MaterialNome} ({Dinheiro.Formatar(perda.CustoEstimadoCentavos)}).");
     });
 }
