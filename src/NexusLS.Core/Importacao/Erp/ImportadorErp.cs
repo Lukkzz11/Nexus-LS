@@ -5,6 +5,7 @@ using System.Text.Json.Nodes;
 using Microsoft.EntityFrameworkCore;
 using NexusLS.Core.Data;
 using NexusLS.Core.Models;
+using NexusLS.Core.Services;
 
 namespace NexusLS.Core.Importacao.Erp;
 
@@ -472,7 +473,7 @@ public sealed class ImportadorErp
                 var existente = await db.PagamentosCliente.FirstOrDefaultAsync(p => p.Guid == lig.EntidadeGuid);
                 if (existente is not null) db.PagamentosCliente.Remove(existente);
                 db.ImportacaoErp.Remove(lig);
-                r.Avisos.Add($"contas_receber/{doc.Id}: pagamento de {valor / 100m:N2} foi estornado ou cancelado no ERP; removido daqui.");
+                r.Avisos.Add($"contas_receber/{doc.Id}: pagamento de {TextoBr.Numero(valor / 100m)} foi estornado ou cancelado no ERP; removido daqui.");
             }
         }
         return ligacao is null;

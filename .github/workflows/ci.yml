@@ -40,6 +40,7 @@ jobs:
         run: dotnet restore NexusLS.slnx
 
       - name: Compilar em Release
+        id: compilar
         run: dotnet build NexusLS.slnx --no-restore -c Release
 
       # Testes das regras de negócio (Core + SQLite em memória).
@@ -50,7 +51,10 @@ jobs:
           --logger "trx;LogFileName=core.trx"
 
       # Testes das telas/ViewModels (fluxo do PDV, tecla por tecla, sem abrir janela).
+      # Roda mesmo quando o Core falha: antes, uma falha no Core pulava a suíte de telas inteira
+      # e o resultado dela nunca aparecia no GitHub. Só não roda se a compilação falhar.
       - name: Testar a interface (App)
+        if: always() && steps.compilar.outcome == 'success'
         run: >
           dotnet test tests/NexusLS.App.Tests/NexusLS.App.Tests.csproj
           --no-build -c Release
@@ -59,8 +63,10 @@ jobs:
       # A auditoria precisa FALHAR o job quando houver vulnerabilidade conhecida.
       # O comando `dotnet list package --vulnerable` costuma sair com código 0 mesmo
       # encontrando problemas, por isso o texto também é conferido.
+      # Roda mesmo depois de um teste vermelho: são informações independentes.
       - name: Auditar pacotes com vulnerabilidades conhecidas
         shell: pwsh
+        if: always()
         continue-on-error: false
         env:
           DOTNET_CLI_UI_LANGUAGE: en

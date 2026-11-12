@@ -162,7 +162,7 @@ public class ConfiguracaoVitrine
         void Par(string a, string b, string o)
         {
             if (Cores.TryGetValue(a, out var ca) && Cores.TryGetValue(b, out var cb) && Contraste(ca, cb) < 4.5)
-                avisos.Add($"{o}: contraste baixo ({Contraste(ca, cb):0.0}:1; o ideal é 4,5:1 ou mais).");
+                avisos.Add($"{o}: contraste baixo ({TextoBr.Numero(Contraste(ca, cb), "0.0")}:1; o ideal é 4,5:1 ou mais).");
         }
         Par("titulo", "fundo", "Título sobre o fundo");
         Par("preco", "cartao", "Preço sobre o fundo dos produtos");

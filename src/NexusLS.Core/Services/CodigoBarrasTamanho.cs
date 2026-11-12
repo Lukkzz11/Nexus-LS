@@ -131,7 +131,7 @@ public static class CodigoBarrasTamanho
 
         if (larguraEtiquetaMm > 0 && !LegibilidadeCodigo.Legivel(codigo, larguraEtiquetaMm))
         {
-            erros.Add($"as barras ficariam com menos de {LegibilidadeCodigo.ModuloMinimoMm:0.00} mm nesta etiqueta");
+            erros.Add($"as barras ficariam com menos de {TextoBr.Numero(LegibilidadeCodigo.ModuloMinimoMm, "0.00")} mm nesta etiqueta");
         }
 
         return erros;

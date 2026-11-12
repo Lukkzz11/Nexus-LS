@@ -168,7 +168,7 @@ public static class PrecificacaoPro
         var equilibrio = PrecoDeEquilibrio(p);
         var alertas = new List<Alerta>();
         if (depois.LucroCentavos < 0)
-            alertas.Add(new Alerta(true, $"Neste preço você tem prejuízo de {Math.Abs(depois.LucroCentavos) / 100m:N2} por peça (considerando os custos informados)."));
+            alertas.Add(new Alerta(true, $"Neste preço você tem prejuízo de {TextoBr.Numero(Math.Abs(depois.LucroCentavos) / 100m)} por peça (considerando os custos informados)."));
         else if (equilibrio is long eq && depois.PrecoCentavos < eq)
             alertas.Add(new Alerta(true, "Preço abaixo do preço de equilíbrio."));
         if (precoMinimoCentavos > 0 && depois.PrecoCentavos < precoMinimoCentavos)
