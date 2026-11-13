@@ -44,6 +44,13 @@ public class EditorDesenhoService
 
         foreach (var el in modelo.Elementos)
         {
+            // Objetos que ficaram só na mesa de trabalho, fora da etiqueta, não são impressos
+            // (é a mesma regra do desktop do Corel/Illustrator).
+            if (!Bancada.IntersectaEtiqueta(el.X, el.Y, el.Largura, el.Altura, modelo.LarguraMm, modelo.AlturaMm))
+            {
+                continue;
+            }
+
             DesenharElemento(dc, el, produto, tamanho, nomeLoja);
         }
     }
@@ -53,7 +60,7 @@ public class EditorDesenhoService
         if (string.IsNullOrWhiteSpace(hex)) return fallback;
         try
         {
-            return (Brush)new BrushConverter().ConvertFromString(hex) ?? fallback;
+            return new BrushConverter().ConvertFromString(hex) as Brush ?? fallback;
         }
         catch
         {
@@ -398,7 +405,7 @@ public class EditorDesenhoService
 
         if (el.Variavel == VariavelEtiqueta.PrecoVarejo)
         {
-            return (produto.PrecoVendaCentavos / 100.0).ToString("F2");
+            return TextoBr.Numero(produto.PrecoVendaCentavos / 100.0, "F2");
         }
 
         // Padrão: código oficial do produto/tamanho (EAN-13, referência, código curto ou código interno).
@@ -457,6 +464,12 @@ public class EditorDesenhoService
         {
             if (!el.Visivel) continue;
 
+            // Só imprime o que está na etiqueta; o que ficou na mesa de trabalho não sai.
+            if (!Bancada.IntersectaEtiqueta(el.X, el.Y, el.Largura, el.Altura, modelo.LarguraMm, modelo.AlturaMm))
+            {
+                continue;
+            }
+
             var xDots = (int)(el.X * dotsPorMm);
             var yDots = (int)(el.Y * dotsPorMm);
             var largDots = (int)(el.Largura * dotsPorMm);
@@ -475,16 +488,29 @@ public class EditorDesenhoService
                 case TipoElemento.Texto:
                     var txt = ResolverTexto(el, produto, tamanho, nomeLoja);
                     var tamFonteZpl = Math.Clamp((int)(el.TamanhoFonte * 2.8), 16, 80);
-                    sb.AppendLine($"^FO{xDots},{yDots}^A0{orientacaoZpl},{tamFonteZpl},{tamFonteZpl}^FD{txt}^FS");
+                    sb.AppendLine($"^FO{xDots},{yDots}^A0{orientacaoZpl},{tamFonteZpl},{tamFonteZpl}{CampoZpl.Montar(txt)}");
                     break;
 
                 case TipoElemento.CodigoBarras:
                     var cod = ResolverCodigo(el, produto, tamanho);
                     if (string.IsNullOrWhiteSpace(cod)) break;
+
                     if (el.TipoCodigo == TipoSimboloCodigo.QrCode)
                     {
                         var mag = Math.Clamp(altDots / 25, 2, 8);
                         sb.AppendLine($"^FO{xDots},{yDots}^BQ{orientacaoZpl},2,{mag}{CampoZpl.Montar($"QA,{cod}")}");
+                    }
+                    else if (el.TipoCodigo == TipoSimboloCodigo.Ean13 && CodigoBarrasInterno.EhEan13Valido(cod))
+                    {
+                        var hBarras = Math.Max(20, altDots - 20);
+                        var legivel = el.MostrarTextoLegivel ? "Y" : "N";
+                        sb.AppendLine($"^FO{xDots},{yDots}^BE{orientacaoZpl},{hBarras},{legivel},N{CampoZpl.Montar(cod)}");
+                    }
+                    else if (el.TipoCodigo == TipoSimboloCodigo.Code39 && CodigoCode39Valido(cod))
+                    {
+                        var hBarras = Math.Max(20, altDots - 20);
+                        var legivel = el.MostrarTextoLegivel ? "Y" : "N";
+                        sb.AppendLine($"^FO{xDots},{yDots}^B3{orientacaoZpl},{hBarras},{legivel},N{CampoZpl.Montar(cod)}");
                     }
                     else
                     {
@@ -511,5 +537,17 @@ public class EditorDesenhoService
         sb.AppendLine($"^PQ{copias}");
         sb.AppendLine("^XZ");
         return sb.ToString();
+    }
+
+    private static bool CodigoCode39Valido(string? c)
+    {
+        if (string.IsNullOrWhiteSpace(c)) return false;
+        foreach (var ch in c)
+        {
+            if (ch is (>= '0' and <= '9') or (>= 'A' and <= 'Z') or '-' or '.' or ' ' or '$' or '/' or '+' or '%')
+                continue;
+            return false;
+        }
+        return true;
     }
 }

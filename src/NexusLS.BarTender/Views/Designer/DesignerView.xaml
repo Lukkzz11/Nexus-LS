@@ -186,9 +186,9 @@
                     <Border Background="#F8FAFC" BorderBrush="{StaticResource CorBorda}" BorderThickness="1" CornerRadius="{StaticResource RaioPequeno}" Padding="6,2" VerticalAlignment="Center">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <TextBlock Text="L:" FontSize="10.5" FontWeight="Bold" Foreground="{StaticResource CorTextoSuave}" VerticalAlignment="Center" Margin="0,0,3,0" />
-                            <TextBox Text="{Binding FolhaLarguraMm, UpdateSourceTrigger=LostFocus, StringFormat='{}{0:0.##}'}" Width="40" Height="24" Padding="2,0" FontSize="11" FontWeight="Bold" TextAlignment="Center" VerticalContentAlignment="Center" ToolTip="Largura da Folha (mm)" />
+                            <TextBox Text="{Binding FolhaLarguraMm, UpdateSourceTrigger=LostFocus, StringFormat='{}{0:0.##}'}" KeyDown="FolhaTextBox_KeyDown" Width="40" Height="24" Padding="2,0" FontSize="11" FontWeight="Bold" TextAlignment="Center" VerticalContentAlignment="Center" ToolTip="Largura da Folha (mm) - Pressione Enter para aplicar" />
                             <TextBlock Text=" × A:" FontSize="10.5" FontWeight="Bold" Foreground="{StaticResource CorTextoSuave}" VerticalAlignment="Center" Margin="3,0,3,0" />
-                            <TextBox Text="{Binding FolhaAlturaMm, UpdateSourceTrigger=LostFocus, StringFormat='{}{0:0.##}'}" Width="40" Height="24" Padding="2,0" FontSize="11" FontWeight="Bold" TextAlignment="Center" VerticalContentAlignment="Center" ToolTip="Altura da Folha (mm)" />
+                            <TextBox Text="{Binding FolhaAlturaMm, UpdateSourceTrigger=LostFocus, StringFormat='{}{0:0.##}'}" KeyDown="FolhaTextBox_KeyDown" Width="40" Height="24" Padding="2,0" FontSize="11" FontWeight="Bold" TextAlignment="Center" VerticalContentAlignment="Center" ToolTip="Altura da Folha (mm) - Pressione Enter para aplicar" />
                             <TextBlock Text=" mm" FontSize="10.5" Foreground="{StaticResource CorTextoSuave}" VerticalAlignment="Center" Margin="2,0,6,0" />
                             <Button Command="{Binding AlternarOrientacaoFolhaCommand}" Style="{StaticResource BotaoSecundario}" Width="24" Height="24" Padding="0" ToolTip="Inverter Orientação (Paisagem / Retrato)">
                                 <ui:SymbolIcon Symbol="ArrowSync24" FontSize="12" />
@@ -616,24 +616,24 @@
                     <!-- Bancada Central do Canvas (com Pan e Zoom estilo CAD/Corel) -->
                     <ScrollViewer Grid.Row="1" Grid.Column="1" x:Name="CanvasScrollViewer"
                                   HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
-                                  Background="Transparent" MouseDown="ScrollViewer_MouseDown"
+                                  Background="#E2E8F0" MouseDown="ScrollViewer_MouseDown"
                                   PreviewMouseDown="CanvasScrollViewer_PreviewMouseDown"
                                   PreviewMouseMove="CanvasScrollViewer_PreviewMouseMove"
                                   PreviewMouseUp="CanvasScrollViewer_PreviewMouseUp"
                                   PreviewMouseWheel="CanvasScrollViewer_PreviewMouseWheel"
                                   ScrollChanged="CanvasScrollViewer_ScrollChanged">
-                        <Grid HorizontalAlignment="Center" VerticalAlignment="Center" Margin="32">
-                            <!-- Papel da Etiqueta com Sombra Realista -->
-                            <Border Background="White" CornerRadius="2">
+                        <Grid HorizontalAlignment="Center" VerticalAlignment="Center" Margin="100">
+                            <!-- Papel da Etiqueta com Sombra Realista (Mesa de Trabalho Corel/Illustrator) -->
+                            <Border Background="White" CornerRadius="2" ClipToBounds="False">
                                 <Border.Effect>
-                                    <DropShadowEffect Color="#0F172A" BlurRadius="24" ShadowDepth="6" Opacity="0.14" />
+                                    <DropShadowEffect Color="#0F172A" BlurRadius="24" ShadowDepth="6" Opacity="0.18" />
                                 </Border.Effect>
 
                                 <!-- Grid interno que contém o Canvas e Guias de Margem Segura -->
-                                <Grid>
+                                <Grid ClipToBounds="False">
                                     <!-- Canvas com elementos -->
                                     <Canvas x:Name="EditorCanvas"
-                                            ClipToBounds="True"
+                                            ClipToBounds="False"
                                             Background="White"
                                             MouseLeftButtonDown="Canvas_MouseLeftButtonDown"
                                             MouseMove="Canvas_MouseMove"
@@ -777,11 +777,11 @@
                                             </Grid.ColumnDefinitions>
                                             <StackPanel Grid.Column="0">
                                                 <TextBlock Text="Largura (mm)" Style="{StaticResource Rotulo}" Margin="0,0,0,4" />
-                                                <TextBox Text="{Binding FolhaLarguraMm, UpdateSourceTrigger=LostFocus, StringFormat='{}{0:0.##}'}" FontWeight="Bold" FontSize="13" Padding="6,4" TextAlignment="Center" />
+                                                <TextBox Text="{Binding FolhaLarguraMm, UpdateSourceTrigger=LostFocus, StringFormat='{}{0:0.##}'}" KeyDown="FolhaTextBox_KeyDown" FontWeight="Bold" FontSize="13" Padding="6,4" TextAlignment="Center" ToolTip="Pressione Enter para aplicar" />
                                             </StackPanel>
                                             <StackPanel Grid.Column="2">
                                                 <TextBlock Text="Altura (mm)" Style="{StaticResource Rotulo}" Margin="0,0,0,4" />
-                                                <TextBox Text="{Binding FolhaAlturaMm, UpdateSourceTrigger=LostFocus, StringFormat='{}{0:0.##}'}" FontWeight="Bold" FontSize="13" Padding="6,4" TextAlignment="Center" />
+                                                <TextBox Text="{Binding FolhaAlturaMm, UpdateSourceTrigger=LostFocus, StringFormat='{}{0:0.##}'}" KeyDown="FolhaTextBox_KeyDown" FontWeight="Bold" FontSize="13" Padding="6,4" TextAlignment="Center" ToolTip="Pressione Enter para aplicar" />
                                             </StackPanel>
                                         </Grid>
 

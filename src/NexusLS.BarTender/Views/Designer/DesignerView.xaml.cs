@@ -34,12 +34,28 @@ public partial class DesignerView : UserControl
         InitializeComponent();
         DataContextChanged += DesignerView_DataContextChanged;
         Loaded += DesignerView_Loaded;
+        Unloaded += DesignerView_Unloaded;
     }
 
     private void DesignerView_Loaded(object sender, RoutedEventArgs e)
     {
         _camadaAdorner = AdornerLayer.GetAdornerLayer(EditorCanvas);
+        var win = Window.GetWindow(this);
+        if (win != null)
+        {
+            win.PreviewKeyDown -= Window_PreviewKeyDown;
+            win.PreviewKeyDown += Window_PreviewKeyDown;
+        }
         ReconstruirCanvas();
+    }
+
+    private void DesignerView_Unloaded(object sender, RoutedEventArgs e)
+    {
+        var win = Window.GetWindow(this);
+        if (win != null)
+        {
+            win.PreviewKeyDown -= Window_PreviewKeyDown;
+        }
     }
 
     private void DesignerView_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
@@ -69,13 +85,21 @@ public partial class DesignerView : UserControl
     private void Vm_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(DesignerViewModel.Modelo) ||
-            e.PropertyName == nameof(DesignerViewModel.ElementoSelecionado) ||
-            e.PropertyName == nameof(DesignerViewModel.ZoomNivel) ||
+            e.PropertyName == nameof(DesignerViewModel.FolhaLarguraMm) ||
+            e.PropertyName == nameof(DesignerViewModel.FolhaAlturaMm) ||
             e.PropertyName == nameof(DesignerViewModel.ProdutoAtual) ||
             e.PropertyName == nameof(DesignerViewModel.MostrarDadosReais) ||
             e.PropertyName == nameof(DesignerViewModel.MostrarGrade))
         {
             Dispatcher.InvokeAsync(ReconstruirCanvas);
+        }
+        else if (e.PropertyName == nameof(DesignerViewModel.ElementoSelecionado))
+        {
+            AtualizarAdornerParaSelecionado();
+        }
+        else if (e.PropertyName == nameof(DesignerViewModel.ZoomNivel))
+        {
+            DesenharReguas();
         }
         else if (e.PropertyName == nameof(DesignerViewModel.FerramentaMaoAtiva))
         {
@@ -90,17 +114,33 @@ public partial class DesignerView : UserControl
         }
     }
 
+    private void AtualizarAdornerParaSelecionado()
+    {
+        RemoverAdorner();
+        if (VM?.ElementoSelecionado == null || EditorCanvas == null) return;
+
+        foreach (UIElement child in EditorCanvas.Children)
+        {
+            if (child is FrameworkElement fe && fe.Tag == VM.ElementoSelecionado)
+            {
+                AplicarAdorner(fe, VM.ElementoSelecionado);
+                break;
+            }
+        }
+    }
+
     private DesignerViewModel? VM => DataContext as DesignerViewModel;
 
     public void ReconstruirCanvas()
     {
-        if (VM == null || EditorCanvas == null) return;
+        var vm = VM;
+        if (vm?.Modelo?.Elementos == null || EditorCanvas == null) return;
 
         EditorCanvas.Children.Clear();
         RemoverAdorner();
 
-        var larguraDip = EditorDesenhoService.Dip(VM.Modelo.LarguraMm);
-        var alturaDip = EditorDesenhoService.Dip(VM.Modelo.AlturaMm);
+        var larguraDip = EditorDesenhoService.Dip(vm.Modelo.LarguraMm);
+        var alturaDip = EditorDesenhoService.Dip(vm.Modelo.AlturaMm);
 
         EditorCanvas.Width = larguraDip;
         EditorCanvas.Height = alturaDip;
@@ -139,7 +179,7 @@ public partial class DesignerView : UserControl
         Canvas.SetTop(retMargem, margemSeguraDip);
         EditorCanvas.Children.Add(retMargem);
 
-        foreach (var el in VM.Modelo.Elementos)
+        foreach (var el in vm.Modelo.Elementos)
         {
             var elementoVisual = CriarVisualElemento(el);
             EditorCanvas.Children.Add(elementoVisual);
@@ -649,7 +689,6 @@ public partial class DesignerView : UserControl
                     _estaRedimensionando = false;
                     if (VM != null) VM.EmOperacaoInterativa = false;
                     VM?.RegistrarSnapshot();
-                    ReconstruirCanvas();
                     VM?.AtualizarPreview();
                 },
                 onRedimensionandoIniciado: () =>
@@ -753,23 +792,24 @@ public partial class DesignerView : UserControl
         double fator = e.Delta > 0 ? 1.15 : (1.0 / 1.15);
         var zoomNovo = Math.Clamp(Math.Round(VM.ZoomNivel * fator, 2), 0.5, 4.0);
 
-        if (Math.Abs(zoomNovo - VM.ZoomNivel) > 0.01)
+        if (Math.Abs(zoomNovo - VM.ZoomNivel) > 0.005)
         {
             var zoomAntigo = VM.ZoomNivel;
+            var escala = zoomNovo / zoomAntigo;
+
+            var contentX = CanvasScrollViewer.HorizontalOffset + posViewerAntes.X;
+            var contentY = CanvasScrollViewer.VerticalOffset + posViewerAntes.Y;
+
             VM.ZoomNivel = zoomNovo;
 
-            if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
+            Dispatcher.InvokeAsync(() =>
             {
-                // Zoom centralizado sob o cursor
-                Dispatcher.InvokeAsync(() =>
-                {
-                    var escala = zoomNovo / zoomAntigo;
-                    var novoOffsetH = (CanvasScrollViewer.HorizontalOffset + posViewerAntes.X) * escala - posViewerAntes.X;
-                    var novoOffsetV = (CanvasScrollViewer.VerticalOffset + posViewerAntes.Y) * escala - posViewerAntes.Y;
-                    CanvasScrollViewer.ScrollToHorizontalOffset(novoOffsetH);
-                    CanvasScrollViewer.ScrollToVerticalOffset(novoOffsetV);
-                }, System.Windows.Threading.DispatcherPriority.Loaded);
-            }
+                var novoOffsetH = (contentX * escala) - posViewerAntes.X;
+                var novoOffsetV = (contentY * escala) - posViewerAntes.Y;
+                CanvasScrollViewer.ScrollToHorizontalOffset(novoOffsetH);
+                CanvasScrollViewer.ScrollToVerticalOffset(novoOffsetV);
+                DesenharReguas();
+            }, System.Windows.Threading.DispatcherPriority.Loaded);
         }
 
         e.Handled = true;
@@ -917,13 +957,44 @@ public partial class DesignerView : UserControl
         }
     }
 
+    private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        UserControl_KeyDown(sender, e);
+    }
+
+    private void FolhaTextBox_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter && sender is TextBox tb)
+        {
+            var be = tb.GetBindingExpression(TextBox.TextProperty);
+            be?.UpdateSource();
+            Keyboard.ClearFocus();
+            this.Focus();
+            e.Handled = true;
+        }
+    }
+
     private void UserControl_KeyDown(object sender, KeyEventArgs e)
     {
-        if (VM == null) return;
+        if (VM == null || e.Handled) return;
 
         // Se estiver digitando em uma caixa de texto inline, não intercepta atalhos da prancheta
-        if (Keyboard.FocusedElement is TextBox)
+        if (Keyboard.FocusedElement is TextBox tb)
         {
+            if (e.Key == Key.Escape)
+            {
+                Keyboard.ClearFocus();
+                this.Focus();
+                e.Handled = true;
+            }
+            else if (e.Key == Key.Enter)
+            {
+                var be = tb.GetBindingExpression(TextBox.TextProperty);
+                be?.UpdateSource();
+                Keyboard.ClearFocus();
+                this.Focus();
+                e.Handled = true;
+            }
             return;
         }
 

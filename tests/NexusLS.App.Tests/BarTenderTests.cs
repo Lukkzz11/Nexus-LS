@@ -318,4 +318,55 @@ public class BarTenderTests : IDisposable
         Assert.Equal("Sem Código", semNada.StatusCodigoTexto);
         Assert.Equal("—", semNada.CodigoBarrasExibicao);
     }
+
+    [Fact]
+    public void Bancada_IntersectaEtiqueta_IdentificaCorretamenteDentroEFora()
+    {
+        // Totalmente dentro
+        Assert.True(Bancada.IntersectaEtiqueta(5, 5, 20, 10, 50, 30));
+        // Parcialmente dentro (corta borda)
+        Assert.True(Bancada.IntersectaEtiqueta(-5, 5, 20, 10, 50, 30));
+        Assert.True(Bancada.IntersectaEtiqueta(45, 5, 20, 10, 50, 30));
+        // Totalmente na mesa de trabalho fora da folha
+        Assert.False(Bancada.IntersectaEtiqueta(-25, 5, 10, 10, 50, 30));
+        Assert.False(Bancada.IntersectaEtiqueta(60, 5, 10, 10, 50, 30));
+        Assert.False(Bancada.IntersectaEtiqueta(5, -20, 10, 10, 50, 30));
+        Assert.False(Bancada.IntersectaEtiqueta(5, 40, 10, 10, 50, 30));
+    }
+
+    [Fact]
+    public void Bancada_Prender_MantemElementoNosLimitesDoDesktop()
+    {
+        var (x1, y1) = Bancada.Prender(-100, -100, 50, 30);
+        Assert.Equal(Bancada.LimiteMinimoMm, x1);
+        Assert.Equal(Bancada.LimiteMinimoMm, y1);
+
+        var (x2, y2) = Bancada.Prender(200, 200, 50, 30);
+        Assert.Equal(50 + Bancada.MargemMesaMm, x2);
+        Assert.Equal(30 + Bancada.MargemMesaMm, y2);
+    }
+
+    [Fact]
+    public void EditorDesenho_Zpl_EscapaCaracteresEspeciais()
+    {
+        var modelo = NexusLS.BarTender.Models.Designer.ModeloEtiquetaDesign.CriarPadrao50x30();
+        var el = modelo.Elementos.First(e => e.Tipo == NexusLS.BarTender.Models.Designer.TipoElemento.Texto);
+        el.Variavel = NexusLS.BarTender.Models.Designer.VariavelEtiqueta.Nenhuma;
+        el.Texto = "TESTE ^XA E ~XZ ESPECIAL";
+
+        var zpl = EditorDesenhoService.GerarZpl(modelo, null, "MINHA LOJA", 1);
+        Assert.Contains("TESTE _5EXA E _7EXZ ESPECIAL", zpl);
+    }
+
+    [Fact]
+    public void Predefinicao_TagVestuarioRefTamanho35x60_ContemElementosObrigatorios()
+    {
+        var m = NexusLS.BarTender.Models.Designer.ModeloEtiquetaDesign.CriarTagVestuarioRefTamanho35x60();
+        Assert.Equal(35.0, m.LarguraMm);
+        Assert.Equal(60.0, m.AlturaMm);
+
+        Assert.Contains(m.Elementos, e => e.Variavel == NexusLS.BarTender.Models.Designer.VariavelEtiqueta.Tamanho && e.TamanhoFonte >= 20);
+        Assert.Contains(m.Elementos, e => e.Variavel == NexusLS.BarTender.Models.Designer.VariavelEtiqueta.Referencia);
+        Assert.Contains(m.Elementos, e => e.Tipo == NexusLS.BarTender.Models.Designer.TipoElemento.CodigoBarras);
+    }
 }

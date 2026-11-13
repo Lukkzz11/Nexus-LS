@@ -33,7 +33,30 @@ public partial class ModeloEtiquetaDesign : ObservableObject
         {
             Directory.CreateDirectory(dir);
         }
-        File.WriteAllText(caminho, json);
+
+        // Grava em arquivo temporário e só então troca: uma queda de energia no meio
+        // não deixa o modelo truncado, e o anterior fica guardado em ".bak".
+        var temporario = caminho + ".tmp";
+        try
+        {
+            File.WriteAllText(temporario, json);
+
+            if (File.Exists(caminho))
+            {
+                File.Replace(temporario, caminho, caminho + ".bak", ignoreMetadataErrors: true);
+            }
+            else
+            {
+                File.Move(temporario, caminho);
+            }
+        }
+        finally
+        {
+            if (File.Exists(temporario))
+            {
+                try { File.Delete(temporario); } catch { }
+            }
+        }
     }
 
     public static ModeloEtiquetaDesign Carregar(string caminho)

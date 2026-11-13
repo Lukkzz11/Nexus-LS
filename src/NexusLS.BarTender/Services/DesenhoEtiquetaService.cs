@@ -246,42 +246,89 @@ public class DesenhoEtiquetaService
         sb.AppendLine($"^LL{alturaDots}");
         sb.AppendLine("^LH0,0");
 
-        var y = 20;
+        var y = 16;
+        const int margemX = 20;
+        var larguraConteudo = Math.Max(40, larguraDots - (margemX * 2));
+
+        // Escreve uma linha de texto respeitando o rodapé da etiqueta. Todo texto passa pelo
+        // CampoZpl (^FH): "^", "~" e "_" no nome do produto não podem virar comando de impressora.
+        void Linha(string texto, int fonte, string alinhamento = "L")
+        {
+            var alturaLinha = Math.Max(fonte + 6, 20);
+            if (y + alturaLinha > alturaDots - 20) return;
+
+            sb.AppendLine($"^FO{margemX},{y}^A0N,{fonte},{fonte}^FB{larguraConteudo},1,0,{alinhamento}{CampoZpl.Montar(texto)}");
+            y += alturaLinha;
+        }
 
         // Loja
         if (config.MostrarNomeLoja && !string.IsNullOrWhiteSpace(config.NomeLoja))
         {
-            sb.AppendLine($"^FO20,{y}^A0N,22,22^FB{larguraDots - 40},1,0,C^FD{config.NomeLoja}^FS");
-            y += 28;
+            Linha(config.NomeLoja, 22, "C");
         }
 
-        // Produto
-        if (config.MostrarNomeProduto)
+        // Produto (até duas linhas)
+        if (config.MostrarNomeProduto && !string.IsNullOrWhiteSpace(produto.Nome))
         {
-            sb.AppendLine($"^FO20,{y}^A0N,24,24^FB{larguraDots - 40},2,0,L^FD{produto.Nome}^FS");
-            y += 54;
+            const int alturaProduto = 48;
+            if (y + alturaProduto <= alturaDots - 20)
+            {
+                sb.AppendLine($"^FO{margemX},{y}^A0N,24,24^FB{larguraConteudo},2,0,L{CampoZpl.Montar(produto.Nome)}");
+                y += alturaProduto;
+            }
         }
 
-        // Referência e Preço
-        var textoVarejo = Dinheiro.Formatar(produto.PrecoVendaCentavos);
-        sb.AppendLine($"^FO20,{y}^A0N,38,38^FD{textoVarejo}^FS");
+        // Referência, tamanho e código interno: cada um respeita a configuração da tela
+        if (config.MostrarReferencia && !string.IsNullOrWhiteSpace(produto.Referencia))
+        {
+            Linha($"Ref: {produto.Referencia}", 20);
+        }
+
+        if (config.MostrarTamanho && !string.IsNullOrWhiteSpace(tamanho))
+        {
+            Linha($"Tam: {tamanho}", 20);
+        }
+
+        if (config.MostrarCodigoInterno && !string.IsNullOrWhiteSpace(produto.CodigoInterno))
+        {
+            Linha($"Cod: {produto.CodigoInterno}", 20);
+        }
+
+        // Preços
+        if (config.MostrarPrecoVarejo)
+        {
+            Linha(Dinheiro.Formatar(produto.PrecoVendaCentavos), 36);
+        }
 
         if (config.MostrarPrecoAtacado && produto.PrecoAtacadoCentavos > 0)
         {
-            var textoAtacado = $"Atacado: {Dinheiro.Formatar(produto.PrecoAtacadoCentavos)}";
-            sb.AppendLine($"^FO{larguraDots / 2},{y + 8}^A0N,22,22^FD{textoAtacado}^FS");
+            Linha($"Atacado: {Dinheiro.Formatar(produto.PrecoAtacadoCentavos)}", 22);
         }
 
-        y += 46;
-
-        // Código de Barras Code 128 — regra única do Core (referência + número do tamanho)
+        // Código de barras — mesma regra única do Core (referência + número do tamanho)
         if (config.MostrarCodigoBarras)
         {
             var codigo = CodigoBarrasTamanho.Resolver(produto, tamanho);
-            if (Code128.PodeCodificar(codigo))
+            if (!string.IsNullOrWhiteSpace(codigo))
             {
-                var alturaBarrasDots = Math.Max(30, alturaDots - y - 35);
-                sb.AppendLine($"^FO30,{y}^BY2,2,{alturaBarrasDots}^BCN,{alturaBarrasDots},Y,N,N{CampoZpl.Montar(codigo)}");
+                var alturaBarras = Math.Clamp(alturaDots - y - 24, 30, 180);
+                var yBarras = Math.Max(y, alturaDots - alturaBarras - 24);
+
+                if (config.TipoCodigo == TipoCodigoBarras.Ean13 && CodigoBarrasInterno.EhEan13Valido(codigo))
+                {
+                    sb.AppendLine($"^FO{margemX},{yBarras}^BY2,2,{alturaBarras}^BEN,{alturaBarras},Y,N{CampoZpl.Montar(codigo)}");
+                }
+                else if (Code128.PodeCodificar(codigo))
+                {
+                    // EAN-13 configurado, mas o produto só tem referência/código interno:
+                    // imprime em Code 128 em vez de deixar a etiqueta sem código.
+                    if (config.TipoCodigo == TipoCodigoBarras.Ean13)
+                    {
+                        App.Log($"ZPL: código '{codigo}' não é EAN-13 válido; usando Code 128.");
+                    }
+
+                    sb.AppendLine($"^FO{margemX},{yBarras}^BY2,2,{alturaBarras}^BCN,{alturaBarras},Y,N,N{CampoZpl.Montar(codigo)}");
+                }
             }
         }
 
