@@ -23,6 +23,7 @@ public interface IGatewayPix
 public interface IRepositorioPix
 {
     Task<CobrancaPix?> PorChaveVendaAsync(string chaveVenda, CancellationToken ct = default);
+    Task<CobrancaPix?> PorIdExternoAsync(string gateway, string idExterno, CancellationToken ct = default);
     Task SalvarAsync(CobrancaPix cobranca, CancellationToken ct = default);
 }
 
@@ -95,6 +96,22 @@ public class ServicoPix
         cobranca = cobranca with { ChaveVenda = chaveVenda };
         await _repositorio.SalvarAsync(cobranca, ct).ConfigureAwait(false);
         return cobranca;
+    }
+
+    /// <summary>Avisa que uma cobrança mudou de situação (chamado pelo webhook). A tela do Pix usa isso para reagir na hora.</summary>
+    public event Action<CobrancaPix>? CobrancaAtualizada;
+
+    /// <summary>
+    /// Chamado quando o gateway avisa (webhook) que algo mudou. O aviso NÃO é confiável por si só: sempre se pergunta ao gateway
+    /// a situação real antes de gravar. Devolve nulo se a cobrança não é deste computador.
+    /// </summary>
+    public async Task<CobrancaPix?> ConfirmarPorAvisoAsync(string gateway, string idExterno, CancellationToken ct = default)
+    {
+        var atual = await _repositorio.PorIdExternoAsync(gateway, idExterno, ct).ConfigureAwait(false);
+        if (atual is null) return null;
+        var nova = await AtualizarAsync(atual.ChaveVenda, ct).ConfigureAwait(false) ?? atual;
+        if (nova.Status != atual.Status) CobrancaAtualizada?.Invoke(nova);
+        return nova;
     }
 
     /// <summary>Consulta o gateway e grava a situação. Sem internet, devolve a última conhecida (a venda continua pendente).</summary>

@@ -43,7 +43,7 @@ public partial class PdvView : UserControl
             vm.FocoSolicitado += AoPedirFoco;
             vm.CobrarPix = (chave, valor) =>
             {
-                var janela = new PixCobrancaWindow(App.Servicos.Pix, chave, valor) { Owner = Window.GetWindow(this) };
+                var janela = new PixCobrancaWindow(App.Servicos.Pix, chave, valor, App.Servicos.PagamentosConfig.Ler().PixEmOutroMonitor) { Owner = Window.GetWindow(this) };
                 janela.ShowDialog();
                 return Task.FromResult(janela.Aprovado);
             };

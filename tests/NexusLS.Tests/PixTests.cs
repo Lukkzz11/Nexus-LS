@@ -8,6 +8,8 @@ public class PixTests
     {
         public Dictionary<string, CobrancaPix> D { get; } = new();
         public Task<CobrancaPix?> PorChaveVendaAsync(string c, CancellationToken ct = default) => Task.FromResult(D.GetValueOrDefault(c));
+        public Task<CobrancaPix?> PorIdExternoAsync(string g, string id, CancellationToken ct = default) =>
+            Task.FromResult(D.Values.FirstOrDefault(x => x.Gateway == g && x.IdExterno == id));
         public Task SalvarAsync(CobrancaPix c, CancellationToken ct = default) { D[c.ChaveVenda] = c; return Task.CompletedTask; }
     }
 

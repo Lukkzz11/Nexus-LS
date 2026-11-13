@@ -19,6 +19,11 @@ public class ConfiguracaoPagamentos
     /// <summary>Minutos até o QR Code expirar.</summary>
     public int ValidadeMinutos { get; set; } = 30;
 
+    /// <summary>Porta local que recebe os avisos (webhook) do Mercado Pago; o túnel da Cloudflare aponta para ela.</summary>
+    public int WebhookPorta { get; set; } = 5099;
+    /// <summary>Abre a tela do Pix no outro monitor (o do cliente), se houver mais de um.</summary>
+    public bool PixEmOutroMonitor { get; set; } = true;
+
     public bool TemToken => !string.IsNullOrWhiteSpace(MercadoPagoTokenProtegido);
 
     public TarifaGateway TarifaMercadoPago() =>

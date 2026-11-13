@@ -25,7 +25,7 @@ public sealed class PixCobrancaWindow : Window
 
     public bool Aprovado { get; private set; }
 
-    public PixCobrancaWindow(ServicoPix pix, string chaveVenda, long valorCentavos)
+    public PixCobrancaWindow(ServicoPix pix, string chaveVenda, long valorCentavos, bool emOutroMonitor = false)
     {
         _pix = pix;
         _chave = chaveVenda;
@@ -57,7 +57,11 @@ public sealed class PixCobrancaWindow : Window
         _status.Text = "Gerando a cobrança...";
         Loaded += async (_, _) => await GerarAsync(valorCentavos);
         _timer.Tick += async (_, _) => await ConsultarAsync();
-        Closed += (_, _) => _timer.Stop();
+        // O aviso do Mercado Pago (webhook) chega em outra thread: reconsulta na hora, sem esperar o próximo ciclo.
+        void AoAvisar(CobrancaPix _) => Dispatcher.BeginInvoke(async () => await ConsultarAsync());
+        _pix.CobrancaAtualizada += AoAvisar;
+        Closed += (_, _) => { _timer.Stop(); _pix.CobrancaAtualizada -= AoAvisar; };
+        if (emOutroMonitor) ContentRendered += (_, _) => TelasPix.MoverParaOutroMonitor(this);
     }
 
     private async Task GerarAsync(long valorCentavos)

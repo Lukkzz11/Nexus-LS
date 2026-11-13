@@ -39,6 +39,13 @@ public class RepositorioPixSqlite : IRepositorioPix
         return r is null ? null : Para(r);
     }
 
+    public async Task<CobrancaPix?> PorIdExternoAsync(string gateway, string idExterno, CancellationToken ct = default)
+    {
+        await using var db = await _fabrica.CreateDbContextAsync(ct);
+        var r = await db.CobrancasPix.AsNoTracking().FirstOrDefaultAsync(c => c.Gateway == gateway && c.IdExterno == idExterno, ct);
+        return r is null ? null : Para(r);
+    }
+
     public async Task SalvarAsync(CobrancaPix cobranca, CancellationToken ct = default)
     {
         await using var db = await _fabrica.CreateDbContextAsync(ct);

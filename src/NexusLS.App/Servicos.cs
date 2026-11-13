@@ -23,6 +23,7 @@ public sealed class ContainerDeServicos
     public NexusLS.Core.Pagamentos.ConfiguracaoPagamentosStore PagamentosConfig { get; }
     public NexusLS.Core.Pagamentos.RepositorioPixSqlite PixRepo { get; }
     public NexusLS.Core.Pagamentos.ServicoPix Pix { get; }
+    public NexusLS.Core.Pagamentos.ReceptorWebhookPix WebhookPix { get; }
     public ClienteService Clientes { get; }
     public TituloPrazoService TitulosPrazo { get; }
     public ConfiguracaoService Configuracao { get; }
@@ -95,6 +96,8 @@ public sealed class ContainerDeServicos
             },
             PixRepo,
             () => new[] { PagamentosConfig.Ler().TarifaMercadoPago() });
+        WebhookPix = new(Pix, PagamentosConfig.Ler().WebhookPorta);
+        WebhookPix.Iniciar();   // se a porta estiver ocupada o Pix segue funcionando pela consulta periódica
         Clientes = new(fabrica) { ExigirDocumentoNaTela = true };
         TitulosPrazo = new(fabrica);
         Configuracao = new(fabrica);
