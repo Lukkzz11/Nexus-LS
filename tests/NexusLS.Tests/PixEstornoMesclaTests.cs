@@ -110,3 +110,14 @@ public class MesclaProdutosTests : IDisposable
         Assert.Empty(await mescla.ListarAsync());
     }
 }
+
+public class DescreverContaTests
+{
+    [Fact]
+    public void Conta_de_teste_e_real_sao_distinguidas()
+    {
+        Assert.Contains("conta de TESTE", NexusLS.Core.Pagamentos.MercadoPagoGateway.DescreverConta("{\"nickname\":\"TESTUSER123\"}"));
+        Assert.Contains("conta REAL", NexusLS.Core.Pagamentos.MercadoPagoGateway.DescreverConta("{\"nickname\":\"LUCAS99\"}"));
+        Assert.Equal("", NexusLS.Core.Pagamentos.MercadoPagoGateway.DescreverConta("nao e json"));
+    }
+}

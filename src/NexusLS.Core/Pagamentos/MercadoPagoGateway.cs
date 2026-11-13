@@ -91,12 +91,27 @@ public sealed class MercadoPagoGateway : IGatewayPix, IEstornoPix
         {
             using var pedido = Pedido(HttpMethod.Get, "/users/me");
             using var resposta = await _http.SendAsync(pedido, ct).ConfigureAwait(false);
-            if (resposta.IsSuccessStatusCode) return (true, "Conexão com o Mercado Pago funcionando.");
             var corpo = await resposta.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+            if (resposta.IsSuccessStatusCode) return (true, "Conexão com o Mercado Pago funcionando. " + DescreverConta(corpo));
             return (false, $"O Mercado Pago respondeu com erro {(int)resposta.StatusCode}. {MotivoDaRecusa(corpo, resposta.StatusCode)}".Trim());
         }
         catch (InvalidOperationException e) { return (false, e.Message); }
         catch (Exception e) when (e is HttpRequestException or TaskCanceledException) { return (false, "Sem conexão com o Mercado Pago."); }
+    }
+
+    /// <summary>Diz de quem é o token (apelido da conta) e se é conta de teste, para o dono não misturar token real com pagador de teste.</summary>
+    public static string DescreverConta(string corpo)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(corpo);
+            var r = doc.RootElement;
+            var apelido = r.ValueKind == JsonValueKind.Object && r.TryGetProperty("nickname", out var n) && n.ValueKind == JsonValueKind.String ? n.GetString() : null;
+            if (string.IsNullOrWhiteSpace(apelido)) return "";
+            var teste = apelido.StartsWith("TEST", StringComparison.OrdinalIgnoreCase);
+            return $"Conta do token: {apelido} ({(teste ? "conta de TESTE" : "conta REAL, não é de teste")}).";
+        }
+        catch (JsonException) { return ""; }
     }
 
     /// <summary>Extrai o motivo que o Mercado Pago devolveu (message / cause), sem nunca incluir o token. Cai numa dica por código HTTP.</summary>
