@@ -335,9 +335,6 @@
                                     Command="{Binding AbrirAtualizadorCommand}" />
                             <Button Content="Configurações de Pagamento (Pix)" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,6"
                                     Click="AbrirConfigPagamento" />
-                            <!-- PROVISÓRIO: remover junto com Views/ComparacaoErpProvisoriaWindow.cs -->
-                            <Button Content="Importar ERP e comparar (provisório)" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,6"
-                                    Click="AbrirComparacaoErp" />
                             <Button Content="Portal Web" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,6" Visibility="Collapsed"
                                     Command="{Binding AbrirPortalWebCommand}" />
                         </WrapPanel>
