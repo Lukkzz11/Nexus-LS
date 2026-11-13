@@ -119,5 +119,6 @@ public class DescreverContaTests
         Assert.Contains("conta de TESTE", NexusLS.Core.Pagamentos.MercadoPagoGateway.DescreverConta("{\"nickname\":\"TESTUSER123\"}"));
         Assert.Contains("conta REAL", NexusLS.Core.Pagamentos.MercadoPagoGateway.DescreverConta("{\"nickname\":\"LUCAS99\"}"));
         Assert.Equal("", NexusLS.Core.Pagamentos.MercadoPagoGateway.DescreverConta("nao e json"));
+        Assert.Contains("conta de TESTE", NexusLS.Core.Pagamentos.MercadoPagoGateway.DescreverConta("{\"nickname\":\"LUCAS99\"}", "TEST-abc"));
     }
 }
