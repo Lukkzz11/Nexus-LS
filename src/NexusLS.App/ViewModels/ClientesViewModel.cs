@@ -400,6 +400,7 @@ public partial class ClientesViewModel : ViewModelBase
     private Task ConfirmarImportacaoAsync() => ExecutarAsync(async () =>
     {
         if (_csvImportacao is null) return;
+        await NexusLS.Core.Backup.CopiaAntesDeImportar.ExecutarAsync();
         var resultado = await _clientes.ImportarAsync(_csvImportacao);
         ImportacaoAberta = false;
         LinhasImportacao.Clear();

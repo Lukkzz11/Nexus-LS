@@ -79,6 +79,8 @@ public partial class ImportacaoErpViewModel : ViewModelBase
                 MostrarErro("Sem entrar no ERP não dá para importar. Clique em Importar de novo e informe o usuário do ERP.");
                 return;
             }
+            Resultado = "Fazendo uma cópia de segurança...";
+            await NexusLS.Core.Backup.CopiaAntesDeImportar.ExecutarAsync();
             Resultado = "Lendo o ERP...";
             var r = await _criarImportador().ImportarAsync(default, new Progress<string>(m => Resultado = m));
             Resultado = Resumir(r);

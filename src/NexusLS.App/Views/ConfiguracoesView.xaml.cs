@@ -52,6 +52,6 @@ public partial class ConfiguracoesView : UserControl
     }
 
     private void AbrirConfigPagamento(object sender, System.Windows.RoutedEventArgs e) =>
-        new ConfiguracaoPagamentosWindow(App.Servicos.PagamentosConfig, App.Servicos.PixRepo)
+        new ConfiguracaoPagamentosWindow(App.Servicos.PagamentosConfig, App.Servicos.PixRepo, App.Servicos.Pix)
         { Owner = System.Windows.Window.GetWindow(this) }.ShowDialog();
 }

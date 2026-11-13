@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 namespace NexusLS.Core.Backup;
 
 /// <summary>Por que o backup foi feito. Vira parte do nome do arquivo.</summary>
-public enum MotivoBackup { Manual, Automatico, PreAtualizacao, PreRestauracao, PreLimpeza }
+public enum MotivoBackup { Manual, Automatico, PreAtualizacao, PreRestauracao, PreLimpeza, PreImportacao }
 
 /// <summary>Como está a proteção dos dados, para o aviso da tela inicial.</summary>
 public enum SituacaoBackup { Nunca, EmDia, Atrasado, SoManual }
@@ -30,6 +30,7 @@ public static class RegrasBackup
         MotivoBackup.Automatico => "auto",
         MotivoBackup.PreAtualizacao => "pre-atualizacao",
         MotivoBackup.PreLimpeza => "pre-limpeza",
+        MotivoBackup.PreImportacao => "pre-importacao",
         _ => "pre-restauracao"
     };
 
@@ -53,6 +54,7 @@ public static class RegrasBackup
             case "pre-atualizacao": motivo = MotivoBackup.PreAtualizacao; return true;
             case "pre-restauracao": motivo = MotivoBackup.PreRestauracao; return true;
             case "pre-limpeza": motivo = MotivoBackup.PreLimpeza; return true;
+            case "pre-importacao": motivo = MotivoBackup.PreImportacao; return true;
             default: return false;
         }
     }

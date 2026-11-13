@@ -24,6 +24,7 @@ public sealed class ContainerDeServicos
     public NexusLS.Core.Pagamentos.RepositorioPixSqlite PixRepo { get; }
     public NexusLS.Core.Pagamentos.ServicoPix Pix { get; }
     public NexusLS.Core.Pagamentos.ReceptorWebhookPix WebhookPix { get; }
+    public NexusLS.Core.Services.MesclaProdutos Mescla { get; }
     public ClienteService Clientes { get; }
     public TituloPrazoService TitulosPrazo { get; }
     public ConfiguracaoService Configuracao { get; }
@@ -81,6 +82,7 @@ public sealed class ContainerDeServicos
         FabricaBanco = fabrica;
 
         Produtos = new(fabrica);
+        Mescla = new(fabrica);
         Estoque = new(fabrica);
         Vendas = new(fabrica);
         ModelosEtiqueta = new(NexusLS.Core.Etiquetas.ModeloEtiquetaStore.CaminhoPadrao());
@@ -128,6 +130,7 @@ public sealed class ContainerDeServicos
             new NexusLS.Core.Atualizacao.FonteGitHub(_httpAtualizacao, NexusLS.Core.Atualizacao.ConfiguracaoAtualizacao.Repositorio()),
             NexusLS.Core.Atualizacao.AtualizadorService.PastaPadrao(),
             NexusLS.Core.Atualizacao.VersaoPrograma.Atual());
+        NexusLS.Core.Backup.CopiaAntesDeImportar.Gancho = () => Backup.FazerAsync(NexusLS.Core.Backup.MotivoBackup.PreImportacao);
         Atualizacao = new(Atualizador, NexusLS.App.AplicadorDeAtualizacao.AplicarEReiniciarAsync);
         Limpeza = new(fabrica,
             async () => (await Backup.FazerAsync(NexusLS.Core.Backup.MotivoBackup.PreLimpeza)).Caminho);

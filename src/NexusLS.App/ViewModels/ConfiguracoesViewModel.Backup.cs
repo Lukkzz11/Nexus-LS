@@ -21,6 +21,7 @@ public record ItemBackup(InfoBackup Info)
         MotivoBackup.Automatico => "automático",
         MotivoBackup.PreAtualizacao => "antes de atualizar",
         MotivoBackup.PreLimpeza => "antes de apagar dados",
+        MotivoBackup.PreImportacao => "antes de importar",
         _ => "antes de restaurar"
     };
 

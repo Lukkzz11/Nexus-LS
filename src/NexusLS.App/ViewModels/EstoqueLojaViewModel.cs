@@ -126,6 +126,7 @@ public partial class EstoqueLojaViewModel : ViewModelBase
                          $"{Environment.NewLine}{Environment.NewLine}O estoque de produto que já existe não é alterado. Importar agora?";
             if (!ConfirmarImportacao(resumo)) { MostrarSucesso("Importação cancelada. Nada foi cadastrado."); return; }
 
+            await NexusLS.Core.Backup.CopiaAntesDeImportar.ExecutarAsync();
             var resultado = await new ImportadorProdutos(_produtos, _estoque).ImportarAsync(analise);
             await BuscarAsync();
 
@@ -196,8 +197,16 @@ public partial class EstoqueLojaViewModel : ViewModelBase
     [ObservableProperty] private string _nome = "";
     [ObservableProperty] private string _codigoBarras = "";
     [ObservableProperty] private string _referencia = "";
-    [ObservableProperty] private string _precoVenda = "";
-    [ObservableProperty] private string _precoAtacado = "";
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(AvisoAtacado))] private string _precoVenda = "";
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(AvisoAtacado))] private string _precoAtacado = "";
+
+    public Task AtualizarListaAsync() => BuscarAsync();
+
+    /// <summary>Atacado igual ou acima do varejo quase sempre é erro de digitação; avisa sem impedir de salvar.</summary>
+    public string AvisoAtacado =>
+        Dinheiro.TentarConverter(PrecoVenda, out var varejo) && Dinheiro.TentarConverter(PrecoAtacado, out var atacado) && atacado > 0 && varejo > 0 && atacado >= varejo
+            ? "Atenção: o atacado está igual ou maior que o varejo. Confira os preços."
+            : "";
     [ObservableProperty] private string _precoCusto = "";
     [ObservableProperty] private string _categoria = "";
     [ObservableProperty] private string _codigoInterno = "";

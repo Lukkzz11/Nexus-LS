@@ -49,6 +49,9 @@
                     <Button Content="Exportar CSV" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,8"
                             AutomationProperties.Name="Exportar CSV" ToolTip="Salva o estoque inteiro (uma linha por tamanho) numa planilha CSV para o Excel."
                             Command="{Binding ExportarCsvCommand}" />
+                    <Button Content="Mesclar duplicados" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,8"
+                            AutomationProperties.Name="Mesclar produtos duplicados" ToolTip="Procura produtos com o mesmo nome e junta o estoque num só. O repetido fica desativado, e o histórico de vendas é mantido."
+                            Click="MesclarDuplicados_Click" />
                     <Button Content="Importar CSV" Style="{StaticResource BotaoSecundario}"
                             AutomationProperties.Name="Importar CSV" ToolTip="Cadastra vários produtos de uma planilha (CSV). Produtos que já existem não são alterados."
                             Margin="0,0,0,8" IsEnabled="{Binding PodeImportar}" Command="{Binding ImportarCsvCommand}" />
@@ -276,6 +279,15 @@
                                                  ToolTip="Vazio = vale o preço de varejo" />
                                     </StackPanel>
                                 </Grid>
+                                <TextBlock Text="{Binding AvisoAtacado}" Foreground="#B45309" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,4,0,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Style.Triggers>
+                                                <Trigger Property="Text" Value=""><Setter Property="Visibility" Value="Collapsed" /></Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
 
                                 <Grid>
                                     <Grid.ColumnDefinitions>

@@ -9,7 +9,7 @@ namespace NexusLS.Core.Pagamentos;
 /// Pix pelo Mercado Pago (API de pagamentos). O token vem de fora (armazenamento protegido do Windows) e nunca fica no código.
 /// A chave de idempotência vai no cabeçalho X-Idempotency-Key: repetir a chamada devolve a mesma cobrança.
 /// </summary>
-public sealed class MercadoPagoGateway : IGatewayPix
+public sealed class MercadoPagoGateway : IGatewayPix, IEstornoPix
 {
     private const string Base = "https://api.mercadopago.com";
     private readonly HttpClient _http;
@@ -74,6 +74,16 @@ public sealed class MercadoPagoGateway : IGatewayPix
         return Traduzir(doc.RootElement.GetProperty("status").GetString());
     }
 
+    /// <summary>Estorno total (POST /v1/payments/{id}/refunds sem valor). A chave de idempotência impede estornar duas vezes.</summary>
+    public async Task EstornarAsync(string idExterno, string chaveIdempotencia, CancellationToken ct = default)
+    {
+        using var pedido = Pedido(HttpMethod.Post, "/v1/payments/" + Uri.EscapeDataString(idExterno) + "/refunds", chaveIdempotencia, "{}");
+        using var resposta = await _http.SendAsync(pedido, ct).ConfigureAwait(false);
+        if (resposta.IsSuccessStatusCode) return;
+        var corpo = await resposta.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+        throw new HttpRequestException($"Mercado Pago recusou o estorno ({(int)resposta.StatusCode}). {MotivoDaRecusa(corpo, resposta.StatusCode)}".Trim());
+    }
+
     /// <summary>Confere se o token é aceito pelo Mercado Pago (GET /users/me). Devolve a mensagem para a tela.</summary>
     public async Task<(bool Ok, string Mensagem)> TestarAsync(CancellationToken ct = default)
     {
@@ -125,6 +135,7 @@ public sealed class MercadoPagoGateway : IGatewayPix
         "cancelled" => StatusPix.Cancelado,
         "rejected" => StatusPix.Cancelado,
         "expired" => StatusPix.Expirado,
+        "refunded" or "charged_back" => StatusPix.Estornado,
         _ => StatusPix.Pendente,
     };
 }

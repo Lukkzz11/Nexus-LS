@@ -33,7 +33,6 @@ public partial class App : Application
 
                 var win = new MainWindow();
                 win.CapturarPrintsHub(pastaDestino);
-                win.CapturarPrintsHub(@"C:\Users\Lucas Emanuel\.gemini\antigravity\brain\975d27ab-5c9a-4609-bb4c-9e018d33ea89\prints");
             }
             catch (Exception ex)
             {

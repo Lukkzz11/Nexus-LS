@@ -21,6 +21,9 @@ public sealed class PixCobrancaWindow : Window
     private readonly TextBox _codigo = new() { IsReadOnly = true, TextWrapping = TextWrapping.Wrap, MaxHeight = 70, FontSize = 12, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
     private readonly Image _qr = new() { Width = 260, Height = 260, Stretch = Stretch.Uniform, HorizontalAlignment = HorizontalAlignment.Center };
     private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromSeconds(3) };
+    private readonly DispatcherTimer _relogio = new() { Interval = TimeSpan.FromSeconds(1) };
+    private readonly TextBlock _contagem = new() { FontSize = 13, Foreground = Brushes.DimGray, HorizontalAlignment = HorizontalAlignment.Center };
+    private DateTime? _expira;
     private bool _consultando;
 
     public bool Aprovado { get; private set; }
@@ -45,6 +48,7 @@ public sealed class PixCobrancaWindow : Window
         painel.Children.Add(new TextBlock { Text = "Mostre o QR Code ao cliente", FontSize = 18, FontWeight = FontWeights.Bold });
         painel.Children.Add(new TextBlock { Text = "Total: " + Dinheiro.Formatar(valorCentavos), FontSize = 15, Margin = new Thickness(0, 2, 0, 10) });
         painel.Children.Add(_qr);
+        painel.Children.Add(_contagem);
         painel.Children.Add(new TextBlock { Text = "Pix copia e cola:", Margin = new Thickness(0, 10, 0, 2) });
         painel.Children.Add(_codigo);
         painel.Children.Add(_status);
@@ -56,11 +60,12 @@ public sealed class PixCobrancaWindow : Window
 
         _status.Text = "Gerando a cobrança...";
         Loaded += async (_, _) => await GerarAsync(valorCentavos);
+        _relogio.Tick += (_, _) => AtualizarContagem();
         _timer.Tick += async (_, _) => await ConsultarAsync();
         // O aviso do Mercado Pago (webhook) chega em outra thread: reconsulta na hora, sem esperar o próximo ciclo.
         void AoAvisar(CobrancaPix _) => Dispatcher.BeginInvoke(async () => await ConsultarAsync());
         _pix.CobrancaAtualizada += AoAvisar;
-        Closed += (_, _) => { _timer.Stop(); _pix.CobrancaAtualizada -= AoAvisar; };
+        Closed += (_, _) => { _timer.Stop(); _relogio.Stop(); _pix.CobrancaAtualizada -= AoAvisar; };
         if (emOutroMonitor) ContentRendered += (_, _) => TelasPix.MoverParaOutroMonitor(this);
     }
 
@@ -71,14 +76,23 @@ public sealed class PixCobrancaWindow : Window
             var cobranca = await _pix.IniciarAsync(_chave, valorCentavos, "Venda Nexus");
             _codigo.Text = cobranca.CopiaECola;
             if (!string.IsNullOrWhiteSpace(cobranca.QrCodeBase64)) _qr.Source = Imagem(cobranca.QrCodeBase64!);
+            _expira = cobranca.ExpiraEm;
             Tratar(cobranca.Status);
-            if (!Aprovado) _timer.Start();
+            if (!Aprovado) { _timer.Start(); _relogio.Start(); AtualizarContagem(); }
         }
         catch (Exception ex) when (ex is InvalidOperationException or System.Net.Http.HttpRequestException or TaskCanceledException)
         {
             _status.Foreground = Brushes.Firebrick;
             _status.Text = "Não foi possível gerar o Pix: " + ex.Message;
         }
+    }
+
+    private void AtualizarContagem()
+    {
+        if (_expira is not DateTime fim) return;
+        var resta = fim - DateTime.Now;
+        _contagem.Text = resta > TimeSpan.Zero ? $"Expira em {(int)resta.TotalMinutes:00}:{resta.Seconds:00}" : "QR Code expirado";
+        if (resta <= TimeSpan.Zero) _contagem.Foreground = Brushes.Firebrick;
     }
 
     private async Task ConsultarAsync()
@@ -98,7 +112,7 @@ public sealed class PixCobrancaWindow : Window
         switch (status)
         {
             case StatusPix.Aprovado:
-                _timer.Stop();
+                _timer.Stop(); _relogio.Stop(); _contagem.Text = "";
                 Aprovado = true;
                 _status.Foreground = Brushes.SeaGreen;
                 _status.Text = "Pagamento confirmado!";

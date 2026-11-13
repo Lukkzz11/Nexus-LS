@@ -6,6 +6,12 @@ namespace NexusLS.App.Views;
 
 public partial class EstoqueLojaView : UserControl
 {
+    private async void MesclarDuplicados_Click(object sender, RoutedEventArgs e)
+    {
+        await new MesclarDuplicadosWindow(App.Servicos.Mescla) { Owner = Window.GetWindow(this) }.MostrarAsync();
+        if (DataContext is EstoqueLojaViewModel vm) await vm.AtualizarListaAsync();
+    }
+
     public EstoqueLojaView()
     {
         InitializeComponent();

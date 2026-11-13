@@ -1,6 +1,6 @@
 namespace NexusLS.Core.Pagamentos;
 
-public enum StatusPix { Pendente, Aprovado, Expirado, Cancelado, Erro }
+public enum StatusPix { Pendente, Aprovado, Expirado, Cancelado, Erro, Estornado }
 
 /// <summary>Cobrança Pix no formato padrão do Nexus, igual para qualquer gateway.</summary>
 public record CobrancaPix(
@@ -17,6 +17,12 @@ public interface IGatewayPix
 
     /// <summary>Situação real da cobrança no gateway (única fonte para considerar a venda paga).</summary>
     Task<StatusPix> ConsultarAsync(string idExterno, CancellationToken ct = default);
+}
+
+/// <summary>Gateway que sabe devolver o dinheiro de um Pix já aprovado (estorno total).</summary>
+public interface IEstornoPix
+{
+    Task EstornarAsync(string idExterno, string chaveIdempotencia, CancellationToken ct = default);
 }
 
 /// <summary>Onde as cobranças ficam registradas (SQLite no programa; em memória nos testes).</summary>
@@ -112,6 +118,20 @@ public class ServicoPix
         var nova = await AtualizarAsync(atual.ChaveVenda, ct).ConfigureAwait(false) ?? atual;
         if (nova.Status != atual.Status) CobrancaAtualizada?.Invoke(nova);
         return nova;
+    }
+
+    /// <summary>Devolve o valor ao cliente (estorno total). Só vale para Pix aprovado; a situação só muda depois que o gateway aceita.</summary>
+    public async Task<CobrancaPix> EstornarAsync(string chaveVenda, CancellationToken ct = default)
+    {
+        var atual = await _repositorio.PorChaveVendaAsync(chaveVenda, ct).ConfigureAwait(false)
+            ?? throw new InvalidOperationException("Cobrança Pix não encontrada.");
+        if (atual.Status != StatusPix.Aprovado) throw new InvalidOperationException("Só dá para estornar um Pix já pago.");
+        if (!_gateways.TryGetValue(atual.Gateway, out var g) || g is not IEstornoPix estorno)
+            throw new InvalidOperationException($"O gateway {atual.Gateway} não faz estorno pelo Nexus. Faça o estorno no painel dele.");
+        await estorno.EstornarAsync(atual.IdExterno, "estorno-" + atual.IdExterno, ct).ConfigureAwait(false);
+        var novo = atual with { Status = StatusPix.Estornado };
+        await _repositorio.SalvarAsync(novo, ct).ConfigureAwait(false);
+        return novo;
     }
 
     /// <summary>Consulta o gateway e grava a situação. Sem internet, devolve a última conhecida (a venda continua pendente).</summary>

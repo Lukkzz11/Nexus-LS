@@ -22,6 +22,7 @@ public class RegrasBackupTests
     [InlineData(MotivoBackup.PreAtualizacao)]
     [InlineData(MotivoBackup.PreRestauracao)]
     [InlineData(MotivoBackup.PreLimpeza)]
+    [InlineData(MotivoBackup.PreImportacao)]
     public void Nome_gerado_e_lido_de_volta(MotivoBackup motivo)
     {
         var quando = new DateTime(2026, 1, 2, 3, 4, 5);

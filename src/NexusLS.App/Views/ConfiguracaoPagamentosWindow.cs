@@ -14,6 +14,10 @@ public sealed class ConfiguracaoPagamentosWindow : Window
 {
     private readonly ConfiguracaoPagamentosStore _store;
     private readonly RepositorioPixSqlite _repo;
+    private readonly ServicoPix _pix;
+    private List<CobrancaPixRegistro> _lista = new();
+    private readonly CheckBox _outroMonitor = new() { Content = "Abrir a tela do Pix no outro monitor (o do cliente)", Margin = new Thickness(0, 0, 0, 10) };
+    private readonly TextBox _porta = new() { Margin = new Thickness(0, 0, 0, 10) };
     private readonly CheckBox _ativo = new() { Content = "Ativar Pix automático pelo Mercado Pago", Margin = new Thickness(0, 0, 0, 10) };
     private readonly PasswordBox _token = new() { Margin = new Thickness(0, 0, 0, 10) };
     private readonly TextBox _email = new() { Margin = new Thickness(0, 0, 0, 10) };
@@ -23,10 +27,11 @@ public sealed class ConfiguracaoPagamentosWindow : Window
     private readonly ListBox _historico = new() { Height = 150, Margin = new Thickness(0, 6, 0, 0) };
     private readonly ConfiguracaoPagamentos _config;
 
-    public ConfiguracaoPagamentosWindow(ConfiguracaoPagamentosStore store, RepositorioPixSqlite repo)
+    public ConfiguracaoPagamentosWindow(ConfiguracaoPagamentosStore store, RepositorioPixSqlite repo, ServicoPix pix)
     {
         _store = store;
         _repo = repo;
+        _pix = pix;
         _config = store.Ler();
         Title = "Configurações de Pagamento";
         Width = 520;
@@ -36,6 +41,8 @@ public sealed class ConfiguracaoPagamentosWindow : Window
         ResizeMode = ResizeMode.NoResize;
 
         _ativo.IsChecked = _config.MercadoPagoAtivo;
+        _outroMonitor.IsChecked = _config.PixEmOutroMonitor;
+        _porta.Text = _config.WebhookPorta.ToString(CultureInfo.InvariantCulture);
         _email.Text = _config.EmailPagador;
         _percentual.Text = _config.MercadoPagoPercentual.ToString("0.##", CultureInfo.GetCultureInfo("pt-BR"));
         _validade.Text = _config.ValidadeMinutos.ToString(CultureInfo.InvariantCulture);
@@ -62,10 +69,21 @@ public sealed class ConfiguracaoPagamentosWindow : Window
         p.Children.Add(_percentual);
         p.Children.Add(new TextBlock { Text = "Validade do QR Code (minutos)" });
         p.Children.Add(_validade);
+        p.Children.Add(_outroMonitor);
+        p.Children.Add(new TextBlock { Text = "Porta local dos avisos do Mercado Pago (webhook); vale na próxima abertura do Nexus" });
+        p.Children.Add(_porta);
         p.Children.Add(botoes);
         p.Children.Add(_mensagem);
         p.Children.Add(new TextBlock { Text = "Últimas cobranças Pix", FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 14, 0, 0) });
         p.Children.Add(_historico);
+        var estornar = new Button { Content = "Estornar o selecionado", Padding = new Thickness(12, 5, 12, 5), Margin = new Thickness(0, 6, 8, 0) };
+        estornar.Click += async (_, _) => await EstornarAsync();
+        var conferir = new Button { Content = "Conferência (CSV)", Padding = new Thickness(12, 5, 12, 5), Margin = new Thickness(0, 6, 0, 0) };
+        conferir.Click += async (_, _) => await ConferirAsync();
+        var linha = new StackPanel { Orientation = Orientation.Horizontal };
+        linha.Children.Add(estornar);
+        linha.Children.Add(conferir);
+        p.Children.Add(linha);
         Content = p;
 
         Loaded += async (_, _) => await CarregarHistoricoAsync();
@@ -82,6 +100,10 @@ public sealed class ConfiguracaoPagamentosWindow : Window
         _config.EmailPagador = _email.Text.Trim();
         _config.MercadoPagoPercentual = pct;
         _config.ValidadeMinutos = min;
+        if (!int.TryParse(_porta.Text.Trim(), out var porta) || porta < 1024 || porta > 65535)
+        { _mensagem.Text = "A porta deve ficar entre 1024 e 65535."; return false; }
+        _config.WebhookPorta = porta;
+        _config.PixEmOutroMonitor = _outroMonitor.IsChecked == true;
         _store.DefinirToken(_config, _token.Password);
         if (_config.MercadoPagoAtivo && !_config.TemToken) { _mensagem.Text = "Cadastre o Access Token para ativar."; return false; }
         if (_config.MercadoPagoAtivo && !_config.EmailPagador.Contains('@')) { _mensagem.Text = "Informe um e-mail válido do pagador."; return false; }
@@ -113,9 +135,43 @@ public sealed class ConfiguracaoPagamentosWindow : Window
         try
         {
             _historico.Items.Clear();
-            foreach (var c in await _repo.HistoricoAsync(30))
+            _lista = (await _repo.HistoricoAsync(30)).ToList();
+            foreach (var c in _lista)
                 _historico.Items.Add($"{c.CriadaEm:dd/MM HH:mm} · {Dinheiro.Formatar(c.ValorCentavos)} · {c.Status}" + (c.VendaId is int v ? $" · venda #{v}" : ""));
         }
         catch (Exception) { /* histórico é só informativo */ }
+    }
+
+    private async Task EstornarAsync()
+    {
+        if (_historico.SelectedIndex < 0 || _historico.SelectedIndex >= _lista.Count) { _mensagem.Text = "Selecione uma cobrança na lista."; return; }
+        var c = _lista[_historico.SelectedIndex];
+        if (c.Status != StatusPix.Aprovado) { _mensagem.Text = "Só dá para estornar um Pix já pago."; return; }
+        if (MessageBox.Show(this, $"Devolver {Dinheiro.Formatar(c.ValorCentavos)} ao cliente (estorno total)?\nIsso não pode ser desfeito. Depois, cancele a venda no Nexus.",
+                "Estornar Pix", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
+        try
+        {
+            await _pix.EstornarAsync(c.ChaveVenda);
+            _mensagem.Text = "Estorno feito. Lembre de cancelar a venda no Nexus.";
+        }
+        catch (Exception e) when (e is InvalidOperationException or System.Net.Http.HttpRequestException or TaskCanceledException)
+        { _mensagem.Text = e.Message; }
+        await CarregarHistoricoAsync();
+    }
+
+    private async Task ConferirAsync()
+    {
+        try
+        {
+            var todas = await _repo.HistoricoAsync(5000);
+            var r = ConferenciaPix.Resumir(todas, DateTime.Now);
+            var pasta = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            var arquivo = System.IO.Path.Combine(pasta, $"Conferencia-Pix-{DateTime.Now:yyyy-MM-dd-HHmm}.csv");
+            await System.IO.File.WriteAllTextAsync(arquivo, ConferenciaPix.Csv(todas), new System.Text.UTF8Encoding(true));
+            _mensagem.Text = $"{r.Aprovados} pagos ({Dinheiro.Formatar(r.AprovadosCentavos)}), {r.Estornados} estornados ({Dinheiro.Formatar(r.EstornadosCentavos)}), {r.Pendentes} pendentes, {r.Expirados} expirados. "
+                + (r.PagosSemVenda.Count > 0 ? $"ATENÇÃO: {r.PagosSemVenda.Count} Pix pago(s) sem venda ligada. " : "Nenhum pago sem venda. ")
+                + (r.PendentesAntigos.Count > 0 ? $"{r.PendentesAntigos.Count} pendente(s) com mais de 2 h. " : "") + "Arquivo salvo em Documentos.";
+        }
+        catch (Exception e) when (e is System.IO.IOException or UnauthorizedAccessException) { _mensagem.Text = "Não foi possível salvar o arquivo: " + e.Message; }
     }
 }

@@ -46,7 +46,6 @@ public static class Program
 
                 var win = new JanelaSetup(op);
                 win.CapturarPrintsPassos(pastaDestino);
-                win.CapturarPrintsPassos(@"C:\Users\Lucas Emanuel\.gemini\antigravity\brain\975d27ab-5c9a-4609-bb4c-9e018d33ea89\prints");
                 return 0;
             }
             catch (Exception ex)
