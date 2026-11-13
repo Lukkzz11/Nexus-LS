@@ -510,3 +510,34 @@ public sealed class ImportadorErpTests : IDisposable
         Assert.False(consulta.ContainsKey("limit"));
     }
 }
+
+public sealed class ImportadorErpSemDuplicarTests : IDisposable
+{
+    private readonly BancoDeTeste _banco = new(comFilaSincronizacao: true, usuarioUid: () => "uid");
+    private readonly FonteErpFalsa _fonte = new();
+    public void Dispose() => _banco.Dispose();
+
+    [Fact]
+    public async Task Produto_que_ja_existe_aqui_e_ligado_ao_do_ERP_em_vez_de_duplicado()
+    {
+        await using (var db = _banco.CriarContexto())
+        {
+            db.Produtos.Add(new Produto { Nome = "Camiseta Surf", Referencia = "R-1", CodigoBarras = "789", PrecoVendaCentavos = 1000, Tamanhos = { new ProdutoTamanho { Tamanho = "M", Estoque = 1 } } });
+            db.Produtos.Add(new Produto { Nome = "Boné", PrecoVendaCentavos = 2000, Tamanhos = { new ProdutoTamanho { Tamanho = Tamanhos.SemTamanho, Estoque = 1 } } });
+            db.Produtos.Add(new Produto { Nome = "Chinelo", Referencia = "A", Tamanhos = { new ProdutoTamanho { Tamanho = Tamanhos.SemTamanho, Estoque = 0 } } });
+            await db.SaveChangesAsync();
+        }
+        _fonte.Por("produtos", "p1", """{"nome":"CAMISETA SURF NOVA","codigoBarras":"789","precoVarejo":59.9,"precoAtacado":45,"gradeTamanhos":{"M":5},"atualizadoEm":"2026-10-30T10:00:00Z"}""");
+        _fonte.Por("produtos", "p2", """{"nome":"boné","referencia":"B-2","precoVarejo":30,"precoAtacado":20,"estoqueTotal":4,"atualizadoEm":"2026-10-30T10:00:00Z"}""");
+        _fonte.Por("produtos", "p3", """{"nome":"Chinelo","referencia":"B","precoVarejo":10,"estoqueTotal":1,"atualizadoEm":"2026-10-30T10:00:00Z"}""");
+
+        await new ImportadorErp(_banco.Fabrica, _fonte, () => new DateTime(2026, 10, 31, 12, 0, 0, DateTimeKind.Utc)).ImportarAsync();
+
+        await using var d = _banco.CriarContexto();
+        Assert.Equal(4, await d.Produtos.CountAsync());                       // camiseta e boné ligados; chinelo com outra referência é outro produto
+        var camiseta = await d.Produtos.SingleAsync(x => x.CodigoBarras == "789");
+        Assert.Equal(5990, camiseta.PrecoVendaCentavos);
+        Assert.Equal(4500, camiseta.PrecoAtacadoCentavos);
+        Assert.Equal(2000, (await d.Produtos.SingleAsync(x => x.Nome == "boné")).PrecoAtacadoCentavos);
+    }
+}

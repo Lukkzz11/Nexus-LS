@@ -191,6 +191,8 @@ public sealed class ImportadorErp
         if (nome is null) return null;
 
         Produto? p = ligacao is null ? null : await db.Produtos.Include(x => x.Tamanhos).FirstOrDefaultAsync(x => x.Guid == ligacao.EntidadeGuid);
+        // Produto que já existe aqui (cadastrado à mão ou por CSV) e ainda não foi ligado ao ERP: liga em vez de criar outro igual.
+        if (p is null && ligacao is null) p = await AcharProdutoLocalAsync(db, nome, Texto(c, "referencia"), Texto(c, "codigoBarras"));
         var novo = p is null;
         if (novo)
         {
@@ -249,6 +251,29 @@ public sealed class ImportadorErp
 
         UltimoGuid = p.Guid;
         return novo;
+    }
+
+    /// <summary>
+    /// Procura aqui o produto que o ERP está trazendo, entre os que ainda não têm ligação com o ERP:
+    /// pelo código de barras; senão pelo mesmo nome e referência; senão pelo mesmo nome quando um dos lados não tem referência.
+    /// </summary>
+    private static async Task<Produto?> AcharProdutoLocalAsync(PdvDbContext db, string nome, string? referencia, string? codigo)
+    {
+        var ligados = db.ImportacaoErp.Where(x => x.Colecao == "produtos").Select(x => x.EntidadeGuid);
+        var livres = db.Produtos.Include(x => x.Tamanhos).Where(x => !ligados.Contains(x.Guid));
+
+        if (codigo is not null)
+        {
+            var porCodigo = await livres.FirstOrDefaultAsync(x => x.CodigoBarras == codigo);
+            if (porCodigo is not null) return porCodigo;
+        }
+
+        var nomeMin = nome.Trim().ToLower();
+        var mesmoNome = await livres.Where(x => x.Nome.ToLower() == nomeMin).ToListAsync();
+        var refMin = referencia?.Trim().ToLower();
+        var igualNomeERef = mesmoNome.FirstOrDefault(x => refMin is not null && (x.Referencia ?? "").Trim().ToLower() == refMin);
+        if (igualNomeERef is not null) return igualNomeERef;
+        return mesmoNome.FirstOrDefault(x => refMin is null || string.IsNullOrWhiteSpace(x.Referencia));
     }
 
     // ------------------------------------------------------------------ clientes
