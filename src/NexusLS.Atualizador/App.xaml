@@ -6,6 +6,7 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Resources/Tokens.xaml" />
+                <ResourceDictionary Source="Resources/Icones.xaml" />
                 <ResourceDictionary Source="Resources/Tipografia.xaml" />
                 <ResourceDictionary Source="Resources/Botoes.xaml" />
                 <ResourceDictionary Source="Resources/Campos.xaml" />

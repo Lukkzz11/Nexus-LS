@@ -1457,19 +1457,19 @@ public partial class MainWindow : Window
         {
             brd.Background = new SolidColorBrush(Color.FromRgb(0xDC, 0xFC, 0xE7)); // Verde
             txt.Foreground = new SolidColorBrush(Color.FromRgb(0x16, 0x65, 0x34));
-            txt.Text = $"✓ {okTexto}";
+            txt.Text = okTexto;
         }
         else if (status == false)
         {
             brd.Background = new SolidColorBrush(Color.FromRgb(0xFE, 0xE2, 0xE2)); // Vermelho
             txt.Foreground = new SolidColorBrush(Color.FromRgb(0x99, 0x1B, 0x1B));
-            txt.Text = $"✕ {erroTexto}";
+            txt.Text = erroTexto;
         }
         else
         {
             brd.Background = new SolidColorBrush(Color.FromRgb(0xFE, 0xF3, 0xC7)); // Amarelo
             txt.Foreground = new SolidColorBrush(Color.FromRgb(0x92, 0x40, 0x0E));
-            txt.Text = $"○ {neutroTexto ?? "Opcional"}";
+            txt.Text = neutroTexto ?? "Opcional";
         }
     }
 
