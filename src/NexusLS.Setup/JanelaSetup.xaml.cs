@@ -44,6 +44,29 @@ public partial class JanelaSetup : Window
 
         AtualizarEspacoDisco();
         IrParaPasso(1);
+
+        Loaded += JanelaSetup_Loaded;
+    }
+
+    private void JanelaSetup_Loaded(object sender, RoutedEventArgs e)
+    {
+        var args = Environment.GetCommandLineArgs();
+        if (args.Any(a => a.Equals("--capturar-prints", StringComparison.OrdinalIgnoreCase)))
+        {
+            var idx = Array.FindIndex(args, a => a.Equals("--capturar-prints", StringComparison.OrdinalIgnoreCase));
+            var pastaDestino = (idx >= 0 && idx < args.Length - 1 && !args[idx + 1].StartsWith("-"))
+                ? args[idx + 1]
+                : @"C:\Users\Lucas Emanuel\Desktop\Prints_Nexus";
+
+            Dispatcher.InvokeAsync(async () =>
+            {
+                await Task.Delay(300);
+                CapturarPrintsPassos(pastaDestino);
+                var pastaArtefatos = @"C:\Users\Lucas Emanuel\.gemini\antigravity\brain\975d27ab-5c9a-4609-bb4c-9e018d33ea89\prints";
+                CapturarPrintsPassos(pastaArtefatos);
+                Application.Current.Shutdown(0);
+            });
+        }
     }
 
     private void IrParaPasso(int passo)
@@ -475,5 +498,91 @@ public partial class JanelaSetup : Window
             "3. PROTEÇÃO DE DADOS: O software processa e armazena os dados de operações e estoque com criptografia e segurança, atendendo às diretrizes da LGPD (Lei Geral de Proteção de Dados).\n\n" +
             "4. ATUALIZAÇÕES E SUPORTE: O cliente tem direito a atualizações de segurança e correções durante o período de vigência da licença comercial ativa.\n\n" +
             "5. RESPONSABILIDADE: O usuário é responsável pela guarda de suas senhas, cópias de segurança (backups) e pela regularidade fiscal de suas operações comerciais.";
+    }
+
+    public void CapturarPrintsPassos(string pastaDestino)
+    {
+        try
+        {
+            Directory.CreateDirectory(pastaDestino);
+
+            Width = 860;
+            Height = 640;
+            Show();
+            UpdateLayout();
+
+            for (int passo = 1; passo <= 6; passo++)
+            {
+                IrParaPasso(passo);
+
+                if (passo == 1)
+                {
+                    TxtChave.Text = "NEXUS-QP7V-577T-8MFL";
+                    CardStatusLicenca.Visibility = Visibility.Visible;
+                    CardStatusLicenca.Background = new SolidColorBrush(Color.FromRgb(0xF0, 0xFD, 0xF4));
+                    CardStatusLicenca.BorderBrush = new SolidColorBrush(Color.FromRgb(0xBB, 0xF7, 0xD0));
+                    TxtStatusLicenca.Text = "Licença Comercial Válida e Ativa";
+                    TxtStatusLicenca.Foreground = new SolidColorBrush(Color.FromRgb(0x15, 0x80, 0x3D));
+                    TxtDetalhesLicenca.Text = "Cliente: Life Surf (Jarbas) | Plano Anual | Válida até 06/11/2027";
+                    TxtDetalhesLicenca.Foreground = new SolidColorBrush(Color.FromRgb(0x16, 0x65, 0x34));
+                }
+                else if (passo == 2)
+                {
+                    ChkAceitoTermos.IsChecked = true;
+                }
+                else if (passo == 3)
+                {
+                    TxtCaminhoPasta.Text = @"C:\Users\Lucas Emanuel\AppData\Local\Programs\Nexus";
+                }
+                else if (passo == 4)
+                {
+                    ChkNexus.IsChecked = true;
+                    ChkBarTender.IsChecked = true;
+                    ChkAtualizador.IsChecked = true;
+                    ChkAtalhos.IsChecked = true;
+                }
+                else if (passo == 5)
+                {
+                    BarraProgresso.Value = 68;
+                    TxtPercentualProgresso.Text = "68%";
+                    TxtMensagemProgresso.Text = "Descompactando pacotes do sistema Nexus LS...";
+                    TxtDetalhesProgresso.Text = "Extraindo módulos e configurando atalhos na Área de Trabalho...";
+                }
+
+                UpdateLayout();
+                Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.Render);
+
+                int w = (int)RootGrid.ActualWidth;
+                int h = (int)RootGrid.ActualHeight;
+                if (w <= 0) w = 844;
+                if (h <= 0) h = 601;
+
+                var rtb = new System.Windows.Media.Imaging.RenderTargetBitmap(w, h, 96, 96, PixelFormats.Pbgra32);
+                rtb.Render(RootGrid);
+
+                var encoder = new System.Windows.Media.Imaging.PngBitmapEncoder();
+                encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(rtb));
+
+                var nomeArquivo = passo switch
+                {
+                    1 => "Nexus_Setup_01_Licenca.png",
+                    2 => "Nexus_Setup_02_Termos.png",
+                    3 => "Nexus_Setup_03_Pasta.png",
+                    4 => "Nexus_Setup_04_Modulos.png",
+                    5 => "Nexus_Setup_05_Instalacao.png",
+                    _ => "Nexus_Setup_06_Conclusao.png"
+                };
+
+                var caminho = Path.Combine(pastaDestino, nomeArquivo);
+                using var fs = File.Create(caminho);
+                encoder.Save(fs);
+            }
+
+            Close();
+        }
+        catch (Exception ex)
+        {
+            File.WriteAllText(Path.Combine(pastaDestino, "erro_captura_setup.txt"), ex.ToString());
+        }
     }
 }

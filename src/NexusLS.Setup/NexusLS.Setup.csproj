@@ -4,6 +4,12 @@
     <ProjectReference Include="..\NexusLS.Core\NexusLS.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Resource Include="nexus.ico" />
+    <Resource Include="Assets\emblema.png" />
+    <Resource Include="Assets\emblema-branco.png" />
+  </ItemGroup>
+
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>

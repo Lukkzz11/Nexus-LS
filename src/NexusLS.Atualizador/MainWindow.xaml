@@ -2,7 +2,6 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Nexus Hub — Central de Aplicativos e Atualizações"
-        Icon="nexus.ico"
         Height="760" Width="1120" MinHeight="680" MinWidth="980"
         WindowStartupLocation="CenterScreen"
         Background="#F8FAFC" Foreground="#0F172A"
@@ -58,7 +57,7 @@
         </Style>
     </Window.Resources>
 
-    <Grid>
+    <Grid x:Name="RootGrid" Background="#F8FAFC">
         <Grid.ColumnDefinitions>
             <!-- 0: MENU LATERAL FIXO (SIDEBAR) -->
             <ColumnDefinition Width="230" />

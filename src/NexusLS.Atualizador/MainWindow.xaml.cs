@@ -57,6 +57,24 @@ public partial class MainWindow : Window
 
         // Processar argumentos de linha de comando se houver
         var args = Environment.GetCommandLineArgs();
+        if (args.Any(a => a.Equals("--capturar-prints", StringComparison.OrdinalIgnoreCase)))
+        {
+            var idx = Array.FindIndex(args, a => a.Equals("--capturar-prints", StringComparison.OrdinalIgnoreCase));
+            var pastaDestino = (idx >= 0 && idx < args.Length - 1 && !args[idx + 1].StartsWith("-"))
+                ? args[idx + 1]
+                : @"C:\Users\Lucas Emanuel\Desktop\Prints_Nexus";
+
+            Dispatcher.InvokeAsync(async () =>
+            {
+                await Task.Delay(400);
+                CapturarPrintsHub(pastaDestino);
+                var pastaArtefatos = @"C:\Users\Lucas Emanuel\.gemini\antigravity\brain\975d27ab-5c9a-4609-bb4c-9e018d33ea89\prints";
+                CapturarPrintsHub(pastaArtefatos);
+                Application.Current.Shutdown(0);
+            });
+            return;
+        }
+
         if (args.Contains("--atalho"))
         {
             CriarAtalhoDesktop(silencioso: true);
@@ -1562,6 +1580,56 @@ public partial class MainWindow : Window
             {
                 MessageBox.Show("Erro ao criar atalho: " + ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+    }
+
+    public void CapturarPrintsHub(string pastaDestino)
+    {
+        try
+        {
+            Directory.CreateDirectory(pastaDestino);
+
+            Width = 1120;
+            Height = 760;
+            Show();
+            UpdateLayout();
+
+            var telas = new (string rota, string arquivo)[]
+            {
+                ("inicio", "Nexus_Hub_01_Inicio.png"),
+                ("atualizacoes", "Nexus_Hub_02_Atualizacoes.png"),
+                ("licenca", "Nexus_Hub_03_Licenca.png"),
+                ("diagnostico", "Nexus_Hub_04_Diagnostico.png"),
+                ("sobre", "Nexus_Hub_05_Sobre.png")
+            };
+
+            foreach (var (rota, arquivo) in telas)
+            {
+                NavegarPara(rota);
+                UpdateLayout();
+                Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.Render);
+
+                int w = (int)RootGrid.ActualWidth;
+                int h = (int)RootGrid.ActualHeight;
+                if (w <= 0) w = 1104;
+                if (h <= 0) h = 721;
+
+                var rtb = new System.Windows.Media.Imaging.RenderTargetBitmap(w, h, 96, 96, PixelFormats.Pbgra32);
+                rtb.Render(RootGrid);
+
+                var encoder = new System.Windows.Media.Imaging.PngBitmapEncoder();
+                encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(rtb));
+
+                var caminho = Path.Combine(pastaDestino, arquivo);
+                using var fs = File.Create(caminho);
+                encoder.Save(fs);
+            }
+
+            Close();
+        }
+        catch (Exception ex)
+        {
+            File.WriteAllText(Path.Combine(pastaDestino, "erro_captura_hub.txt"), ex.ToString());
         }
     }
 }

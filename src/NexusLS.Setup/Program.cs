@@ -34,6 +34,28 @@ public static class Program
             }
         }
 
+        if (args.Any(a => a.Equals("--capturar-prints", StringComparison.OrdinalIgnoreCase)))
+        {
+            try
+            {
+                var appQuick = new Application();
+                var idx = Array.FindIndex(args, a => a.Equals("--capturar-prints", StringComparison.OrdinalIgnoreCase));
+                var pastaDestino = (idx >= 0 && idx < args.Length - 1 && !args[idx + 1].StartsWith("-"))
+                    ? args[idx + 1]
+                    : @"C:\Users\Lucas Emanuel\Desktop\Prints_Nexus";
+
+                var win = new JanelaSetup(op);
+                win.CapturarPrintsPassos(pastaDestino);
+                win.CapturarPrintsPassos(@"C:\Users\Lucas Emanuel\.gemini\antigravity\brain\975d27ab-5c9a-4609-bb4c-9e018d33ea89\prints");
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                File.WriteAllText(Path.Combine(Path.GetTempPath(), "nexus-setup-fatal.txt"), ex.ToString());
+                return 1;
+            }
+        }
+
         AppDomain.CurrentDomain.UnhandledException += (s, e) =>
         {
             var msg = e.ExceptionObject?.ToString() ?? "Erro fatal desconhecido";

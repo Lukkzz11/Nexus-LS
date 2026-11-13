@@ -17,4 +17,32 @@ public partial class App : Application
             try { File.WriteAllText(@"C:\NexusLS\crash_atualizador.txt", e.Exception?.ToString() ?? "Dispatcher null"); } catch { }
         };
     }
+
+    protected override void OnStartup(StartupEventArgs e)
+    {
+        base.OnStartup(e);
+
+        if (e.Args.Any(a => a.Equals("--capturar-prints", StringComparison.OrdinalIgnoreCase)))
+        {
+            try
+            {
+                var idx = Array.FindIndex(e.Args, a => a.Equals("--capturar-prints", StringComparison.OrdinalIgnoreCase));
+                var pastaDestino = (idx >= 0 && idx < e.Args.Length - 1 && !e.Args[idx + 1].StartsWith("-"))
+                    ? e.Args[idx + 1]
+                    : @"C:\Users\Lucas Emanuel\Desktop\Prints_Nexus";
+
+                var win = new MainWindow();
+                win.CapturarPrintsHub(pastaDestino);
+                win.CapturarPrintsHub(@"C:\Users\Lucas Emanuel\.gemini\antigravity\brain\975d27ab-5c9a-4609-bb4c-9e018d33ea89\prints");
+            }
+            catch (Exception ex)
+            {
+                try { File.WriteAllText(@"C:\NexusLS\crash_atualizador.txt", ex.ToString()); } catch { }
+            }
+            Shutdown(0);
+            return;
+        }
+
+        new MainWindow().Show();
+    }
 }
