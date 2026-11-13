@@ -51,6 +51,10 @@ public partial class ConfiguracoesView : UserControl
             CaixaSegredoGoogle.Password = vm.GoogleSegredoNovo;
     }
 
+    // PROVISÓRIO: remover junto com ComparacaoErpProvisoriaWindow.cs
+    private void AbrirComparacaoErp(object sender, System.Windows.RoutedEventArgs e) =>
+        new ComparacaoErpProvisoriaWindow { Owner = System.Windows.Window.GetWindow(this) }.ShowDialog();
+
     private void AbrirConfigPagamento(object sender, System.Windows.RoutedEventArgs e) =>
         new ConfiguracaoPagamentosWindow(App.Servicos.PagamentosConfig, App.Servicos.PixRepo)
         { Owner = System.Windows.Window.GetWindow(this) }.ShowDialog();
