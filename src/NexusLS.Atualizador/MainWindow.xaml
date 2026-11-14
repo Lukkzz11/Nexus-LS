@@ -8,10 +8,10 @@
         FontFamily="Segoe UI, Inter, Arial">
 
     <Window.Resources>
-        <!-- Estilo dos Botões de Navegação Lateral -->
+        <!-- Estilo dos Botões de Navegação Lateral Estilo Windows 11 Fluent -->
         <Style x:Key="ItemMenuLateral" TargetType="Button">
-            <Setter Property="Height" Value="46" />
-            <Setter Property="Margin" Value="10,3,10,3" />
+            <Setter Property="Height" Value="42" />
+            <Setter Property="Margin" Value="8,2,8,2" />
             <Setter Property="Padding" Value="14,0" />
             <Setter Property="FontSize" Value="13" />
             <Setter Property="FontWeight" Value="SemiBold" />
@@ -25,9 +25,13 @@
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="border"
                                 Background="{TemplateBinding Background}"
-                                CornerRadius="8"
+                                CornerRadius="6"
                                 Padding="{TemplateBinding Padding}">
-                            <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Left" />
+                            <Grid>
+                                <Border x:Name="pilarAtivo" Width="3" HorizontalAlignment="Left" Margin="-14,4,0,4"
+                                        Background="#0284C7" CornerRadius="2" Visibility="Collapsed" />
+                                <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Left" Margin="4,0,0,0" />
+                            </Grid>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
@@ -36,7 +40,9 @@
                             </Trigger>
                             <Trigger Property="Tag" Value="Ativo">
                                 <Setter TargetName="border" Property="Background" Value="#EFF6FF" />
-                                <Setter Property="Foreground" Value="#2563EB" />
+                                <Setter TargetName="pilarAtivo" Property="Visibility" Value="Visible" />
+                                <Setter Property="Foreground" Value="#0284C7" />
+                                <Setter Property="FontWeight" Value="Bold" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -44,16 +50,12 @@
             </Setter>
         </Style>
 
-        <!-- Sombra suave para os cartões de aplicativos -->
-        <DropShadowEffect x:Key="SombraSuave" BlurRadius="12" Direction="270" ShadowDepth="2" Color="#0F172A" Opacity="0.05" />
-
-        <!-- Estilo de Card Padrão -->
+        <!-- Estilo de Card Padrão Windows Enterprise -->
         <Style x:Key="CardBranco" TargetType="Border">
             <Setter Property="Background" Value="#FFFFFF" />
             <Setter Property="BorderBrush" Value="#E2E8F0" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="12" />
-            <Setter Property="Effect" Value="{StaticResource SombraSuave}" />
+            <Setter Property="CornerRadius" Value="8" />
         </Style>
     </Window.Resources>
 
@@ -279,24 +281,24 @@
                             </StackPanel>
 
                             <!-- Botão Grande: ABRIR NEXUS LS -->
-                            <Button x:Name="BtnIniciarNexus" Grid.Row="2" Height="50"
-                                    Background="#2563EB" Foreground="White" BorderThickness="0"
+                            <Button x:Name="BtnIniciarNexus" Grid.Row="2" Height="48"
+                                    Background="#0284C7" Foreground="White" BorderThickness="0"
                                     Cursor="Hand" Click="BtnIniciarNexus_Click">
                                 <Button.Template>
                                     <ControlTemplate TargetType="Button">
-                                        <Border x:Name="b" Background="{TemplateBinding Background}" CornerRadius="10">
+                                        <Border x:Name="b" Background="{TemplateBinding Background}" CornerRadius="6">
                                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                                         </Border>
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="b" Property="Background" Value="#1D4ED8" />
+                                                <Setter TargetName="b" Property="Background" Value="#0369A1" />
                                             </Trigger>
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>
                                 </Button.Template>
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <Path Data="{StaticResource IconePlay}" Width="14" Height="14" Fill="#FFFFFF" Stretch="Uniform" Margin="0,0,10,0" VerticalAlignment="Center" />
-                                    <TextBlock Text="ABRIR NEXUS LS" FontWeight="Bold" FontSize="14" VerticalAlignment="Center" />
+                                    <Path Data="{StaticResource IconePlay}" Width="13" Height="13" Fill="#FFFFFF" Stretch="Uniform" Margin="0,0,10,0" VerticalAlignment="Center" />
+                                    <TextBlock Text="ABRIR NEXUS LS" FontWeight="Bold" FontSize="13" VerticalAlignment="Center" />
                                 </StackPanel>
                             </Button>
                         </Grid>
@@ -357,12 +359,12 @@
                             </StackPanel>
 
                             <!-- Botão Grande: ABRIR BARTENDER -->
-                            <Button x:Name="BtnIniciarBarTender" Grid.Row="2" Height="50"
+                            <Button x:Name="BtnIniciarBarTender" Grid.Row="2" Height="48"
                                     Background="#059669" Foreground="White" BorderThickness="0"
                                     Cursor="Hand" Click="BtnIniciarBarTender_Click">
                                 <Button.Template>
                                     <ControlTemplate TargetType="Button">
-                                        <Border x:Name="b" Background="{TemplateBinding Background}" CornerRadius="10">
+                                        <Border x:Name="b" Background="{TemplateBinding Background}" CornerRadius="6">
                                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                                         </Border>
                                         <ControlTemplate.Triggers>
@@ -373,97 +375,93 @@
                                     </ControlTemplate>
                                 </Button.Template>
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <Path Data="{StaticResource IconePlay}" Width="14" Height="14" Fill="#FFFFFF" Stretch="Uniform" Margin="0,0,10,0" VerticalAlignment="Center" />
-                                    <TextBlock Text="ABRIR BARTENDER" FontWeight="Bold" FontSize="14" VerticalAlignment="Center" />
+                                    <Path Data="{StaticResource IconePlay}" Width="13" Height="13" Fill="#FFFFFF" Stretch="Uniform" Margin="0,0,10,0" VerticalAlignment="Center" />
+                                    <TextBlock Text="ABRIR BARTENDER" FontWeight="Bold" FontSize="13" VerticalAlignment="Center" />
                                 </StackPanel>
                             </Button>
                         </Grid>
                     </Border>
                 </Grid>
 
-                <!-- PAINEL COMPACTO E ORGANIZADO: INFORMAÇÕES DA INSTALAÇÃO -->
-                <Border Grid.Row="2" Style="{StaticResource CardBranco}" Padding="22,18">
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,14">
-                            <Path Data="{StaticResource IconeEscudo}" Width="15" Height="15" Fill="#2563EB" Stretch="Uniform" Margin="0,0,8,0" VerticalAlignment="Center" />
-                            <TextBlock Text="Informações da Instalação e Licença Comercial" FontSize="13" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center" />
-                        </StackPanel>
+                <!-- FICHA TÉCNICA UNIFICADA: PROPRIEDADES DA ESTAÇÃO E LICENÇA (PADRÃO WINDOWS ENTERPRISE) -->
+                <Border Grid.Row="2" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
 
-                        <Grid>
+                        <!-- Cabeçalho da Seção -->
+                        <Border Grid.Row="0" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="18,10" CornerRadius="6,6,0,0">
+                            <Grid>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Path Data="{StaticResource IconeEscudo}" Width="14" Height="14" Fill="#0284C7" Stretch="Uniform" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                    <TextBlock Text="Propriedades da Estação e Licença Comercial" FontSize="12" FontWeight="Bold" Foreground="#1E293B" VerticalAlignment="Center" />
+                                </StackPanel>
+                                <TextBlock Text="● Conectado ao Servidor em Nuvem" FontSize="11" Foreground="#16A34A" FontWeight="SemiBold" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                            </Grid>
+                        </Border>
+
+                        <!-- Grade Estruturada de Propriedades -->
+                        <Grid Grid.Row="1" Margin="20,14">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="14" />
+                                <ColumnDefinition Width="20" />
                                 <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="14" />
+                                <ColumnDefinition Width="20" />
                                 <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="14" />
+                                <ColumnDefinition Width="20" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
-                                <RowDefinition Height="12" />
+                                <RowDefinition Height="14" />
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
 
                             <!-- Linha 1 -->
-                            <Border Grid.Row="0" Grid.Column="0" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="12,8">
-                                <StackPanel>
-                                    <TextBlock Text="CLIENTE RESPONSÁVEL" FontSize="10" FontWeight="Bold" Foreground="#64748B" />
-                                    <TextBlock x:Name="TxtHomeCliente" Text="Carregando..." FontSize="13" FontWeight="SemiBold" Foreground="#0F172A" Margin="0,3,0,0" />
-                                </StackPanel>
-                            </Border>
+                            <StackPanel Grid.Row="0" Grid.Column="0">
+                                <TextBlock Text="CLIENTE RESPONSÁVEL" FontSize="10" FontWeight="Bold" Foreground="#64748B" />
+                                <TextBlock x:Name="TxtHomeCliente" Text="Carregando..." FontSize="13" FontWeight="SemiBold" Foreground="#0F172A" Margin="0,3,0,0" />
+                            </StackPanel>
 
-                            <Border Grid.Row="0" Grid.Column="2" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="12,8">
-                                <StackPanel>
-                                    <TextBlock Text="EMPRESA / LOJA" FontSize="10" FontWeight="Bold" Foreground="#64748B" />
-                                    <TextBlock x:Name="TxtHomeEmpresa" Text="Carregando..." FontSize="13" FontWeight="SemiBold" Foreground="#2563EB" Margin="0,3,0,0" />
-                                </StackPanel>
-                            </Border>
+                            <StackPanel Grid.Row="0" Grid.Column="2">
+                                <TextBlock Text="EMPRESA / LOJA" FontSize="10" FontWeight="Bold" Foreground="#64748B" />
+                                <TextBlock x:Name="TxtHomeEmpresa" Text="Carregando..." FontSize="13" FontWeight="SemiBold" Foreground="#0284C7" Margin="0,3,0,0" />
+                            </StackPanel>
 
-                            <Border Grid.Row="0" Grid.Column="4" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="12,8">
-                                <StackPanel>
-                                    <TextBlock Text="PLANO CONTRATADO" FontSize="10" FontWeight="Bold" Foreground="#64748B" />
-                                    <TextBlock x:Name="TxtHomePlano" Text="COMERCIAL" FontSize="13" FontWeight="SemiBold" Foreground="#0F172A" Margin="0,3,0,0" />
-                                </StackPanel>
-                            </Border>
+                            <StackPanel Grid.Row="0" Grid.Column="4">
+                                <TextBlock Text="PLANO CONTRATADO" FontSize="10" FontWeight="Bold" Foreground="#64748B" />
+                                <TextBlock x:Name="TxtHomePlano" Text="COMERCIAL" FontSize="13" FontWeight="SemiBold" Foreground="#0F172A" Margin="0,3,0,0" />
+                            </StackPanel>
 
-                            <Border Grid.Row="0" Grid.Column="6" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="12,8">
-                                <StackPanel>
-                                    <TextBlock Text="SITUAÇÃO DA LICENÇA" FontSize="10" FontWeight="Bold" Foreground="#64748B" />
-                                    <TextBlock x:Name="TxtHomeLicencaStatus" Text="Ativa e Autorizada" FontSize="13" FontWeight="Bold" Foreground="#15803D" Margin="0,3,0,0" />
-                                </StackPanel>
-                            </Border>
+                            <StackPanel Grid.Row="0" Grid.Column="6">
+                                <TextBlock Text="SITUAÇÃO DA LICENÇA" FontSize="10" FontWeight="Bold" Foreground="#64748B" />
+                                <TextBlock x:Name="TxtHomeLicencaStatus" Text="Ativa e Autorizada" FontSize="13" FontWeight="Bold" Foreground="#16A34A" Margin="0,3,0,0" />
+                            </StackPanel>
 
                             <!-- Linha 2 -->
-                            <Border Grid.Row="2" Grid.Column="0" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="12,8">
-                                <StackPanel>
-                                    <TextBlock Text="DATA DE VALIDADE" FontSize="10" FontWeight="Bold" Foreground="#64748B" />
-                                    <TextBlock x:Name="TxtHomeValidade" Text="—" FontSize="13" FontWeight="SemiBold" Foreground="#0F172A" Margin="0,3,0,0" />
-                                </StackPanel>
-                            </Border>
+                            <StackPanel Grid.Row="2" Grid.Column="0">
+                                <TextBlock Text="DATA DE VALIDADE" FontSize="10" FontWeight="Bold" Foreground="#64748B" />
+                                <TextBlock x:Name="TxtHomeValidade" Text="—" FontSize="13" FontWeight="SemiBold" Foreground="#0F172A" Margin="0,3,0,0" />
+                            </StackPanel>
 
-                            <Border Grid.Row="2" Grid.Column="2" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="12,8">
-                                <StackPanel>
-                                    <TextBlock Text="DIAS RESTANTES" FontSize="10" FontWeight="Bold" Foreground="#64748B" />
-                                    <TextBlock x:Name="TxtHomeDiasRestantes" Text="—" FontSize="13" FontWeight="SemiBold" Foreground="#0F172A" Margin="0,3,0,0" />
-                                </StackPanel>
-                            </Border>
+                            <StackPanel Grid.Row="2" Grid.Column="2">
+                                <TextBlock Text="DIAS RESTANTES" FontSize="10" FontWeight="Bold" Foreground="#64748B" />
+                                <TextBlock x:Name="TxtHomeDiasRestantes" Text="—" FontSize="13" FontWeight="SemiBold" Foreground="#0F172A" Margin="0,3,0,0" />
+                            </StackPanel>
 
-                            <Border Grid.Row="2" Grid.Column="4" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="12,8">
-                                <StackPanel>
-                                    <TextBlock Text="VERSÃO INSTALADA" FontSize="10" FontWeight="Bold" Foreground="#64748B" />
-                                    <TextBlock x:Name="TxtHomeVersaoInstalada" Text="v1.2.6" FontSize="13" FontWeight="SemiBold" Foreground="#0F172A" Margin="0,3,0,0" />
-                                </StackPanel>
-                            </Border>
+                            <StackPanel Grid.Row="2" Grid.Column="4">
+                                <TextBlock Text="VERSÃO INSTALADA" FontSize="10" FontWeight="Bold" Foreground="#64748B" />
+                                <TextBlock x:Name="TxtHomeVersaoInstalada" Text="v1.2.6" FontSize="13" FontWeight="SemiBold" Foreground="#0F172A" Margin="0,3,0,0" />
+                            </StackPanel>
 
-                            <Border Grid.Row="2" Grid.Column="6" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="12,8">
-                                <StackPanel>
-                                    <TextBlock Text="ÚLTIMA ATUALIZAÇÃO" FontSize="10" FontWeight="Bold" Foreground="#64748B" />
-                                    <TextBlock x:Name="TxtHomeUltimaAtualizacao" Text="—" FontSize="13" FontWeight="SemiBold" Foreground="#64748B" Margin="0,3,0,0" />
-                                </StackPanel>
-                            </Border>
+                            <StackPanel Grid.Row="2" Grid.Column="6">
+                                <TextBlock Text="ÚLTIMA ATUALIZAÇÃO" FontSize="10" FontWeight="Bold" Foreground="#64748B" />
+                                <TextBlock x:Name="TxtHomeUltimaAtualizacao" Text="—" FontSize="13" FontWeight="SemiBold" Foreground="#64748B" Margin="0,3,0,0" />
+                            </StackPanel>
                         </Grid>
-                    </StackPanel>
+                    </Grid>
                 </Border>
             </Grid>
 

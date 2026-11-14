@@ -97,23 +97,23 @@ public partial class JanelaSetup : Window
     {
         if (numeroStep == passoAtual)
         {
-            badge.Background = new SolidColorBrush(Color.FromRgb(0xEF, 0xF6, 0xFF)); // Blue 50
-            badge.BorderBrush = new SolidColorBrush(Color.FromRgb(0x93, 0xC5, 0xFD)); // Blue 300
-            txt.Foreground = new SolidColorBrush(Color.FromRgb(0x1D, 0x4E, 0xD8)); // Blue 700
+            badge.Background = new SolidColorBrush(Color.FromRgb(0x02, 0x84, 0xC7)); // Sky 600
+            badge.BorderBrush = new SolidColorBrush(Color.FromRgb(0x38, 0xBD, 0xF8)); // Sky 400
+            txt.Foreground = new SolidColorBrush(Color.FromRgb(0xFF, 0xFF, 0xFF));
             txt.FontWeight = FontWeights.Bold;
         }
         else if (numeroStep < passoAtual)
         {
-            badge.Background = new SolidColorBrush(Color.FromRgb(0xF0, 0xFD, 0xF4)); // Green 50
-            badge.BorderBrush = new SolidColorBrush(Color.FromRgb(0xBB, 0xF7, 0xD0)); // Green 200
-            txt.Foreground = new SolidColorBrush(Color.FromRgb(0x15, 0x80, 0x3D)); // Green 700
+            badge.Background = new SolidColorBrush(Color.FromRgb(0x16, 0xA3, 0x4A)); // Green 600
+            badge.BorderBrush = new SolidColorBrush(Color.FromRgb(0x4A, 0xDE, 0x80)); // Green 400
+            txt.Foreground = new SolidColorBrush(Color.FromRgb(0xE2, 0xE8, 0xF0));
             txt.FontWeight = FontWeights.SemiBold;
         }
         else
         {
-            badge.Background = new SolidColorBrush(Color.FromRgb(0xF1, 0xF5, 0xF9)); // Slate 100
-            badge.BorderBrush = new SolidColorBrush(Color.FromRgb(0xE2, 0xE8, 0xF0)); // Slate 200
-            txt.Foreground = new SolidColorBrush(Color.FromRgb(0x64, 0x74, 0x8B)); // Slate 500
+            badge.Background = new SolidColorBrush(Color.FromRgb(0x1E, 0x29, 0x3B)); // Slate 800
+            badge.BorderBrush = new SolidColorBrush(Color.FromRgb(0x33, 0x41, 0x55)); // Slate 700
+            txt.Foreground = new SolidColorBrush(Color.FromRgb(0x94, 0xA3, 0xB8));
             txt.FontWeight = FontWeights.Normal;
         }
     }
@@ -262,7 +262,7 @@ public partial class JanelaSetup : Window
 
                 if (mostrarAlerta)
                 {
-                    MessageBox.Show(this, $"A chave de licença não pôde ser ativada:\n\n{res.Mensagem}\n\nCódigo HWID deste PC: {_hwid}", "Licença Recusada", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    JanelaDialogo.Mostrar("Licença Recusada", $"A chave de licença não pôde ser ativada:\n\n{res.Mensagem}\n\nCódigo HWID deste PC: {_hwid}", TipoDialogo.Aviso, this);
                 }
             }
 
@@ -280,7 +280,7 @@ public partial class JanelaSetup : Window
 
             if (mostrarAlerta)
             {
-                MessageBox.Show(this, $"Erro ao conectar no servidor de licenças:\n\n{ex.Message}", "Erro de Conexão", MessageBoxButton.OK, MessageBoxImage.Error);
+                JanelaDialogo.Mostrar("Erro de Conexão", $"Erro ao conectar no servidor de licenças:\n\n{ex.Message}", TipoDialogo.Erro, this);
             }
 
             AtualizarEstadoBotoes();
@@ -388,13 +388,13 @@ public partial class JanelaSetup : Window
 
             if (!_op.InstalarNexusLS && !_op.InstalarBarTender && !_op.InstalarAtualizador)
             {
-                MessageBox.Show(this, "Selecione pelo menos um módulo para instalar.", "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
+                JanelaDialogo.Mostrar("Aviso de Seleção", "Selecione pelo menos um módulo para prosseguir com a instalação.", TipoDialogo.Aviso, this);
                 return;
             }
 
             if (_instalador.HaProgramaAberto())
             {
-                MessageBox.Show(this, "Feche todos os programas do Nexus que estiverem abertos antes de continuar com a instalação.", "Programas em Execução", MessageBoxButton.OK, MessageBoxImage.Warning);
+                JanelaDialogo.Mostrar("Programas em Execução", "Feche todos os programas do Nexus que estiverem abertos antes de continuar com a instalação.", TipoDialogo.Aviso, this);
                 return;
             }
 
@@ -409,7 +409,7 @@ public partial class JanelaSetup : Window
 
     private void BtnCancelar_Click(object sender, RoutedEventArgs e)
     {
-        if (MessageBox.Show(this, "Deseja realmente cancelar a instalação do Nexus?", "Cancelar Instalação", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+        if (JanelaDialogo.Confirmar("Cancelar Instalação", "Deseja realmente cancelar a instalação do Nexus?", this))
         {
             Close();
         }
@@ -460,7 +460,7 @@ public partial class JanelaSetup : Window
             TxtMensagemProgresso.Text = $"Erro durante a instalação: {ex.Message}";
             TxtMensagemProgresso.Foreground = new SolidColorBrush(Color.FromRgb(0x99, 0x1B, 0x1B));
 
-            MessageBox.Show(this, $"Ocorreu uma falha durante a instalação:\n\n{ex.Message}", "Falha na Instalação", MessageBoxButton.OK, MessageBoxImage.Error);
+            JanelaDialogo.Mostrar("Falha na Instalação", $"Ocorreu uma falha durante a instalação:\n\n{ex.Message}", TipoDialogo.Erro, this);
             IrParaPasso(4);
         }
     }
@@ -577,6 +577,24 @@ public partial class JanelaSetup : Window
                 using var fs = File.Create(caminho);
                 encoder.Save(fs);
             }
+
+            // Captura de exemplo do Novo Popup Customizado do Nexus
+            try
+            {
+                var diag = new JanelaDialogo("Validação de Licença", "A chave comercial foi verificada e autorizada com sucesso na nuvem.\n\nTerminal: LIFE SURF (Caixa 01)\nPlano: Anual Comercial", TipoDialogo.Sucesso, this);
+                diag.Show();
+                diag.UpdateLayout();
+                Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.Render);
+
+                var rtbDiag = new System.Windows.Media.Imaging.RenderTargetBitmap(460, 220, 96, 96, PixelFormats.Pbgra32);
+                rtbDiag.Render(diag);
+                var encDiag = new System.Windows.Media.Imaging.PngBitmapEncoder();
+                encDiag.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(rtbDiag));
+                using var fsDiag = File.Create(Path.Combine(pastaDestino, "Nexus_Setup_07_Popup_Customizado.png"));
+                encDiag.Save(fsDiag);
+                diag.Close();
+            }
+            catch { }
 
             Close();
         }

@@ -294,29 +294,26 @@ public partial class MainWindow : Window
             if (!precisaNexus && !precisaBt)
             {
                 TxtStatusGeral.Text = $"Todos os programas estão 100% atualizados com o GitHub (v{resNexus.Atual}).";
-                MessageBox.Show(
-                    this,
+                JanelaDialogo.Mostrar(
+                    "Sistemas Atualizados",
                     $"Todos os aplicativos do Nexus já estão atualizados na versão mais recente oficial do GitHub (v{resNexus.Atual})!\n\n" +
                     $"• Nexus LS: Sincronizado (hash SHA-256 verificado)\n" +
                     $"• Nexus BarTender: Sincronizado (hash SHA-256 verificado)\n\n" +
                     "O programa está pronto e nenhuma atualização é necessária.",
-                    "Sistemas Atualizados",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                    TipoDialogo.Sucesso,
+                    this);
                 return;
             }
 
-            var confirm = MessageBox.Show(
-                this,
+            var confirm = JanelaDialogo.Confirmar(
+                "Atualizar com Git",
                 $"Foram encontradas atualizações no GitHub:\n\n" +
                 (precisaNexus ? $"• Nexus LS: versão {resNexus.Nova!.Versao}\n" : "• Nexus LS: Atualizado\n") +
                 (precisaBt ? $"• Nexus BarTender: versão {resBt.Nova!.Versao}\n" : "• Nexus BarTender: Atualizado\n") +
                 "\nDeseja baixar e atualizar os aplicativos agora?",
-                "Atualizar com Git",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
+                this);
 
-            if (confirm != MessageBoxResult.Yes) return;
+            if (!confirm) return;
 
             NavegarPara("atualizacoes");
 
@@ -334,7 +331,7 @@ public partial class MainWindow : Window
         catch (Exception ex)
         {
             TxtStatusGeral.Text = "Erro ao sincronizar com Git: " + ex.Message;
-            MessageBox.Show(this, "Falha ao sincronizar com o GitHub:\n" + ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+            JanelaDialogo.Mostrar("Erro de Sincronização", "Falha ao sincronizar com o GitHub:\n" + ex.Message, TipoDialogo.Erro, this);
         }
         finally
         {
@@ -622,12 +619,11 @@ public partial class MainWindow : Window
         var avaliacao = _ultimoResultadoLicenca ?? _licenca.AvaliarLocal();
         if (!avaliacao.Ativa)
         {
-            MessageBox.Show(
-                this,
-                $"Não é possível iniciar o Nexus LS porque a licença não está ativa neste computador.\n\nSituação atual: {TxtLicencaStatus.Text}\nDetalhe: {avaliacao.Mensagem}\n\nAtive ou valide sua chave no menu 'Licença'.",
+            JanelaDialogo.Mostrar(
                 "Licença Necessária",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+                $"Não é possível iniciar o Nexus LS porque a licença não está ativa neste computador.\n\nSituação atual: {TxtLicencaStatus.Text}\nDetalhe: {avaliacao.Mensagem}\n\nAtive ou valide sua chave no menu 'Licença'.",
+                TipoDialogo.Aviso,
+                this);
             NavegarPara("licenca");
             return;
         }
@@ -635,7 +631,7 @@ public partial class MainWindow : Window
         var exe = TxtCaminhoExe.Text.Trim();
         if (!File.Exists(exe))
         {
-            MessageBox.Show(this, "Executável do Nexus LS não encontrado em:\n" + exe, "Executável Não Encontrado", MessageBoxButton.OK, MessageBoxImage.Warning);
+            JanelaDialogo.Mostrar("Executável Não Encontrado", "Executável do Nexus LS não encontrado em:\n" + exe, TipoDialogo.Aviso, this);
             return;
         }
 
@@ -650,7 +646,7 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            MessageBox.Show(this, "Erro ao iniciar o Nexus LS: " + ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+            JanelaDialogo.Mostrar("Erro de Inicialização", "Erro ao iniciar o Nexus LS: " + ex.Message, TipoDialogo.Erro, this);
         }
     }
 
@@ -659,12 +655,11 @@ public partial class MainWindow : Window
         var avaliacao = _ultimoResultadoLicenca ?? _licenca.AvaliarLocal();
         if (!avaliacao.Ativa)
         {
-            MessageBox.Show(
-                this,
-                $"Não é possível iniciar o Nexus BarTender porque a licença não está ativa neste computador.\n\nSituação atual: {TxtLicencaStatus.Text}\nDetalhe: {avaliacao.Mensagem}\n\nAtive ou valide sua chave no menu 'Licença'.",
+            JanelaDialogo.Mostrar(
                 "Licença Necessária",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+                $"Não é possível iniciar o Nexus BarTender porque a licença não está ativa neste computador.\n\nSituação atual: {TxtLicencaStatus.Text}\nDetalhe: {avaliacao.Mensagem}\n\nAtive ou valide sua chave no menu 'Licença'.",
+                TipoDialogo.Aviso,
+                this);
             NavegarPara("licenca");
             return;
         }
@@ -680,7 +675,7 @@ public partial class MainWindow : Window
         var exe = candidatos.FirstOrDefault(File.Exists);
         if (exe == null)
         {
-            MessageBox.Show(this, "Executável do Nexus BarTender (NexusBarTender.exe) não foi localizado neste computador.\nVocê pode instalá-lo ou atualizar pelo menu Atualizações.", "Módulo Não Encontrado", MessageBoxButton.OK, MessageBoxImage.Warning);
+            JanelaDialogo.Mostrar("Módulo Não Encontrado", "Executável do Nexus BarTender (NexusBarTender.exe) não foi localizado neste computador.\nVocê pode instalá-lo ou atualizar pelo menu Atualizações.", TipoDialogo.Aviso, this);
             return;
         }
 
@@ -695,7 +690,7 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            MessageBox.Show(this, "Erro ao iniciar o Nexus BarTender: " + ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+            JanelaDialogo.Mostrar("Erro de Inicialização", "Erro ao iniciar o Nexus BarTender: " + ex.Message, TipoDialogo.Erro, this);
         }
     }
 
@@ -712,7 +707,7 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            MessageBox.Show(this, "Não foi possível copiar o código: " + ex.Message, "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
+            JanelaDialogo.Mostrar("Aviso", "Não foi possível copiar o código: " + ex.Message, TipoDialogo.Aviso, this);
         }
     }
 
@@ -734,7 +729,7 @@ public partial class MainWindow : Window
         var chave = TxtChaveLicenca.Text.Trim().ToUpperInvariant();
         if (string.IsNullOrWhiteSpace(chave))
         {
-            MessageBox.Show(this, "Digite ou cole a chave da licença antes de validar.", "Chave Obrigatória", MessageBoxButton.OK, MessageBoxImage.Information);
+            JanelaDialogo.Mostrar("Chave Obrigatória", "Digite ou cole a chave da licença antes de validar.", TipoDialogo.Aviso, this);
             TxtChaveLicenca.Focus();
             return;
         }
@@ -762,7 +757,7 @@ public partial class MainWindow : Window
         var chave = TxtChaveLicenca.Text.Trim().ToUpperInvariant();
         if (string.IsNullOrWhiteSpace(chave))
         {
-            MessageBox.Show(this, "Digite ou cole a chave da licença antes de consultar.", "Chave Obrigatória", MessageBoxButton.OK, MessageBoxImage.Information);
+            JanelaDialogo.Mostrar("Chave Obrigatória", "Digite ou cole a chave da licença antes de consultar.", TipoDialogo.Aviso, this);
             TxtChaveLicenca.Focus();
             return;
         }
@@ -877,9 +872,10 @@ public partial class MainWindow : Window
 
     private async void BtnRemoverLicenca_Click(object sender, RoutedEventArgs e)
     {
-        if (MessageBox.Show(this,
+        if (!JanelaDialogo.Confirmar(
+            "Confirmar Desvinculação",
             "Deseja desvincular e remover a licença deste computador?\n\nIsso liberará a vaga deste computador no servidor e você precisará informar a chave novamente para usar o Nexus LS aqui.",
-            "Confirmar Desvinculação", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+            this))
             return;
 
         BtnRemoverLicenca.IsEnabled = false;
@@ -959,19 +955,19 @@ public partial class MainWindow : Window
                 TxtBadgeNexusLS.Foreground = (SolidColorBrush)FindResource("CorPositivo");
                 TxtVersaoDetalheNexus.Text = $"v{res.Atual} (Sincronizado com o GitHub)";
                 TxtStatusGeral.Text = "O Nexus LS já está atualizado com a versão oficial do GitHub.";
-                MessageBox.Show(this, $"O Nexus LS já está totalmente atualizado na versão v{res.Atual}.\nO executável instalado confere exatamente com o repositório oficial do GitHub.", "Sistema Atualizado", MessageBoxButton.OK, MessageBoxImage.Information);
+                JanelaDialogo.Mostrar("Sistema Atualizado", $"O Nexus LS já está totalmente atualizado na versão v{res.Atual}.\nO executável instalado confere exatamente com o repositório oficial do GitHub.", TipoDialogo.Sucesso, this);
             }
             else
             {
                 BrdNovidade.Visibility = Visibility.Collapsed;
                 TxtStatusGeral.Text = res.Mensagem;
-                MessageBox.Show(this, res.Mensagem, "Verificação Online", MessageBoxButton.OK, MessageBoxImage.Warning);
+                JanelaDialogo.Mostrar("Verificação Online", res.Mensagem, TipoDialogo.Aviso, this);
             }
         }
         catch (Exception ex)
         {
             TxtStatusGeral.Text = "Erro ao verificar: " + ex.Message;
-            MessageBox.Show(this, "Falha ao verificar atualizações:\n" + ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+            JanelaDialogo.Mostrar("Erro", "Falha ao verificar atualizações:\n" + ex.Message, TipoDialogo.Erro, this);
         }
         finally
         {
@@ -1019,12 +1015,12 @@ public partial class MainWindow : Window
             _versaoDisponivel = null;
             BrdNovidade.Visibility = Visibility.Collapsed;
             TxtStatusGeral.Text = "Nexus LS atualizado com sucesso para a versão " + versaoInstaladaNova;
-            MessageBox.Show(this, "Nexus LS atualizado com sucesso para a versão " + versaoInstaladaNova + "!", "Atualização Concluída", MessageBoxButton.OK, MessageBoxImage.Information);
+            JanelaDialogo.Mostrar("Atualização Concluída", "Nexus LS atualizado com sucesso para a versão " + versaoInstaladaNova + "!", TipoDialogo.Sucesso, this);
         }
         catch (Exception ex)
         {
             TxtStatusGeral.Text = "Erro na atualização: " + ex.Message;
-            MessageBox.Show(this, "Falha na atualização:\n" + ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+            JanelaDialogo.Mostrar("Falha na Atualização", "Falha na atualização:\n" + ex.Message, TipoDialogo.Erro, this);
         }
         finally
         {
@@ -1041,12 +1037,11 @@ public partial class MainWindow : Window
 
         if (!File.Exists(backup))
         {
-            MessageBox.Show(this, "Nenhum arquivo de backup anterior encontrado em:\n" + backup, "Backup Não Encontrado", MessageBoxButton.OK, MessageBoxImage.Warning);
+            JanelaDialogo.Mostrar("Backup Não Encontrado", "Nenhum arquivo de backup anterior encontrado em:\n" + backup, TipoDialogo.Aviso, this);
             return;
         }
 
-        if (MessageBox.Show(this, $"Deseja restaurar a versão anterior ({backup}) sobre o executável atual?",
-            "Restaurar Versão Anterior", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+        if (JanelaDialogo.Confirmar("Restaurar Versão Anterior", $"Deseja restaurar a versão anterior ({backup}) sobre o executável atual?", this))
         {
             try
             {
@@ -1056,18 +1051,17 @@ public partial class MainWindow : Window
                     return;
                 }
 
-                // Mesma troca segura da atualização: copia para um intermediário e renomeia (nunca deixa pela metade).
                 var pastaExe = Path.GetDirectoryName(Path.GetFullPath(exeAlvo)) ?? AppContext.BaseDirectory;
                 var intermediario = Path.Combine(pastaExe, "restaurar-" + Guid.NewGuid().ToString("N") + ".exe");
                 File.Copy(backup, intermediario, overwrite: true);
                 AtualizadorService.TrocarExecutavel(exeAlvo, intermediario);
                 CarregarStatusVersao();
                 TxtStatusGeral.Text = "Versão anterior restaurada com sucesso.";
-                MessageBox.Show(this, "Versão anterior restaurada com sucesso!", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
+                JanelaDialogo.Mostrar("Sucesso", "Versão anterior restaurada com sucesso!", TipoDialogo.Sucesso, this);
             }
             catch (Exception ex)
             {
-                MessageBox.Show(this, "Erro ao restaurar backup: " + ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+                JanelaDialogo.Mostrar("Erro", "Erro ao restaurar backup: " + ex.Message, TipoDialogo.Erro, this);
             }
         }
     }
@@ -1097,18 +1091,17 @@ public partial class MainWindow : Window
                     File.Copy(exeAlvo, backup, overwrite: true);
                 }
 
-                // O arquivo escolhido é copiado para um intermediário: a troca não apaga o original do operador.
                 var pastaExe = Path.GetDirectoryName(Path.GetFullPath(exeAlvo)) ?? AppContext.BaseDirectory;
                 var intermediario = Path.Combine(pastaExe, "novo-" + Guid.NewGuid().ToString("N") + ".exe");
                 File.Copy(ofd.FileName, intermediario, overwrite: true);
                 AtualizadorService.TrocarExecutavel(exeAlvo, intermediario);
                 CarregarStatusVersao();
                 TxtStatusGeral.Text = "Executável atualizado com sucesso a partir de: " + ofd.FileName;
-                MessageBox.Show(this, "Executável atualizado com sucesso!", "Atualizado", MessageBoxButton.OK, MessageBoxImage.Information);
+                JanelaDialogo.Mostrar("Atualizado", "Executável atualizado com sucesso!", TipoDialogo.Sucesso, this);
             }
             catch (Exception ex)
             {
-                MessageBox.Show(this, "Erro ao copiar arquivo: " + ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+                JanelaDialogo.Mostrar("Erro", "Erro ao copiar arquivo: " + ex.Message, TipoDialogo.Erro, this);
             }
         }
     }
@@ -1173,19 +1166,19 @@ public partial class MainWindow : Window
                 TxtBadgeBarTender.Foreground = (SolidColorBrush)FindResource("CorPositivo");
                 TxtVersaoDetalheBarTender.Text = $"v{res.Atual} (Sincronizado com o GitHub)";
                 TxtStatusGeral.Text = "O Nexus BarTender já está na versão mais recente disponível (idêntico ao Git).";
-                MessageBox.Show(this, $"O Nexus BarTender já está totalmente atualizado na versão v{res.Atual}.\nO executável instalado confere exatamente com o repositório oficial do GitHub.", "Módulo Atualizado", MessageBoxButton.OK, MessageBoxImage.Information);
+                JanelaDialogo.Mostrar("Módulo Atualizado", $"O Nexus BarTender já está totalmente atualizado na versão v{res.Atual}.\nO executável instalado confere exatamente com o repositório oficial do GitHub.", TipoDialogo.Sucesso, this);
             }
             else
             {
                 BrdNovidadeBarTender.Visibility = Visibility.Collapsed;
                 TxtStatusGeral.Text = res.Mensagem;
-                MessageBox.Show(this, res.Mensagem, "Verificação BarTender", MessageBoxButton.OK, MessageBoxImage.Warning);
+                JanelaDialogo.Mostrar("Verificação BarTender", res.Mensagem, TipoDialogo.Aviso, this);
             }
         }
         catch (Exception ex)
         {
             TxtStatusGeral.Text = "Erro ao verificar BarTender: " + ex.Message;
-            MessageBox.Show(this, "Falha ao verificar atualizações do BarTender:\n" + ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+            JanelaDialogo.Mostrar("Erro", "Falha ao verificar atualizações do BarTender:\n" + ex.Message, TipoDialogo.Erro, this);
         }
         finally
         {
@@ -1235,12 +1228,12 @@ public partial class MainWindow : Window
             _versaoDisponivelBarTender = null;
             BrdNovidadeBarTender.Visibility = Visibility.Collapsed;
             TxtStatusGeral.Text = "Nexus BarTender atualizado com sucesso para a versão " + versaoBaixando;
-            MessageBox.Show(this, "Nexus BarTender atualizado com sucesso!", "Atualização Concluída", MessageBoxButton.OK, MessageBoxImage.Information);
+            JanelaDialogo.Mostrar("Atualização Concluída", "Nexus BarTender atualizado com sucesso!", TipoDialogo.Sucesso, this);
         }
         catch (Exception ex)
         {
             TxtStatusGeral.Text = "Erro na atualização do BarTender: " + ex.Message;
-            MessageBox.Show(this, "Falha na atualização do BarTender:\n" + ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+            JanelaDialogo.Mostrar("Falha na Atualização", "Falha na atualização do BarTender:\n" + ex.Message, TipoDialogo.Erro, this);
         }
         finally
         {
@@ -1257,11 +1250,11 @@ public partial class MainWindow : Window
 
         if (!File.Exists(backup))
         {
-            MessageBox.Show(this, "Nenhum arquivo de backup anterior do BarTender encontrado em:\n" + backup, "Backup Não Encontrado", MessageBoxButton.OK, MessageBoxImage.Warning);
+            JanelaDialogo.Mostrar("Backup Não Encontrado", "Nenhum arquivo de backup anterior do BarTender encontrado em:\n" + backup, TipoDialogo.Aviso, this);
             return;
         }
 
-        if (MessageBox.Show(this, $"Deseja restaurar a versão anterior do BarTender ({backup})?", "Confirmar Restauração", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+        if (JanelaDialogo.Confirmar("Confirmar Restauração", $"Deseja restaurar a versão anterior do BarTender ({backup})?", this))
         {
             try
             {
@@ -1276,11 +1269,11 @@ public partial class MainWindow : Window
                 File.Copy(backup, intermediario, overwrite: true);
                 AtualizadorService.TrocarExecutavel(exeAlvo, intermediario);
                 CarregarStatusVersaoBarTender();
-                MessageBox.Show(this, "Versão anterior do BarTender restaurada com sucesso!", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
+                JanelaDialogo.Mostrar("Sucesso", "Versão anterior do BarTender restaurada com sucesso!", TipoDialogo.Sucesso, this);
             }
             catch (Exception ex)
             {
-                MessageBox.Show(this, "Erro ao restaurar backup do BarTender: " + ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+                JanelaDialogo.Mostrar("Erro", "Erro ao restaurar backup do BarTender: " + ex.Message, TipoDialogo.Erro, this);
             }
         }
     }
@@ -1317,11 +1310,11 @@ public partial class MainWindow : Window
                 File.Copy(d.FileName, intermediario, overwrite: true);
                 AtualizadorService.TrocarExecutavel(destino, intermediario);
                 CarregarStatusVersaoBarTender();
-                MessageBox.Show(this, "Executável do BarTender atualizado com sucesso!", "Atualizado", MessageBoxButton.OK, MessageBoxImage.Information);
+                JanelaDialogo.Mostrar("Atualizado", "Executável do BarTender atualizado com sucesso!", TipoDialogo.Sucesso, this);
             }
             catch (Exception ex)
             {
-                MessageBox.Show(this, "Erro ao copiar arquivo do BarTender: " + ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+                JanelaDialogo.Mostrar("Erro", "Erro ao copiar arquivo do BarTender: " + ex.Message, TipoDialogo.Erro, this);
             }
         }
     }
@@ -1367,11 +1360,13 @@ public partial class MainWindow : Window
     private void AvisarQueNaoFechou(string nomeAmigavel)
     {
         TxtStatusGeral.Text = $"Atualização cancelada: feche o {nomeAmigavel} e tente de novo.";
-        MessageBox.Show(this,
+        JanelaDialogo.Mostrar(
+            "Nexus Atualizador",
             $"O {nomeAmigavel} não fechou, então nada foi trocado.\n\n" +
             "Feche o programa (confira se há uma tela com o caixa aberto pedindo para fechar) e clique em instalar de novo.\n\n" +
             "O atualizador não encerra o programa à força para não corromper o banco de dados.",
-            "Nexus Atualizador", MessageBoxButton.OK, MessageBoxImage.Information);
+            TipoDialogo.Aviso,
+            this);
     }
 
     // ==================== DIAGNÓSTICO E SUPORTE ====================
@@ -1511,11 +1506,11 @@ public partial class MainWindow : Window
 
             Clipboard.SetText(relatorio);
             TxtStatusGeral.Text = "Relatório de diagnóstico copiado para a área de transferência!";
-            MessageBox.Show(this, "O relatório de diagnóstico foi copiado para a área de transferência!\nBasta colar (Ctrl+V) no atendimento ao cliente.", "Relatório Copiado", MessageBoxButton.OK, MessageBoxImage.Information);
+            JanelaDialogo.Mostrar("Relatório Copiado", "O relatório de diagnóstico foi copiado para a área de transferência!\nBasta colar (Ctrl+V) no atendimento ao cliente.", TipoDialogo.Sucesso, this);
         }
         catch (Exception ex)
         {
-            MessageBox.Show(this, "Não foi possível copiar o relatório: " + ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Warning);
+            JanelaDialogo.Mostrar("Erro", "Não foi possível copiar o relatório: " + ex.Message, TipoDialogo.Aviso, this);
         }
     }
 
@@ -1530,7 +1525,7 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            MessageBox.Show(this, "Não foi possível abrir a pasta de dados: " + ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+            JanelaDialogo.Mostrar("Erro", "Não foi possível abrir a pasta de dados: " + ex.Message, TipoDialogo.Erro, this);
         }
     }
 
@@ -1568,8 +1563,7 @@ public partial class MainWindow : Window
 
                     if (!silencioso)
                     {
-                        MessageBox.Show($"Atalho criado com sucesso na Área de Trabalho:\n{caminhoAtalho}",
-                            "Atalho Criado", MessageBoxButton.OK, MessageBoxImage.Information);
+                        JanelaDialogo.Mostrar("Atalho Criado", $"Atalho criado com sucesso na Área de Trabalho:\n{caminhoAtalho}", TipoDialogo.Sucesso);
                     }
                 }
             }
@@ -1578,7 +1572,7 @@ public partial class MainWindow : Window
         {
             if (!silencioso)
             {
-                MessageBox.Show("Erro ao criar atalho: " + ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+                JanelaDialogo.Mostrar("Erro", "Erro ao criar atalho: " + ex.Message, TipoDialogo.Erro);
             }
         }
     }
@@ -1624,6 +1618,24 @@ public partial class MainWindow : Window
                 using var fs = File.Create(caminho);
                 encoder.Save(fs);
             }
+
+            // Captura do Novo Popup Customizado no Nexus Hub
+            try
+            {
+                var diag = new JanelaDialogo("Sistemas Sincronizados", "Todos os aplicativos do Nexus foram verificados e conferem exatamente com a versão oficial do GitHub (v1.2.6).\n\n• Nexus LS: Pronto para inicialização\n• Nexus BarTender: Pronto para inicialização", TipoDialogo.Sucesso, this);
+                diag.Show();
+                diag.UpdateLayout();
+                Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.Render);
+
+                var rtbDiag = new System.Windows.Media.Imaging.RenderTargetBitmap(460, 220, 96, 96, PixelFormats.Pbgra32);
+                rtbDiag.Render(diag);
+                var encDiag = new System.Windows.Media.Imaging.PngBitmapEncoder();
+                encDiag.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(rtbDiag));
+                using var fsDiag = File.Create(Path.Combine(pastaDestino, "Nexus_Hub_06_Popup_Customizado.png"));
+                encDiag.Save(fsDiag);
+                diag.Close();
+            }
+            catch { }
 
             Close();
         }
