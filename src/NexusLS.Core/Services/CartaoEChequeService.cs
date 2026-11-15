@@ -46,7 +46,7 @@ public class LiquidacaoCartaoService
                         && !liquidadas.Contains(v.Id))
             .ToListAsync();
         return vendas.OrderBy(v => v.DataHora)
-            .Select(v => new CartaoAliquidar(v.Id, v.DataHora, v.FormaPagamento, v.Parcelas, v.TotalCentavos,
+            .Select(v => new CartaoAliquidar(v.Id, v.DataHora, v.FormaPagamento, v.Parcelas, v.ValorPagoCentavos,
                 PrazosFinanceiros.PrevisaoDoCartao(v.DataHora, v.FormaPagamento))).ToList();
     }
 
@@ -60,7 +60,7 @@ public class LiquidacaoCartaoService
         var vendas = await db.Vendas.AsNoTracking().Where(v => ids.Contains(v.Id)).ToDictionaryAsync(v => v.Id);
         var contas = await db.ContasFinanceiras.AsNoTracking().ToDictionaryAsync(c => c.Id, c => c.Nome);
         return liquidacoes.OrderByDescending(l => l.Data).ThenByDescending(l => l.Id)
-            .Select(l => new CartaoLiquidado(l.VendaId, vendas[l.VendaId].DataHora, vendas[l.VendaId].TotalCentavos, l.Data,
+            .Select(l => new CartaoLiquidado(l.VendaId, vendas[l.VendaId].DataHora, vendas[l.VendaId].ValorPagoCentavos, l.Data,
                 contas.GetValueOrDefault(l.ContaId, "?"), l.TaxaCentavos)).ToList();
     }
 
@@ -74,7 +74,7 @@ public class LiquidacaoCartaoService
             throw new RegraDeNegocioException("Só venda no cartão é liquidada aqui.");
         if (await db.LiquidacoesCartao.AnyAsync(l => l.VendaId == vendaId && !l.Cancelada))
             throw new RegraDeNegocioException("Essa venda já foi liquidada.");
-        if (taxaCentavos < 0 || taxaCentavos > venda.TotalCentavos)
+        if (taxaCentavos < 0 || taxaCentavos > venda.ValorPagoCentavos)
             throw new RegraDeNegocioException("A taxa não pode ser negativa nem maior que o valor da venda.");
         if (data.Date < venda.DataHora.Date) throw new RegraDeNegocioException("O dinheiro não pode cair antes do dia da venda.");
         if (data.Date > _agora().Date) throw new RegraDeNegocioException("A data da liquidação não pode ser no futuro.");

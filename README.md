@@ -3,7 +3,7 @@
 PDV (frente de caixa) e controle de estoque para loja de roupas e acessórios, feito em C# com .NET e WPF, para Windows.
 Funciona sem internet e sem login, com uma loja só. Todo o programa, o código e os comentários estão em português.
 
-**Versão atual:** 1.2.6.
+**Versão atual:** 1.2.29.
 
 ## Telas
 
@@ -15,6 +15,7 @@ O programa abre na tela **Início** (indicadores e atalhos); o menu lateral tem 
 | **Vendas** | **PDV** | Frente de caixa, todo pelo teclado (veja o fluxo abaixo). |
 | | **Caixa** | Vendas de um dia, resumo por forma de pagamento, detalhe, **cancelar** venda (pede o motivo, registra quem e quando cancelou, devolve o estoque se você quiser; a venda nunca é apagada), reimprimir cupom, **relatório do dia em PDF** (totais, formas de pagamento e a lista das vendas, gerado pelo próprio programa) e exportar CSV. |
 | | **Fechamento** | Abrir o caixa com troco inicial, registrar sangria, reforço, despesa e entrada avulsa, e fechar conferindo dinheiro, cartão e Pix contra o esperado. Diferença exige observação. Fechamentos nunca mudam: conferir de novo cria uma nova versão. **Relatório do caixa por período (PDF):** escolha as datas (até 1 ano, sem datas futuras) e **Gerar PDF**: turnos (abertura, fechamento, operador, troco, vendas, movimentos e a última conferência), vendas por forma de pagamento, sangrias, reforços, despesas, entradas avulsas e as diferenças de dinheiro, cartão e Pix. Vendas canceladas nunca entram nos totais (só aparecem num aviso). O PDF é gerado pelo próprio programa (sem biblioteca externa), em texto de largura fixa. |
+| | **Trocas** | Troca de mercadoria com **vale-troca**. Digite o número da venda (está no cupom), marque quantas peças de cada linha voltaram e o motivo: as peças voltam ao estoque **do tamanho de onde saíram** e o valor pago vira um vale com código (ex.: `VT7K3M9Q2A`), impresso na impressora do cupom. O valor é o que o cliente pagou: o desconto da venda é repartido entre as peças e o acréscimo do cartão não volta; devolver aos poucos soma exatamente o valor da linha. Não se devolve mais peças do que foram vendidas; venda cancelada não troca e venda a prazo só troca depois de quitada. A venda original nunca muda, e **venda com troca não se cancela**. Cancelar a troca (com motivo, para quem pode cancelar vendas) tira as peças do estoque de novo e anula o vale, só se o vale não foi usado. Lista das trocas dos últimos 90 dias e dos vales, com o saldo de cada um (reimprimir). No financeiro, a troca é **devolução da receita** e o custo da peça sai do CMV, sem mexer em saldo (nenhum dinheiro saiu). |
 | | **Pedidos** | Quadro com as etapas **Novo → Em separação → Separado → Pronto para retirada → Entregue** (e Cancelado). Escolha um cartão para ver itens e histórico (cada mudança guarda data e quem fez), **avançar ou voltar** uma etapa, **cancelar com motivo** (pedido entregue não cancela) e imprimir a **lista de separação** (itens com caixinha, sem preços). Crie pedidos de balcão, WhatsApp, catálogo ou encomenda (com produtos do estoque ou item sem cadastro, como serviço). **Venda a prazo no PDV vira pedido sozinha** (ligado à venda, vendas anteriores a esta versão não ganham pedido) e cancelar a venda cancela o pedido. O pedido só acompanha a entrega: não mexe em estoque nem em caixa. |
 | | **Mais vendidos** | Ranking de produtos num período, com opção de separar por tamanho, e exportar CSV. Três **pizzas** de participação no faturamento: produtos (os 6 que mais faturaram + Outros), categoria e forma de pagamento. Vendas canceladas nunca entram. |
 | **Estoque** | **Estoque da loja** | Lista de produtos, cadastro (preço de varejo e de atacado, custo, mínimo, referência, categoria, código de barras com botão **Gerar** para EAN-13 interno, código interno automático INT-000001 e calculadora de margem/preço), grade de tamanhos com estoque de cada um e ajuste de estoque com motivo (entrada, perda, correção). Itens abaixo do mínimo ficam em amarelo. Todo ajuste vira uma linha no histórico. **Exportar CSV** salva o estoque inteiro para o Excel (uma linha por tamanho: produto, referência, categoria, códigos, tamanho, estoque, mínimo, preços de varejo e atacado, custo e situação; inclui os desativados, marcados). |
@@ -46,7 +47,7 @@ BUSCA vazia + carrinho cheio ─Enter→ DESCONTO ─Enter→ PAGAMENTO ─Enter
 - **Tamanho:** sempre abre ao escolher o produto. Grade de 3 colunas, navegue com ← → ↑ ↓ ou digite a letra/número do tamanho (M, GG, 38). No **atacado** aparece também a opção "Sem tamanho".
 - **Quantidade:** digite o número ou use ↑ soma / ↓ subtrai (mínimo 1); limitada ao estoque do tamanho.
 - **Desconto:** ← escolhe R$, → escolhe %. Pode ficar vazio.
-- **Pagamento:** dinheiro, Pix, cartão débito, cartão crédito (1 a 4 parcelas), cheque e a prazo (exige cliente). ← → trocam a forma, ↑ ↓ mudam as parcelas. No dinheiro o valor recebido já vem com o total, o troco é calculado e não deixa finalizar com valor menor. Na venda a prazo, digite o nome do cliente: se ele não existir, o primeiro Enter o cadastra.
+- **Pagamento:** dinheiro, Pix, cartão débito, cartão crédito (1 a 4 parcelas), cheque e a prazo (exige cliente). ← → trocam a forma, ↑ ↓ mudam as parcelas. **F6 usa um vale-troca:** digite ou leia o código; o saldo do vale abate do total e o resto é pago pela forma escolhida (não pode ser a prazo nem cheque). Se o vale cobre tudo, a venda sai como "Vale-troca" e o que sobra fica no vale. O acréscimo do crédito é calculado só sobre o que falta. Caixa, fechamento, cartões e Pix contam só o dinheiro que entrou; a parte paga com vale aparece numa linha própria no resumo por forma. Cancelar a venda devolve o saldo ao vale. F6 de novo tira o vale. No dinheiro o valor recebido já vem com o total, o troco é calculado e não deixa finalizar com valor menor. Na venda a prazo, digite o nome do cliente: se ele não existir, o primeiro Enter o cadastra.
 - **Sucesso:** botões Reimprimir cupom e Nova venda (← → alternam, Enter confirma).
 - **Carrinho:** quantidade, remover item, **editar o preço** direto na linha (por unidade ou pelo total da linha), esvaziar com confirmação. A venda em andamento é **salva sozinha** e volta se você fechar o programa.
 
@@ -58,6 +59,7 @@ BUSCA vazia + carrinho cheio ─Enter→ DESCONTO ─Enter→ PAGAMENTO ─Enter
 | `F2` | Foco na busca (e seleciona o texto) |
 | `Espaço` | Com a busca vazia, alterna a tabela de preço: varejo / atacado |
 | `F10` | Atalho extra: avança para o fechamento da venda (como Enter com a busca vazia) |
+| `F6` | No pagamento: usa um vale-troca (de novo: tira o vale) |
 | `Enter` | Avança a etapa |
 | `Esc` | Fecha a janela atual e volta à busca (não esvazia o carrinho) |
 | `Del` | Remove o item selecionado do carrinho |

@@ -11,7 +11,7 @@ namespace NexusLS.App.ViewModels;
 public enum EtapaPdv { Busca, Tamanho, Quantidade, Desconto, Pagamento, Sucesso }
 
 /// <summary>As teclas que o fluxo entende. A tela traduz as teclas do WPF para estas.</summary>
-public enum ComandoTecla { Enter, Esc, Esquerda, Direita, Cima, Baixo, F10, Espaco }
+public enum ComandoTecla { Enter, Esc, Esquerda, Direita, Cima, Baixo, F10, Espaco, F6 }
 
 /// <summary>Para onde o ViewModel pede que o cursor vá (a tela é quem sabe mexer no foco).</summary>
 public enum AlvoFoco { Busca, Modal, Quantidade, Desconto, ValorRecebido, Cliente }
@@ -93,6 +93,12 @@ public partial class PdvViewModel : ViewModelBase, IEditorCarrinho
     public Func<bool> PixAutomaticoAtivo { get; set; } = () => false;
     /// <summary>Mostra o QR Code e espera a confirmação. Devolve verdadeiro só se o gateway aprovou.</summary>
     public Func<string, long, Task<bool>>? CobrarPix { get; set; }
+
+    /// <summary>Trocas e vale-troca (o PDV aceita o vale no pagamento, com F6). Sem ele, o F6 não faz nada.</summary>
+    public TrocaService? Trocas { get; set; }
+
+    /// <summary>A tela pede o código do vale-troca (digitado ou lido pelo leitor). Nulo = desistiu.</summary>
+    public Func<string?>? PedirCodigoVale { get; set; }
 
     /// <summary>O ViewModel pede para a tela mover o cursor (a tela é quem sabe mexer no foco).</summary>
     public event Action<AlvoFoco>? FocoSolicitado;

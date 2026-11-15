@@ -157,15 +157,57 @@ public class SelecaoPagamento
         ValorRecebidoTexto = Dinheiro.FormatarParaEdicao(baseCentavos);
     }
 
-    /// <summary>Total depois do desconto, antes do acréscimo do crédito.</summary>
+    /// <summary>Total depois do desconto, antes do vale-troca e do acréscimo do crédito.</summary>
     public long BaseCentavos { get; }
 
-    /// <summary>Acréscimo do crédito para as parcelas escolhidas (zero nas outras formas).</summary>
-    public long AcrescimoCentavos => Forma == FormaPagamento.CartaoCredito ? TaxasCartao.Acrescimo(BaseCentavos, Parcelas) : 0;
+    // ---------- vale-troca ----------
 
-    /// <summary>O que o cliente paga: a base mais o acréscimo do crédito.</summary>
-    public long TotalCentavos => BaseCentavos + AcrescimoCentavos;
-    public FormaPagamento Forma { get; private set; } = FormaPagamento.Dinheiro;
+    /// <summary>Código do vale-troca usado (nulo sem vale).</summary>
+    public string? ValeCodigo { get; private set; }
+
+    /// <summary>Saldo do vale quando foi lido (o serviço confere de novo ao gravar).</summary>
+    public long ValeSaldoCentavos { get; private set; }
+
+    /// <summary>Quanto o vale paga desta venda: o saldo dele, até o valor da venda.</summary>
+    public long ValeAplicadoCentavos => ValeCodigo is null ? 0 : Math.Min(ValeSaldoCentavos, BaseCentavos);
+
+    /// <summary>O vale paga a venda inteira: a forma vira "Vale-troca" e não há o que escolher.</summary>
+    public bool ValeCobreTudo => ValeCodigo is not null && ValeAplicadoCentavos >= BaseCentavos;
+
+    /// <summary>O que falta pagar depois do vale, antes do acréscimo do crédito.</summary>
+    public long RestoCentavos => BaseCentavos - ValeAplicadoCentavos;
+
+    /// <summary>Usa o vale-troca nesta venda. O valor recebido em dinheiro passa a ser o que falta.</summary>
+    public void AplicarVale(string codigo, long saldoCentavos)
+    {
+        ValeCodigo = codigo;
+        ValeSaldoCentavos = saldoCentavos;
+        Parcelas = 1;
+        ValorRecebidoTexto = Dinheiro.FormatarParaEdicao(RestoCentavos);
+    }
+
+    /// <summary>Tira o vale da venda (o total volta a ser pago inteiro pela forma escolhida).</summary>
+    public void RemoverVale()
+    {
+        ValeCodigo = null;
+        ValeSaldoCentavos = 0;
+        ValorRecebidoTexto = Dinheiro.FormatarParaEdicao(BaseCentavos);
+    }
+
+    /// <summary>Acréscimo do crédito para as parcelas escolhidas, sobre o que falta depois do vale (zero nas outras formas).</summary>
+    public long AcrescimoCentavos => Forma == FormaPagamento.CartaoCredito ? TaxasCartao.Acrescimo(RestoCentavos, Parcelas) : 0;
+
+    /// <summary>O que o cliente paga agora pela forma escolhida: o que falta depois do vale, mais o acréscimo do crédito.</summary>
+    public long TotalCentavos => RestoCentavos + AcrescimoCentavos;
+
+    private FormaPagamento _forma = FormaPagamento.Dinheiro;
+
+    /// <summary>A forma escolhida; com o vale cobrindo tudo, é sempre "Vale-troca".</summary>
+    public FormaPagamento Forma
+    {
+        get => ValeCobreTudo ? FormaPagamento.ValeTroca : _forma;
+        private set => _forma = value;
+    }
     public int Parcelas { get; private set; } = 1;
     public string ValorRecebidoTexto { get; set; }
 
@@ -179,6 +221,7 @@ public class SelecaoPagamento
         FormaPagamento.CartaoDebito => "Cartão débito",
         FormaPagamento.CartaoCredito => "Cartão crédito",
         FormaPagamento.Cheque => "Cheque",
+        FormaPagamento.ValeTroca => "Vale-troca",
         _ => "A prazo"
     };
 
@@ -190,6 +233,7 @@ public class SelecaoPagamento
 
     private void Trocar(int passo)
     {
+        if (ValeCobreTudo) return; // o vale pagou tudo: não há forma a escolher
         var indice = Array.IndexOf(Formas, Forma);
         Forma = Formas[(indice + passo + Formas.Length) % Formas.Length];
         Parcelas = 1; // parcelas só existem no crédito: ao sair e voltar, recomeça em 1x
@@ -242,6 +286,9 @@ public class SelecaoPagamento
         if (Forma == FormaPagamento.APrazo && ClienteId is null)
             return "A venda a prazo exige um cliente. Digite o nome e escolha na lista.";
 
+        if (ValeCodigo is not null && Forma is FormaPagamento.APrazo or FormaPagamento.Cheque)
+            return $"Com vale-troca, o resto ({Dinheiro.Formatar(RestoCentavos)}) não pode ser a prazo nem em cheque. Escolha outra forma.";
+
         return null;
     }
 
@@ -254,7 +301,8 @@ public class SelecaoPagamento
         carrinho.Tabela,
         desconto.Percentual,
         Forma == FormaPagamento.CartaoCredito ? Parcelas : 1,
-        Forma == FormaPagamento.APrazo ? ClienteId : null);
+        Forma == FormaPagamento.APrazo ? ClienteId : null,
+        ValeTrocaCodigo: ValeCodigo);
 }
 
 public enum OpcaoSucesso { Reimprimir, NovaVenda }

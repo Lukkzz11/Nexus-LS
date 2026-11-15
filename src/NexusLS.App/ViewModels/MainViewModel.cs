@@ -7,7 +7,7 @@ using NexusLS.Core.Models;
 namespace NexusLS.App.ViewModels;
 
 /// <summary>Os itens do menu lateral. O nome do item é também o "Tag" do botão: assim o menu destaca o da tela aberta.</summary>
-public enum ItemMenu { Inicio, Pdv, VendaCliente, Caixa, Pedidos, MaisVendidos, Desempenho, EstoqueDaLoja, ResumoEstoque, Fabrica, CalculadoraPrecos, Compras, Fornecedores, Etiquetas, Clientes, Agenda, EditorCatalogo, Financeiro, ContasESaldos, Relatorios, CatalogoOnline, Funcionarios, Atividades, Configuracoes }
+public enum ItemMenu { Inicio, Pdv, VendaCliente, Caixa, Pedidos, MaisVendidos, Desempenho, EstoqueDaLoja, ResumoEstoque, Fabrica, CalculadoraPrecos, Compras, Fornecedores, Etiquetas, Clientes, Agenda, EditorCatalogo, Financeiro, ContasESaldos, Relatorios, CatalogoOnline, Funcionarios, Atividades, Configuracoes, Trocas }
 
 /// <summary>
 /// ViewModel = a "lógica da tela". Ele guarda os dados que a tela mostra e os comandos dos botões,
@@ -44,6 +44,7 @@ public partial class MainViewModel : ObservableObject
             configuracao: _servicos.Configuracao, caixa: _servicos.Caixa);
         _pdv.Pix = _servicos.Pix;
         _pdv.PixRepo = _servicos.PixRepo;
+        _pdv.Trocas = _servicos.Trocas;
         _pdv.PixAutomaticoAtivo = () => _servicos.PagamentosConfig.Ler().TarifaMercadoPago().Ativo;
         // Abre na tela Início (indicadores e atalhos). Quem preferir o PDV direto liga isso em Configurações.
         // Task.Run: lê a configuração fora da thread da tela, sem risco de travar a abertura.
@@ -65,6 +66,7 @@ public partial class MainViewModel : ObservableObject
             case ItemMenu.VendaCliente: IrParaVendaCliente(); break;
             case ItemMenu.Caixa: IrParaCaixa(); break;
             case ItemMenu.Pedidos: IrParaPedidos(); break;
+            case ItemMenu.Trocas: IrParaTrocas(); break;
             case ItemMenu.MaisVendidos: IrParaMaisVendidos(); break;
             case ItemMenu.Desempenho: IrParaDesempenho(); break;
             case ItemMenu.EstoqueDaLoja: IrParaEstoque(); break;
@@ -99,6 +101,7 @@ public partial class MainViewModel : ObservableObject
     }), ItemMenu.VendaCliente);
     [RelayCommand] private void IrParaCaixa() => Abrir(new VendasViewModel(_servicos.Vendas, _servicos.Cupons, _servicos.Caixa,
         new FechamentoViewModel(_servicos.Caixa, _servicos.Configuracao, _servicos.RelatorioCaixa), _servicos.Clientes, _servicos.Configuracao), ItemMenu.Caixa);
+    [RelayCommand] private void IrParaTrocas() => Abrir(new TrocasViewModel(_servicos.Trocas, _servicos.Cupons), ItemMenu.Trocas);
     [RelayCommand] private void IrParaPedidos() => Abrir(new PedidosViewModel(_servicos.Pedidos, _servicos.Produtos, _servicos.Clientes, _servicos.Cupons), ItemMenu.Pedidos);
     [RelayCommand] private void IrParaDesempenho() => Abrir(new DesempenhoVendasViewModel(_servicos.Desempenho), ItemMenu.Desempenho);
     [RelayCommand] private void IrParaMaisVendidos() => Abrir(new MaisVendidosViewModel(_servicos.Relatorios), ItemMenu.MaisVendidos);
@@ -166,7 +169,7 @@ public partial class MainViewModel : ObservableObject
     {
         ItemMenu.Inicio => true,
         ItemMenu.Pdv or ItemMenu.VendaCliente => Sessao.Pode(Permissao.Vender),
-        ItemMenu.Caixa => Sessao.Pode(Permissao.Caixa),
+        ItemMenu.Caixa or ItemMenu.Trocas => Sessao.Pode(Permissao.Caixa),
         ItemMenu.Pedidos => Sessao.Pode(Permissao.Vender),
         ItemMenu.MaisVendidos or ItemMenu.Desempenho or ItemMenu.Relatorios => Sessao.Pode(Permissao.Relatorios),
         ItemMenu.EstoqueDaLoja or ItemMenu.ResumoEstoque or ItemMenu.Etiquetas or ItemMenu.CalculadoraPrecos or ItemMenu.Fabrica => Sessao.Pode(Permissao.Estoque),

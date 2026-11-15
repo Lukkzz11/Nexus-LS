@@ -698,6 +698,65 @@ namespace NexusLS.Core.Migrations
                     b.ToTable("ContasFinanceiras");
                 });
 
+            modelBuilder.Entity("NexusLS.Core.Models.Devolucao", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("AtualizadoEm")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("Cancelada")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("CanceladoPor")
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("ClienteId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("DataCancelamento")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("DataHora")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("Guid")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Motivo")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("MotivoCancelamento")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Operador")
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("ValorCentavos")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("VendaId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DataHora");
+
+                    b.HasIndex("Guid")
+                        .IsUnique();
+
+                    b.HasIndex("VendaId");
+
+                    b.ToTable("Devolucoes");
+                });
+
             modelBuilder.Entity("NexusLS.Core.Models.EventoPedido", b =>
                 {
                     b.Property<int>("Id")
@@ -964,6 +1023,52 @@ namespace NexusLS.Core.Migrations
                     b.HasIndex("ProdutoId");
 
                     b.ToTable("ItensCompra");
+                });
+
+            modelBuilder.Entity("NexusLS.Core.Models.ItemDevolucao", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long?>("CustoUnitarioCentavos")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("DevolucaoId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("DevolveuEstoque")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ItemVendaId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("NomeProduto")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ProdutoId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Quantidade")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Tamanho")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("ValorCentavos")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DevolucaoId");
+
+                    b.HasIndex("ItemVendaId");
+
+                    b.ToTable("ItensDevolucao");
                 });
 
             modelBuilder.Entity("NexusLS.Core.Models.ItemFilaSincronizacao", b =>
@@ -1949,6 +2054,55 @@ namespace NexusLS.Core.Migrations
                     b.ToTable("TurnosCaixa");
                 });
 
+            modelBuilder.Entity("NexusLS.Core.Models.ValeTroca", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("AtualizadoEm")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("Cancelado")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ClienteId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Codigo")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CriadoEm")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("DevolucaoId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("Guid")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Operador")
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("ValorCentavos")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Codigo")
+                        .IsUnique();
+
+                    b.HasIndex("DevolucaoId");
+
+                    b.HasIndex("Guid")
+                        .IsUnique();
+
+                    b.ToTable("ValesTroca");
+                });
+
             modelBuilder.Entity("NexusLS.Core.Models.Venda", b =>
                 {
                     b.Property<int>("Id")
@@ -2015,6 +2169,12 @@ namespace NexusLS.Core.Migrations
                     b.Property<long>("TrocoCentavos")
                         .HasColumnType("INTEGER");
 
+                    b.Property<long>("ValeTrocaCentavos")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ValeTrocaId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<long?>("ValorRecebidoCentavos")
                         .HasColumnType("INTEGER");
 
@@ -2030,6 +2190,8 @@ namespace NexusLS.Core.Migrations
 
                     b.HasIndex("Guid")
                         .IsUnique();
+
+                    b.HasIndex("ValeTrocaId");
 
                     b.HasIndex("DataHora", "Cancelada");
 
@@ -2137,6 +2299,17 @@ namespace NexusLS.Core.Migrations
                     b.Navigation("Fornecedor");
                 });
 
+            modelBuilder.Entity("NexusLS.Core.Models.Devolucao", b =>
+                {
+                    b.HasOne("NexusLS.Core.Models.Venda", "Venda")
+                        .WithMany()
+                        .HasForeignKey("VendaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Venda");
+                });
+
             modelBuilder.Entity("NexusLS.Core.Models.EventoPedido", b =>
                 {
                     b.HasOne("NexusLS.Core.Models.Pedido", null)
@@ -2167,6 +2340,15 @@ namespace NexusLS.Core.Migrations
                         .WithMany()
                         .HasForeignKey("ProdutoId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("NexusLS.Core.Models.ItemDevolucao", b =>
+                {
+                    b.HasOne("NexusLS.Core.Models.Devolucao", null)
+                        .WithMany("Itens")
+                        .HasForeignKey("DevolucaoId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
@@ -2272,10 +2454,20 @@ namespace NexusLS.Core.Migrations
                         .HasForeignKey("ClienteId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("NexusLS.Core.Models.ValeTroca", null)
+                        .WithMany()
+                        .HasForeignKey("ValeTrocaId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("Cliente");
                 });
 
             modelBuilder.Entity("NexusLS.Core.Models.Compra", b =>
+                {
+                    b.Navigation("Itens");
+                });
+
+            modelBuilder.Entity("NexusLS.Core.Models.Devolucao", b =>
                 {
                     b.Navigation("Itens");
                 });

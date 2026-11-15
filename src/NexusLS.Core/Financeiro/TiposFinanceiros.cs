@@ -60,13 +60,20 @@ public record LancFin(
 /// <param name="AjusteTituloCentavos">Abatimento (negativo) ou acréscimo (positivo) dado no título a prazo desta venda.</param>
 public record VendaFin(string Id, DateTime Data, long TotalCentavos, long CustoCentavos, long AjusteTituloCentavos = 0);
 
+/// <summary>
+/// Troca do período: as peças voltaram e o valor virou vale-troca. Não mexe em saldo (nenhum dinheiro saiu); reduz a
+/// receita (devolução) e devolve o custo das mercadorias.
+/// </summary>
+public record DevolucaoFin(string Id, DateTime Data, long ValorCentavos, long CustoCentavos);
+
 public record EntradaMotor(
     DateTime Hoje,
     IReadOnlyList<ContaFin> Contas,
     IReadOnlyList<LancFin> Lancamentos,
     IReadOnlyList<VendaFin> Vendas,
     DateTime PeriodoInicio,
-    DateTime PeriodoFim);
+    DateTime PeriodoFim,
+    IReadOnlyList<DevolucaoFin>? Devolucoes = null);
 
 public record SaldoConta(int Id, string Nome, TipoContaFin Tipo, long SaldoInicialCentavos,
     long EntradasCentavos, long SaidasCentavos, long DisponivelCentavos);

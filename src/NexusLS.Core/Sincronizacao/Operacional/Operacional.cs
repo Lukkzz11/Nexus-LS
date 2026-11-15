@@ -162,6 +162,7 @@ public sealed class MontadorOperacional : IMontadorDocumentos
                 ["acrescimoCentavos"] = v.AcrescimoCentavos,
                 ["acrescimoCentavos"] = v.AcrescimoCentavos,
                 ["totalCentavos"] = v.TotalCentavos,
+                ["valeTrocaCentavos"] = v.ValeTrocaCentavos,
                 ["valorRecebidoCentavos"] = v.ValorRecebidoCentavos,
                 ["trocoCentavos"] = v.TrocoCentavos,
                 ["clienteGuid"] = v.ClienteId is int cid && guidsClientes.TryGetValue(cid, out var gc) ? gc : (Guid?)null,

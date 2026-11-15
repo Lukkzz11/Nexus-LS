@@ -25,6 +25,8 @@ public record ItemCarrinho(
 /// <param name="ClienteId">Obrigatório na venda a prazo; opcional nas demais.</param>
 /// <param name="ChaveUnica">Código desta tentativa de venda. Se a mesma chave chegar de novo, o serviço devolve a venda
 /// já gravada em vez de criar outra (protege contra Enter repetido, travamento e reenvio).</param>
+/// <param name="ValeTrocaCodigo">Código do vale-troca que paga a venda (no todo ou em parte). O serviço confere o saldo e usa o
+/// que couber; o resto é pago pela <paramref name="FormaPagamento"/>. Se o vale cobre tudo, a forma vira Vale-troca.</param>
 public record PedidoVenda(
     IReadOnlyList<ItemCarrinho> Itens,
     long DescontoCentavos,
@@ -34,4 +36,5 @@ public record PedidoVenda(
     decimal? DescontoPercentual = null,
     int Parcelas = 1,
     int? ClienteId = null,
-    Guid? ChaveUnica = null);
+    Guid? ChaveUnica = null,
+    string? ValeTrocaCodigo = null);

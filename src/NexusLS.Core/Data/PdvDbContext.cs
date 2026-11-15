@@ -50,6 +50,9 @@ public class PdvDbContext : DbContext
     public DbSet<LiquidacaoCartao> LiquidacoesCartao => Set<LiquidacaoCartao>();
     public DbSet<ChequeRecebido> ChequesRecebidos => Set<ChequeRecebido>();
     public DbSet<ChequeEmitido> ChequesEmitidos => Set<ChequeEmitido>();
+    public DbSet<Devolucao> Devolucoes => Set<Devolucao>();
+    public DbSet<ItemDevolucao> ItensDevolucao => Set<ItemDevolucao>();
+    public DbSet<ValeTroca> ValesTroca => Set<ValeTroca>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -184,6 +187,8 @@ public class PdvDbContext : DbContext
             e.Property(v => v.Operador).HasMaxLength(80);
             e.Property(v => v.MotivoCancelamento).HasMaxLength(300);
             e.Property(v => v.CanceladoPor).HasMaxLength(80);
+            e.HasOne<ValeTroca>().WithMany().HasForeignKey(v => v.ValeTrocaId).OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(v => v.ValeTrocaId);
         });
 
         modelBuilder.Entity<ItemVenda>(e =>
@@ -210,6 +215,33 @@ public class PdvDbContext : DbContext
             e.Property(c => c.Cidade).HasMaxLength(100);
             e.Property(c => c.Estado).HasMaxLength(2);
             e.HasIndex(c => c.Nome);
+        });
+
+        modelBuilder.Entity<Devolucao>(e =>
+        {
+            e.Property(d => d.Motivo).IsRequired().HasMaxLength(200);
+            e.Property(d => d.Operador).HasMaxLength(80);
+            e.Property(d => d.MotivoCancelamento).HasMaxLength(200);
+            e.Property(d => d.CanceladoPor).HasMaxLength(80);
+            e.HasOne(d => d.Venda).WithMany().HasForeignKey(d => d.VendaId).OnDelete(DeleteBehavior.Restrict);
+            e.HasMany(d => d.Itens).WithOne().HasForeignKey(i => i.DevolucaoId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(d => d.VendaId);
+            e.HasIndex(d => d.DataHora);
+        });
+
+        modelBuilder.Entity<ItemDevolucao>(e =>
+        {
+            e.Property(i => i.NomeProduto).IsRequired().HasMaxLength(200);
+            e.Property(i => i.Tamanho).IsRequired().HasMaxLength(30);
+            e.HasIndex(i => i.ItemVendaId);
+        });
+
+        modelBuilder.Entity<ValeTroca>(e =>
+        {
+            e.Property(v => v.Codigo).IsRequired().HasMaxLength(20);
+            e.Property(v => v.Operador).HasMaxLength(80);
+            e.HasIndex(v => v.Codigo).IsUnique();
+            e.HasIndex(v => v.DevolucaoId);
         });
 
         modelBuilder.Entity<AjusteCreditoCliente>(e =>

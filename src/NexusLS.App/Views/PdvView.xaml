@@ -511,9 +511,15 @@
                                  DisplayMemberPath="Nome" />
                     </StackPanel>
 
+                    <!-- Vale-troca (F6): quanto ele paga e quanto falta -->
+                    <TextBlock Text="{Binding ValeTexto}" TextWrapping="Wrap" FontSize="16" FontWeight="SemiBold" Margin="0,12,0,0"
+                               Foreground="{StaticResource CorSucesso}" />
+
                     <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" />
                     <TextBlock Style="{StaticResource DicaModal}"
                                Text="← → ↑ ↓ trocam a forma (no crédito, ↑ ↓ mudam as parcelas) · Enter finaliza a venda · Esc volta à busca" />
+                    <TextBlock Style="{StaticResource DicaModal}" Text="F6 usa um vale-troca (abate do total)"
+                               Visibility="{Binding AceitaVale, Converter={StaticResource BoolVis}}" />
                 </StackPanel>
             </Border>
 

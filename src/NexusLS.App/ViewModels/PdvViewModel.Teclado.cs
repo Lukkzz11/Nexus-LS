@@ -169,6 +169,9 @@ public partial class PdvViewModel
             case ComandoTecla.F10:
                 _ = ExecutarOcupadoAsync(FinalizarVendaAsync);
                 return true;
+            case ComandoTecla.F6:
+                _ = ExecutarOcupadoAsync(UsarValeAsync);
+                return true;
             case ComandoTecla.Esc: VoltarParaBusca(); return true;
             default: return false;
         }

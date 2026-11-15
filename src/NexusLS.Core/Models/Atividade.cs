@@ -28,7 +28,9 @@ public enum TipoAtividade
     ChequeEmitidoCancelado = 23,
     CreditoClienteAjustado = 24,
     ClientesImportados = 25,
-    ClienteDaVendaAlterado = 26
+    ClienteDaVendaAlterado = 26,
+    DevolucaoRegistrada = 27,
+    DevolucaoCancelada = 28
 }
 
 /// <summary>

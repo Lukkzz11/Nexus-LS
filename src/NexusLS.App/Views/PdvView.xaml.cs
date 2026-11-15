@@ -47,6 +47,8 @@ public partial class PdvView : UserControl
                 janela.ShowDialog();
                 return Task.FromResult(janela.Aprovado);
             };
+            vm.PedirCodigoVale = () => DialogoMotivo.PedirTexto(Window.GetWindow(this), "Vale-troca",
+                "Digite ou leia o código do vale-troca:", 4, "Informe o código do vale.");
             _ = vm.AtualizarCaixaAsync();
         }
         Focar(AlvoFoco.Busca);
@@ -117,6 +119,9 @@ public partial class PdvView : UserControl
             case Key.F8:
                 vm.AlternarTabelaCommand.Execute(null);
                 e.Handled = true;
+                return;
+            case Key.F6 when vm.Etapa == EtapaPdv.Pagamento:
+                e.Handled = vm.ProcessarTecla(ComandoTecla.F6);
                 return;
             // Espaço com a busca VAZIA troca varejo/atacado. Com texto digitado, o espaço é só um espaço (ex.: "camiseta azul").
             case Key.Space when vm.Etapa == EtapaPdv.Busca && vm.Busca.Length == 0 && CaixaBusca.IsKeyboardFocused:

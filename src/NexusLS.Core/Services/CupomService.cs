@@ -67,6 +67,26 @@ public class CupomService
         await _impressora.ImprimirAsync(MontadorCupom.MontarListaSeparacao(pedido, loja), loja);
     }
 
+    /// <summary>Imprime (ou reimprime) o vale-troca pelo código, com o saldo de agora.</summary>
+    public async Task ImprimirValeTrocaAsync(string codigo)
+    {
+        var loja = await _configuracao.ObterAsync();
+        await _impressora.ImprimirAsync(await GerarValeTrocaAsync(codigo, loja), loja);
+    }
+
+    /// <summary>O texto do vale-troca (o mesmo que vai para a impressora).</summary>
+    public async Task<string> GerarValeTrocaAsync(string codigo, ConfiguracaoLoja? loja = null)
+    {
+        loja ??= await _configuracao.ObterAsync();
+        await using var db = await _fabrica.CreateDbContextAsync();
+        var vale = await TrocaService.AcharValeAsync(db, codigo) ?? throw new RegraDeNegocioException("Vale-troca não encontrado.");
+        var saldo = await TrocaService.SaldoAsync(db, vale);
+        var itens = vale.DevolucaoId is int d
+            ? await db.ItensDevolucao.AsNoTracking().Where(i => i.DevolucaoId == d).OrderBy(i => i.Id).ToListAsync()
+            : new List<ItemDevolucao>();
+        return MontadorCupom.MontarValeTroca(saldo, itens, loja);
+    }
+
     /// <summary>Cupom de teste com uma venda de exemplo, usando os dados do formulário (mesmo antes de salvar).</summary>
     public Task ImprimirTesteAsync(ConfiguracaoLoja loja)
     {

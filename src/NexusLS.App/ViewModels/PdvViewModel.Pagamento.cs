@@ -14,6 +14,44 @@ public partial class PdvViewModel
 
     [ObservableProperty] private string _acrescimoTexto = "";
 
+    /// <summary>Linha do vale-troca no pagamento ("Vale VT... paga R$ 30,00 · falta R$ 20,00"); vazia sem vale.</summary>
+    [ObservableProperty] private string _valeTexto = "";
+
+    /// <summary>A tela de pagamento mostra a dica do F6 só quando o programa tem o serviço de trocas.</summary>
+    public bool AceitaVale => Trocas is not null;
+
+    /// <summary>
+    /// F6 no pagamento: lê o código do vale-troca e abate o saldo dele do total (o resto vai pela forma escolhida). Com um
+    /// vale já aplicado, o F6 tira o vale. O VendaService confere o vale de novo ao gravar.
+    /// </summary>
+    private async Task UsarValeAsync()
+    {
+        if (_pagamento is null || Trocas is null) return;
+        if (_pagamento.ValeCodigo is not null)
+        {
+            _pagamento.RemoverVale();
+            ValorRecebidoTexto = _pagamento.ValorRecebidoTexto;
+            AtualizarPagamento();
+            MostrarSucesso("Vale-troca retirado desta venda.");
+            return;
+        }
+
+        var codigo = PedirCodigoVale?.Invoke();
+        if (string.IsNullOrWhiteSpace(codigo)) return;
+        var vale = await Trocas.ConsultarValeAsync(codigo);
+        if (vale is null) { MostrarErro("Vale-troca não encontrado. Confira o código."); return; }
+        if (vale.Cancelado) { MostrarErro($"O vale-troca {vale.Codigo} foi cancelado."); return; }
+        if (vale.SaldoCentavos <= 0) { MostrarErro($"O vale-troca {vale.Codigo} já foi usado (sem saldo)."); return; }
+
+        _pagamento.AplicarVale(vale.Codigo, vale.SaldoCentavos);
+        ValorRecebidoTexto = _pagamento.ValorRecebidoTexto;
+        AtualizarPagamento();
+        MostrarSucesso(_pagamento.ValeCobreTudo
+            ? "Vale-troca aplicado: paga a venda inteira. Tecle Enter para finalizar."
+            : $"Vale-troca aplicado. Falta {Dinheiro.Formatar(_pagamento.RestoCentavos)}: escolha como pagar o resto.");
+        FocoSolicitado?.Invoke(EmDinheiro ? AlvoFoco.ValorRecebido : AlvoFoco.Modal);
+    }
+
     private void AbrirDesconto()
     {
         if (_carrinho.Vazio)
@@ -129,7 +167,15 @@ public partial class PdvViewModel
         OnPropertyChanged(nameof(EmDinheiro));
         OnPropertyChanged(nameof(EmCredito));
         OnPropertyChanged(nameof(EmAPrazo));
+        OnPropertyChanged(nameof(AceitaVale));
         TotalFinalTexto = Dinheiro.Formatar(_pagamento!.TotalCentavos);
+        ValeTexto = _pagamento.ValeCodigo is null
+            ? ""
+            : $"Vale-troca {_pagamento.ValeCodigo}: paga {Dinheiro.Formatar(_pagamento.ValeAplicadoCentavos)} de {Dinheiro.Formatar(_pagamento.BaseCentavos)}"
+              + (_pagamento.ValeCobreTudo
+                  ? (_pagamento.ValeSaldoCentavos > _pagamento.BaseCentavos ? $" · sobram {Dinheiro.Formatar(_pagamento.ValeSaldoCentavos - _pagamento.BaseCentavos)} no vale" : "")
+                  : $" · falta {Dinheiro.Formatar(_pagamento.RestoCentavos)}")
+              + " · F6 tira o vale";
         AcrescimoTexto = _pagamento.AcrescimoCentavos > 0
             ? $"Acréscimo do crédito em {_pagamento.Parcelas}x ({TaxasCartao.Percentual(_pagamento.Parcelas):0}%): {Dinheiro.Formatar(_pagamento.AcrescimoCentavos)}  ·  {_pagamento.Parcelas}x de {Dinheiro.Formatar((_pagamento.TotalCentavos + _pagamento.Parcelas - 1) / _pagamento.Parcelas)}"
             : "";
@@ -254,6 +300,8 @@ public partial class PdvViewModel
 
         var pagou = SelecaoPagamento.Nome(venda.FormaPagamento);
         if (venda.FormaPagamento == FormaPagamento.CartaoCredito && venda.Parcelas > 1) pagou += $" em {venda.Parcelas}x";
+        if (venda.ValeTrocaCentavos > 0 && venda.FormaPagamento != FormaPagamento.ValeTroca)
+            pagou = $"Vale-troca {Dinheiro.Formatar(venda.ValeTrocaCentavos)} + {pagou} {Dinheiro.Formatar(venda.ValorPagoCentavos)}";
         SucessoTitulo = $"Venda #{venda.Id} finalizada!";
         SucessoDetalhe = $"{Dinheiro.Formatar(venda.TotalCentavos)}  ·  {pagou}"
                          + (venda.TrocoCentavos > 0 ? $"  ·  Troco {Dinheiro.Formatar(venda.TrocoCentavos)}" : "");

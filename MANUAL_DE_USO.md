@@ -25,10 +25,12 @@ Este manual explica o dia a dia do programa. Ele descreve o que o programa faz h
 | **↑ ↓** | Muda a quantidade, as parcelas do crédito ou a linha de opções |
 | **Espaço** (busca vazia) | Troca a tabela entre **Varejo** e **Atacado** (o botão fica laranja no atacado) |
 | **Enter** (busca vazia) ou **F10** | Fecha a venda: desconto, depois pagamento |
+| **F6** (no pagamento) | Usa um **vale-troca**: digite ou leia o código. F6 de novo tira o vale |
 | **Del** | Remove o item selecionado do carrinho |
 | **Esc** | Fecha a janela aberta (não esvazia o carrinho) |
 
 - **Formas de pagamento:** dinheiro (com troco), Pix, débito, crédito (1 a 4x, com acréscimo de 5%, 7%, 9% ou 10%), cheque e **a prazo** (exige cliente; pode cadastrar o cliente na hora digitando o nome e dando Enter).
+- **Vale-troca no pagamento (F6):** o saldo do vale abate do total; o resto vai pela forma escolhida (dinheiro, Pix ou cartão; não pode ser a prazo nem cheque). Se o vale paga tudo, o que sobra continua no vale para a próxima compra.
 - **Preço e total da linha** podem ser editados no carrinho. Vazio devolve o preço de tabela.
 - **Venda em andamento:** se o programa fechar com itens no carrinho, ao abrir a venda volta, conferida com o estoque.
 - **Tela de sucesso:** Enter já segue para a próxima venda; use ← para "Reimprimir cupom".
@@ -42,6 +44,7 @@ Menu **Vendas > Venda Cliente**: escolha o cliente (a lista mostra quanto cada u
 - **Caixa:** lista as vendas do dia, imprime/reimprime cupom, gera **Nota em PDF** (da venda) e **Relatório do dia em PDF** (totais, formas de pagamento e a lista das vendas), exporta CSV e **cancela venda** (sempre com motivo; pode devolver os itens ao estoque). Nada é apagado: cancelar deixa o registro.
 - **Fechamento de caixa:** confira dinheiro, cartão e Pix contra o esperado. Se houver diferença, a observação é obrigatória. Para corrigir, faça uma nova versão: a anterior continua no histórico.
 - **Movimentos:** sangria, reforço, despesa paga pela gaveta e entrada avulsa ficam ligados ao turno.
+- **Trocas (menu Vendas > Trocas):** digite o número da venda (está no cupom) e Enter, escreva na coluna **Voltam** quantas peças de cada linha o cliente trouxe, informe o motivo e clique **Registrar troca e gerar vale**. As peças voltam ao estoque do tamanho e o **vale-troca** sai na impressora do cupom (dá para reimprimir na lista de vales). O vale vale o que o cliente pagou pelas peças (com o desconto da venda repartido; o acréscimo do cartão não volta) e **não vira dinheiro**: é usado no PDV com **F6**. Venda a prazo só troca depois de quitada. Errou? **Cancelar troca** (pede motivo) desfaz, se o vale ainda não foi usado.
 
 ## 4. Estoque, compras e fábrica
 

@@ -45,5 +45,18 @@ public class Venda : EntidadeSincronizavel
     /// <summary>Código da tentativa que gerou esta venda (nulo nas vendas antigas). Único: impede gravar a mesma venda duas vezes.</summary>
     public Guid? ChaveUnica { get; set; }
 
+    /// <summary>Vale-troca usado nesta venda (nulo se não usou).</summary>
+    public int? ValeTrocaId { get; set; }
+
+    /// <summary>
+    /// Parte do total paga com o vale-troca. O <see cref="TotalCentavos"/> continua sendo a venda inteira (receita); o que
+    /// entrou de dinheiro de verdade, na forma de pagamento, é <see cref="ValorPagoCentavos"/>.
+    /// </summary>
+    public long ValeTrocaCentavos { get; set; }
+
+    /// <summary>O que entrou pela forma de pagamento (gaveta, Pix, cartão...): o total menos a parte paga com vale-troca.</summary>
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    public long ValorPagoCentavos => TotalCentavos - ValeTrocaCentavos;
+
     public List<ItemVenda> Itens { get; set; } = new();
 }

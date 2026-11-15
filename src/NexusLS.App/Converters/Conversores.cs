@@ -28,6 +28,8 @@ public class TipoMovimentacaoConverter : IValueConverter
         TipoMovimentacao.Correcao => "Correção",
         TipoMovimentacao.Venda => "Venda",
         TipoMovimentacao.CancelamentoVenda => "Cancelamento de venda",
+        TipoMovimentacao.Devolucao => "Troca (devolução)",
+        TipoMovimentacao.CancelamentoDevolucao => "Cancelamento de troca",
         _ => string.Empty
     };
 
@@ -55,6 +57,7 @@ public class FormaPagamentoConverter : IValueConverter
         FormaPagamento.CartaoCredito => "Cartão crédito",
         FormaPagamento.Cheque => "Cheque",
         FormaPagamento.APrazo => "A prazo",
+        FormaPagamento.ValeTroca => "Vale-troca",
         _ => string.Empty
     };
 

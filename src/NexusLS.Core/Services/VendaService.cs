@@ -125,7 +125,9 @@ public class VendaService
 
         venda.SubtotalCentavos = venda.Itens.Sum(i => i.TotalCentavos);
         venda.ClienteId = await ValidarClienteAsync(db, pedido);
-        CalcularDescontoEPagamento(venda, pedido);
+        var desconto = CalcularDesconto(venda, pedido);
+        await AplicarValeAsync(db, venda, pedido, venda.SubtotalCentavos - desconto);
+        CalcularPagamento(venda, pedido, desconto);
         if (venda.FormaPagamento == FormaPagamento.APrazo && venda.ClienteId is int clienteId)
             await ValidarLimiteAsync(db, clienteId, venda.TotalCentavos);
 
@@ -195,6 +197,9 @@ public class VendaService
             ?? throw new RegraDeNegocioException("Venda não encontrada.");
         if (venda.Cancelada)
             throw new RegraDeNegocioException("Esta venda já está cancelada.");
+        if (await TrocaService.TemDevolucaoAsync(db, venda.Id))
+            throw new RegraDeNegocioException(
+                "Esta venda teve troca (peças devolvidas e vale-troca entregue). Cancele a troca antes, na tela Trocas, se o vale não foi usado.");
 
         if (venda.FormaPagamento == FormaPagamento.APrazo && venda.ClienteId is int cid)
         {
@@ -263,7 +268,8 @@ public class VendaService
 
         AtividadeService.Registrar(db, TipoAtividade.VendaCancelada,
             $"Cancelou a venda #{venda.Id} ({Dinheiro.Formatar(venda.TotalCentavos)}): {motivo}"
-            + (devolverEstoque ? "" : " (estoque não devolvido)"),
+            + (devolverEstoque ? "" : " (estoque não devolvido)")
+            + (venda.ValeTrocaCentavos > 0 ? $"; {Dinheiro.Formatar(venda.ValeTrocaCentavos)} voltaram ao vale-troca" : ""),
             $"Venda #{venda.Id}", venda.CanceladoPor, agora);
 
         await db.SaveChangesAsync();
@@ -409,7 +415,46 @@ public class VendaService
         return cliente.Id;
     }
 
-    private static void CalcularDescontoEPagamento(Venda venda, PedidoVenda pedido)
+    /// <summary>
+    /// Confere o vale-troca do pedido e marca na venda quanto ele paga: o saldo do vale, até o valor da venda (depois do
+    /// desconto). Se o vale cobre tudo, a venda fica com a forma Vale-troca; se não, o resto vai pela forma escolhida, que
+    /// não pode ser a prazo nem cheque (a dívida e o cheque contam o total da venda).
+    /// </summary>
+    private static async Task AplicarValeAsync(PdvDbContext db, Venda venda, PedidoVenda pedido, long baseCentavos)
+    {
+        if (string.IsNullOrWhiteSpace(pedido.ValeTrocaCodigo))
+        {
+            if (pedido.FormaPagamento == FormaPagamento.ValeTroca)
+                throw new RegraDeNegocioException("Informe o código do vale-troca.");
+            return;
+        }
+
+        var vale = await TrocaService.AcharValeAsync(db, pedido.ValeTrocaCodigo)
+            ?? throw new RegraDeNegocioException("Vale-troca não encontrado. Confira o código.");
+        if (vale.Cancelado) throw new RegraDeNegocioException($"O vale-troca {vale.Codigo} foi cancelado.");
+        var saldo = vale.ValorCentavos - await TrocaService.UsadoDoValeAsync(db, vale.Id);
+        if (saldo <= 0) throw new RegraDeNegocioException($"O vale-troca {vale.Codigo} já foi usado (sem saldo).");
+
+        var usado = Math.Min(saldo, baseCentavos);
+        if (usado < baseCentavos)
+        {
+            if (pedido.FormaPagamento == FormaPagamento.ValeTroca)
+                throw new RegraDeNegocioException(
+                    $"O vale-troca cobre {Dinheiro.Formatar(usado)}: faltam {Dinheiro.Formatar(baseCentavos - usado)}. Escolha como pagar o resto.");
+            if (pedido.FormaPagamento is FormaPagamento.APrazo or FormaPagamento.Cheque)
+                throw new RegraDeNegocioException("O resto de uma venda com vale-troca não pode ser a prazo nem em cheque.");
+        }
+        else
+        {
+            venda.FormaPagamento = FormaPagamento.ValeTroca; // o vale pagou tudo
+            venda.Parcelas = 1;
+        }
+
+        venda.ValeTrocaId = vale.Id;
+        venda.ValeTrocaCentavos = usado;
+    }
+
+    private static long CalcularDesconto(Venda venda, PedidoVenda pedido)
     {
         // Desconto: em R$ ou em %, nunca os dois. O % vira R$ (arredondado ao centavo) na hora da venda.
         long desconto = pedido.DescontoCentavos;
@@ -428,20 +473,27 @@ public class VendaService
             throw new RegraDeNegocioException("O desconto não pode ser maior que o subtotal.");
 
         venda.DescontoCentavos = desconto;
-        venda.AcrescimoCentavos = pedido.FormaPagamento == FormaPagamento.CartaoCredito
-            ? TaxasCartao.Acrescimo(venda.SubtotalCentavos - desconto, pedido.Parcelas)
+        return desconto;
+    }
+
+    /// <summary>Acréscimo do crédito (sobre o que falta pagar depois do vale), total e troco. A forma já está na venda.</summary>
+    private static void CalcularPagamento(Venda venda, PedidoVenda pedido, long desconto)
+    {
+        var resto = venda.SubtotalCentavos - desconto - venda.ValeTrocaCentavos;
+        venda.AcrescimoCentavos = venda.FormaPagamento == FormaPagamento.CartaoCredito
+            ? TaxasCartao.Acrescimo(resto, pedido.Parcelas)
             : 0;
         venda.TotalCentavos = venda.SubtotalCentavos - desconto + venda.AcrescimoCentavos;
 
-        if (pedido.FormaPagamento == FormaPagamento.Dinheiro)
+        if (venda.FormaPagamento == FormaPagamento.Dinheiro)
         {
             var recebido = pedido.ValorRecebidoCentavos
                 ?? throw new RegraDeNegocioException("Informe o valor recebido em dinheiro.");
-            if (recebido < venda.TotalCentavos)
+            if (recebido < venda.ValorPagoCentavos)
                 throw new RegraDeNegocioException("O valor recebido é menor que o total da venda.");
 
             venda.ValorRecebidoCentavos = recebido;
-            venda.TrocoCentavos = recebido - venda.TotalCentavos;
+            venda.TrocoCentavos = recebido - venda.ValorPagoCentavos;
         }
         else
         {

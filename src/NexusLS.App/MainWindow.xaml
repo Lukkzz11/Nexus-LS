@@ -86,6 +86,12 @@
                             <TextBlock Text="Caixa" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
+                    <Button Tag="Trocas" Visibility="{Binding VerCaixa, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Trocas" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaTrocasCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="ArrowSwap24" Style="{StaticResource IconeDoMenu}" />
+                            <TextBlock Text="Trocas" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
                     <Button Tag="Pedidos" Visibility="{Binding VerPdv, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Pedidos" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaPedidosCommand}">
                         <StackPanel Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="TaskListSquareLtr24" Style="{StaticResource IconeDoMenu}" />

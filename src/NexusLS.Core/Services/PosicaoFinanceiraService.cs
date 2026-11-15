@@ -75,11 +75,14 @@ public class PosicaoFinanceiraService
                 case FormaPagamento.APrazo:
                     break; // sem dinheiro agora: vira título a receber (abaixo)
 
+                case FormaPagamento.ValeTroca:
+                    break; // paga inteira com vale-troca: nenhum dinheiro entrou (a receita conta, abaixo)
+
                 case FormaPagamento.CartaoDebito or FormaPagamento.CartaoCredito:
                     if (liquidacoes.TryGetValue(v.Id, out var liq))
                     {
                         lancs.Add(new($"venda:{v.Id}", OrigemFin.Venda, ClasseFin.Venda, SentidoFin.Entrada, SituacaoFin.Realizado,
-                            v.TotalCentavos, liq.Data, ContaId: liq.ContaId, Descricao: $"Venda #{v.Id} (cartão)"));
+                            v.ValorPagoCentavos, liq.Data, ContaId: liq.ContaId, Descricao: $"Venda #{v.Id} (cartão)"));
                         if (liq.TaxaCentavos > 0)
                             lancs.Add(new($"taxa-cartao:{v.Id}", OrigemFin.Cartao, ClasseFin.TarifaCartao, SentidoFin.Saida, SituacaoFin.Realizado,
                                 liq.TaxaCentavos, liq.Data, ContaId: liq.ContaId, Descricao: $"Taxa do cartão da venda #{v.Id}"));
@@ -87,7 +90,7 @@ public class PosicaoFinanceiraService
                     else
                     {
                         lancs.Add(new($"venda:{v.Id}", OrigemFin.Venda, ClasseFin.Venda, SentidoFin.Entrada, SituacaoFin.EmCompensacao,
-                            v.TotalCentavos, data, DataPrevista: PrazosFinanceiros.PrevisaoDoCartao(data, v.FormaPagamento),
+                            v.ValorPagoCentavos, data, DataPrevista: PrazosFinanceiros.PrevisaoDoCartao(data, v.FormaPagamento),
                             Descricao: $"Venda #{v.Id} (cartão a liquidar)"));
                     }
                     break;
@@ -98,9 +101,9 @@ public class PosicaoFinanceiraService
                         v.TotalCentavos, data, DataPrevista: data.Date.AddDays(PrazosFinanceiros.DiasCheque), Descricao: $"Venda #{v.Id} (cheque)"));
                     break;
 
-                default:
+                default: // dinheiro e Pix: só o que entrou (a parte paga com vale-troca não é dinheiro)
                     lancs.Add(new($"venda:{v.Id}", OrigemFin.Venda, ClasseFin.Venda, SentidoFin.Entrada, SituacaoFin.Realizado,
-                        v.TotalCentavos, data, ContaId: ContaDaForma(v.FormaPagamento), Descricao: $"Venda #{v.Id}"));
+                        v.ValorPagoCentavos, data, ContaId: ContaDaForma(v.FormaPagamento), Descricao: $"Venda #{v.Id}"));
                     break;
             }
         }
@@ -208,7 +211,16 @@ public class PosicaoFinanceiraService
             // abatimento/acréscimo no título a prazo: mexe na receita da venda (que em si nunca é alterada)
             v.FormaPagamento == FormaPagamento.APrazo && vigentes.TryGetValue(v.Id, out var aj) ? aj.ValorNovoCentavos - v.TotalCentavos : 0)).ToList();
 
+        // ---- trocas do período: a peça voltou, o valor virou vale (devolução da receita) e o custo sai do CMV ----
+        var devolucoes = await db.Devolucoes.AsNoTracking().Include(d => d.Itens)
+            .Where(d => !d.Cancelada && d.DataHora >= inicio && d.DataHora < fimExclusivo).ToListAsync();
+        var semCusto = devolucoes.SelectMany(d => d.Itens).Select(i => i.ProdutoId).Distinct().Where(id => !custosAtuais.ContainsKey(id)).ToList();
+        foreach (var prod in await db.Produtos.AsNoTracking().Where(p => semCusto.Contains(p.Id)).Select(p => new { p.Id, p.PrecoCustoCentavos }).ToListAsync())
+            custosAtuais[prod.Id] = prod.PrecoCustoCentavos;
+        var devolucoesFin = devolucoes.Select(d => new DevolucaoFin($"devolucao:{d.Id}", d.DataHora, d.ValorCentavos,
+            d.Itens.Sum(i => (i.CustoUnitarioCentavos ?? custosAtuais.GetValueOrDefault(i.ProdutoId)) * i.Quantidade))).ToList();
+
         var contasFin = contas.Select(c => new ContaFin(c.Id, c.Nome, c.Tipo, c.SaldoInicialCentavos, c.DataSaldoInicial, c.Padrao)).ToList();
-        return MotorFinanceiro.Calcular(new EntradaMotor(_agora(), contasFin, lancs, vendasFin, de, ate));
+        return MotorFinanceiro.Calcular(new EntradaMotor(_agora(), contasFin, lancs, vendasFin, de, ate, devolucoesFin));
     }
 }

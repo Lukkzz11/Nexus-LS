@@ -18,6 +18,7 @@ public sealed class ContainerDeServicos
     public ProdutoService Produtos { get; }
     public EstoqueService Estoque { get; }
     public VendaService Vendas { get; }
+    public TrocaService Trocas { get; }
     public NexusLS.Core.Etiquetas.ModeloEtiquetaStore ModelosEtiqueta { get; }
     public CaixaService Caixa { get; }
     public NexusLS.Core.Pagamentos.ConfiguracaoPagamentosStore PagamentosConfig { get; }
@@ -85,6 +86,7 @@ public sealed class ContainerDeServicos
         Mescla = new(fabrica);
         Estoque = new(fabrica);
         Vendas = new(fabrica);
+        Trocas = new(fabrica);
         ModelosEtiqueta = new(NexusLS.Core.Etiquetas.ModeloEtiquetaStore.CaminhoPadrao());
         Caixa = new(fabrica);
         PagamentosConfig = new(NexusLS.Core.Pagamentos.ConfiguracaoPagamentosStore.CaminhoPadrao(), new NexusLS.App.Seguranca.ProtetorDpapi());

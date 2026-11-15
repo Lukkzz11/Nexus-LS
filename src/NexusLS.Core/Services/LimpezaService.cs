@@ -81,8 +81,11 @@ public class LimpezaService
         apagados["Liquidações de cartão"] = await db.LiquidacoesCartao.ExecuteDeleteAsync(); // aponta para a venda
         apagados["Cheques recebidos"] = await db.ChequesRecebidos.ExecuteDeleteAsync();
         apagados["Transferências entre contas"] = await db.Transferencias.ExecuteDeleteAsync();
+        apagados["Itens de troca"] = await db.ItensDevolucao.ExecuteDeleteAsync();
+        apagados["Trocas"] = await db.Devolucoes.ExecuteDeleteAsync();
         apagados["Itens de venda"] = await db.ItensVenda.ExecuteDeleteAsync();
         apagados["Vendas"] = await db.Vendas.ExecuteDeleteAsync();
+        apagados["Vales-troca"] = await db.ValesTroca.ExecuteDeleteAsync();
         apagados["Pagamentos de clientes"] = await db.PagamentosCliente.ExecuteDeleteAsync();
         apagados["Lançamentos financeiros"] = await db.Lancamentos.ExecuteDeleteAsync();
         apagados["Itens de compra"] = await db.ItensCompra.ExecuteDeleteAsync();

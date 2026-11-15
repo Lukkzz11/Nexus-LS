@@ -207,13 +207,24 @@ public class RelatorioService
 
     public const string SemCategoria = "Sem categoria";
 
-    /// <summary>Total por forma de pagamento, na ordem de sempre (dinheiro, Pix, débito...). Só formas que tiveram venda.</summary>
-    public static IReadOnlyList<ResumoForma> ResumoPorForma(IEnumerable<Venda> vendas) => vendas
-        .Where(v => !v.Cancelada)
-        .GroupBy(v => v.FormaPagamento)
-        .OrderBy(g => Array.IndexOf(SelecaoPagamento.Formas, g.Key))
-        .Select(g => new ResumoForma(g.Key, g.Count(), g.Sum(v => v.TotalCentavos)))
-        .ToList();
+    /// <summary>
+    /// Total por forma de pagamento, na ordem de sempre (dinheiro, Pix, débito...). Só formas que tiveram venda. A parte
+    /// paga com vale-troca fica numa linha própria, no fim (a venda com vale e resto no Pix aparece nas duas linhas).
+    /// </summary>
+    public static IReadOnlyList<ResumoForma> ResumoPorForma(IEnumerable<Venda> vendas)
+    {
+        var validas = vendas.Where(v => !v.Cancelada).ToList();
+        var lista = validas
+            .Where(v => v.FormaPagamento != FormaPagamento.ValeTroca)
+            .GroupBy(v => v.FormaPagamento)
+            .OrderBy(g => Array.IndexOf(SelecaoPagamento.Formas, g.Key))
+            .Select(g => new ResumoForma(g.Key, g.Count(), g.Sum(v => v.ValorPagoCentavos)))
+            .ToList();
+        var comVale = validas.Where(v => v.ValeTrocaCentavos > 0).ToList();
+        if (comVale.Count > 0)
+            lista.Add(new ResumoForma(FormaPagamento.ValeTroca, comVale.Count, comVale.Sum(v => v.ValeTrocaCentavos)));
+        return lista;
+    }
 
     private static (DateTime inicio, DateTime fim) Periodo(DateTime de, DateTime ate)
     {

@@ -14,6 +14,8 @@ namespace NexusLS.Core.Financeiro;
 ///  - Retirada (sangria) e reforço de caixa não são despesa nem receita.
 ///  - Aporte, outra entrada, retirada do proprietário e outra saída movem o saldo mas ficam FORA do resultado.
 ///  - Lançamento sem conta não entra em nenhum saldo; vira aviso, para ser corrigido.
+///  - Troca com vale-troca não mexe em saldo: é devolução da receita e o custo da peça sai do CMV. A venda paga com vale
+///    conta a receita inteira, mas só o que entrou de dinheiro vira lançamento.
 /// </summary>
 public static class MotorFinanceiro
 {
@@ -99,6 +101,8 @@ public static class MotorFinanceiro
         var realizados = lancamentos
             .Where(l => l.Situacao == SituacaoFin.Realizado && l.Sentido != SentidoFin.Transferencia && NoPeriodo(l.Data)).ToList();
         var vendas = entrada.Vendas.Where(v => NoPeriodo(v.Data)).ToList();
+        var trocas = (entrada.Devolucoes ?? Array.Empty<DevolucaoFin>()).Where(d => NoPeriodo(d.Data))
+            .GroupBy(d => d.Id).Select(g => g.First()).ToList();
         var despesas = realizados.Where(l => l.Sentido == SentidoFin.Saida
             && l.Classe is ClasseFin.Despesa or ClasseFin.TarifaCartao).ToList();
 
@@ -107,8 +111,8 @@ public static class MotorFinanceiro
             realizados.Where(l => l.Sentido == SentidoFin.Entrada).Sum(l => l.ValorCentavos),
             realizados.Where(l => l.Sentido == SentidoFin.Saida).Sum(l => l.ValorCentavos),
             vendas.Sum(v => v.TotalCentavos),
-            realizados.Where(l => l.Classe == ClasseFin.Devolucao).Sum(l => l.ValorCentavos),
-            vendas.Sum(v => v.CustoCentavos),
+            realizados.Where(l => l.Classe == ClasseFin.Devolucao).Sum(l => l.ValorCentavos) + trocas.Sum(d => d.ValorCentavos),
+            vendas.Sum(v => v.CustoCentavos) - trocas.Sum(d => d.CustoCentavos),
             realizados.Where(l => l.Sentido == SentidoFin.Entrada && l.Classe == ClasseFin.ReceitaOutra).Sum(l => l.ValorCentavos),
             despesas.Sum(l => l.ValorCentavos),
             despesas.GroupBy(l => l.Classe == ClasseFin.TarifaCartao ? "Taxas de cartão" : l.Categoria ?? "Sem categoria")

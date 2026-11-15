@@ -95,7 +95,14 @@ public static class MontadorCupom
             linhas.Add(DuasPontas("Desconto:", "- " + Reais(venda.DescontoCentavos), largura));
         if (venda.AcrescimoCentavos > 0)
             linhas.Add(DuasPontas("Acréscimo crédito:", "+" + Reais(venda.AcrescimoCentavos), largura));
-        linhas.Add(DuasPontas(modelo == ModeloCupom.Comprovante ? "Total da Nota:" : "TOTAL A PAGAR:", Reais(venda.TotalCentavos), largura));
+        if (venda.ValeTrocaCentavos > 0)
+        {
+            linhas.Add(DuasPontas("Total:", Reais(venda.TotalCentavos), largura));
+            linhas.Add(DuasPontas("Vale-troca:", "- " + Reais(venda.ValeTrocaCentavos), largura));
+            linhas.Add(DuasPontas(modelo == ModeloCupom.Comprovante ? "Restante:" : "TOTAL A PAGAR:", Reais(venda.ValorPagoCentavos), largura));
+        }
+        else
+            linhas.Add(DuasPontas(modelo == ModeloCupom.Comprovante ? "Total da Nota:" : "TOTAL A PAGAR:", Reais(venda.TotalCentavos), largura));
 
         // Pagamento
         if (loja.CupomMostrarPagamento)
@@ -112,7 +119,7 @@ public static class MontadorCupom
                 linhas.Add(DuasPontas("TROCO:", Reais(venda.TrocoCentavos), largura));
             }
             if (venda.FormaPagamento == FormaPagamento.CartaoCredito && venda.Parcelas > 1)
-                linhas.Add(DuasPontas($"{venda.Parcelas}x de", Reais(PrimeiraParcela(venda.TotalCentavos, venda.Parcelas)), largura));
+                linhas.Add(DuasPontas($"{venda.Parcelas}x de", Reais(PrimeiraParcela(venda.ValorPagoCentavos, venda.Parcelas)), largura));
         }
 
         // Rodapé
@@ -236,6 +243,43 @@ public static class MontadorCupom
         }
         linhas.Add("");
         linhas.Add("Separado por: ____________________");
+        linhas.Add("");
+        return string.Join("\n", linhas);
+    }
+
+    /// <summary>
+    /// O vale-troca impresso: código grande (é o que o PDV lê, com F6), valor, saldo, de qual venda veio e as peças que
+    /// voltaram. Sai na mesma impressora do cupom.
+    /// </summary>
+    public static string MontarValeTroca(SaldoVale vale, IReadOnlyList<ItemDevolucao> itens, ConfiguracaoLoja loja)
+    {
+        var largura = Math.Clamp(loja.LarguraCupom, ConfiguracaoService.LarguraMinima, ConfiguracaoService.LarguraMaxima);
+        var linhas = new List<string>();
+        var traco = new string('-', largura);
+
+        linhas.AddRange(Centralizar(loja.NomeLoja, largura));
+        linhas.Add(traco);
+        linhas.AddRange(Centralizar("VALE-TROCA", largura));
+        linhas.Add("");
+        linhas.AddRange(Centralizar(vale.Codigo, largura));
+        linhas.Add("");
+        linhas.Add(DuasPontas("Valor:", Reais(vale.ValorCentavos), largura));
+        if (vale.UsadoCentavos > 0) linhas.Add(DuasPontas("Saldo:", Reais(vale.SaldoCentavos), largura));
+        linhas.Add(DuasPontas("Emitido em:", vale.CriadoEm.ToString("dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture), largura));
+        if (vale.VendaOrigemId is int origem) linhas.Add($"Troca da venda #{origem}");
+        if (!string.IsNullOrWhiteSpace(vale.Cliente)) linhas.AddRange(Quebrar($"Cliente: {vale.Cliente}", largura));
+        if (itens.Count > 0)
+        {
+            linhas.Add(traco);
+            foreach (var item in itens)
+            {
+                var nome = item.Tamanho == Tamanhos.SemTamanho ? item.NomeProduto : $"{item.NomeProduto} ({item.Tamanho})";
+                linhas.AddRange(Quebrar($"{item.Quantidade} x {nome}", largura));
+            }
+        }
+        linhas.Add(traco);
+        foreach (var parte in Paragrafos("Apresente este vale no caixa. Vale como pagamento, no todo ou em parte. Não é trocado por dinheiro."))
+            linhas.AddRange(Quebrar(parte, largura));
         linhas.Add("");
         return string.Join("\n", linhas);
     }

@@ -6,7 +6,11 @@ namespace NexusLS.App.Views;
 /// <summary>Janelinha com uma pergunta e uma caixa de texto para o motivo. Devolve nulo se o operador voltar.</summary>
 public static class DialogoMotivo
 {
-    public static string? Pedir(Window? dono, string titulo, string pergunta)
+    public static string? Pedir(Window? dono, string titulo, string pergunta) =>
+        PedirTexto(dono, titulo, pergunta, 3, "Informe o motivo (pelo menos 3 letras).");
+
+    /// <summary>Pede um texto qualquer (com pelo menos <paramref name="minimo"/> letras). Nulo se o operador voltar.</summary>
+    public static string? PedirTexto(Window? dono, string titulo, string pergunta, int minimo, string mensagemErro)
     {
         var motivo = new TextBox { MinHeight = 34, Margin = new Thickness(0, 10, 0, 0) };
         var erro = new TextBlock { Foreground = System.Windows.Media.Brushes.Firebrick, Margin = new Thickness(0, 6, 0, 0) };
@@ -29,7 +33,7 @@ public static class DialogoMotivo
         };
         ok.Click += (_, _) =>
         {
-            if (motivo.Text.Trim().Length < 3) { erro.Text = "Informe o motivo (pelo menos 3 letras)."; motivo.Focus(); return; }
+            if (motivo.Text.Trim().Length < minimo) { erro.Text = mensagemErro; motivo.Focus(); return; }
             janela.DialogResult = true;
         };
         janela.Loaded += (_, _) => motivo.Focus();

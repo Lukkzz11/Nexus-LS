@@ -6,5 +6,7 @@ public enum TipoMovimentacao
     Perda = 2,
     Correcao = 3,
     Venda = 4,
-    CancelamentoVenda = 5
+    CancelamentoVenda = 5,
+    Devolucao = 6,
+    CancelamentoDevolucao = 7
 }

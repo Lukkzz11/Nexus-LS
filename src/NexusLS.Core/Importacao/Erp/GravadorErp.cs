@@ -85,6 +85,7 @@ public static class MontadorErp
         FormaPagamento.CartaoDebito => "cartao_debito",
         FormaPagamento.CartaoCredito => "cartao_credito",
         FormaPagamento.Cheque => "cheque",
+        FormaPagamento.ValeTroca => "vale_troca",
         _ => "prazo"
     };
 

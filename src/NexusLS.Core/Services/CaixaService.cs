@@ -243,10 +243,11 @@ public class CaixaService
         // O filtro de data vai para o SQL; só as colunas usadas são lidas.
         var vendas = await db.Vendas.AsNoTracking()
             .Where(v => v.DataHora >= turno.DataAbertura && v.DataHora <= fim)
-            .Select(v => new { v.Cancelada, v.FormaPagamento, v.TotalCentavos })
+            .Select(v => new { v.Cancelada, v.FormaPagamento, Pago = v.TotalCentavos - v.ValeTrocaCentavos })
             .ToListAsync();
         var validas = vendas.Where(v => !v.Cancelada).ToList();
-        long Soma(params FormaPagamento[] formas) => validas.Where(v => formas.Contains(v.FormaPagamento)).Sum(v => v.TotalCentavos);
+        // O que entrou pela forma (a parte paga com vale-troca não é dinheiro: não entra em gaveta, maquininha nem Pix).
+        long Soma(params FormaPagamento[] formas) => validas.Where(v => formas.Contains(v.FormaPagamento)).Sum(v => v.Pago);
 
         var movimentos = (await db.MovimentosCaixa.AsNoTracking().Where(m => m.TurnoId == turno.Id).ToListAsync())
             .OrderBy(m => m.DataHora).ThenBy(m => m.Id).ToList();

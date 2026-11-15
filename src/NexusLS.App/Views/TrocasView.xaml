@@ -1,0 +1,136 @@
+<UserControl x:Class="NexusLS.App.Views.TrocasView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" MinWidth="420" />
+            <ColumnDefinition Width="16" />
+            <ColumnDefinition Width="*" MinWidth="380" />
+        </Grid.ColumnDefinitions>
+
+        <StackPanel Grid.ColumnSpan="3" Margin="0,0,0,14">
+            <TextBlock Text="Trocas e vale-troca" Style="{StaticResource TituloTela}" />
+            <TextBlock Text="A peça devolvida volta ao estoque do tamanho e o valor pago vira um vale-troca. No PDV, tecle F6 no pagamento para usar o vale."
+                       Style="{StaticResource Rotulo}" TextWrapping="Wrap" />
+        </StackPanel>
+
+        <!-- NOVA TROCA -->
+        <Border Grid.Row="1" Style="{StaticResource Painel}" VerticalAlignment="Top">
+            <StackPanel>
+                <TextBlock Text="Nova troca" FontSize="18" FontWeight="SemiBold" />
+
+                <TextBlock Text="Número da venda (no cupom)" Style="{StaticResource Rotulo}" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="CaixaNumero" Text="{Binding NumeroVendaTexto, UpdateSourceTrigger=PropertyChanged}"
+                             AutomationProperties.Name="Número da venda">
+                        <TextBox.InputBindings>
+                            <KeyBinding Key="Enter" Command="{Binding BuscarVendaCommand}" />
+                        </TextBox.InputBindings>
+                    </TextBox>
+                    <Button Grid.Column="1" Content="Buscar venda" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0"
+                            Command="{Binding BuscarVendaCommand}" />
+                </Grid>
+
+                <StackPanel Visibility="{Binding TemVenda, Converter={StaticResource BoolVis}}">
+                    <TextBlock Text="{Binding VendaResumo}" FontWeight="SemiBold" Margin="0,12,0,6" TextWrapping="Wrap" />
+                    <DataGrid ItemsSource="{Binding Linhas}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
+                              HeadersVisibility="Column" SelectionMode="Single" MaxHeight="320" AutomationProperties.Name="Peças da venda">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Peça" Binding="{Binding Produto, Mode=OneWay}" Width="3*" IsReadOnly="True" />
+                            <DataGridTextColumn Header="Vendidas" Binding="{Binding VendidasTexto, Mode=OneWay}" Width="1.6*" IsReadOnly="True" />
+                            <DataGridTextColumn Header="Valor un." Binding="{Binding ValorUnitarioTexto, Mode=OneWay}" Width="1.2*" IsReadOnly="True" />
+                            <DataGridTextColumn Header="Voltam" Binding="{Binding QuantidadeTexto, UpdateSourceTrigger=PropertyChanged}" Width="*" />
+                            <DataGridTextColumn Header="Vale" Binding="{Binding ValorTexto, Mode=OneWay}" Width="1.2*" IsReadOnly="True" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <TextBlock Text="Digite na coluna &quot;Voltam&quot; quantas peças de cada linha o cliente devolveu." Style="{StaticResource Rotulo}" TextWrapping="Wrap" />
+
+                    <TextBlock Text="Motivo (tamanho errado, defeito, não gostou...)" Style="{StaticResource Rotulo}" />
+                    <TextBox Text="{Binding Motivo, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Motivo da troca" />
+
+                    <TextBlock Text="{Binding TotalTrocaTexto}" FontSize="20" FontWeight="Bold" Margin="0,14,0,0"
+                               Foreground="{StaticResource CorPrimaria}" />
+                    <Button Content="Registrar troca e gerar vale" Style="{StaticResource BotaoPrimario}" HorizontalAlignment="Left" Margin="0,12,0,0"
+                            Command="{Binding GerarValeCommand}" />
+                </StackPanel>
+
+                <Border Visibility="{Binding TemUltimoVale, Converter={StaticResource BoolVis}}" Style="{StaticResource FaixaAviso}" Margin="0,14,0,0">
+                    <StackPanel>
+                        <TextBlock Text="{Binding UltimoValeTexto}" FontSize="18" FontWeight="Bold" TextWrapping="Wrap" />
+                        <Button Content="Reimprimir vale" Style="{StaticResource BotaoSecundario}" HorizontalAlignment="Left" Margin="0,8,0,0"
+                                Command="{Binding ReimprimirUltimoCommand}" />
+                    </StackPanel>
+                </Border>
+
+                <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" />
+            </StackPanel>
+        </Border>
+
+        <!-- LISTAS -->
+        <Grid Grid.Row="1" Grid.Column="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="16" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <Border Style="{StaticResource Painel}">
+                <DockPanel>
+                    <Grid DockPanel.Dock="Top" Margin="0,0,0,8">
+                        <TextBlock Text="Trocas dos últimos 90 dias" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        <Button Content="Cancelar troca" Style="{StaticResource BotaoSecundario}" HorizontalAlignment="Right"
+                                Visibility="{Binding PodeCancelar, Converter={StaticResource BoolVis}}" Command="{Binding CancelarTrocaCommand}" />
+                    </Grid>
+                    <DataGrid ItemsSource="{Binding Devolucoes}" SelectedItem="{Binding DevolucaoSelecionada, Mode=TwoWay}"
+                              AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" HeadersVisibility="Column"
+                              AutomationProperties.Name="Trocas recentes">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Data" Binding="{Binding DataHora, StringFormat=dd/MM HH:mm, Mode=OneWay}" Width="1.1*" />
+                            <DataGridTextColumn Header="Venda" Binding="{Binding VendaId, StringFormat=#{0}, Mode=OneWay}" Width="0.8*" />
+                            <DataGridTextColumn Header="Peças" Binding="{Binding Pecas, Mode=OneWay}" Width="0.7*" />
+                            <DataGridTextColumn Header="Valor" Binding="{Binding ValorCentavos, Converter={StaticResource Centavos}, Mode=OneWay}" Width="1*" />
+                            <DataGridTextColumn Header="Vale" Binding="{Binding CodigoVale, Mode=OneWay}" Width="1.4*" />
+                            <DataGridTextColumn Header="Motivo" Binding="{Binding Motivo, Mode=OneWay}" Width="2*" />
+                            <DataGridCheckBoxColumn Header="Cancelada" Binding="{Binding Cancelada, Mode=OneWay}" Width="0.9*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </Border>
+
+            <Border Grid.Row="2" Style="{StaticResource Painel}">
+                <DockPanel>
+                    <Grid DockPanel.Dock="Top" Margin="0,0,0,8">
+                        <StackPanel>
+                            <TextBlock Text="Vales-troca" FontSize="16" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding ResumoVales}" Style="{StaticResource Rotulo}" Margin="0,2,0,0" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <CheckBox Content="Só com saldo" IsChecked="{Binding SoValesComSaldo}" VerticalAlignment="Center" Margin="0,0,12,0" />
+                            <Button Content="Reimprimir" Style="{StaticResource BotaoSecundario}" Command="{Binding ReimprimirValeCommand}" />
+                        </StackPanel>
+                    </Grid>
+                    <DataGrid ItemsSource="{Binding Vales}" SelectedItem="{Binding ValeSelecionado, Mode=TwoWay}"
+                              AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" HeadersVisibility="Column"
+                              AutomationProperties.Name="Vales-troca">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Código" Binding="{Binding Codigo, Mode=OneWay}" Width="1.5*" />
+                            <DataGridTextColumn Header="Emitido" Binding="{Binding CriadoEm, StringFormat=dd/MM/yy, Mode=OneWay}" Width="1*" />
+                            <DataGridTextColumn Header="Valor" Binding="{Binding ValorCentavos, Converter={StaticResource Centavos}, Mode=OneWay}" Width="1*" />
+                            <DataGridTextColumn Header="Saldo" Binding="{Binding SaldoCentavos, Converter={StaticResource Centavos}, Mode=OneWay}" Width="1*" />
+                            <DataGridTextColumn Header="Cliente" Binding="{Binding Cliente, Mode=OneWay}" Width="1.6*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

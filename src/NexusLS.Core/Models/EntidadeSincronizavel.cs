@@ -45,6 +45,8 @@ public static class NomesEntidade
     public const string MateriaPrima = "materiaprima";
     public const string OrdemProducao = "ordemproducao";
     public const string PerdaProducao = "perdaproducao";
+    public const string Devolucao = "devolucao";
+    public const string ValeTroca = "valetroca";
 
     /// <summary>O nome da entidade para uma classe (o nome da classe em minúsculas).</summary>
     public static string De(Type tipo) => tipo.Name.ToLowerInvariant();

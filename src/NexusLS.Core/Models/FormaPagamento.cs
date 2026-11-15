@@ -8,5 +8,7 @@ public enum FormaPagamento
     CartaoDebito = 3,   // vendas antigas "Cartão" viraram débito
     CartaoCredito = 4,
     Cheque = 5,
-    APrazo = 6
+    APrazo = 6,
+    /// <summary>Venda paga inteira com vale-troca (nenhum dinheiro entrou).</summary>
+    ValeTroca = 7
 }
