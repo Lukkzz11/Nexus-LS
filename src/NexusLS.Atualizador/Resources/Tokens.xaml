@@ -9,44 +9,44 @@
     -->
 
     <!-- ===== Cores: base ===== -->
-    <SolidColorBrush x:Key="CorFundo" Color="#F3F4F6" />          <!-- fundo da janela -->
+    <SolidColorBrush x:Key="CorFundo" Color="#F8FAFC" />          <!-- fundo da janela -->
     <SolidColorBrush x:Key="CorPainel" Color="White" />           <!-- cartões, tabelas, campos -->
     <SolidColorBrush x:Key="CorMenu" Color="White" />             <!-- menu lateral -->
-    <SolidColorBrush x:Key="CorTexto" Color="#111827" />
-    <SolidColorBrush x:Key="CorTextoSuave" Color="#6B7280" />     <!-- rótulos, dicas, cabeçalho de tabela -->
-    <SolidColorBrush x:Key="CorBorda" Color="#E5E7EB" />          <!-- contorno de cartão -->
-    <SolidColorBrush x:Key="CorBordaCampo" Color="#D1D5DB" />     <!-- contorno de botão secundário e campo -->
-    <SolidColorBrush x:Key="CorBordaForte" Color="#9CA3AF" />
-    <SolidColorBrush x:Key="CorLinhaGrade" Color="#EEF0F3" />     <!-- linhas entre as linhas da tabela -->
-    <SolidColorBrush x:Key="CorHover" Color="#F3F4F6" />          <!-- passar o mouse sobre linha, botão suave ou menu -->
-    <SolidColorBrush x:Key="CorCabecalho" Color="#F9FAFB" />      <!-- cabeçalho de tabela -->
+    <SolidColorBrush x:Key="CorTexto" Color="#0F172A" />
+    <SolidColorBrush x:Key="CorTextoSuave" Color="#64748B" />     <!-- rótulos, dicas, cabeçalho de tabela -->
+    <SolidColorBrush x:Key="CorBorda" Color="#E2E8F0" />          <!-- contorno de cartão -->
+    <SolidColorBrush x:Key="CorBordaCampo" Color="#CBD5E1" />     <!-- contorno de botão secundário e campo -->
+    <SolidColorBrush x:Key="CorBordaForte" Color="#94A3B8" />
+    <SolidColorBrush x:Key="CorLinhaGrade" Color="#F1F5F9" />     <!-- linhas entre as linhas da tabela -->
+    <SolidColorBrush x:Key="CorHover" Color="#F1F5F9" />          <!-- passar o mouse sobre linha, botão suave ou menu -->
+    <SolidColorBrush x:Key="CorCabecalho" Color="#F8FAFC" />      <!-- cabeçalho de tabela -->
 
-    <!-- ===== Cores: ação principal (azul) ===== -->
-    <SolidColorBrush x:Key="CorPrimaria" Color="#2563EB" />
-    <SolidColorBrush x:Key="CorPrimariaHover" Color="#1D4ED8" />
-    <SolidColorBrush x:Key="CorPrimariaPressionada" Color="#1E40AF" />
-    <SolidColorBrush x:Key="CorSelecao" Color="#DBEAFE" />        <!-- linha selecionada -->
-    <SolidColorBrush x:Key="CorSelecaoSuave" Color="#EFF6FF" />   <!-- item ativo do menu -->
-    <SolidColorBrush x:Key="CorFoco" Color="#2563EB" />
+    <!-- ===== Cores: ação principal (Azul Windows Fluent) ===== -->
+    <SolidColorBrush x:Key="CorPrimaria" Color="#0067B8" />
+    <SolidColorBrush x:Key="CorPrimariaHover" Color="#005A9E" />
+    <SolidColorBrush x:Key="CorPrimariaPressionada" Color="#004578" />
+    <SolidColorBrush x:Key="CorSelecao" Color="#E0EDF8" />        <!-- linha selecionada -->
+    <SolidColorBrush x:Key="CorSelecaoSuave" Color="#F0F6FC" />   <!-- item ativo do menu -->
+    <SolidColorBrush x:Key="CorFoco" Color="#0067B8" />
     <SolidColorBrush x:Key="CorSobrePrimaria" Color="White" />    <!-- texto sobre fundo azul -->
-    <SolidColorBrush x:Key="CorSobrePrimariaSuave" Color="#DBEAFE" />
-    <SolidColorBrush x:Key="CorMenuAtivo" Color="#EFF6FF" />
+    <SolidColorBrush x:Key="CorSobrePrimariaSuave" Color="#E0EDF8" />
+    <SolidColorBrush x:Key="CorMenuAtivo" Color="#F0F6FC" />
 
     <!-- ===== Cores: estados ===== -->
-    <SolidColorBrush x:Key="CorSucesso" Color="#0F7B0F" />
+    <SolidColorBrush x:Key="CorSucesso" Color="#16A34A" />
     <SolidColorBrush x:Key="CorPositivo" Color="#15803D" />
-    <SolidColorBrush x:Key="CorPerigo" Color="#C42B1C" />
-    <SolidColorBrush x:Key="CorPerigoHover" Color="#A32317" />
-    <SolidColorBrush x:Key="CorPerigoPressionado" Color="#8A1D13" />
-    <SolidColorBrush x:Key="CorNegativo" Color="#B91C1C" />
-    <SolidColorBrush x:Key="CorAlerta" Color="#FFF4CE" />
-    <SolidColorBrush x:Key="CorAviso" Color="#B45309" />
-    <SolidColorBrush x:Key="CorAvisoFundo" Color="#FFF7E6" />
+    <SolidColorBrush x:Key="CorPerigo" Color="#DC2626" />
+    <SolidColorBrush x:Key="CorPerigoHover" Color="#B91C1C" />
+    <SolidColorBrush x:Key="CorPerigoPressionado" Color="#991B1B" />
+    <SolidColorBrush x:Key="CorNegativo" Color="#DC2626" />
+    <SolidColorBrush x:Key="CorAlerta" Color="#FEF3C7" />
+    <SolidColorBrush x:Key="CorAviso" Color="#D97706" />
+    <SolidColorBrush x:Key="CorAvisoFundo" Color="#FFFBEB" />
     <SolidColorBrush x:Key="CorAtencaoFundo" Color="#FFEDD5" />
     <SolidColorBrush x:Key="CorAtencaoBorda" Color="#EA580C" />
     <SolidColorBrush x:Key="CorAtencaoTexto" Color="#9A3412" />
-    <SolidColorBrush x:Key="CorSobreposicao" Color="#B3111827" /> <!-- véu atrás dos modais -->
-    <SolidColorBrush x:Key="CorColunaFundo" Color="#ECEEF1" />
+    <SolidColorBrush x:Key="CorSobreposicao" Color="#B30F172A" /> <!-- véu atrás dos modais -->
+    <SolidColorBrush x:Key="CorColunaFundo" Color="#F8FAFC" />
 
     <!-- Paleta categórica dos gráficos (pizzas): cores bem distintas entre si, na ordem de uso. "Outros" é sempre cinza. -->
     <SolidColorBrush x:Key="CorSerie1" Color="#2563EB" />

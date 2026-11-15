@@ -694,6 +694,48 @@ public partial class MainWindow : Window
         }
     }
 
+    private void BtnAbrirPastaNexus_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var exe = TxtCaminhoExe.Text.Trim();
+            var pasta = File.Exists(exe) ? Path.GetDirectoryName(exe) : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "Nexus");
+            if (Directory.Exists(pasta))
+            {
+                Process.Start(new ProcessStartInfo("explorer.exe", pasta) { UseShellExecute = true });
+            }
+            else
+            {
+                JanelaDialogo.Mostrar("Diretório", $"A pasta de instalação ainda não foi criada:\n{pasta}", TipoDialogo.Aviso, this);
+            }
+        }
+        catch (Exception ex)
+        {
+            JanelaDialogo.Mostrar("Erro", $"Não foi possível abrir o diretório: {ex.Message}", TipoDialogo.Erro, this);
+        }
+    }
+
+    private void BtnAbrirPastaBarTender_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var exe = TxtCaminhoBarTenderExe.Text.Trim();
+            var pasta = File.Exists(exe) ? Path.GetDirectoryName(exe) : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "Nexus");
+            if (Directory.Exists(pasta))
+            {
+                Process.Start(new ProcessStartInfo("explorer.exe", pasta) { UseShellExecute = true });
+            }
+            else
+            {
+                JanelaDialogo.Mostrar("Diretório", $"A pasta de instalação ainda não foi criada:\n{pasta}", TipoDialogo.Aviso, this);
+            }
+        }
+        catch (Exception ex)
+        {
+            JanelaDialogo.Mostrar("Erro", $"Não foi possível abrir o diretório: {ex.Message}", TipoDialogo.Erro, this);
+        }
+    }
+
     // ==================== EVENTOS DE LICENÇA ====================
 
     private void BtnCopiarHwid_Click(object sender, RoutedEventArgs e)

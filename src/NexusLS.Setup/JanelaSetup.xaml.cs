@@ -97,8 +97,8 @@ public partial class JanelaSetup : Window
     {
         if (numeroStep == passoAtual)
         {
-            badge.Background = new SolidColorBrush(Color.FromRgb(0x02, 0x84, 0xC7)); // Sky 600
-            badge.BorderBrush = new SolidColorBrush(Color.FromRgb(0x38, 0xBD, 0xF8)); // Sky 400
+            badge.Background = new SolidColorBrush(Color.FromRgb(0x00, 0x67, 0xB8)); // Windows 11 Fluent Blue
+            badge.BorderBrush = new SolidColorBrush(Color.FromRgb(0x2B, 0x88, 0xD8)); // Fluent Blue Light
             txt.Foreground = new SolidColorBrush(Color.FromRgb(0xFF, 0xFF, 0xFF));
             txt.FontWeight = FontWeights.Bold;
         }

@@ -34,7 +34,7 @@
                         <Trigger Property="IsKeyboardFocused" Value="True">
                             <Setter TargetName="borda" Property="Effect">
                                 <Setter.Value>
-                                    <DropShadowEffect ShadowDepth="0" BlurRadius="7" Color="#2563EB" Opacity="0.75" />
+                                    <DropShadowEffect ShadowDepth="0" BlurRadius="5" Color="#0067B8" Opacity="0.5" />
                                 </Setter.Value>
                             </Setter>
                         </Trigger>
@@ -160,7 +160,7 @@
                         <Trigger Property="IsKeyboardFocused" Value="True">
                             <Setter TargetName="borda" Property="Effect">
                                 <Setter.Value>
-                                    <DropShadowEffect ShadowDepth="0" BlurRadius="7" Color="#2563EB" Opacity="0.75" />
+                                    <DropShadowEffect ShadowDepth="0" BlurRadius="5" Color="#0067B8" Opacity="0.5" />
                                 </Setter.Value>
                             </Setter>
                         </Trigger>

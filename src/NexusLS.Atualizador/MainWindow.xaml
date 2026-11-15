@@ -29,7 +29,7 @@
                                 Padding="{TemplateBinding Padding}">
                             <Grid>
                                 <Border x:Name="pilarAtivo" Width="3" HorizontalAlignment="Left" Margin="-14,4,0,4"
-                                        Background="#0284C7" CornerRadius="2" Visibility="Collapsed" />
+                                        Background="#0067B8" CornerRadius="2" Visibility="Collapsed" />
                                 <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Left" Margin="4,0,0,0" />
                             </Grid>
                         </Border>
@@ -41,7 +41,7 @@
                             <Trigger Property="Tag" Value="Ativo">
                                 <Setter TargetName="border" Property="Background" Value="#EFF6FF" />
                                 <Setter TargetName="pilarAtivo" Property="Visibility" Value="Visible" />
-                                <Setter Property="Foreground" Value="#0284C7" />
+                                <Setter Property="Foreground" Value="#0067B8" />
                                 <Setter Property="FontWeight" Value="Bold" />
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -90,7 +90,7 @@
                         <StackPanel VerticalAlignment="Center">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="NEXUS" FontWeight="Bold" FontSize="16" Foreground="#0F172A" />
-                                <TextBlock Text=" HUB" FontWeight="Black" FontSize="16" Foreground="#2563EB" Margin="3,0,0,0" />
+                                <TextBlock Text=" HUB" FontWeight="Black" FontSize="16" Foreground="#0067B8" Margin="3,0,0,0" />
                             </StackPanel>
                             <TextBlock Text="Central de Aplicativos" FontSize="11" Foreground="#64748B" Margin="0,2,0,0" />
                         </StackPanel>
@@ -231,12 +231,16 @@
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
                                 <RowDefinition Height="*" />
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
 
+                            <!-- Faixa Superior de Destaque Fluent Blue -->
+                            <Border Grid.Row="0" Height="3" Background="#0067B8" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="-26,-26,-26,18" CornerRadius="8,8,0,0" />
+
                             <!-- Cabeçalho do Card: Ícone + Título + Badge de Status -->
-                            <StackPanel Grid.Row="0">
+                            <StackPanel Grid.Row="1">
                                 <Grid Margin="0,0,0,16">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto" />
@@ -264,8 +268,8 @@
                             </StackPanel>
 
                             <!-- Descrição e Detalhes da Versão -->
-                            <StackPanel Grid.Row="1" VerticalAlignment="Center" Margin="0,0,0,20">
-                                <TextBlock Text="Gestão completa de vendas, fechamento de caixa, controle de estoque, clientes, emissão de comprovantes térmicos e retaguarda."
+                            <StackPanel Grid.Row="2" VerticalAlignment="Center" Margin="0,0,0,20">
+                                <TextBlock Text="Gestão completa de vendas, fechamento de caixa, controle de estoque, clientes, emissão de comprovantes térmicos e retaguarda comercial."
                                            FontSize="13" Foreground="#475569" TextWrapping="Wrap" LineHeight="20" Margin="0,0,0,14" />
 
                                 <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="12,8">
@@ -280,27 +284,41 @@
                                 </Border>
                             </StackPanel>
 
-                            <!-- Botão Grande: ABRIR NEXUS LS -->
-                            <Button x:Name="BtnIniciarNexus" Grid.Row="2" Height="48"
-                                    Background="#0284C7" Foreground="White" BorderThickness="0"
-                                    Cursor="Hand" Click="BtnIniciarNexus_Click">
-                                <Button.Template>
-                                    <ControlTemplate TargetType="Button">
-                                        <Border x:Name="b" Background="{TemplateBinding Background}" CornerRadius="6">
-                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                        </Border>
-                                        <ControlTemplate.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="b" Property="Background" Value="#0369A1" />
-                                            </Trigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Button.Template>
-                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <Path Data="{StaticResource IconePlay}" Width="13" Height="13" Fill="#FFFFFF" Stretch="Uniform" Margin="0,0,10,0" VerticalAlignment="Center" />
-                                    <TextBlock Text="ABRIR NEXUS LS" FontWeight="Bold" FontSize="13" VerticalAlignment="Center" />
-                                </StackPanel>
-                            </Button>
+                            <!-- Linha de Ações: ABRIR NEXUS LS + Atalho de Pasta -->
+                            <Grid Grid.Row="3">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="8" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Button x:Name="BtnIniciarNexus" Height="48"
+                                        Background="#0067B8" Foreground="White" BorderThickness="0"
+                                        Cursor="Hand" Click="BtnIniciarNexus_Click">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="b" Background="{TemplateBinding Background}" CornerRadius="6">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="b" Property="Background" Value="#005A9E" />
+                                                </Trigger>
+                                                <Trigger Property="IsPressed" Value="True">
+                                                    <Setter TargetName="b" Property="Background" Value="#004578" />
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Path Data="{StaticResource IconePlay}" Width="13" Height="13" Fill="#FFFFFF" Stretch="Uniform" Margin="0,0,10,0" VerticalAlignment="Center" />
+                                        <TextBlock Text="ABRIR NEXUS LS" FontWeight="Bold" FontSize="13" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Grid.Column="2" Width="48" Height="48" Style="{StaticResource BotaoSecundario}" Padding="0"
+                                        ToolTip="Abrir pasta de instalação do Nexus LS" Click="BtnAbrirPastaNexus_Click">
+                                    <Path Data="{StaticResource IconePasta}" Width="16" Height="16" Fill="#475569" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Button>
+                            </Grid>
                         </Grid>
                     </Border>
 
@@ -310,12 +328,16 @@
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
                                 <RowDefinition Height="*" />
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
 
+                            <!-- Faixa Superior de Destaque Esmeralda -->
+                            <Border Grid.Row="0" Height="3" Background="#059669" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="-26,-26,-26,18" CornerRadius="8,8,0,0" />
+
                             <!-- Cabeçalho do Card: Ícone + Título + Badge de Status -->
-                            <StackPanel Grid.Row="0">
+                            <StackPanel Grid.Row="1">
                                 <Grid Margin="0,0,0,16">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto" />
@@ -342,7 +364,7 @@
                             </StackPanel>
 
                             <!-- Descrição e Detalhes da Versão -->
-                            <StackPanel Grid.Row="1" VerticalAlignment="Center" Margin="0,0,0,20">
+                            <StackPanel Grid.Row="2" VerticalAlignment="Center" Margin="0,0,0,20">
                                 <TextBlock Text="Impressão autônoma de etiquetas térmicas, código de barras (EAN-13, Code 128), gôndolas de produtos e personalização com logotipo."
                                            FontSize="13" Foreground="#475569" TextWrapping="Wrap" LineHeight="20" Margin="0,0,0,14" />
 
@@ -358,27 +380,41 @@
                                 </Border>
                             </StackPanel>
 
-                            <!-- Botão Grande: ABRIR BARTENDER -->
-                            <Button x:Name="BtnIniciarBarTender" Grid.Row="2" Height="48"
-                                    Background="#059669" Foreground="White" BorderThickness="0"
-                                    Cursor="Hand" Click="BtnIniciarBarTender_Click">
-                                <Button.Template>
-                                    <ControlTemplate TargetType="Button">
-                                        <Border x:Name="b" Background="{TemplateBinding Background}" CornerRadius="6">
-                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                        </Border>
-                                        <ControlTemplate.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="b" Property="Background" Value="#047857" />
-                                            </Trigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Button.Template>
-                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <Path Data="{StaticResource IconePlay}" Width="13" Height="13" Fill="#FFFFFF" Stretch="Uniform" Margin="0,0,10,0" VerticalAlignment="Center" />
-                                    <TextBlock Text="ABRIR BARTENDER" FontWeight="Bold" FontSize="13" VerticalAlignment="Center" />
-                                </StackPanel>
-                            </Button>
+                            <!-- Linha de Ações: ABRIR BARTENDER + Atalho de Pasta -->
+                            <Grid Grid.Row="3">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="8" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Button x:Name="BtnIniciarBarTender" Height="48"
+                                        Background="#059669" Foreground="White" BorderThickness="0"
+                                        Cursor="Hand" Click="BtnIniciarBarTender_Click">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="b" Background="{TemplateBinding Background}" CornerRadius="6">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="b" Property="Background" Value="#047857" />
+                                                </Trigger>
+                                                <Trigger Property="IsPressed" Value="True">
+                                                    <Setter TargetName="b" Property="Background" Value="#065F46" />
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Path Data="{StaticResource IconePlay}" Width="13" Height="13" Fill="#FFFFFF" Stretch="Uniform" Margin="0,0,10,0" VerticalAlignment="Center" />
+                                        <TextBlock Text="ABRIR BARTENDER" FontWeight="Bold" FontSize="13" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Grid.Column="2" Width="48" Height="48" Style="{StaticResource BotaoSecundario}" Padding="0"
+                                        ToolTip="Abrir pasta de instalação do BarTender" Click="BtnAbrirPastaBarTender_Click">
+                                    <Path Data="{StaticResource IconePasta}" Width="16" Height="16" Fill="#475569" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Button>
+                            </Grid>
                         </Grid>
                     </Border>
                 </Grid>
@@ -395,7 +431,7 @@
                         <Border Grid.Row="0" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="18,10" CornerRadius="6,6,0,0">
                             <Grid>
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <Path Data="{StaticResource IconeEscudo}" Width="14" Height="14" Fill="#0284C7" Stretch="Uniform" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                    <Path Data="{StaticResource IconeEscudo}" Width="14" Height="14" Fill="#0067B8" Stretch="Uniform" Margin="0,0,8,0" VerticalAlignment="Center" />
                                     <TextBlock Text="Propriedades da Estação e Licença Comercial" FontSize="12" FontWeight="Bold" Foreground="#1E293B" VerticalAlignment="Center" />
                                 </StackPanel>
                                 <TextBlock Text="● Conectado ao Servidor em Nuvem" FontSize="11" Foreground="#16A34A" FontWeight="SemiBold" HorizontalAlignment="Right" VerticalAlignment="Center" />
@@ -427,7 +463,7 @@
 
                             <StackPanel Grid.Row="0" Grid.Column="2">
                                 <TextBlock Text="EMPRESA / LOJA" FontSize="10" FontWeight="Bold" Foreground="#64748B" />
-                                <TextBlock x:Name="TxtHomeEmpresa" Text="Carregando..." FontSize="13" FontWeight="SemiBold" Foreground="#0284C7" Margin="0,3,0,0" />
+                                <TextBlock x:Name="TxtHomeEmpresa" Text="Carregando..." FontSize="13" FontWeight="SemiBold" Foreground="#0067B8" Margin="0,3,0,0" />
                             </StackPanel>
 
                             <StackPanel Grid.Row="0" Grid.Column="4">
@@ -535,7 +571,7 @@
                                 </Button>
                             </WrapPanel>
 
-                            <ProgressBar x:Name="PrgAtualizacao" Height="8" Visibility="Collapsed" Margin="0,0,0,6" Foreground="#2563EB" Background="#E2E8F0" BorderThickness="0" />
+                            <ProgressBar x:Name="PrgAtualizacao" Height="8" Visibility="Collapsed" Margin="0,0,0,6" Foreground="#0067B8" Background="#E2E8F0" BorderThickness="0" />
                             <TextBlock x:Name="TxtVersaoArquivo" Text="Executável pronto" FontSize="11" Foreground="#64748B" />
                         </StackPanel>
                     </Border>
@@ -702,7 +738,7 @@
                                 </StackPanel>
                                 <StackPanel Grid.Row="0" Grid.Column="2">
                                     <TextBlock Text="EMPRESA / ESTABELECIMENTO" FontSize="11" FontWeight="Bold" Foreground="#64748B" />
-                                    <TextBlock x:Name="TxtLicencaEmpresa" Text="—" FontSize="14" FontWeight="SemiBold" Foreground="#2563EB" Margin="0,3,0,0" />
+                                    <TextBlock x:Name="TxtLicencaEmpresa" Text="—" FontSize="14" FontWeight="SemiBold" Foreground="#0067B8" Margin="0,3,0,0" />
                                 </StackPanel>
                                 <StackPanel Grid.Row="0" Grid.Column="4">
                                     <TextBlock Text="PLANO CONTRATADO" FontSize="11" FontWeight="Bold" Foreground="#64748B" />
@@ -724,7 +760,7 @@
                             </Grid>
 
                             <!-- Bloco do HWID -->
-                            <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="10" Padding="16">
+                            <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="16">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
@@ -733,7 +769,7 @@
                                     <StackPanel VerticalAlignment="Center">
                                         <TextBlock Text="CÓDIGO DESTE COMPUTADOR (HWID)" FontSize="11" FontWeight="Bold" Foreground="#64748B" />
                                         <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                                            <TextBlock x:Name="TxtCodigoMaquina" Text="Carregando..." FontFamily="Consolas" FontSize="16" FontWeight="Bold" Foreground="#2563EB" />
+                                            <TextBlock x:Name="TxtCodigoMaquina" Text="Carregando..." FontFamily="Consolas" FontSize="16" FontWeight="Bold" Foreground="#0067B8" />
                                             <TextBlock x:Name="TxtNomeComputador" Text=" • Terminal" FontSize="12" Foreground="#64748B" VerticalAlignment="Center" Margin="8,0,0,0" />
                                         </StackPanel>
                                     </StackPanel>
@@ -804,7 +840,7 @@
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <Path Data="{StaticResource IconeNuvem}" Width="18" Height="18" Fill="#2563EB" Stretch="Uniform" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                    <Path Data="{StaticResource IconeNuvem}" Width="18" Height="18" Fill="#0067B8" Stretch="Uniform" Margin="0,0,12,0" VerticalAlignment="Center" />
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                         <TextBlock Text="Conexão com a Internet" FontSize="13" FontWeight="SemiBold" Foreground="#0F172A" />
                                         <TextBlock x:Name="TxtDiagInternetDesc" Text="Acesso à rede mundial e resolução de DNS" FontSize="11" Foreground="#64748B" />
@@ -861,7 +897,7 @@
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <Path Data="{StaticResource IconePlay}" Width="18" Height="18" Fill="#2563EB" Stretch="Uniform" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                    <Path Data="{StaticResource IconePlay}" Width="18" Height="18" Fill="#0067B8" Stretch="Uniform" Margin="0,0,12,0" VerticalAlignment="Center" />
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                         <TextBlock Text="Instalação do Nexus LS (ERP &amp; PDV)" FontSize="13" FontWeight="SemiBold" Foreground="#0F172A" />
                                         <TextBlock x:Name="TxtDiagNexusDesc" Text="Executável NexusLS.exe localizado" FontSize="11" Foreground="#64748B" />
@@ -918,7 +954,7 @@
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <Path Data="{StaticResource IconeAtualizar}" Width="18" Height="18" Fill="#2563EB" Stretch="Uniform" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                    <Path Data="{StaticResource IconeAtualizar}" Width="18" Height="18" Fill="#0067B8" Stretch="Uniform" Margin="0,0,12,0" VerticalAlignment="Center" />
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                         <TextBlock Text="Sistema de Atualizações Oficiais (GitHub Releases)" FontSize="13" FontWeight="SemiBold" Foreground="#0F172A" />
                                         <TextBlock x:Name="TxtDiagUpdatesDesc" Text="Comunicação com repositório Lukkzz11/Nexus-LS---Update" FontSize="11" Foreground="#64748B" />
@@ -973,7 +1009,7 @@
                                 <StackPanel VerticalAlignment="Center">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="NEXUS" FontWeight="Bold" FontSize="24" Foreground="#0F172A" />
-                                        <TextBlock Text=" HUB" FontWeight="Black" FontSize="24" Foreground="#2563EB" Margin="4,0,0,0" />
+                                        <TextBlock Text=" HUB" FontWeight="Black" FontSize="24" Foreground="#0067B8" Margin="4,0,0,0" />
                                     </StackPanel>
                                     <TextBlock Text="Central de Aplicativos e Gerenciamento do Ecossistema Nexus" FontSize="13" Foreground="#64748B" Margin="0,4,0,0" />
                                 </StackPanel>
@@ -982,7 +1018,7 @@
                             <TextBlock Text="O Nexus Hub centraliza o lançamento, a atualização e a validação de licenças dos sistemas Nexus LS (ERP e Frente de Caixa) e Nexus BarTender (Estúdio de Etiquetas), proporcionando uma experiência de gestão comercial moderna e ágil para o seu negócio."
                                        FontSize="13" Foreground="#334155" LineHeight="22" TextWrapping="Wrap" Margin="0,0,0,24" />
 
-                            <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="10" Padding="18" Margin="0,0,0,24">
+                            <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="18" Margin="0,0,0,24">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
@@ -991,7 +1027,7 @@
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Grid.Column="0">
                                         <TextBlock Text="NEXUS HUB" FontSize="11" FontWeight="Bold" Foreground="#64748B" />
-                                        <TextBlock Text="v1.2.6 (Oficial)" FontSize="14" FontWeight="Bold" Foreground="#2563EB" Margin="0,2,0,0" />
+                                        <TextBlock Text="v1.2.6 (Oficial)" FontSize="14" FontWeight="Bold" Foreground="#0067B8" Margin="0,2,0,0" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="1">
                                         <TextBlock Text="NEXUS LS (ERP/PDV)" FontSize="11" FontWeight="Bold" Foreground="#64748B" />

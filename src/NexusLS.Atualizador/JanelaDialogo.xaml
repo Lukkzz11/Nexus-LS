@@ -27,7 +27,7 @@
             <Border Grid.Row="0" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="16,10" CornerRadius="8,8,0,0">
                 <Grid>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Border Background="#0284C7" CornerRadius="4" Width="18" Height="18" Margin="0,0,8,0">
+                        <Border Background="#0067B8" CornerRadius="4" Width="18" Height="18" Margin="0,0,8,0">
                             <TextBlock Text="N" Foreground="White" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                         <TextBlock x:Name="TxtTituloBarra" Text="Nexus — Mensagem do Sistema" FontSize="12" FontWeight="SemiBold" Foreground="#334155" VerticalAlignment="Center" />
@@ -84,7 +84,7 @@
                             Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" Foreground="#334155"
                             FontSize="12" FontWeight="SemiBold" Cursor="Hand" Click="BtnCancelar_Click" />
                     <Button x:Name="BtnConfirmar" Content="OK" Width="90" Height="32"
-                            Background="#0284C7" BorderBrush="#0284C7" BorderThickness="1" Foreground="#FFFFFF"
+                            Background="#0067B8" BorderBrush="#0067B8" BorderThickness="1" Foreground="#FFFFFF"
                             FontSize="12" FontWeight="SemiBold" Cursor="Hand" Click="BtnConfirmar_Click" />
                 </StackPanel>
             </Border>
