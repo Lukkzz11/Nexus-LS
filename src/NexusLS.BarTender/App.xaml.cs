@@ -38,6 +38,11 @@ public partial class App : Application
         }
     }
 
+    public static void Log(Exception ex, string contexto)
+    {
+        Log($"[ERRO] {contexto}: {ex.GetType().Name} - {ex.Message}");
+    }
+
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);

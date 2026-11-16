@@ -11,6 +11,59 @@ namespace NexusLS.BarTender.Services;
 
 public class ImpressaoService
 {
+    private static PrintDialog? PrepararDialogoImpressao(
+        string? nomeImpressora,
+        double larguraMm,
+        double alturaMm,
+        out string? impressoraEfetiva)
+    {
+        impressoraEfetiva = null;
+        var dialogo = new PrintDialog();
+
+        if (!string.IsNullOrWhiteSpace(nomeImpressora))
+        {
+            try
+            {
+                using var server = new System.Printing.LocalPrintServer();
+                dialogo.PrintQueue = server.GetPrintQueue(nomeImpressora);
+                impressoraEfetiva = dialogo.PrintQueue.FullName;
+            }
+            catch (Exception ex)
+            {
+                App.Log(ex, $"Impressora '{nomeImpressora}' nao encontrada. Fallback para '{dialogo.PrintQueue?.FullName}'");
+                impressoraEfetiva = dialogo.PrintQueue?.FullName;
+            }
+        }
+        else
+        {
+            impressoraEfetiva = dialogo.PrintQueue?.FullName;
+        }
+
+        if (dialogo.ShowDialog() != true) return null;
+
+        try
+        {
+            if (larguraMm >= 200) // Folha A4
+            {
+                dialogo.PrintTicket.PageMediaSize = new System.Printing.PageMediaSize(
+                    System.Printing.PageMediaSizeName.ISOA4);
+            }
+            else // Bobina termica
+            {
+                dialogo.PrintTicket.PageMediaSize = new System.Printing.PageMediaSize(
+                    DesenhoEtiquetaService.Dip(larguraMm),
+                    DesenhoEtiquetaService.Dip(alturaMm));
+            }
+        }
+        catch (Exception ex)
+        {
+            // Drivers de impressoras termicas que nao aceitam tamanho programatico
+            App.Log(ex, "Nao foi possivel configurar o tamanho de pagina no PrintTicket");
+        }
+
+        return dialogo;
+    }
+
     public static bool Imprimir(
         IEnumerable<ItemFila> itens,
         ConfiguracaoEtiqueta config,
@@ -20,38 +73,14 @@ public class ImpressaoService
         var listaItens = itens.ToList();
         if (listaItens.Count == 0) return false;
 
-        var dialogo = new PrintDialog();
-        if (!string.IsNullOrWhiteSpace(nomeImpressora))
-        {
-            try
-            {
-                var server = new System.Printing.LocalPrintServer();
-                dialogo.PrintQueue = server.GetPrintQueue(nomeImpressora);
-            }
-            catch { }
-        }
-        if (dialogo.ShowDialog() != true) return false;
-
         var formatoCore = config.Formato.FormatoCore;
+        var dialogo = PrepararDialogoImpressao(
+            nomeImpressora,
+            formatoCore.PaginaLarguraMm,
+            formatoCore.PaginaAlturaMm,
+            out _);
 
-        try
-        {
-            if (formatoCore.PaginaLarguraMm >= 200) // Folha A4
-            {
-                dialogo.PrintTicket.PageMediaSize = new System.Printing.PageMediaSize(
-                    System.Printing.PageMediaSizeName.ISOA4);
-            }
-            else // Bobina térmica (50x30, 40x25, 60x40, etc.)
-            {
-                dialogo.PrintTicket.PageMediaSize = new System.Printing.PageMediaSize(
-                    DesenhoEtiquetaService.Dip(formatoCore.PaginaLarguraMm),
-                    DesenhoEtiquetaService.Dip(formatoCore.PaginaAlturaMm));
-            }
-        }
-        catch
-        {
-            // Alguns drivers de impressora térmica não aceitam configurar o papel programaticamente
-        }
+        if (dialogo == null) return false;
 
         var paginator = new BarTenderPaginator(listaItens, config, primeiraPosicao);
         dialogo.PrintDocument(paginator, "Nexus BarTender - Impressão de Etiquetas");
@@ -68,33 +97,13 @@ public class ImpressaoService
         var listaItens = itens.ToList();
         if (listaItens.Count == 0) return false;
 
-        var dialogo = new PrintDialog();
-        if (!string.IsNullOrWhiteSpace(nomeImpressora))
-        {
-            try
-            {
-                var server = new System.Printing.LocalPrintServer();
-                dialogo.PrintQueue = server.GetPrintQueue(nomeImpressora);
-            }
-            catch { }
-        }
-        if (dialogo.ShowDialog() != true) return false;
+        var dialogo = PrepararDialogoImpressao(
+            nomeImpressora,
+            modelo.LarguraMm,
+            modelo.AlturaMm,
+            out _);
 
-        try
-        {
-            if (modelo.LarguraMm >= 200)
-            {
-                dialogo.PrintTicket.PageMediaSize = new System.Printing.PageMediaSize(
-                    System.Printing.PageMediaSizeName.ISOA4);
-            }
-            else
-            {
-                dialogo.PrintTicket.PageMediaSize = new System.Printing.PageMediaSize(
-                    EditorDesenhoService.Dip(modelo.LarguraMm),
-                    EditorDesenhoService.Dip(modelo.AlturaMm));
-            }
-        }
-        catch { }
+        if (dialogo == null) return false;
 
         var paginator = new BarTenderDesignPaginator(listaItens, modelo, nomeLoja, primeiraPosicao);
         dialogo.PrintDocument(paginator, $"Nexus BarTender - {modelo.Nome}");
