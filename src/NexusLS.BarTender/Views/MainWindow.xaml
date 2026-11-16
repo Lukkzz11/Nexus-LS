@@ -23,6 +23,7 @@
     <ui:FluentWindow.Resources>
         <!-- Estilo de item do menu lateral idêntico ao Nexus LS -->
         <Style x:Key="ItemDoMenu" TargetType="Button" BasedOn="{StaticResource BotaoMenu}">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Style.Triggers>
                 <DataTrigger Value="True">
                     <DataTrigger.Binding>
@@ -49,6 +50,15 @@
             <Setter Property="CornerRadius" Value="{StaticResource RaioPequeno}" />
             <Setter Property="Padding" Value="8,2" />
             <Setter Property="Margin" Value="0,0,6,0" />
+        </Style>
+
+        <Style x:Key="BadgeContadorMenu" TargetType="Border">
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="7,1" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Background" Value="{StaticResource CorCabecalho}" />
+            <Setter Property="BorderBrush" Value="{StaticResource CorBorda}" />
+            <Setter Property="BorderThickness" Value="1" />
         </Style>
     </ui:FluentWindow.Resources>
 
@@ -114,7 +124,7 @@
 
                             <!-- 2. Catálogo de Produtos do ERP -->
                             <Button Tag="Catalogo" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaCatalogoCommand}" Margin="0,0,0,4">
-                                <Grid Width="170">
+                                <Grid HorizontalAlignment="Stretch">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
@@ -123,7 +133,7 @@
                                         <ui:SymbolIcon Symbol="Box24" Style="{StaticResource IconeDoMenu}" />
                                         <TextBlock Text="Catálogo ERP" VerticalAlignment="Center" />
                                     </StackPanel>
-                                    <Border Grid.Column="1" Background="{StaticResource CorCabecalho}" BorderBrush="{StaticResource CorBorda}" BorderThickness="1" CornerRadius="10" Padding="6,1" VerticalAlignment="Center">
+                                    <Border Grid.Column="1" Style="{StaticResource BadgeContadorMenu}">
                                         <TextBlock Text="{Binding TotalProdutos}" FontSize="10.5" FontWeight="Bold" Foreground="{StaticResource CorTextoSuave}" />
                                     </Border>
                                 </Grid>
@@ -131,7 +141,7 @@
 
                             <!-- 3. Fila de Impressão -->
                             <Button Tag="Fila" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaFilaCommand}" Margin="0,0,0,4">
-                                <Grid Width="170">
+                                <Grid HorizontalAlignment="Stretch">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
@@ -140,7 +150,7 @@
                                         <ui:SymbolIcon Symbol="Print24" Style="{StaticResource IconeDoMenu}" />
                                         <TextBlock Text="Fila de Impressão" VerticalAlignment="Center" />
                                     </StackPanel>
-                                    <Border Grid.Column="1" Background="{StaticResource CorPrimaria}" CornerRadius="10" Padding="7,1" VerticalAlignment="Center">
+                                    <Border Grid.Column="1" Style="{StaticResource BadgeContadorMenu}" Background="{StaticResource CorPrimaria}" BorderThickness="0">
                                         <TextBlock Text="{Binding TotalEtiquetasFila}" FontSize="10.5" FontWeight="Bold" Foreground="White" />
                                     </Border>
                                 </Grid>
@@ -158,7 +168,7 @@
 
                             <!-- 5. Licença & Atualizações -->
                             <Button Style="{StaticResource ItemDoMenu}" Command="{Binding AbrirAtualizadorLicencaCommand}">
-                                <Grid Width="170">
+                                <Grid HorizontalAlignment="Stretch">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
@@ -167,7 +177,7 @@
                                         <ui:SymbolIcon Symbol="ShieldCheckmark24" Style="{StaticResource IconeDoMenu}" />
                                         <TextBlock Text="Licença &amp; Atualizador" VerticalAlignment="Center" />
                                     </StackPanel>
-                                    <Border Grid.Column="1" Background="{StaticResource CorPositivo}" CornerRadius="10" Padding="6,1" VerticalAlignment="Center"
+                                    <Border Grid.Column="1" Style="{StaticResource BadgeContadorMenu}" Background="{StaticResource CorPositivo}" BorderThickness="0"
                                             Visibility="{Binding TemAtualizacaoDisponivel, Converter={StaticResource BoolVis}}">
                                         <TextBlock Text="NOVA" FontSize="9.5" FontWeight="Bold" Foreground="White" />
                                     </Border>
@@ -319,6 +329,11 @@
                                   AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
                                   SelectionMode="Single" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
                                   HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0" Background="{StaticResource CorPainel}" RowHeight="42"
+                                  EnableRowVirtualization="True"
+                                  EnableColumnVirtualization="False"
+                                  VirtualizingPanel.IsVirtualizing="True"
+                                  VirtualizingPanel.VirtualizationMode="Recycling"
+                                  ScrollViewer.CanContentScroll="True"
                                   MouseDoubleClick="DataGrid_MouseDoubleClick">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Código" Binding="{Binding CodigoInterno}" Width="90" IsReadOnly="True" />
@@ -420,38 +435,45 @@
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-                                <!-- Ação Rápida de Usar no Estúdio & Adicionar à Fila com Qtd -->
-                                <DataGridTemplateColumn Header="Ações" Width="2.5*">
+                                <!-- Ações Rápidas: Ícones com Tooltip e AutomationProperties.Name -->
+                                <DataGridTemplateColumn Header="Ações" Width="170">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="2,0">
                                                 <Button Command="{Binding DataContext.UsarProdutoNoEstudioCommand, RelativeSource={RelativeSource AncestorType=ui:FluentWindow}}"
                                                         CommandParameter="{Binding}"
-                                                        Style="{StaticResource BotaoPrimario}" Padding="8,4" FontSize="11" Margin="0,0,6,0"
-                                                        ToolTip="Abrir e editar a etiqueta deste produto no Estúdio">
-                                                    <StackPanel Orientation="Horizontal">
-                                                        <ui:SymbolIcon Symbol="PaintBrush24" FontSize="13" Margin="0,0,4,0" VerticalAlignment="Center" />
-                                                        <TextBlock Text="Abrir Etiqueta" VerticalAlignment="Center" />
-                                                    </StackPanel>
+                                                        Style="{StaticResource BotaoPrimario}"
+                                                        Width="28" Height="28" Padding="0" Margin="0,0,6,0"
+                                                        ToolTip="Abrir no Estúdio"
+                                                        AutomationProperties.Name="Abrir no Estúdio">
+                                                    <ui:SymbolIcon Symbol="PaintBrush24" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                                 </Button>
 
                                                 <!-- Quantidade Rápida -->
-                                                <Button Command="{Binding DecrementarQtdCommand}" Style="{StaticResource BotaoSecundario}" Width="24" Height="24" Padding="0" Margin="0,0,2,0">
-                                                    <ui:SymbolIcon Symbol="Subtract24" FontSize="11" />
+                                                <Button Command="{Binding DecrementarQtdCommand}" Style="{StaticResource BotaoSecundario}"
+                                                        Width="24" Height="28" Padding="0" Margin="0,0,2,0"
+                                                        ToolTip="Diminuir quantidade"
+                                                        AutomationProperties.Name="Diminuir quantidade">
+                                                    <ui:SymbolIcon Symbol="Subtract24" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                                 </Button>
-                                                <TextBox Text="{Binding QuantidadeAdicionar, UpdateSourceTrigger=PropertyChanged}" Width="34" Height="24"
-                                                         TextAlignment="Center" VerticalContentAlignment="Center" FontSize="11" FontWeight="Bold" Padding="0" Margin="0,0,2,0" />
-                                                <Button Command="{Binding IncrementarQtdCommand}" Style="{StaticResource BotaoSecundario}" Width="24" Height="24" Padding="0" Margin="0,0,4,0">
-                                                    <ui:SymbolIcon Symbol="Add24" FontSize="11" />
+                                                <TextBox Text="{Binding QuantidadeAdicionar, UpdateSourceTrigger=PropertyChanged}"
+                                                         Width="32" Height="28"
+                                                         TextAlignment="Center" VerticalContentAlignment="Center" FontSize="11" FontWeight="Bold" Padding="0" Margin="0,0,2,0"
+                                                         AutomationProperties.Name="Quantidade de etiquetas a adicionar" />
+                                                <Button Command="{Binding IncrementarQtdCommand}" Style="{StaticResource BotaoSecundario}"
+                                                        Width="24" Height="28" Padding="0" Margin="0,0,6,0"
+                                                        ToolTip="Aumentar quantidade"
+                                                        AutomationProperties.Name="Aumentar quantidade">
+                                                    <ui:SymbolIcon Symbol="Add24" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                                 </Button>
 
                                                 <Button Command="{Binding DataContext.AdicionarItemComQuantidadeFilaCommand, RelativeSource={RelativeSource AncestorType=ui:FluentWindow}}"
                                                         CommandParameter="{Binding}"
-                                                        Style="{StaticResource BotaoSecundario}" Padding="8,4" FontSize="11" ToolTip="Adicionar esta quantidade à fila">
-                                                    <StackPanel Orientation="Horizontal">
-                                                        <ui:SymbolIcon Symbol="Add24" FontSize="13" Margin="0,0,4,0" VerticalAlignment="Center" />
-                                                        <TextBlock Text="Fila" VerticalAlignment="Center" />
-                                                    </StackPanel>
+                                                        Style="{StaticResource BotaoSecundario}"
+                                                        Width="28" Height="28" Padding="0"
+                                                        ToolTip="Adicionar à fila"
+                                                        AutomationProperties.Name="Adicionar à fila">
+                                                    <ui:SymbolIcon Symbol="Add24" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                                 </Button>
                                             </StackPanel>
                                         </DataTemplate>
@@ -471,26 +493,29 @@
                             </Grid.ColumnDefinitions>
 
                             <StackPanel Grid.Column="0" Orientation="Horizontal">
-                                <Button Command="{Binding GerarCodigoIndividualCommand}" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,0">
+                                <Button Command="{Binding GerarCodigoIndividualCommand}" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,0"
+                                        ToolTip="Gera e grava código EAN-13 para o produto selecionado na lista" AutomationProperties.Name="Gera e grava código EAN-13 para o produto selecionado na lista">
                                     <StackPanel Orientation="Horizontal">
                                         <ui:SymbolIcon Symbol="BarcodeScanner24" FontSize="15" Margin="0,0,6,0" VerticalAlignment="Center" />
-                                        <TextBlock Text="Gerar Código EAN-13 para Selecionado" VerticalAlignment="Center" />
+                                        <TextBlock Text="Gerar EAN-13 (selecionado)" VerticalAlignment="Center" />
                                     </StackPanel>
                                 </Button>
 
-                                <Button Command="{Binding GerarCodigosEmLoteCommand}" Style="{StaticResource BotaoPrimario}">
+                                <Button Command="{Binding GerarCodigosEmLoteCommand}" Style="{StaticResource BotaoPrimario}"
+                                        ToolTip="Gera códigos EAN-13 para todos os produtos da base que ainda não têm código" AutomationProperties.Name="Gera códigos EAN-13 para todos os produtos da base que ainda não têm código">
                                     <StackPanel Orientation="Horizontal">
                                         <ui:SymbolIcon Symbol="Sparkle24" FontSize="15" Margin="0,0,6,0" VerticalAlignment="Center" />
-                                        <TextBlock Text="Gerar Códigos para Todos sem Código" FontWeight="Bold" VerticalAlignment="Center" />
+                                        <TextBlock Text="Gerar códigos faltantes" FontWeight="Bold" VerticalAlignment="Center" />
                                     </StackPanel>
                                 </Button>
                             </StackPanel>
 
                             <StackPanel Grid.Column="2" Orientation="Horizontal">
-                                <Button Command="{Binding PuxarEstoqueAtualCommand}" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,0">
+                                <Button Command="{Binding PuxarEstoqueAtualCommand}" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,0"
+                                        ToolTip="Carrega na fila de impressão todos os produtos que possuem saldo positivo em estoque" AutomationProperties.Name="Carrega na fila de impressão todos os produtos que possuem saldo positivo em estoque">
                                     <StackPanel Orientation="Horizontal">
                                         <ui:SymbolIcon Symbol="Box24" FontSize="15" Margin="0,0,6,0" VerticalAlignment="Center" />
-                                        <TextBlock Text="Puxar Estoque da Loja p/ Fila" VerticalAlignment="Center" />
+                                        <TextBlock Text="Puxar estoque da loja" VerticalAlignment="Center" />
                                     </StackPanel>
                                 </Button>
                             </StackPanel>
@@ -565,7 +590,9 @@
                                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                                 <Button Command="{Binding DataContext.DecrementarItemCommand, RelativeSource={RelativeSource AncestorType=ui:FluentWindow}}"
                                                         CommandParameter="{Binding}"
-                                                        Style="{StaticResource BotaoSecundario}" Width="30" Height="30" Padding="0" Margin="0,0,8,0">
+                                                        Style="{StaticResource BotaoSecundario}" Width="30" Height="30" Padding="0" Margin="0,0,8,0"
+                                                        ToolTip="Diminuir quantidade"
+                                                        AutomationProperties.Name="Diminuir quantidade">
                                                     <ui:SymbolIcon Symbol="Subtract24" FontSize="13" />
                                                 </Button>
 
@@ -574,7 +601,9 @@
 
                                                 <Button Command="{Binding DataContext.IncrementarItemCommand, RelativeSource={RelativeSource AncestorType=ui:FluentWindow}}"
                                                         CommandParameter="{Binding}"
-                                                        Style="{StaticResource BotaoSecundario}" Width="30" Height="30" Padding="0" Margin="8,0,0,0">
+                                                        Style="{StaticResource BotaoSecundario}" Width="30" Height="30" Padding="0" Margin="8,0,0,0"
+                                                        ToolTip="Aumentar quantidade"
+                                                        AutomationProperties.Name="Aumentar quantidade">
                                                     <ui:SymbolIcon Symbol="Add24" FontSize="13" />
                                                 </Button>
                                             </StackPanel>
@@ -587,7 +616,7 @@
                                         <DataTemplate>
                                             <Button Command="{Binding DataContext.RemoverItemFilaCommand, RelativeSource={RelativeSource AncestorType=ui:FluentWindow}}"
                                                     CommandParameter="{Binding}"
-                                                    Style="{StaticResource BotaoFantasma}" ToolTip="Remover este item da fila" Padding="6,4">
+                                                    Style="{StaticResource BotaoFantasma}" ToolTip="Remover este item da fila" Padding="6,4" AutomationProperties.Name="Remover este item da fila">
                                                 <ui:SymbolIcon Symbol="Dismiss24" FontSize="14" Foreground="{StaticResource CorPerigo}" />
                                             </Button>
                                         </DataTemplate>

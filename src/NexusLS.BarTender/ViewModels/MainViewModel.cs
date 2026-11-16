@@ -259,7 +259,27 @@ public partial class MainViewModel : ObservableObject
             || (item.CodigoBarras?.ToLowerInvariant().Contains(busca) ?? false);
     }
 
-    partial void OnTextoBuscaChanged(string value) => ProdutosView.Refresh();
+        private System.Windows.Threading.DispatcherTimer? _debounceBuscaTimer;
+
+    partial void OnTextoBuscaChanged(string value)
+    {
+        if (_debounceBuscaTimer == null)
+        {
+            _debounceBuscaTimer = new System.Windows.Threading.DispatcherTimer
+            {
+                Interval = TimeSpan.FromMilliseconds(250)
+            };
+            _debounceBuscaTimer.Tick += (_, _) =>
+            {
+                _debounceBuscaTimer?.Stop();
+                ProdutosView.Refresh();
+                AtualizarContadores();
+            };
+        }
+
+        _debounceBuscaTimer.Stop();
+        _debounceBuscaTimer.Start();
+    }
 
     partial void OnFiltroTipoChanged(string value) => ProdutosView.Refresh();
 

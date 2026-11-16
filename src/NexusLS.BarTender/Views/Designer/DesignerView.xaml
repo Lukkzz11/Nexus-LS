@@ -190,7 +190,7 @@
                             <TextBlock Text=" × A:" FontSize="10.5" FontWeight="Bold" Foreground="{StaticResource CorTextoSuave}" VerticalAlignment="Center" Margin="3,0,3,0" />
                             <TextBox Text="{Binding FolhaAlturaMm, UpdateSourceTrigger=LostFocus, StringFormat='{}{0:0.##}'}" KeyDown="FolhaTextBox_KeyDown" Width="40" Height="24" Padding="2,0" FontSize="11" FontWeight="Bold" TextAlignment="Center" VerticalContentAlignment="Center" ToolTip="Altura da Folha (mm) - Pressione Enter para aplicar" />
                             <TextBlock Text=" mm" FontSize="10.5" Foreground="{StaticResource CorTextoSuave}" VerticalAlignment="Center" Margin="2,0,6,0" />
-                            <Button Command="{Binding AlternarOrientacaoFolhaCommand}" Style="{StaticResource BotaoSecundario}" Width="24" Height="24" Padding="0" ToolTip="Inverter Orientação (Paisagem / Retrato)">
+                            <Button Command="{Binding AlternarOrientacaoFolhaCommand}" Style="{StaticResource BotaoSecundario}" Width="24" Height="24" Padding="0" ToolTip="Inverter Orientação (Paisagem / Retrato)" AutomationProperties.Name="Inverter Orientação">
                                 <ui:SymbolIcon Symbol="ArrowSync24" FontSize="12" />
                             </Button>
                         </StackPanel>
@@ -529,11 +529,11 @@
                         <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                             <TextBlock Text="TESTAR COM PRODUTO:" Foreground="{StaticResource CorTextoSuave}" FontWeight="Bold" FontSize="10.5" VerticalAlignment="Center" Margin="0,0,8,0" />
 
-                            <Button Command="{Binding ProdutoAnteriorCommand}" Style="{StaticResource BotaoSecundario}" Width="28" Height="28" Padding="0" ToolTip="Produto anterior no catálogo" Margin="0,0,4,0">
+                            <Button Command="{Binding ProdutoAnteriorCommand}" Style="{StaticResource BotaoSecundario}" Width="28" Height="28" Padding="0" ToolTip="Produto anterior no catálogo" Margin="0,0,4,0" AutomationProperties.Name="Produto anterior">
                                 <ui:SymbolIcon Symbol="ChevronLeft24" FontSize="14" />
                             </Button>
 
-                            <Button Command="{Binding ProximoProdutoCommand}" Style="{StaticResource BotaoSecundario}" Width="28" Height="28" Padding="0" ToolTip="Próximo produto no catálogo" Margin="0,0,10,0">
+                            <Button Command="{Binding ProximoProdutoCommand}" Style="{StaticResource BotaoSecundario}" Width="28" Height="28" Padding="0" ToolTip="Próximo produto no catálogo" Margin="0,0,10,0" AutomationProperties.Name="Próximo produto">
                                 <ui:SymbolIcon Symbol="ChevronRight24" FontSize="14" />
                             </Button>
 
@@ -1019,25 +1019,25 @@
                                         </Grid.ColumnDefinitions>
 
                                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                            <Button Command="{Binding SubirCamadaCommand}" Style="{StaticResource BotaoSecundario}" Width="26" Height="26" Padding="0" Margin="0,0,4,0" ToolTip="Subir camada / Avançar (Ctrl + ])">
+                                            <Button Command="{Binding SubirCamadaCommand}" Style="{StaticResource BotaoSecundario}" Width="26" Height="26" Padding="0" Margin="0,0,4,0" ToolTip="Subir camada / Avançar (Ctrl + ])" AutomationProperties.Name="Subir camada">
                                                 <ui:SymbolIcon Symbol="ArrowUp24" FontSize="13" />
                                             </Button>
-                                            <Button Command="{Binding DescerCamadaCommand}" Style="{StaticResource BotaoSecundario}" Width="26" Height="26" Padding="0" Margin="0,0,6,0" ToolTip="Descer camada / Recuar (Ctrl + [)">
+                                            <Button Command="{Binding DescerCamadaCommand}" Style="{StaticResource BotaoSecundario}" Width="26" Height="26" Padding="0" Margin="0,0,6,0" ToolTip="Descer camada / Recuar (Ctrl + [)" AutomationProperties.Name="Descer camada">
                                                 <ui:SymbolIcon Symbol="ArrowDown24" FontSize="13" />
                                             </Button>
-                                            <Button Command="{Binding AgruparCommand}" Style="{StaticResource BotaoSecundario}" Width="26" Height="26" Padding="0" Margin="0,0,4,0" ToolTip="Agrupar selecionados (Ctrl + G)">
+                                            <Button Command="{Binding AgruparCommand}" Style="{StaticResource BotaoSecundario}" Width="26" Height="26" Padding="0" Margin="0,0,4,0" ToolTip="Agrupar selecionados (Ctrl + G)" AutomationProperties.Name="Agrupar selecionados">
                                                 <ui:SymbolIcon Symbol="Group24" FontSize="13" />
                                             </Button>
-                                            <Button Command="{Binding DesagruparCommand}" Style="{StaticResource BotaoSecundario}" Width="26" Height="26" Padding="0" Margin="0,0,6,0" ToolTip="Desagrupar objetos (Ctrl + Shift + G)">
+                                            <Button Command="{Binding DesagruparCommand}" Style="{StaticResource BotaoSecundario}" Width="26" Height="26" Padding="0" Margin="0,0,6,0" ToolTip="Desagrupar objetos (Ctrl + Shift + G)" AutomationProperties.Name="Desagrupar objetos">
                                                 <ui:SymbolIcon Symbol="GroupDismiss24" FontSize="13" />
                                             </Button>
                                         </StackPanel>
 
                                         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                            <Button Command="{Binding DuplicarSelecionadoCommand}" Style="{StaticResource BotaoSecundario}" Width="26" Height="26" Padding="0" Margin="0,0,4,0" ToolTip="Duplicar camada selecionada (Ctrl + D)">
+                                            <Button Command="{Binding DuplicarSelecionadoCommand}" Style="{StaticResource BotaoSecundario}" Width="26" Height="26" Padding="0" Margin="0,0,4,0" ToolTip="Duplicar camada selecionada (Ctrl + D)" AutomationProperties.Name="Duplicar camada">
                                                 <ui:SymbolIcon Symbol="Copy24" FontSize="13" />
                                             </Button>
-                                            <Button Command="{Binding ExcluirSelecionadoCommand}" Style="{StaticResource BotaoSecundario}" Width="26" Height="26" Padding="0" ToolTip="Excluir camada (Del)">
+                                            <Button Command="{Binding ExcluirSelecionadoCommand}" Style="{StaticResource BotaoSecundario}" Width="26" Height="26" Padding="0" ToolTip="Excluir camada (Del)" AutomationProperties.Name="Excluir camada">
                                                 <ui:SymbolIcon Symbol="Delete24" FontSize="13" Foreground="{StaticResource CorPerigo}" />
                                             </Button>
                                         </StackPanel>
@@ -1080,7 +1080,7 @@
                                                                     Command="{Binding DataContext.AlternarVisibilidadeCamadaCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                                     CommandParameter="{Binding}"
                                                                     Width="24" Height="24" Padding="0" Margin="0,0,4,0" Background="Transparent" BorderThickness="0" Cursor="Hand"
-                                                                    ToolTip="Ocultar / Mostrar na prancheta">
+                                                                    ToolTip="Ocultar / Mostrar na prancheta" AutomationProperties.Name="Alternar visibilidade da camada">
                                                                 <ui:SymbolIcon Symbol="Eye24" FontSize="14">
                                                                     <ui:SymbolIcon.Style>
                                                                         <Style TargetType="ui:SymbolIcon">
@@ -1101,7 +1101,7 @@
                                                                     Command="{Binding DataContext.AlternarBloqueioCamadaCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                                     CommandParameter="{Binding}"
                                                                     Width="24" Height="24" Padding="0" Margin="0,0,6,0" Background="Transparent" BorderThickness="0" Cursor="Hand"
-                                                                    ToolTip="Bloquear / Desbloquear camada contra seleção e movimento">
+                                                                    ToolTip="Bloquear / Desbloquear camada contra seleção e movimento" AutomationProperties.Name="Alternar bloqueio da camada">
                                                                 <ui:SymbolIcon Symbol="LockOpen24" FontSize="13">
                                                                     <ui:SymbolIcon.Style>
                                                                         <Style TargetType="ui:SymbolIcon">
