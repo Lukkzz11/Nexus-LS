@@ -22,6 +22,7 @@ public partial class MainWindow : FluentWindow
             var d = new Microsoft.Win32.OpenFileDialog { Filter = "Licença do Nexus|*.json", Title = "Escolha o arquivo de licença" };
             return d.ShowDialog(this) == true ? d.FileName : null;
         };
+        vm.AbrirJanelaGestao = item => Views.GestaoWindow.Abrir(App.Servicos, this, item, vm.Zoom, z => vm.Zoom = z, () => vm.LicencaTexto);
         vm.AtualizarLicenca();
         vm.AoDetectarLicencaInvalidaNaNuvem = mensagem =>
         {

@@ -1,0 +1,115 @@
+<Window x:Class="NexusLS.App.Views.GestaoWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        Title="Nexus — Gestão" Height="760" Width="1280" MinHeight="600" MinWidth="1000"
+        WindowStartupLocation="CenterOwner" WindowState="Maximized"
+        Background="{StaticResource CorFundo}"
+        FontFamily="{StaticResource FonteTexto}" FontSize="{StaticResource TamCorpo}">
+
+    <Window.Resources>
+        <Style x:Key="ItemDoMenu" TargetType="Button" BasedOn="{StaticResource BotaoMenu}">
+            <Style.Triggers>
+                <DataTrigger Value="True">
+                    <DataTrigger.Binding>
+                        <MultiBinding Converter="{StaticResource IgualTag}">
+                            <Binding Path="ItemAtivo" />
+                            <Binding Path="Tag" RelativeSource="{RelativeSource Self}" />
+                        </MultiBinding>
+                    </DataTrigger.Binding>
+                    <Setter Property="Background" Value="{StaticResource CorMenuAtivo}" />
+                    <Setter Property="BorderBrush" Value="{StaticResource CorSelecao}" />
+                    <Setter Property="FontWeight" Value="SemiBold" />
+                    <Setter Property="Foreground" Value="{StaticResource CorPrimaria}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="IconeDoMenu" TargetType="ui:SymbolIcon">
+            <Setter Property="FontSize" Value="{StaticResource TamIcone}" />
+            <Setter Property="Margin" Value="0,0,12,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="230" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Border Style="{StaticResource PainelLateral}">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Bottom" Margin="18,10,14,16">
+                    <TextBlock Text="{Binding UsuarioTexto}" TextWrapping="Wrap" FontSize="12" Opacity="0.7" Margin="0,0,0,8" />
+                    <Button Content="Fechar a gestão" Style="{StaticResource BotaoSecundario}" Padding="12,6" FontSize="13"
+                            AutomationProperties.Name="Fechar a gestão" Click="Fechar_Click" />
+                </StackPanel>
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="0,16,0,16">
+                        <TextBlock Text="GESTÃO" Style="{StaticResource SecaoMenu}" Margin="20,0,18,6" />
+                    <Button Tag="Agenda" AutomationProperties.Name="Agenda" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaAgendaCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="CalendarLtr24" Style="{StaticResource IconeDoMenu}" />
+                            <TextBlock Text="Agenda" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Tag="EditorCatalogo" Visibility="{Binding VerConfiguracoes, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Editor do catálogo" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaEditorCatalogoCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="PaintBrush24" Style="{StaticResource IconeDoMenu}" />
+                            <TextBlock Text="Editor do catálogo" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Tag="Clientes" Visibility="{Binding VerClientes, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Clientes" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaClientesCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="People24" Style="{StaticResource IconeDoMenu}" />
+                            <TextBlock Text="Clientes" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Tag="Financeiro" Visibility="{Binding VerFinanceiro, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Financeiro" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaFinanceiroCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Wallet24" Style="{StaticResource IconeDoMenu}" />
+                            <TextBlock Text="Financeiro" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Tag="ContasESaldos" Visibility="{Binding VerFinanceiro, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Contas e saldos" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaContasESaldosCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Money24" Style="{StaticResource IconeDoMenu}" />
+                            <TextBlock Text="Contas e saldos" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Tag="Relatorios" Visibility="{Binding VerRelatorios, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Relatórios" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaRelatoriosCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="DataBarVertical24" Style="{StaticResource IconeDoMenu}" />
+                            <TextBlock Text="Relatórios" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Tag="Funcionarios" Visibility="{Binding VerFuncionarios, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Funcionários" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaFuncionariosCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Person24" Style="{StaticResource IconeDoMenu}" />
+                            <TextBlock Text="Funcionários" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Tag="Atividades" Visibility="{Binding VerConfiguracoes, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Atividades" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaAtividadesCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="History24" Style="{StaticResource IconeDoMenu}" />
+                            <TextBlock Text="Atividades" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Tag="Configuracoes" Visibility="{Binding VerConfiguracoes, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Configurações" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaConfiguracoesCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Settings24" Style="{StaticResource IconeDoMenu}" />
+                            <TextBlock Text="Configurações" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    </StackPanel>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+
+        <ContentControl Grid.Column="1" Content="{Binding TelaAtual}">
+            <ContentControl.LayoutTransform>
+                <ScaleTransform ScaleX="{Binding Zoom}" ScaleY="{Binding Zoom}" />
+            </ContentControl.LayoutTransform>
+        </ContentControl>
+    </Grid>
+</Window>

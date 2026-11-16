@@ -150,59 +150,11 @@
                         </StackPanel>
                     </Button>
 
-                    <TextBlock Text="GESTÃO" Style="{StaticResource SecaoMenu}" Visibility="{Binding VerSecaoGestao, Converter={StaticResource BoolVis}}" />
-                    <Button Tag="Agenda" AutomationProperties.Name="Agenda" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaAgendaCommand}">
+                    <TextBlock Text="GESTÃO" Style="{StaticResource SecaoMenu}" />
+                    <Button Tag="Gestao" AutomationProperties.Name="Gestão" ToolTip="Relatórios, financeiro, funcionários e configurações. Pede o PIN de um gerente ou administrador." Style="{StaticResource ItemDoMenu}" Command="{Binding AbrirGestaoCommand}">
                         <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="CalendarLtr24" Style="{StaticResource IconeDoMenu}" />
-                            <TextBlock Text="Agenda" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-                    <Button Tag="EditorCatalogo" Visibility="{Binding VerConfiguracoes, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Editor do catálogo" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaEditorCatalogoCommand}">
-                        <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="PaintBrush24" Style="{StaticResource IconeDoMenu}" />
-                            <TextBlock Text="Editor do catálogo" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-                    <Button Tag="Clientes" Visibility="{Binding VerClientes, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Clientes" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaClientesCommand}">
-                        <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="People24" Style="{StaticResource IconeDoMenu}" />
-                            <TextBlock Text="Clientes" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-                    <Button Tag="Financeiro" Visibility="{Binding VerFinanceiro, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Financeiro" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaFinanceiroCommand}">
-                        <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="Wallet24" Style="{StaticResource IconeDoMenu}" />
-                            <TextBlock Text="Financeiro" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-                    <Button Tag="ContasESaldos" Visibility="{Binding VerFinanceiro, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Contas e saldos" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaContasESaldosCommand}">
-                        <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="Money24" Style="{StaticResource IconeDoMenu}" />
-                            <TextBlock Text="Contas e saldos" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-                    <Button Tag="Relatorios" Visibility="{Binding VerRelatorios, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Relatórios" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaRelatoriosCommand}">
-                        <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="DataBarVertical24" Style="{StaticResource IconeDoMenu}" />
-                            <TextBlock Text="Relatórios" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-                    <Button Tag="Funcionarios" Visibility="{Binding VerFuncionarios, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Funcionários" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaFuncionariosCommand}">
-                        <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="Person24" Style="{StaticResource IconeDoMenu}" />
-                            <TextBlock Text="Funcionários" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-                    <Button Tag="Atividades" Visibility="{Binding VerConfiguracoes, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Atividades" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaAtividadesCommand}">
-                        <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="History24" Style="{StaticResource IconeDoMenu}" />
-                            <TextBlock Text="Atividades" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-                    <Button Tag="Configuracoes" Visibility="{Binding VerConfiguracoes, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Configurações" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaConfiguracoesCommand}">
-                        <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="Settings24" Style="{StaticResource IconeDoMenu}" />
-                            <TextBlock Text="Configurações" VerticalAlignment="Center" />
+                            <ui:SymbolIcon Symbol="LockClosed24" Style="{StaticResource IconeDoMenu}" />
+                            <TextBlock Text="Gestão" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
 

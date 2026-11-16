@@ -1,0 +1,128 @@
+using System.IO;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using NexusLS.App.Seguranca;
+using NexusLS.Core.Models;
+
+namespace NexusLS.App.ViewModels;
+
+/// <summary>
+/// A janela de Gestão: agenda, catálogo, clientes, financeiro, relatórios, funcionários, atividades e configurações.
+/// Fica fora do menu do balcão e só abre com o PIN de um gerente ou administrador (ver GestaoWindow.Abrir).
+/// </summary>
+public partial class GestaoViewModel : ObservableObject
+{
+    private readonly ContainerDeServicos _servicos;
+    private readonly Action<double> _aoMudarZoom;
+    private readonly Func<string> _licencaTexto;
+
+    [ObservableProperty] private object? _telaAtual;
+    [ObservableProperty] private ItemMenu _itemAtivo;
+    [ObservableProperty] private double _zoom = 1.0;
+
+    public GestaoViewModel(ContainerDeServicos servicos, double zoom, Action<double> aoMudarZoom, Func<string> licencaTexto)
+    {
+        _servicos = servicos;
+        Zoom = zoom;
+        _aoMudarZoom = aoMudarZoom;
+        _licencaTexto = licencaTexto;
+        Sessao.Mudou += AtualizarPermissoes;
+    }
+
+    /// <summary>Solta o ouvinte da sessão ao fechar a janela.</summary>
+    public void Encerrar() => Sessao.Mudou -= AtualizarPermissoes;
+
+    /// <summary>Quais itens da Gestão cada permissão libera. A Agenda é de quem entrou na Gestão.</summary>
+    public static bool Permitido(ItemMenu item) => item switch
+    {
+        ItemMenu.Agenda => true,
+        ItemMenu.Clientes => Sessao.Pode(Permissao.Clientes),
+        ItemMenu.Financeiro or ItemMenu.ContasESaldos => Sessao.Pode(Permissao.Financeiro),
+        ItemMenu.Relatorios => Sessao.Pode(Permissao.Relatorios),
+        ItemMenu.Funcionarios => Sessao.Pode(Permissao.Funcionarios),
+        ItemMenu.Configuracoes or ItemMenu.CatalogoOnline or ItemMenu.EditorCatalogo or ItemMenu.Atividades => Sessao.Pode(Permissao.Configuracoes),
+        _ => false
+    };
+
+    /// <summary>Itens que esta janela sabe abrir (o MainViewModel manda para cá os atalhos do Início).</summary>
+    public static bool EhDaGestao(ItemMenu item) => item is ItemMenu.Agenda or ItemMenu.Clientes or ItemMenu.Financeiro or ItemMenu.ContasESaldos
+        or ItemMenu.Relatorios or ItemMenu.Funcionarios or ItemMenu.Configuracoes or ItemMenu.CatalogoOnline or ItemMenu.EditorCatalogo or ItemMenu.Atividades;
+
+    public bool VerClientes => Sessao.Pode(Permissao.Clientes);
+    public bool VerFinanceiro => Sessao.Pode(Permissao.Financeiro);
+    public bool VerRelatorios => Sessao.Pode(Permissao.Relatorios);
+    public bool VerConfiguracoes => Sessao.Pode(Permissao.Configuracoes);
+    public bool VerFuncionarios => Sessao.Pode(Permissao.Funcionarios);
+    public string UsuarioTexto => Sessao.Atual is { } f ? $"{f.Nome} · {Permissoes.Nome(f.Perfil)}" : "Sem login (acesso total)";
+
+    private void AtualizarPermissoes()
+    {
+        foreach (var nome in new[] { nameof(VerClientes), nameof(VerFinanceiro), nameof(VerRelatorios), nameof(VerConfiguracoes), nameof(VerFuncionarios), nameof(UsuarioTexto) })
+            OnPropertyChanged(nome);
+    }
+
+    public void Ir(ItemMenu item)
+    {
+        if (!Permitido(item)) item = ItemMenu.Agenda;
+        switch (item)
+        {
+            case ItemMenu.Clientes: IrParaClientes(); break;
+            case ItemMenu.Financeiro: IrParaFinanceiro(); break;
+            case ItemMenu.ContasESaldos: IrParaContasESaldos(); break;
+            case ItemMenu.Relatorios: IrParaRelatorios(); break;
+            case ItemMenu.Funcionarios: IrParaFuncionarios(); break;
+            case ItemMenu.Atividades: IrParaAtividades(); break;
+            case ItemMenu.Configuracoes: IrParaConfiguracoes(); break;
+            case ItemMenu.CatalogoOnline: IrParaCatalogoOnline(); break;
+            case ItemMenu.EditorCatalogo: IrParaEditorCatalogo(); break;
+            default: IrParaAgenda(); break;
+        }
+    }
+
+    [RelayCommand] private void IrParaEditorCatalogo() => Abrir(new CatalogoWebViewModel(_servicos.CatalogoWeb), ItemMenu.EditorCatalogo);
+    [RelayCommand] private void IrParaAgenda() => Abrir(new AgendaViewModel(_servicos.Agenda, null, _servicos.AgendaNoGoogle), ItemMenu.Agenda);
+    [RelayCommand] private void IrParaClientes() => Abrir(new ClientesViewModel(_servicos.Clientes, _servicos.TitulosPrazo), ItemMenu.Clientes);
+    [RelayCommand] private void IrParaFinanceiro() => Abrir(new FinanceiroViewModel(_servicos.Financeiro, null, _servicos.CategoriasFinanceiras), ItemMenu.Financeiro);
+    [RelayCommand] private void IrParaContasESaldos() => Abrir(new ContasESaldosViewModel(_servicos.Posicao, _servicos.ContasFinanceiras, _servicos.Cartoes, _servicos.Cheques, chequesEmitidos: _servicos.ChequesEmitidos), ItemMenu.ContasESaldos);
+    [RelayCommand] private void IrParaRelatorios() => Abrir(new RelatoriosViewModel(_servicos.Relatorios, null, _servicos.Demonstrativo), ItemMenu.Relatorios);
+    [RelayCommand] private void IrParaFuncionarios() => Abrir(new FuncionariosViewModel(_servicos.Funcionarios), ItemMenu.Funcionarios);
+    [RelayCommand] private void IrParaAtividades() => Abrir(new AtividadesViewModel(_servicos.Atividades), ItemMenu.Atividades);
+
+    [RelayCommand]
+    private void IrParaCatalogoOnline()
+    {
+        var erp = new ImportacaoErpViewModel(_servicos.ErpConfig, _servicos.ContaErp, _servicos.CriarImportadorErp)
+        {
+            PedirLogin = () => Views.LoginFirebaseWindow.PedirErp(_servicos.ContaErp, System.Windows.Application.Current?.MainWindow)
+        };
+        Abrir(new CatalogoOnlineViewModel(_servicos.Firebase, _servicos.Sincronizador, _servicos.SincronizacaoRepo, _servicos.DestinoCatalogo, _servicos.Configuracao, _servicos.Operacional, erp, _servicos.Fotos), ItemMenu.CatalogoOnline);
+    }
+
+    [RelayCommand]
+    private void IrParaConfiguracoes()
+    {
+        var dialogos = new NexusLS.App.Backup.DialogosBackupWpf();
+        var limpar = new LimparDadosViewModel(_servicos.Limpeza, SouAdministrador, dialogos.Confirmar, () =>
+        {
+            // O carrinho guardado aponta para produtos que acabaram de ser apagados: sai junto.
+            try { File.Delete(NexusLS.Core.Services.RascunhoStore.CaminhoPadrao()); } catch (IOException) { }
+            dialogos.Reiniciar();
+        });
+        var config = new ConfiguracoesViewModel(_servicos.Configuracao, _servicos.Cupons, _servicos.Backup, dialogos, limpar, _servicos.Atualizacao);
+        config.UsarPreferencias(_servicos.Preferencias, z => { Zoom = z; _aoMudarZoom(z); }, _licencaTexto);
+        config.AbrirPasta = pasta => System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", "\"" + pasta + "\"") { UseShellExecute = true });
+        config.UsarGoogle(_servicos.Google, url => System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true }));
+        Abrir(config, ItemMenu.Configuracoes);
+    }
+
+    /// <summary>Apagar dados é só do administrador. Com o login desligado (ninguém cadastrado) vale como administrador.</summary>
+    private static bool SouAdministrador() =>
+        !Sessao.LoginAtivo || Sessao.Atual?.Perfil == PerfilFuncionario.Administrador;
+
+    private void Abrir(object tela, ItemMenu item)
+    {
+        if (!Permitido(item)) return; // defesa extra: o menu já esconde o que não é permitido
+        TelaAtual = tela;
+        ItemAtivo = item;
+    }
+}

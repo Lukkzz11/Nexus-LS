@@ -58,6 +58,7 @@ public partial class MainViewModel : ObservableObject
     /// <summary>Usado pelos atalhos da tela Início: abre a tela do item pedido.</summary>
     public void Ir(ItemMenu item)
     {
+        if (GestaoViewModel.EhDaGestao(item)) { AbrirGestaoCom(item); return; }
         if (!Permitido(item)) return;
         switch (item)
         {
@@ -76,16 +77,6 @@ public partial class MainViewModel : ObservableObject
             case ItemMenu.Compras: IrParaCompras(); break;
             case ItemMenu.Fornecedores: IrParaFornecedores(); break;
             case ItemMenu.Etiquetas: IrParaEtiquetas(); break;
-            case ItemMenu.Clientes: IrParaClientes(); break;
-            case ItemMenu.Agenda: IrParaAgenda(); break;
-            case ItemMenu.EditorCatalogo: IrParaEditorCatalogo(); break;
-            case ItemMenu.Financeiro: IrParaFinanceiro(); break;
-            case ItemMenu.ContasESaldos: IrParaContasESaldos(); break;
-            case ItemMenu.Relatorios: IrParaRelatorios(); break;
-            case ItemMenu.CatalogoOnline: IrParaCatalogoOnline(); break;
-            case ItemMenu.Funcionarios: IrParaFuncionarios(); break;
-            case ItemMenu.Atividades: IrParaAtividades(); break;
-            case ItemMenu.Configuracoes: IrParaConfiguracoes(); break;
         }
     }
 
@@ -116,44 +107,13 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand] private void IrParaFornecedores() => Abrir(new FornecedoresViewModel(_servicos.Fornecedores), ItemMenu.Fornecedores);
     [RelayCommand] private void IrParaEtiquetas() => Abrir(new EtiquetasViewModel(_servicos.Produtos, _servicos.ModelosEtiqueta), ItemMenu.Etiquetas);
 
-    // Gestão
-    [RelayCommand] private void IrParaEditorCatalogo() => Abrir(new CatalogoWebViewModel(_servicos.CatalogoWeb), ItemMenu.EditorCatalogo);
-    [RelayCommand] private void IrParaAgenda() => Abrir(new AgendaViewModel(_servicos.Agenda, null, _servicos.AgendaNoGoogle), ItemMenu.Agenda);
-    [RelayCommand] private void IrParaClientes() => Abrir(new ClientesViewModel(_servicos.Clientes, _servicos.TitulosPrazo), ItemMenu.Clientes);
-    [RelayCommand] private void IrParaFinanceiro() => Abrir(new FinanceiroViewModel(_servicos.Financeiro, null, _servicos.CategoriasFinanceiras), ItemMenu.Financeiro);
-    [RelayCommand] private void IrParaContasESaldos() => Abrir(new ContasESaldosViewModel(_servicos.Posicao, _servicos.ContasFinanceiras, _servicos.Cartoes, _servicos.Cheques, chequesEmitidos: _servicos.ChequesEmitidos), ItemMenu.ContasESaldos);
-    [RelayCommand] private void IrParaRelatorios() => Abrir(new RelatoriosViewModel(_servicos.Relatorios, null, _servicos.Demonstrativo), ItemMenu.Relatorios);
-    [RelayCommand]
-    private void IrParaCatalogoOnline()
-    {
-        var erp = new ImportacaoErpViewModel(_servicos.ErpConfig, _servicos.ContaErp, _servicos.CriarImportadorErp)
-        {
-            PedirLogin = () => Views.LoginFirebaseWindow.PedirErp(_servicos.ContaErp, System.Windows.Application.Current?.MainWindow)
-        };
-        Abrir(new CatalogoOnlineViewModel(_servicos.Firebase, _servicos.Sincronizador, _servicos.SincronizacaoRepo, _servicos.DestinoCatalogo, _servicos.Configuracao, _servicos.Operacional, erp, _servicos.Fotos), ItemMenu.CatalogoOnline);
-    }
-    [RelayCommand] private void IrParaFuncionarios() => Abrir(new FuncionariosViewModel(_servicos.Funcionarios), ItemMenu.Funcionarios);
-    [RelayCommand] private void IrParaAtividades() => Abrir(new AtividadesViewModel(_servicos.Atividades), ItemMenu.Atividades);
-    [RelayCommand]
-    private void IrParaConfiguracoes()
-    {
-        var dialogos = new NexusLS.App.Backup.DialogosBackupWpf();
-        var limpar = new LimparDadosViewModel(_servicos.Limpeza, SouAdministrador, dialogos.Confirmar, () =>
-        {
-            // O carrinho guardado aponta para produtos que acabaram de ser apagados: sai junto.
-            try { File.Delete(NexusLS.Core.Services.RascunhoStore.CaminhoPadrao()); } catch (IOException) { }
-            dialogos.Reiniciar();
-        });
-        var config = new ConfiguracoesViewModel(_servicos.Configuracao, _servicos.Cupons, _servicos.Backup, dialogos, limpar, _servicos.Atualizacao);
-        config.UsarPreferencias(_servicos.Preferencias, z => Zoom = z, () => LicencaTexto);
-        config.AbrirPasta = pasta => System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", "\"" + pasta + "\"") { UseShellExecute = true });
-        config.UsarGoogle(_servicos.Google, url => System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true }));
-        Abrir(config, ItemMenu.Configuracoes);
-    }
+    // Gestão: abre numa janela própria, com PIN (ver GestaoWindow.Abrir)
+    /// <summary>A MainWindow define: abrir a janela de Gestão precisa da janela dona e do zoom.</summary>
+    public Action<ItemMenu>? AbrirJanelaGestao { get; set; }
 
-    /// <summary>Apagar dados é só do administrador. Com o login desligado (ninguém cadastrado) vale como administrador.</summary>
-    private static bool SouAdministrador() =>
-        !Sessao.LoginAtivo || Sessao.Atual?.Perfil == PerfilFuncionario.Administrador;
+    [RelayCommand] private void AbrirGestao() => AbrirGestaoCom(ItemMenu.Agenda);
+
+    private void AbrirGestaoCom(ItemMenu item) => AbrirJanelaGestao?.Invoke(item);
 
     private void Abrir(object tela, ItemMenu item)
     {
@@ -174,11 +134,6 @@ public partial class MainViewModel : ObservableObject
         ItemMenu.MaisVendidos or ItemMenu.Desempenho or ItemMenu.Relatorios => Sessao.Pode(Permissao.Relatorios),
         ItemMenu.EstoqueDaLoja or ItemMenu.ResumoEstoque or ItemMenu.Etiquetas or ItemMenu.CalculadoraPrecos or ItemMenu.Fabrica => Sessao.Pode(Permissao.Estoque),
         ItemMenu.Compras or ItemMenu.Fornecedores => Sessao.Pode(Permissao.Compras),
-        ItemMenu.Clientes => Sessao.Pode(Permissao.Clientes),
-        ItemMenu.Agenda => true,
-        ItemMenu.Financeiro or ItemMenu.ContasESaldos => Sessao.Pode(Permissao.Financeiro),
-        ItemMenu.Funcionarios => Sessao.Pode(Permissao.Funcionarios),
-        ItemMenu.Configuracoes or ItemMenu.CatalogoOnline or ItemMenu.EditorCatalogo or ItemMenu.Atividades => Sessao.Pode(Permissao.Configuracoes),
         _ => false
     };
 

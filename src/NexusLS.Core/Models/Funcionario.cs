@@ -33,6 +33,9 @@ public static class Permissoes
         Permissao.Vender | Permissao.Caixa | Permissao.CancelarVendas | Permissao.Estoque | Permissao.Compras |
         Permissao.Clientes | Permissao.Financeiro | Permissao.Relatorios | Permissao.Configuracoes | Permissao.Funcionarios;
 
+    /// <summary>Quem tem alguma destas pode entrar na janela de Gestão (relatórios, financeiro, configurações, funcionários).</summary>
+    public const Permissao Gestao = Permissao.Relatorios | Permissao.Financeiro | Permissao.Configuracoes | Permissao.Funcionarios;
+
     /// <summary>O que cada perfil pronto pode. "Personalizado" usa as permissões marcadas à mão.</summary>
     public static Permissao DoPerfil(PerfilFuncionario perfil) => perfil switch
     {
@@ -99,4 +102,7 @@ public class Funcionario
     public string PerfilTexto => Permissoes.Nome(Perfil);
 
     public bool Pode(Permissao p) => (PermissoesEfetivas & p) == p;
+
+    /// <summary>Verdadeiro se tiver pelo menos uma das permissões pedidas.</summary>
+    public bool PodeAlguma(Permissao p) => (PermissoesEfetivas & p) != 0;
 }
