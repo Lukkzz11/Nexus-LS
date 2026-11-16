@@ -1,0 +1,11 @@
+<Project>
+  <!-- Identificação do programa nas propriedades do .exe (Detalhes). Executável sem empresa/descrição
+       costuma ser tratado com mais desconfiança por antivírus e pelo SmartScreen. -->
+  <PropertyGroup>
+    <Company>Nexus LS</Company>
+    <Authors>Nexus LS</Authors>
+    <Copyright>© 2026 Nexus LS. Todos os direitos reservados.</Copyright>
+    <Description>Nexus LS: sistema de vendas, estoque e etiquetas para lojas.</Description>
+    <NeutralLanguage>pt-BR</NeutralLanguage>
+  </PropertyGroup>
+</Project>
