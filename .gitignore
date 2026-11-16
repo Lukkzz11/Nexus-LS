@@ -498,3 +498,8 @@ atualizador-web/
 
 # Worktrees temporárias criadas por agentes
 .claude/
+
+# Build results universais
+**/bin/
+**/obj/
+
