@@ -232,6 +232,7 @@ public partial class MainViewModel : ObservableObject
     private async Task InicializarAsync()
     {
         await RecarregarDadosAsync();
+        AplicarPedidoDoNexus();
         _ = VerificarAtualizacaoAsync();
     }
 

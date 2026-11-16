@@ -330,6 +330,45 @@ public partial class EtiquetasViewModel : ViewModelBase
         return Task.CompletedTask;
     });
 
+    /// <summary>
+    /// Abre o Nexus BarTender com os argumentos do pedido. Devolve false se o BarTender não está instalado.
+    /// Trocável nos testes.
+    /// </summary>
+    public Func<IReadOnlyList<string>, bool> AbrirNoBarTender { get; set; } = args =>
+    {
+        var exe = PedidoBarTender.LocalizarExe();
+        if (exe is null) return false;
+
+        var info = new System.Diagnostics.ProcessStartInfo(exe)
+        {
+            UseShellExecute = false,
+            WorkingDirectory = System.IO.Path.GetDirectoryName(exe)!
+        };
+        foreach (var a in args) info.ArgumentList.Add(a);
+        System.Diagnostics.Process.Start(info);
+        return true;
+    };
+
+    /// <summary>Manda a fila para o BarTender (que cria e edita os modelos), que abre já na Fila de impressão.</summary>
+    [RelayCommand]
+    private Task ImprimirNoBarTenderAsync() => ExecutarAsync(() =>
+    {
+        if (Fila.Count == 0)
+            throw new RegraDeNegocioException("A fila está vazia. Adicione produtos antes de enviar ao BarTender.");
+
+        var itens = Fila.Select(l => new ItemPedidoBarTender(
+            l.ProdutoId,
+            string.Equals(l.Tamanho, Tamanhos.SemTamanho, StringComparison.OrdinalIgnoreCase) ? "" : l.Tamanho,
+            l.Quantidade));
+
+        if (!AbrirNoBarTender(PedidoBarTender.Montar(itens)))
+            throw new RegraDeNegocioException(
+                "O Nexus BarTender não foi encontrado neste computador. Instale-o pelo instalador do Nexus ou pelo Atualizador.");
+
+        MostrarSucesso("Fila enviada ao BarTender.");
+        return Task.CompletedTask;
+    });
+
     private void AtualizarResumo()
     {
         if (_carregando) return;

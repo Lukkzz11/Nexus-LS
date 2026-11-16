@@ -44,10 +44,32 @@ public class BancoDadosService
 
     public bool BancoExiste() => File.Exists(CaminhoAtual);
 
+    private string? _caminhoPreparado;
+
+    /// <summary>
+    /// Aplica no banco os mesmos ajustes do Nexus (WAL, espera de 30 s se estiver ocupado, chaves estrangeiras).
+    /// Só mexe em banco que já existe, para nunca criar um arquivo vazio e fazer o BarTender achar que está conectado.
+    /// </summary>
+    private void PrepararBanco()
+    {
+        if (_caminhoPreparado == CaminhoAtual || !BancoExiste()) return;
+        try
+        {
+            PreparadorBanco.Aplicar(CaminhoAtual);
+            _caminhoPreparado = CaminhoAtual;
+        }
+        catch (Exception ex)
+        {
+            App.Log($"PrepararBanco falhou ({CaminhoAtual}): {ex.Message}");
+        }
+    }
+
     public PdvDbContext CriarContexto()
     {
+        PrepararBanco();
+
         var options = new DbContextOptionsBuilder<PdvDbContext>()
-            .UseSqlite($"Data Source={CaminhoAtual};Default Timeout=30")
+            .UseSqlite(CaminhoBanco.StringConexao(CaminhoAtual))
             .AddInterceptors(new FilaSincronizacaoInterceptor(() => null))
             .Options;
 
@@ -78,8 +100,9 @@ public class BancoDadosService
             await using var db = CriarContexto();
             return await db.ConfiguracoesLoja.AsNoTracking().FirstOrDefaultAsync();
         }
-        catch
+        catch (Exception ex)
         {
+            App.Log($"ObterConfiguracaoLojaAsync falhou: {ex.Message}");
             return null;
         }
     }
