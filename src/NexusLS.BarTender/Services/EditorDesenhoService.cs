@@ -4,6 +4,7 @@ using System.Text;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using NexusLS.BarTender.Models;
 using NexusLS.BarTender.Models.Designer;
 using NexusLS.Core.Etiquetas;
 using NexusLS.Core.Models;
@@ -550,4 +551,41 @@ public class EditorDesenhoService
         }
         return true;
     }
+    /// <summary>
+    /// Gera miniatura leve e vetorial em memória (DrawingImage) para a fila de impressão e prévias.
+    /// </summary>
+    public static ImageSource? GerarMiniatura(Produto? produto, string? tamanho, ModeloEtiquetaDesign? modelo, ConfiguracaoEtiqueta? config)
+    {
+        try
+        {
+            var group = new DrawingGroup();
+            using (var dc = group.Open())
+            {
+                if (modelo != null && modelo.Elementos.Count > 0)
+                {
+                    var nomeLoja = config?.NomeLoja ?? "NEXUS";
+                    Desenhar(dc, modelo, produto, tamanho, nomeLoja, desenharBordaExterna: true);
+                }
+                else if (produto != null && config != null)
+                {
+                    var largDip = Dip(config.Formato.FormatoCore.EtiquetaLarguraMm);
+                    var altDip = Dip(config.Formato.FormatoCore.EtiquetaAlturaMm);
+                    DesenhoEtiquetaService.Desenhar(dc, produto, tamanho, config, largDip, altDip);
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            group.Freeze();
+            var img = new DrawingImage(group);
+            img.Freeze();
+            return img;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
 }

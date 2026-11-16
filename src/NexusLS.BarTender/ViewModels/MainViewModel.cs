@@ -89,6 +89,9 @@ public partial class MainViewModel : ObservableObject
     private int _totalEtiquetasFila;
 
     [ObservableProperty]
+    private bool _temItensNaFila;
+
+    [ObservableProperty]
     private int _totalPaginasFila;
 
     [ObservableProperty]
@@ -585,13 +588,34 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
+    partial void OnUsarModeloDesignerChanged(bool value)
+    {
+        AtualizarMiniaturasFila();
+    }
+
     private void AtualizarTotaisFila()
     {
         TotalEtiquetasFila = FilaImpressao.Sum(i => i.Quantidade);
+        TemItensNaFila = FilaImpressao.Count > 0;
         var porPagina = Config.Formato.FormatoCore.EtiquetasPorPagina;
         TotalPaginasFila = porPagina > 0
             ? (int)Math.Ceiling((double)TotalEtiquetasFila / porPagina)
             : TotalEtiquetasFila;
+    }
+
+    public void AtualizarMiniaturasFila()
+    {
+        var modelo = UsarModeloDesigner ? DesignerVM.Modelo : null;
+        foreach (var item in FilaImpressao)
+        {
+            item.Miniatura = EditorDesenhoService.GerarMiniatura(item.Produto, item.Tamanho, modelo, Config);
+        }
+    }
+
+    private void AtualizarMiniaturaItem(ItemFila item)
+    {
+        var modelo = UsarModeloDesigner ? DesignerVM.Modelo : null;
+        item.Miniatura = EditorDesenhoService.GerarMiniatura(item.Produto, item.Tamanho, modelo, Config);
     }
 
     [RelayCommand]
@@ -670,6 +694,7 @@ public partial class MainViewModel : ObservableObject
         }
 
         var novo = new ItemFila(produto, quantidade, tamanho);
+        AtualizarMiniaturaItem(novo);
         FilaImpressao.Add(novo);
         return novo;
     }
@@ -680,7 +705,11 @@ public partial class MainViewModel : ObservableObject
         if (existente != null)
             existente.Quantidade = Math.Max(1, quantidade);
         else
-            FilaImpressao.Add(new ItemFila(produto, quantidade, tamanho));
+        {
+            var item = new ItemFila(produto, quantidade, tamanho);
+            AtualizarMiniaturaItem(item);
+            FilaImpressao.Add(item);
+        }
     }
 
     /// <summary>

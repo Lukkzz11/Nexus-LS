@@ -1,3 +1,4 @@
+using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using NexusLS.Core.Models;
 using NexusLS.Core.Services;
@@ -13,6 +14,9 @@ public partial class ItemFila : ObservableObject
 
     [ObservableProperty]
     private string _tamanho = "";
+
+    [ObservableProperty]
+    private ImageSource? _miniatura;
 
     public string Nome => Produto.Nome;
     public string? Referencia => Produto.Referencia;

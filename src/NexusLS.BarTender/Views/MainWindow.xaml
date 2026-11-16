@@ -565,65 +565,107 @@
                     </Grid>
 
                     <Border Grid.Row="1" Style="{StaticResource Painel}" Padding="0" Margin="0,0,0,14">
-                        <DataGrid ItemsSource="{Binding FilaImpressao}"
-                                  AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
-                                  SelectionMode="Single" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
-                                  HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0" Background="{StaticResource CorPainel}" RowHeight="46">
-                            <DataGrid.Columns>
-                                <DataGridTemplateColumn Header="Produto" Width="3*" SortMemberPath="Nome">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <StackPanel VerticalAlignment="Center" Margin="10,2">
-                                                <TextBlock Text="{Binding Nome}" FontWeight="SemiBold" Foreground="{StaticResource CorTexto}" TextTrimming="CharacterEllipsis" FontSize="13.5" />
-                                                <TextBlock Text="{Binding CodigoBarras, TargetNullValue='Sem código de barras'}" Foreground="{StaticResource CorTextoSuave}" FontSize="11.5" />
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
+                        <Grid>
+                            <!-- Tabela com Miniaturas de Etiqueta -->
+                            <DataGrid ItemsSource="{Binding FilaImpressao}"
+                                      Visibility="{Binding TemItensNaFila, Converter={StaticResource BoolParaVisibilidadeConverter}}"
+                                      AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
+                                      SelectionMode="Single" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                                      HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0" Background="{StaticResource CorPainel}" RowHeight="48">
+                                <DataGrid.Columns>
+                                    <!-- Miniatura da Etiqueta -->
+                                    <DataGridTemplateColumn Header="Etiqueta" Width="72" CanUserSort="False">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Border Width="56" Height="40" Background="White" BorderBrush="{StaticResource CorBorda}" BorderThickness="1" CornerRadius="{StaticResource RaioPequeno}" Margin="6,2" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                    <Image Source="{Binding Miniatura}" Stretch="Uniform" Margin="2" />
+                                                </Border>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
 
-                                <DataGridTextColumn Header="Tamanho" Binding="{Binding TamanhoExibicao}" Width="1*" IsReadOnly="True" />
-                                <DataGridTextColumn Header="Preço Varejo" Binding="{Binding PrecoVarejoFormatado}" Width="1.5*" IsReadOnly="True" />
+                                    <DataGridTemplateColumn Header="Produto" Width="3*" SortMemberPath="Nome">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <StackPanel VerticalAlignment="Center" Margin="10,2">
+                                                    <TextBlock Text="{Binding Nome}" FontWeight="SemiBold" Foreground="{StaticResource CorTexto}" TextTrimming="CharacterEllipsis" FontSize="13.5" />
+                                                    <TextBlock Text="{Binding CodigoBarras, TargetNullValue='Sem código de barras'}" Foreground="{StaticResource CorTextoSuave}" FontSize="11.5" />
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
 
-                                <DataGridTemplateColumn Header="Quantidade de Etiquetas" Width="2.2*">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                <Button Command="{Binding DataContext.DecrementarItemCommand, RelativeSource={RelativeSource AncestorType=ui:FluentWindow}}"
+                                    <DataGridTextColumn Header="Tamanho" Binding="{Binding TamanhoExibicao}" Width="1*" IsReadOnly="True" />
+                                    <DataGridTextColumn Header="Preço Varejo" Binding="{Binding PrecoVarejoFormatado}" Width="1.5*" IsReadOnly="True" />
+
+                                    <DataGridTemplateColumn Header="Quantidade de Etiquetas" Width="2.2*">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <Button Command="{Binding DataContext.DecrementarItemCommand, RelativeSource={RelativeSource AncestorType=ui:FluentWindow}}"
+                                                            CommandParameter="{Binding}"
+                                                            Style="{StaticResource BotaoSecundario}" Width="30" Height="30" Padding="0" Margin="0,0,8,0"
+                                                            ToolTip="Diminuir quantidade"
+                                                            AutomationProperties.Name="Diminuir quantidade">
+                                                        <ui:SymbolIcon Symbol="Subtract24" FontSize="13" />
+                                                    </Button>
+
+                                                    <TextBox Text="{Binding Quantidade, UpdateSourceTrigger=PropertyChanged}" Width="52" Height="30"
+                                                             TextAlignment="Center" VerticalContentAlignment="Center" Padding="2" FontSize="13" FontWeight="Bold" />
+
+                                                    <Button Command="{Binding DataContext.IncrementarItemCommand, RelativeSource={RelativeSource AncestorType=ui:FluentWindow}}"
+                                                            CommandParameter="{Binding}"
+                                                            Style="{StaticResource BotaoSecundario}" Width="30" Height="30" Padding="0" Margin="8,0,0,0"
+                                                            ToolTip="Aumentar quantidade"
+                                                            AutomationProperties.Name="Aumentar quantidade">
+                                                        <ui:SymbolIcon Symbol="Add24" FontSize="13" />
+                                                    </Button>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+
+                                    <DataGridTemplateColumn Header="" Width="0.8*">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Button Command="{Binding DataContext.RemoverItemFilaCommand, RelativeSource={RelativeSource AncestorType=ui:FluentWindow}}"
                                                         CommandParameter="{Binding}"
-                                                        Style="{StaticResource BotaoSecundario}" Width="30" Height="30" Padding="0" Margin="0,0,8,0"
-                                                        ToolTip="Diminuir quantidade"
-                                                        AutomationProperties.Name="Diminuir quantidade">
-                                                    <ui:SymbolIcon Symbol="Subtract24" FontSize="13" />
+                                                        Style="{StaticResource BotaoFantasma}" ToolTip="Remover este item da fila" Padding="6,4" AutomationProperties.Name="Remover este item da fila">
+                                                    <ui:SymbolIcon Symbol="Dismiss24" FontSize="14" Foreground="{StaticResource CorPerigo}" />
                                                 </Button>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
 
-                                                <TextBox Text="{Binding Quantidade, UpdateSourceTrigger=PropertyChanged}" Width="52" Height="30"
-                                                         TextAlignment="Center" VerticalContentAlignment="Center" Padding="2" FontSize="13" FontWeight="Bold" />
-
-                                                <Button Command="{Binding DataContext.IncrementarItemCommand, RelativeSource={RelativeSource AncestorType=ui:FluentWindow}}"
-                                                        CommandParameter="{Binding}"
-                                                        Style="{StaticResource BotaoSecundario}" Width="30" Height="30" Padding="0" Margin="8,0,0,0"
-                                                        ToolTip="Aumentar quantidade"
-                                                        AutomationProperties.Name="Aumentar quantidade">
-                                                    <ui:SymbolIcon Symbol="Add24" FontSize="13" />
-                                                </Button>
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-
-                                <DataGridTemplateColumn Header="" Width="0.8*">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <Button Command="{Binding DataContext.RemoverItemFilaCommand, RelativeSource={RelativeSource AncestorType=ui:FluentWindow}}"
-                                                    CommandParameter="{Binding}"
-                                                    Style="{StaticResource BotaoFantasma}" ToolTip="Remover este item da fila" Padding="6,4" AutomationProperties.Name="Remover este item da fila">
-                                                <ui:SymbolIcon Symbol="Dismiss24" FontSize="14" Foreground="{StaticResource CorPerigo}" />
-                                            </Button>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                            </DataGrid.Columns>
-                        </DataGrid>
+                            <!-- Estado Vazio Amigável Quando a Fila Zerada -->
+                            <Border Visibility="{Binding TemItensNaFila, Converter={StaticResource BoolParaVisibilidadeConverter}, ConverterParameter=invert}"
+                                    VerticalAlignment="Center" HorizontalAlignment="Center" Padding="40,32">
+                                <StackPanel HorizontalAlignment="Center">
+                                    <Border Width="72" Height="72" CornerRadius="36"
+                                            Background="{StaticResource CorSuperficieSuave}"
+                                            BorderBrush="{StaticResource CorBorda}" BorderThickness="1"
+                                            HorizontalAlignment="Center" Margin="0,0,0,16">
+                                        <ui:SymbolIcon Symbol="Print24" FontSize="34" Foreground="{StaticResource CorTextoSuave}"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <TextBlock Text="Nenhuma etiqueta na fila" FontSize="16" FontWeight="Bold"
+                                               Foreground="{StaticResource CorTexto}" HorizontalAlignment="Center" />
+                                    <TextBlock Text="Adicione produtos do catálogo ou monte um layout no Estúdio de Etiquetas para imprimir."
+                                               Style="{StaticResource TextoApoio}" HorizontalAlignment="Center"
+                                               Margin="0,6,0,20" TextAlignment="Center" />
+                                    <Button Command="{Binding IrParaCatalogoCommand}" Style="{StaticResource BotaoPrimario}"
+                                            Padding="18,10" HorizontalAlignment="Center" ToolTip="Ir para a aba Catálogo ERP"
+                                            AutomationProperties.Name="Ir ao Catálogo de Produtos">
+                                        <StackPanel Orientation="Horizontal">
+                                            <ui:SymbolIcon Symbol="Box24" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                            <TextBlock Text="Ir ao Catálogo de Produtos" FontWeight="Bold" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
                     </Border>
 
                     <!-- Rodapé de Disparo da Fila -->
@@ -684,7 +726,7 @@
                     </Border>
                 </Grid>
 
-                <!-- 4. TELA DE CONFIGURAÇÕES -->
+                <!-- 4. TELA DE CONFIGURAÇÕES ORGANIZADA EM SEÇÕES -->
                 <ScrollViewer Margin="20,16" VerticalScrollBarVisibility="Auto">
                     <ScrollViewer.Style>
                         <Style TargetType="ScrollViewer">
@@ -697,33 +739,87 @@
                         </Style>
                     </ScrollViewer.Style>
 
-                    <StackPanel MaxWidth="700" HorizontalAlignment="Left">
-                        <TextBlock Text="Configurações de Impressão" Style="{StaticResource TituloTela}" Margin="0,0,0,4" />
-                        <TextBlock Text="Personalize o cabeçalho padrão da sua loja e formatos de bobina." Style="{StaticResource TextoApoio}" Margin="0,0,0,16" />
+                    <StackPanel MaxWidth="1040" HorizontalAlignment="Stretch">
+                        <TextBlock Text="Configurações de Impressão e Loja" Style="{StaticResource TituloTela}" Margin="0,0,0,4" />
+                        <TextBlock Text="Gerencie as preferências da loja, opções padrão de impressão e diagnósticos avançados." Style="{StaticResource TextoApoio}" Margin="0,0,0,20" />
 
-                        <Border Style="{StaticResource Painel}" Padding="20" Margin="0,0,0,16">
+                        <!-- SEÇÃO 1: LOJA -->
+                        <Border Style="{StaticResource Painel}" Padding="24" Margin="0,0,0,16">
                             <StackPanel>
-                                <TextBlock Text="DADOS DA LOJA" FontWeight="Bold" FontSize="13" Foreground="{StaticResource CorTexto}" Margin="0,0,0,10" />
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                                    <ui:SymbolIcon Symbol="BuildingShop24" FontSize="18" Foreground="{StaticResource CorPrimaria}" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                    <TextBlock Text="Loja e Identificação" FontWeight="Bold" FontSize="14" Foreground="{StaticResource CorTexto}" VerticalAlignment="Center" />
+                                </StackPanel>
 
-                                <TextBlock Text="Nome / Cabeçalho da Loja impresso nas etiquetas" Style="{StaticResource Rotulo}" Margin="0,0,0,4" />
-                                <TextBox Text="{Binding Config.NomeLoja, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,14" />
-
-                                <TextBlock Text="Formato de Papel Padrão" Style="{StaticResource Rotulo}" Margin="0,0,0,4" />
-                                <ComboBox ItemsSource="{Binding FormatosDisponiveis}" SelectedItem="{Binding Config.Formato, Mode=TwoWay}" DisplayMemberPath="Nome" Margin="0,0,0,14" />
+                                <TextBlock Text="Nome / Cabeçalho da Loja impresso nas etiquetas clássicas" Style="{StaticResource Rotulo}" Margin="0,0,0,4" />
+                                <TextBox Text="{Binding Config.NomeLoja, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,8" />
+                                <TextBlock Text="Este nome é exibido no topo das etiquetas de gôndola e modelos convencionais." Style="{StaticResource TextoApoio}" />
                             </StackPanel>
                         </Border>
 
-                        <Border Style="{StaticResource Painel}" Padding="20">
+                        <!-- SEÇÃO 2: IMPRESSÃO -->
+                        <Border Style="{StaticResource Painel}" Padding="24" Margin="0,0,0,16">
                             <StackPanel>
-                                <TextBlock Text="EXPORTAÇÃO ZPL II (ZEBRA)" FontWeight="Bold" FontSize="13" Foreground="{StaticResource CorTexto}" Margin="0,0,0,10" />
-                                <TextBlock Text="Código ZPL II nativo gerado para a etiqueta atual:" Style="{StaticResource TextoApoio}" Margin="0,0,0,8" />
-                                <TextBox Text="{Binding DesignerVM.ZplCodigo, Mode=OneWay}" FontFamily="Consolas" FontSize="11" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" Height="140" Margin="0,0,0,10" />
-                                <Button Command="{Binding CopiarZplCommand}" Style="{StaticResource BotaoSecundario}" Padding="12,6" HorizontalAlignment="Left">
-                                    <StackPanel Orientation="Horizontal">
-                                        <ui:SymbolIcon Symbol="Copy24" FontSize="15" Margin="0,0,6,0" VerticalAlignment="Center" />
-                                        <TextBlock Text="Copiar Código ZPL II" VerticalAlignment="Center" />
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                                    <ui:SymbolIcon Symbol="Print24" FontSize="18" Foreground="{StaticResource CorPrimaria}" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                    <TextBlock Text="Padrões de Impressão" FontWeight="Bold" FontSize="14" Foreground="{StaticResource CorTexto}" VerticalAlignment="Center" />
+                                </StackPanel>
+
+                                <Grid Margin="0,0,0,14">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="16" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Formato de Papel -->
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Formato de Papel Padrão" Style="{StaticResource Rotulo}" Margin="0,0,0,4" />
+                                        <ComboBox ItemsSource="{Binding FormatosDisponiveis}" SelectedItem="{Binding Config.Formato, Mode=TwoWay}" DisplayMemberPath="Nome" Height="34" />
                                     </StackPanel>
-                                </Button>
+
+                                    <!-- Impressora Padrão -->
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Impressora Padrão do Windows" Style="{StaticResource Rotulo}" Margin="0,0,0,4" />
+                                        <ComboBox ItemsSource="{Binding ImpressorasInstaladas}" SelectedItem="{Binding ImpressoraSelecionada, Mode=TwoWay}" Height="34" />
+                                    </StackPanel>
+                                </Grid>
+
+                                <Border Background="{StaticResource CorSuperficieSuave}" CornerRadius="{StaticResource RaioPequeno}" Padding="14,10" BorderBrush="{StaticResource CorBorda}" BorderThickness="1">
+                                    <CheckBox Content="Usar por padrão o modelo ativo no Estúdio de Etiquetas (com imagens, QR code e composição)"
+                                              IsChecked="{Binding UsarModeloDesigner, Mode=TwoWay}"
+                                              FontWeight="SemiBold" Foreground="{StaticResource CorPrimaria}" />
+                                </Border>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- SEÇÃO 3: AVANÇADO -->
+                        <Border Style="{StaticResource Painel}" Padding="24" Margin="0,0,0,16">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                                    <ui:SymbolIcon Symbol="Wrench24" FontSize="18" Foreground="{StaticResource CorPrimaria}" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                    <TextBlock Text="Avançado" FontWeight="Bold" FontSize="14" Foreground="{StaticResource CorTexto}" VerticalAlignment="Center" />
+                                </StackPanel>
+
+                                <!-- Expander ZPL II -->
+                                <Expander IsExpanded="False" Background="Transparent" BorderBrush="{StaticResource CorBorda}">
+                                    <Expander.Header>
+                                        <StackPanel Orientation="Horizontal">
+                                            <ui:SymbolIcon Symbol="Code24" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                            <TextBlock Text="Exportação de Código ZPL II (Zebra / Elgin Bobina Térmica)" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Expander.Header>
+                                    <StackPanel Margin="0,12,0,0">
+                                        <TextBlock Text="Código ZPL II nativo correspondente ao modelo atual do Estúdio:" Style="{StaticResource TextoApoio}" Margin="0,0,0,8" />
+                                        <TextBox Text="{Binding DesignerVM.ZplCodigo, Mode=OneWay}" FontFamily="Consolas" FontSize="11" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" Height="150" Margin="0,0,0,12" />
+                                        <Button Command="{Binding CopiarZplCommand}" Style="{StaticResource BotaoSecundario}" Padding="14,7" HorizontalAlignment="Left" ToolTip="Copiar para a área de transferência" AutomationProperties.Name="Copiar Código ZPL II">
+                                            <StackPanel Orientation="Horizontal">
+                                                <ui:SymbolIcon Symbol="Copy24" FontSize="15" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                                <TextBlock Text="Copiar Código ZPL II" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </Button>
+                                    </StackPanel>
+                                </Expander>
                             </StackPanel>
                         </Border>
                     </StackPanel>
