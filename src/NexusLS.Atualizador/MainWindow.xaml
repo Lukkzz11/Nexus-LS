@@ -152,7 +152,7 @@
                             <TextBlock Text="HWID:" FontSize="10" Foreground="#94A3B8" Margin="0,0,4,0" />
                             <TextBlock x:Name="TxtSidebarHwid" Text="Carregando..." FontFamily="Consolas" FontSize="10" FontWeight="Bold" Foreground="#334155" />
                         </StackPanel>
-                        <TextBlock Text="Nexus Hub v1.2.6" FontSize="10" Foreground="#94A3B8" Margin="0,4,0,0" />
+                        <TextBlock x:Name="TxtHubVersaoRodape" Text="Nexus Hub" FontSize="10" Foreground="#94A3B8" Margin="0,4,0,0" />
                     </StackPanel>
                 </Border>
             </Grid>
@@ -1027,7 +1027,7 @@
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Grid.Column="0">
                                         <TextBlock Text="NEXUS HUB" FontSize="11" FontWeight="Bold" Foreground="#64748B" />
-                                        <TextBlock Text="v1.2.6 (Oficial)" FontSize="14" FontWeight="Bold" Foreground="#0067B8" Margin="0,2,0,0" />
+                                        <TextBlock x:Name="TxtHubVersaoSobre" Text="Oficial" FontSize="14" FontWeight="Bold" Foreground="#0067B8" Margin="0,2,0,0" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="1">
                                         <TextBlock Text="NEXUS LS (ERP/PDV)" FontSize="11" FontWeight="Bold" Foreground="#64748B" />

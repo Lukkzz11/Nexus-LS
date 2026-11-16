@@ -39,6 +39,9 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        var versaoHub = VersaoDoHub();
+        TxtHubVersaoRodape.Text = "Nexus Hub v" + versaoHub;
+        TxtHubVersaoSobre.Text = "v" + versaoHub + " (Oficial)";
         Loaded += MainWindow_Loaded;
     }
 
@@ -340,6 +343,18 @@ public partial class MainWindow : Window
     }
 
     // ==================== LOCALIZAÇÃO E VERSÕES ====================
+
+    /// <summary>A versão deste Hub (a mesma que o publicar-tudo grava no atualizador.exe), sem o hash do commit.</summary>
+    private static string VersaoDoHub()
+    {
+        try
+        {
+            var exe = Environment.ProcessPath;
+            var vi = exe is not null && File.Exists(exe) ? FileVersionInfo.GetVersionInfo(exe) : null;
+            return (vi?.ProductVersion ?? vi?.FileVersion ?? "").Split('+')[0] is { Length: > 0 } v ? v : "—";
+        }
+        catch (Exception) { return "—"; }
+    }
 
     private static string LocalizarExecutavelPadrao()
     {
@@ -1664,7 +1679,7 @@ public partial class MainWindow : Window
             // Captura do Novo Popup Customizado no Nexus Hub
             try
             {
-                var diag = new JanelaDialogo("Sistemas Sincronizados", "Todos os aplicativos do Nexus foram verificados e conferem exatamente com a versão oficial do GitHub (v1.2.6).\n\n• Nexus LS: Pronto para inicialização\n• Nexus BarTender: Pronto para inicialização", TipoDialogo.Sucesso, this);
+                var diag = new JanelaDialogo("Sistemas Sincronizados", "Todos os aplicativos do Nexus foram verificados e conferem exatamente com a versão oficial do GitHub (v" + VersaoDoHub() + ").\n\n• Nexus LS: Pronto para inicialização\n• Nexus BarTender: Pronto para inicialização", TipoDialogo.Sucesso, this);
                 diag.Show();
                 diag.UpdateLayout();
                 Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.Render);
