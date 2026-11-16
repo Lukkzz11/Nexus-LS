@@ -369,4 +369,171 @@ public class BarTenderTests : IDisposable
         Assert.Contains(m.Elementos, e => e.Variavel == NexusLS.BarTender.Models.Designer.VariavelEtiqueta.Referencia);
         Assert.Contains(m.Elementos, e => e.Tipo == NexusLS.BarTender.Models.Designer.TipoElemento.CodigoBarras);
     }
+
+    [Theory]
+    [InlineData("7891234567895", true)]
+    [InlineData("2000000000015", true)]
+    [InlineData("2000000000022", true)]
+    [InlineData("2000000000018", false)] // Checksum incorreto (verificador real é 5)
+    [InlineData("7891234567890", false)] // Checksum incorreto (verificador real é 5)
+    [InlineData("123", false)]           // Tamanho menor
+    [InlineData("78912345678", false)]   // 11 dígitos
+    [InlineData("78912345678901", false)] // 14 dígitos
+    [InlineData("789123456789A", false)] // Não numérico
+    [InlineData("", false)]
+    [InlineData(null, false)]
+    public void Ean13_ValidacaoEDigitoVerificador_ValidaCasosCorretosEIncorretos(string? codigo, bool esperadoValido)
+    {
+        var valido = CodigoBarrasInterno.EhEan13Valido(codigo);
+        Assert.Equal(esperadoValido, valido);
+
+        if (codigo is { Length: 13 } && codigo.All(char.IsAsciiDigit))
+        {
+            var digitoCalculado = CodigoBarrasInterno.DigitoVerificador(codigo[..12]);
+            var digitoReal = codigo[12] - '0';
+            Assert.Equal(esperadoValido, digitoCalculado == digitoReal);
+        }
+    }
+
+    [Fact]
+    public void Paginacao_FolhaA4_OffsetPosicaoInicial_CalculaPaginasEPosicoesCorretamente()
+    {
+        // 21 etiquetas por folha A4 (Pimaco 3x7)
+        var produto = new Produto { Nome = "CAMISA POLO", PrecoVendaCentavos = 7990, CodigoBarras = "2000000000018" };
+        var itens = new List<ItemFila> { new(produto, 15) };
+        var configA4 = new ConfiguracaoEtiqueta { Formato = FormatoOpcao.FolhaA4_3x7 };
+
+        // Começando na posição 1: 15 etiquetas cabem na 1ª página (máx 21)
+        var paginatorInicio = new BarTenderPaginator(itens, configA4, primeiraPosicao: 1);
+        Assert.Equal(1, paginatorInicio.PageCount);
+
+        // Começando na posição 10 (9 etiquetas já usadas/gastas na folha):
+        // 12 cabem na página 1 (posições 10 a 21) e as restantes 3 vão para a página 2 (posições 1 a 3)
+        var paginatorComOffset = new BarTenderPaginator(itens, configA4, primeiraPosicao: 10);
+        Assert.Equal(2, paginatorComOffset.PageCount);
+    }
+
+    [Fact]
+    public void ModeloEtiquetaDesign_SalvarECarregarJson_MantemTodasAsPropriedades()
+    {
+        var tempFile = Path.Combine(Path.GetTempPath(), $"modelo_teste_{Guid.NewGuid():N}.json");
+        try
+        {
+            var original = new NexusLS.BarTender.Models.Designer.ModeloEtiquetaDesign
+            {
+                Nome = "Etiqueta Teste Roundtrip",
+                LarguraMm = 50,
+                AlturaMm = 30
+            };
+
+            original.Elementos.Add(new NexusLS.BarTender.Models.Designer.ElementoDesign
+            {
+                Tipo = NexusLS.BarTender.Models.Designer.TipoElemento.Texto,
+                Texto = "Camiseta DryFit",
+                TamanhoFonte = 14,
+                X = 5,
+                Y = 5,
+                Largura = 40,
+                Altura = 6
+            });
+
+            original.Elementos.Add(new NexusLS.BarTender.Models.Designer.ElementoDesign
+            {
+                Tipo = NexusLS.BarTender.Models.Designer.TipoElemento.CodigoBarras,
+                Texto = "7891234567895",
+                TipoCodigo = NexusLS.BarTender.Models.Designer.TipoSimboloCodigo.Ean13,
+                X = 5,
+                Y = 12,
+                Largura = 40,
+                Altura = 12
+            });
+
+            original.Elementos.Add(new NexusLS.BarTender.Models.Designer.ElementoDesign
+            {
+                Tipo = NexusLS.BarTender.Models.Designer.TipoElemento.Retangulo,
+                Preenchido = false,
+                X = 2,
+                Y = 2,
+                Largura = 46,
+                Altura = 26
+            });
+
+            original.Salvar(tempFile);
+            Assert.True(File.Exists(tempFile));
+
+            var carregado = NexusLS.BarTender.Models.Designer.ModeloEtiquetaDesign.Carregar(tempFile);
+            Assert.NotNull(carregado);
+            Assert.Equal(original.Nome, carregado.Nome);
+            Assert.Equal(original.LarguraMm, carregado.LarguraMm);
+            Assert.Equal(original.AlturaMm, carregado.AlturaMm);
+            Assert.Equal(original.Elementos.Count, carregado.Elementos.Count);
+
+            var texto = carregado.Elementos[0];
+            Assert.Equal(NexusLS.BarTender.Models.Designer.TipoElemento.Texto, texto.Tipo);
+            Assert.Equal("Camiseta DryFit", texto.Texto);
+            Assert.Equal(14, texto.TamanhoFonte);
+
+            var barcode = carregado.Elementos[1];
+            Assert.Equal(NexusLS.BarTender.Models.Designer.TipoElemento.CodigoBarras, barcode.Tipo);
+            Assert.Equal("7891234567895", barcode.Texto);
+            Assert.Equal(NexusLS.BarTender.Models.Designer.TipoSimboloCodigo.Ean13, barcode.TipoCodigo);
+
+            var forma = carregado.Elementos[2];
+            Assert.Equal(NexusLS.BarTender.Models.Designer.TipoElemento.Retangulo, forma.Tipo);
+            Assert.False(forma.Preenchido);
+        }
+        finally
+        {
+            if (File.Exists(tempFile))
+                File.Delete(tempFile);
+        }
+    }
+
+    [Fact]
+    public void EditorDesenho_GerarZpl_ModeloSimples_GeraComandosComEscape()
+    {
+        var modelo = new NexusLS.BarTender.Models.Designer.ModeloEtiquetaDesign
+        {
+            Nome = "Modelo ZPL Teste",
+            LarguraMm = 50,
+            AlturaMm = 30
+        };
+
+        modelo.Elementos.Add(new NexusLS.BarTender.Models.Designer.ElementoDesign
+        {
+            Tipo = NexusLS.BarTender.Models.Designer.TipoElemento.Texto,
+            Variavel = NexusLS.BarTender.Models.Designer.VariavelEtiqueta.Nenhuma,
+            Texto = "PRODUTO ^TOP~ ESPECIAL",
+            X = 5,
+            Y = 5,
+            Largura = 40,
+            Altura = 6
+        });
+
+        modelo.Elementos.Add(new NexusLS.BarTender.Models.Designer.ElementoDesign
+        {
+            Tipo = NexusLS.BarTender.Models.Designer.TipoElemento.CodigoBarras,
+            Variavel = NexusLS.BarTender.Models.Designer.VariavelEtiqueta.Nenhuma,
+            ValorCodigo = "7891234567895",
+            TipoCodigo = NexusLS.BarTender.Models.Designer.TipoSimboloCodigo.Ean13,
+            X = 5,
+            Y = 12,
+            Largura = 40,
+            Altura = 12
+        });
+
+        var zpl = EditorDesenhoService.GerarZpl(modelo, null, "MINHA LOJA", copias: 1);
+
+        Assert.StartsWith("^XA", zpl.Trim());
+        Assert.EndsWith("^XZ", zpl.Trim());
+        Assert.Contains("^PW", zpl);
+        Assert.Contains("^LL", zpl);
+
+        // Caracteres especiais ^ e ~ devem ser escapados como _5E e _7E
+        Assert.Contains("PRODUTO _5ETOP_7E ESPECIAL", zpl);
+        Assert.DoesNotContain("PRODUTO ^TOP~ ESPECIAL", zpl);
+
+        // Código de barras
+        Assert.Contains("7891234567895", zpl);
+    }
 }
