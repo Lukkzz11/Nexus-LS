@@ -702,5 +702,34 @@
 
             </Grid>
         </Grid>
+
+        <!-- ==================== TOAST DISCRETO DE SUCESSO (AUTO-DISMISS ~3S) ==================== -->
+        <Border x:Name="ToastSucesso"
+                Grid.Row="1"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                Margin="0,0,28,24"
+                Background="{StaticResource CorPainel}"
+                BorderBrush="{StaticResource CorBorda}"
+                BorderThickness="1"
+                CornerRadius="{StaticResource RaioGrande}"
+                Padding="16,12"
+                Visibility="Collapsed"
+                Panel.ZIndex="999">
+            <Border.Effect>
+                <DropShadowEffect Color="#0F172A" BlurRadius="24" ShadowDepth="6" Opacity="0.18" />
+            </Border.Effect>
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Border Width="32" Height="32" CornerRadius="{StaticResource RaioMedio}"
+                        Background="{StaticResource CorSelecaoSuave}" Margin="0,0,12,0" VerticalAlignment="Center">
+                    <ui:SymbolIcon Symbol="CheckmarkCircle24" FontSize="18" Foreground="{StaticResource CorPositivo}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock x:Name="ToastTitulo" Text="Sucesso" FontWeight="Bold" FontSize="13" Foreground="{StaticResource CorTexto}" />
+                    <TextBlock x:Name="ToastMensagem" Text="Ação realizada com sucesso." FontSize="12" Foreground="{StaticResource CorTextoSuave}" Margin="0,2,0,0" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
     </Grid>
 </ui:FluentWindow>

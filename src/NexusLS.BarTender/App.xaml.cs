@@ -52,24 +52,24 @@ public partial class App : Application
         {
             Log($"DispatcherUnhandledException: {args.Exception}");
 
-            var continuar = MessageBoxResult.No;
+            var continuar = false;
             try
             {
-                continuar = MessageBox.Show(
+                continuar = Services.DialogoService.Instancia.Confirmar(
                     "O Nexus BarTender encontrou um erro inesperado.\n\n" +
                     $"Detalhe: {args.Exception.Message}\n\n" +
                     "Deseja continuar? Os dados que não foram salvos podem ser perdidos.\n" +
                     $"Se preferir, feche o programa e envie o log:\n{LogFile}",
                     "Nexus BarTender",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Error);
+                    "Continuar",
+                    "Fechar Programa");
             }
             catch
             {
                 // Se nem a mensagem abrir, cai no encerramento abaixo.
             }
 
-            args.Handled = continuar == MessageBoxResult.Yes;
+            args.Handled = continuar;
             if (!args.Handled)
             {
                 Shutdown(1);

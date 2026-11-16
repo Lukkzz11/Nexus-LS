@@ -25,6 +25,30 @@ public partial class MainWindow : FluentWindow
         Closed += (s, e) => App.Log("MainWindow CLOSED event fired!");
     }
 
+    private System.Windows.Threading.DispatcherTimer? _timerToast;
+
+    public void ExibirToast(string mensagem, string titulo = "Sucesso")
+    {
+        if (ToastSucesso == null) return;
+
+        ToastTitulo.Text = titulo;
+        ToastMensagem.Text = mensagem;
+        ToastSucesso.Visibility = Visibility.Visible;
+        ToastSucesso.Opacity = 1.0;
+
+        _timerToast?.Stop();
+        _timerToast = new System.Windows.Threading.DispatcherTimer
+        {
+            Interval = TimeSpan.FromSeconds(3)
+        };
+        _timerToast.Tick += (s, e) =>
+        {
+            _timerToast?.Stop();
+            ToastSucesso.Visibility = Visibility.Collapsed;
+        };
+        _timerToast.Start();
+    }
+
     private void DataGrid_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
         if (DataContext is ViewModels.MainViewModel vm && vm.ProdutoSelecionado != null)

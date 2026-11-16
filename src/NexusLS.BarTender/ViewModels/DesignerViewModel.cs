@@ -538,8 +538,11 @@ public partial class DesignerViewModel : ObservableObject
     [RelayCommand]
     public void Zoom300() => ZoomNivel = 3.0;
 
-    public DesignerViewModel()
+    private readonly IDialogoService _dialogo;
+
+    public DesignerViewModel(IDialogoService? dialogo = null)
     {
+        _dialogo = dialogo ?? DialogoService.Instancia;
         foreach (var m in CatalogoModelos)
         {
             PresetsDisponiveis.Add(m.Nome);
@@ -667,7 +670,7 @@ public partial class DesignerViewModel : ObservableObject
     {
         if (ProdutoAtual == null)
         {
-            MessageBox.Show("Nenhum produto selecionado no catálogo para cadastrar esta etiqueta.", "Nexus BarTender", MessageBoxButton.OK, MessageBoxImage.Warning);
+            _dialogo.Informar("Nenhum produto selecionado no catálogo para cadastrar esta etiqueta.");
             return;
         }
 
@@ -682,16 +685,12 @@ public partial class DesignerViewModel : ObservableObject
                 var itemCat = ListaProdutosCatalog.FirstOrDefault(i => i.Id == ProdutoAtual.Id);
                 itemCat?.AtualizarInfoEtiqueta();
 
-                MessageBox.Show(
-                    $"Etiqueta cadastrada com sucesso para o produto:\n\n{ProdutoAtual.Nome}\n\nModelo: {Modelo.Nome} ({Modelo.LarguraMm:0.#} × {Modelo.AlturaMm:0.#} mm)",
-                    "Etiqueta Vinculada com Sucesso",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                _dialogo.Sucesso($"Etiqueta cadastrada com sucesso para {ProdutoAtual.Nome}!");
             }
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Erro ao salvar etiqueta do produto: {ex.Message}", "Nexus BarTender", MessageBoxButton.OK, MessageBoxImage.Error);
+            _dialogo.Erro($"Erro ao salvar etiqueta do produto: {ex.Message}");
         }
     }
 
@@ -700,13 +699,13 @@ public partial class DesignerViewModel : ObservableObject
     {
         if (ProdutoAtual == null) return;
 
-        var res = MessageBox.Show(
+        var confirmar = _dialogo.Confirmar(
             $"Deseja remover a etiqueta exclusiva e voltar a usar a etiqueta padrão para o produto:\n\n{ProdutoAtual.Nome}?",
             "Restaurar Padrão",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Question);
+            "Sim, Restaurar",
+            "Cancelar");
 
-        if (res == MessageBoxResult.Yes)
+        if (confirmar)
         {
             GerenciadorEtiquetasProdutoService.RemoverEtiquetaProduto(ProdutoAtual.Id);
             ProdutoTemEtiquetaExclusiva = false;
@@ -719,7 +718,7 @@ public partial class DesignerViewModel : ObservableObject
             InscreverEventosModelo();
             AtualizarPreview();
 
-            MessageBox.Show("O produto agora usará a etiqueta padrão do sistema.", "Nexus BarTender", MessageBoxButton.OK, MessageBoxImage.Information);
+            _dialogo.Sucesso("O produto agora usará a etiqueta padrão do sistema.");
         }
     }
 
@@ -941,7 +940,7 @@ public partial class DesignerViewModel : ObservableObject
             try
             {
                 Modelo.Salvar(CaminhoArquivoAtual);
-                MessageBox.Show("Projeto salvo com sucesso!", "Nexus BarTender", MessageBoxButton.OK, MessageBoxImage.Information);
+                _dialogo.Sucesso("Projeto salvo com sucesso!");
                 return;
             }
             catch { }
@@ -965,11 +964,11 @@ public partial class DesignerViewModel : ObservableObject
             {
                 Modelo.Salvar(sfd.FileName);
                 CaminhoArquivoAtual = sfd.FileName;
-                MessageBox.Show("Modelo de etiqueta salvo com sucesso!", "Nexus BarTender", MessageBoxButton.OK, MessageBoxImage.Information);
+                _dialogo.Sucesso("Modelo de etiqueta salvo com sucesso!");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao salvar modelo: {ex.Message}", "Nexus BarTender", MessageBoxButton.OK, MessageBoxImage.Error);
+                _dialogo.Erro($"Erro ao salvar modelo: {ex.Message}");
             }
         }
     }
@@ -1036,7 +1035,7 @@ public partial class DesignerViewModel : ObservableObject
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao carregar a imagem: {ex.Message}", "Editor de Etiquetas", MessageBoxButton.OK, MessageBoxImage.Error);
+                _dialogo.Erro($"Erro ao carregar a imagem: {ex.Message}");
             }
         }
     }
@@ -1064,7 +1063,7 @@ public partial class DesignerViewModel : ObservableObject
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao carregar a imagem: {ex.Message}", "Editor de Etiquetas", MessageBoxButton.OK, MessageBoxImage.Error);
+                _dialogo.Erro($"Erro ao carregar a imagem: {ex.Message}");
             }
         }
     }
@@ -1657,7 +1656,7 @@ public partial class DesignerViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Erro ao criar novo documento: {ex.Message}", "Nexus BarTender", MessageBoxButton.OK, MessageBoxImage.Error);
+            _dialogo.Erro($"Erro ao criar novo documento: {ex.Message}");
         }
     }
 
@@ -1735,12 +1734,12 @@ public partial class DesignerViewModel : ObservableObject
             var sucesso = ImpressaoService.ImprimirDesign(new[] { itemTeste }, Modelo, NomeLoja);
             if (sucesso)
             {
-                MessageBox.Show("Impressão enviada com sucesso!", "Nexus BarTender", MessageBoxButton.OK, MessageBoxImage.Information);
+                _dialogo.Sucesso("Impressão enviada com sucesso!");
             }
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Erro ao imprimir teste: {ex.Message}", "Nexus BarTender", MessageBoxButton.OK, MessageBoxImage.Error);
+            _dialogo.Erro($"Erro ao imprimir teste: {ex.Message}");
         }
     }
 
@@ -1759,11 +1758,11 @@ public partial class DesignerViewModel : ObservableObject
             try
             {
                 Modelo.Salvar(sfd.FileName);
-                MessageBox.Show("Modelo de etiqueta salvo com sucesso!", "Nexus BarTender", MessageBoxButton.OK, MessageBoxImage.Information);
+                _dialogo.Sucesso("Modelo de etiqueta salvo com sucesso!");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao salvar modelo: {ex.Message}", "Nexus BarTender", MessageBoxButton.OK, MessageBoxImage.Error);
+                _dialogo.Erro($"Erro ao salvar modelo: {ex.Message}");
             }
         }
     }
@@ -1785,11 +1784,11 @@ public partial class DesignerViewModel : ObservableObject
                 InscreverEventosModelo();
                 ElementoSelecionado = null;
                 AtualizarPreview();
-                MessageBox.Show("Modelo carregado com sucesso!", "Nexus BarTender", MessageBoxButton.OK, MessageBoxImage.Information);
+                _dialogo.Sucesso("Modelo carregado com sucesso!");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao carregar modelo: {ex.Message}", "Nexus BarTender", MessageBoxButton.OK, MessageBoxImage.Error);
+                _dialogo.Erro($"Erro ao carregar modelo: {ex.Message}");
             }
         }
     }

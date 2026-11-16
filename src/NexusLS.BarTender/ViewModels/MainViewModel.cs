@@ -111,12 +111,17 @@ public partial class MainViewModel : ObservableObject
     public ObservableCollection<ItemFila> FilaImpressao { get; } = new();
     public IReadOnlyList<FormatoOpcao> FormatosDisponiveis => FormatoOpcao.ListaPadrao;
 
-    public MainViewModel() : this(null)
+    private readonly IDialogoService _dialogo;
+
+    public MainViewModel() : this(null, null)
     {
     }
 
-    public MainViewModel(BancoDadosService? dbService)
+    public MainViewModel(BancoDadosService? dbService, IDialogoService? dialogoService = null)
     {
+        _dialogo = dialogoService ?? DialogoService.Instancia;
+        _designerVM = new DesignerViewModel(_dialogo);
+
         var http = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(10) };
         _licencaNuvem = new ServicoLicencaNuvem(
             new FonteLicencaComReserva(new FonteLicencaCloudFunction(http), new FonteLicencaFirestore(http)),
@@ -181,7 +186,7 @@ public partial class MainViewModel : ObservableObject
         }
         else
         {
-            MessageBox.Show("O aplicativo Atualizador e Ativador (atualizador.exe) não foi localizado nesta pasta.", "Nexus BarTender", MessageBoxButton.OK, MessageBoxImage.Information);
+            _dialogo.Informar("O aplicativo Atualizador e Ativador (atualizador.exe) não foi localizado nesta pasta.");
         }
     }
 
@@ -372,7 +377,7 @@ public partial class MainViewModel : ObservableObject
     {
         if (ProdutoSelecionado == null)
         {
-            MessageBox.Show("Selecione um produto na lista primeiro.", "Nexus BarTender", MessageBoxButton.OK, MessageBoxImage.Information);
+            _dialogo.Informar("Selecione um produto na lista primeiro.");
             return;
         }
 
@@ -387,16 +392,12 @@ public partial class MainViewModel : ObservableObject
                 ProdutosView.Refresh();
                 AtualizarPreview();
 
-                MessageBox.Show(
-                    $"Código de barras gerado e salvo com sucesso!\n\nProduto: {ProdutoSelecionado.Nome}\nCódigo EAN-13: {novoCodigo}",
-                    "Nexus BarTender",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                _dialogo.Sucesso($"Código EAN-13 {novoCodigo} gerado para {ProdutoSelecionado.Nome}!");
             }
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Erro ao gerar código: {ex.Message}", "Nexus BarTender", MessageBoxButton.OK, MessageBoxImage.Error);
+            _dialogo.Erro($"Erro ao gerar código: {ex.Message}");
         }
     }
 
@@ -406,18 +407,18 @@ public partial class MainViewModel : ObservableObject
         var semCodigo = TodosProdutos.Where(p => !p.TemCodigoBarras).ToList();
         if (semCodigo.Count == 0)
         {
-            MessageBox.Show("Todos os produtos já têm código na etiqueta (EAN-13, referência + tamanho, código curto ou interno).", "Nexus BarTender", MessageBoxButton.OK, MessageBoxImage.Information);
+            _dialogo.Informar("Todos os produtos já têm código na etiqueta (EAN-13, referência + tamanho, código curto ou interno).");
             return;
         }
 
-        var confirmacao = MessageBox.Show(
+        var confirmacao = _dialogo.Confirmar(
             $"Foram encontrados {semCodigo.Count} produtos sem nenhum código: nem EAN-13, nem referência, nem código interno.\n\n" +
             "Deseja gerar códigos EAN-13 únicos para todos eles e gravar diretamente no banco de dados do Nexus LS?",
-            "Confirmação - Geração em Lote",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Question);
+            "Geração em Lote",
+            "Gerar Códigos",
+            "Cancelar");
 
-        if (confirmacao != MessageBoxResult.Yes) return;
+        if (!confirmacao) return;
 
         EstaCarregando = true;
         try
@@ -428,15 +429,11 @@ public partial class MainViewModel : ObservableObject
             // Recarrega do banco para garantir integridade
             await RecarregarDadosAsync();
 
-            MessageBox.Show(
-                $"{alterados} códigos de barras foram gerados e gravados com sucesso no banco de dados do Nexus LS!",
-                "Geração Concluída",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            _dialogo.Sucesso($"{alterados} códigos de barras gerados e gravados com sucesso no banco de dados!");
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Falha na geração em lote: {ex.Message}", "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+            _dialogo.Erro($"Falha na geração em lote: {ex.Message}");
         }
         finally
         {
@@ -515,11 +512,7 @@ public partial class MainViewModel : ObservableObject
 
         AtualizarTotaisFila();
 
-        MessageBox.Show(
-            $"Fila atualizada com base no estoque!\n\n{linhas} linha(s) na fila, totalizando {TotalEtiquetasFila} etiquetas.",
-            "Nexus BarTender",
-            MessageBoxButton.OK,
-            MessageBoxImage.Information);
+        _dialogo.Sucesso($"Fila atualizada com base no estoque: {linhas} linha(s), totalizando {TotalEtiquetasFila} etiquetas.");
     }
 
     [RelayCommand]
@@ -558,13 +551,13 @@ public partial class MainViewModel : ObservableObject
     {
         if (FilaImpressao.Count == 0) return;
 
-        var confirmacao = MessageBox.Show(
+        var confirmacao = _dialogo.Confirmar(
             "Deseja limpar todos os itens da fila de impressão?",
             "Limpar Fila",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Question);
+            "Sim, Limpar",
+            "Cancelar");
 
-        if (confirmacao == MessageBoxResult.Yes)
+        if (confirmacao)
         {
             FilaImpressao.Clear();
             AtualizarTotaisFila();
@@ -718,11 +711,11 @@ public partial class MainViewModel : ObservableObject
         var detalhe = string.Join("\n• ", problemas.Take(12));
         if (problemas.Count > 12) detalhe += $"\n• ... e mais {problemas.Count - 12} problema(s).";
 
-        return MessageBox.Show(
+        return _dialogo.Confirmar(
             $"Confira antes de imprimir:\n\n• {detalhe}\n\nDeseja imprimir mesmo assim?",
-            "Revisão da fila de impressão",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Warning) == MessageBoxResult.Yes;
+            "Revisão da Fila de Impressão",
+            "Imprimir Mesmo Assim",
+            "Revisar Fila");
     }
 
     private static bool EhEan13(string codigo) =>
@@ -733,7 +726,7 @@ public partial class MainViewModel : ObservableObject
     {
         if (FilaImpressao.Count == 0)
         {
-            MessageBox.Show("Adicione produtos à fila de impressão antes de imprimir.", "Nexus BarTender", MessageBoxButton.OK, MessageBoxImage.Information);
+            _dialogo.Informar("Adicione produtos à fila de impressão antes de imprimir.");
             return;
         }
 
@@ -748,13 +741,14 @@ public partial class MainViewModel : ObservableObject
 
             if (imprimiu)
             {
-                var limpar = MessageBox.Show(
-                    "Impressão enviada com sucesso!\n\nDeseja limpar a fila de impressão agora?",
-                    "Nexus BarTender",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Question);
+                _dialogo.Sucesso("Impressão enviada com sucesso!");
+                var limpar = _dialogo.Confirmar(
+                    "A impressão foi enviada com sucesso.\nDeseja limpar a fila de impressão agora?",
+                    "Limpar Fila",
+                    "Sim, Limpar",
+                    "Manter na Fila");
 
-                if (limpar == MessageBoxResult.Yes)
+                if (limpar)
                 {
                     FilaImpressao.Clear();
                     AtualizarTotaisFila();
@@ -763,7 +757,7 @@ public partial class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Erro durante a impressão: {ex.Message}", "Nexus BarTender", MessageBoxButton.OK, MessageBoxImage.Error);
+            _dialogo.Erro($"Erro durante a impressão: {ex.Message}");
         }
     }
 
@@ -772,7 +766,7 @@ public partial class MainViewModel : ObservableObject
     {
         if (string.IsNullOrWhiteSpace(ZplCodigo)) return;
         Clipboard.SetText(ZplCodigo);
-        MessageBox.Show("Comandos ZPL II copiados para a Área de Transferência!", "Nexus BarTender", MessageBoxButton.OK, MessageBoxImage.Information);
+        _dialogo.Sucesso("Comandos ZPL II copiados para a Área de Transferência!");
     }
 
     [RelayCommand]
@@ -794,7 +788,7 @@ public partial class MainViewModel : ObservableObject
             using var fs = File.OpenWrite(sfd.FileName);
             encoder.Save(fs);
 
-            MessageBox.Show($"Imagem salva em:\n{sfd.FileName}", "Nexus BarTender", MessageBoxButton.OK, MessageBoxImage.Information);
+            _dialogo.Sucesso($"Imagem salva em:\n{sfd.FileName}");
         }
     }
 
