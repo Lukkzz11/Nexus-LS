@@ -127,14 +127,48 @@
                                 </StackPanel>
                             </Border>
 
-                            <!-- Seletor de Tamanho para Teste com Grade Nexus -->
-                            <Border Background="{StaticResource CorSuperficieSubtil}" BorderBrush="{StaticResource CorBorda}" BorderThickness="1" CornerRadius="{StaticResource RaioPequeno}" Padding="6,2" Margin="8,0,0,0" VerticalAlignment="Center" ToolTip="Tamanho do produto para testar a etiqueta e a regra de código de barras Nexus">
+                            <!-- Tamanhos do produto: clicar mostra a etiqueta já com aquele tamanho e o código de barras dele -->
+                            <Border Background="{StaticResource CorSuperficieSubtil}" BorderBrush="{StaticResource CorBorda}" BorderThickness="1" CornerRadius="{StaticResource RaioPequeno}" Padding="8,3" Margin="8,0,0,0" VerticalAlignment="Center" ToolTip="Clique em um tamanho para ver a etiqueta com ele. Ao salvar, o modelo vale para todos os tamanhos; só o tamanho e o código de barras mudam.">
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock Text="TAM:" FontWeight="Bold" FontSize="10" Foreground="{StaticResource CorTextoSuave}" Margin="0,0,4,0" VerticalAlignment="Center" />
-                                    <ComboBox ItemsSource="{Binding TamanhosParaTesteDisponiveis}"
-                                              SelectedItem="{Binding TamanhoParaTeste, Mode=TwoWay}"
-                                              MinWidth="54" Height="24" Padding="4,0" FontSize="11" FontWeight="SemiBold"
-                                              VerticalAlignment="Center" BorderThickness="0" Background="Transparent" />
+                                    <TextBlock Text="TAMANHO:" FontWeight="Bold" FontSize="10" Foreground="{StaticResource CorTextoSuave}" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                    <ListBox ItemsSource="{Binding TamanhosParaTesteDisponiveis}"
+                                             SelectedItem="{Binding TamanhoParaTeste, Mode=TwoWay}"
+                                             Background="Transparent" BorderThickness="0" Padding="0"
+                                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                             ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                                             AutomationProperties.Name="Tamanho do produto">
+                                        <ListBox.ItemsPanel>
+                                            <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                                        </ListBox.ItemsPanel>
+                                        <ListBox.ItemContainerStyle>
+                                            <Style TargetType="ListBoxItem">
+                                                <Setter Property="Margin" Value="2,0" />
+                                                <Setter Property="Padding" Value="9,3" />
+                                                <Setter Property="FontSize" Value="11.5" />
+                                                <Setter Property="FontWeight" Value="SemiBold" />
+                                                <Setter Property="Cursor" Value="Hand" />
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="ListBoxItem">
+                                                            <Border x:Name="Caixa" CornerRadius="{StaticResource RaioPequeno}" Padding="{TemplateBinding Padding}" Background="Transparent" BorderBrush="{StaticResource CorBorda}" BorderThickness="1">
+                                                                <ContentPresenter HorizontalAlignment="Center" />
+                                                            </Border>
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property="IsSelected" Value="True">
+                                                                    <Setter TargetName="Caixa" Property="Background" Value="{StaticResource CorPrimaria}" />
+                                                                    <Setter TargetName="Caixa" Property="BorderBrush" Value="{StaticResource CorPrimaria}" />
+                                                                    <Setter Property="Foreground" Value="White" />
+                                                                </Trigger>
+                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                    <Setter TargetName="Caixa" Property="BorderBrush" Value="{StaticResource CorPrimaria}" />
+                                                                </Trigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+                                        </ListBox.ItemContainerStyle>
+                                    </ListBox>
                                 </StackPanel>
                             </Border>
                         </StackPanel>

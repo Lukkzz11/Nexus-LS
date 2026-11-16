@@ -37,7 +37,7 @@ public partial class DesignerViewModel
                 var itemCat = ListaProdutosCatalog.FirstOrDefault(i => i.Id == ProdutoAtual.Id);
                 itemCat?.AtualizarInfoEtiqueta();
 
-                _dialogo.Sucesso($"Etiqueta cadastrada com sucesso para {ProdutoAtual.Nome}!");
+                _dialogo.Sucesso($"Etiqueta salva para {ProdutoAtual.Nome}!\n\nO modelo vale para todos os tamanhos do produto. Em cada um, só o tamanho e o código de barras mudam; nome e referência continuam os mesmos.");
             }
         }
         catch (Exception ex)
