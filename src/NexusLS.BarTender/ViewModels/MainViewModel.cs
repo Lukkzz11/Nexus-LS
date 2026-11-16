@@ -412,15 +412,38 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     public void IrParaConfiguracoes() => TelaAtiva = "Configuracoes";
 
+    /// <summary>Pergunta o tamanho a editar (null = cancelou). Troca nos testes.</summary>
+    public Func<string, IReadOnlyList<string>, string?> EscolherTamanhoParaEditar { get; set; } = (produto, tamanhos) =>
+    {
+        var janela = new Views.EscolherTamanhoJanela(produto, tamanhos);
+        return janela.ShowDialog() == true ? janela.Escolhido : null;
+    };
+
     [RelayCommand]
     public void UsarProdutoNoEstudio(ProdutoItemViewModel? produtoItem)
     {
-        if (produtoItem != null)
+        if (produtoItem == null) return;
+
+        // Mostra os tamanhos do produto; ao escolher um, o Estúdio abre a etiqueta já com ele.
+        var tamanhos = (produtoItem.Produto.Tamanhos ?? new List<ProdutoTamanho>())
+            .Select(t => (t.Tamanho ?? "").Trim())
+            .Where(t => t.Length > 0 && !string.Equals(t, Tamanhos.SemTamanho, StringComparison.OrdinalIgnoreCase))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        string? escolhido = null;
+        if (tamanhos.Count == 1) escolhido = tamanhos[0];
+        else if (tamanhos.Count > 1)
         {
-            ProdutoSelecionado = produtoItem;
-            DesignerVM.DefinirProduto(produtoItem.Produto, Config.NomeLoja, carregarEtiquetaSalvaSeHouver: true);
-            TelaAtiva = "Estudio";
+            escolhido = EscolherTamanhoParaEditar(produtoItem.Produto.Nome, tamanhos);
+            if (escolhido == null) return; // cancelou
         }
+
+        ProdutoSelecionado = produtoItem;
+        DesignerVM.DefinirProduto(produtoItem.Produto, Config.NomeLoja, carregarEtiquetaSalvaSeHouver: true);
+        if (escolhido != null && DesignerVM.TamanhosParaTesteDisponiveis.Contains(escolhido))
+            DesignerVM.TamanhoParaTeste = escolhido;
+        TelaAtiva = "Estudio";
     }
 
     [RelayCommand]
