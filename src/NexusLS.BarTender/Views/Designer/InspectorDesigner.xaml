@@ -1,0 +1,555 @@
+<UserControl x:Class="NexusLS.BarTender.Views.Designer.InspectorDesigner"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:vm="clr-namespace:NexusLS.BarTender.ViewModels"
+             xmlns:models="clr-namespace:NexusLS.BarTender.Models.Designer"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance vm:DesignerViewModel}">
+
+    <UserControl.Resources>
+        <Style x:Key="SubsecaoCard" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource CorCabecalho}" />
+            <Setter Property="BorderBrush" Value="{StaticResource CorBorda}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="{StaticResource RaioMedio}" />
+            <Setter Property="Padding" Value="12" />
+            <Setter Property="Margin" Value="0,0,0,10" />
+        </Style>
+    </UserControl.Resources>
+
+            <!-- ==================== DIREITA: PAINEL INSPECTOR & CAMADAS ==================== -->
+            <Border Background="{StaticResource CorPainel}" BorderBrush="{StaticResource CorBorda}" BorderThickness="1,0,0,0" Padding="14,12">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <!-- 0: Abas Seletoras: Propriedades / Camadas -->
+                        <RowDefinition Height="Auto" />
+                        <!-- 1: Conteúdo da Aba Ativa -->
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <!-- SELETOR DE ABAS DO INSPECTOR (PROPRIEDADES vs CAMADAS) -->
+                    <Border Grid.Row="0" Background="{StaticResource CorSuperficieSubtil}" CornerRadius="{StaticResource RaioPequeno}" Padding="3" Margin="0,0,0,12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Aba 1: Propriedades -->
+                            <Button Grid.Column="0" Command="{Binding MudarAbaInspetorCommand}" CommandParameter="Propriedades" Padding="8,6" BorderThickness="0">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Setter Property="Background" Value="Transparent" />
+                                        <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />
+                                        <Setter Property="FontWeight" Value="SemiBold" />
+                                        <Setter Property="FontSize" Value="{StaticResource TamPequeno}" />
+                                        <Setter Property="Cursor" Value="Hand" />
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border Background="{TemplateBinding Background}" CornerRadius="{StaticResource RaioPequeno}" Padding="{TemplateBinding Padding}">
+                                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                    </Border>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding AbaInspetorAtiva}" Value="Propriedades">
+                                                <Setter Property="Background" Value="White" />
+                                                <Setter Property="Foreground" Value="{StaticResource CorPrimaria}" />
+                                                <Setter Property="FontWeight" Value="Bold" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <ui:SymbolIcon Symbol="Settings24" FontSize="14" Margin="0,0,5,0" VerticalAlignment="Center" />
+                                    <TextBlock Text="Propriedades" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Aba 2: Camadas (Photoshop Style) -->
+                            <Button Grid.Column="1" Command="{Binding MudarAbaInspetorCommand}" CommandParameter="Camadas" Padding="8,6" BorderThickness="0">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Setter Property="Background" Value="Transparent" />
+                                        <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />
+                                        <Setter Property="FontWeight" Value="SemiBold" />
+                                        <Setter Property="FontSize" Value="{StaticResource TamPequeno}" />
+                                        <Setter Property="Cursor" Value="Hand" />
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border Background="{TemplateBinding Background}" CornerRadius="{StaticResource RaioPequeno}" Padding="{TemplateBinding Padding}">
+                                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                    </Border>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding AbaInspetorAtiva}" Value="Camadas">
+                                                <Setter Property="Background" Value="White" />
+                                                <Setter Property="Foreground" Value="{StaticResource CorPrimaria}" />
+                                                <Setter Property="FontWeight" Value="Bold" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <ui:SymbolIcon Symbol="Layer24" FontSize="14" Margin="0,0,5,0" VerticalAlignment="Center" />
+                                    <TextBlock Text="Camadas" VerticalAlignment="Center" />
+                                    <Border Background="{StaticResource CorSelecao}" CornerRadius="8" Padding="5,1" Margin="6,0,0,0" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding TotalCamadas}" Foreground="{StaticResource CorDestaqueTexto}" FontSize="10" FontWeight="Bold" />
+                                    </Border>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    <!-- CONTEÚDO DAS ABAS -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <Grid>
+                            <!-- ABA 1: PROPRIEDADES (Folha e Elementos) -->
+                            <StackPanel>
+                                <StackPanel.Style>
+                                    <Style TargetType="StackPanel">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding AbaInspetorAtiva}" Value="Propriedades">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </StackPanel.Style>
+
+                                <!-- Título do Inspector -->
+                                <TextBlock Text="Inspector de Propriedades" Style="{StaticResource TituloSecao}" Margin="0,0,0,2" />
+                                <TextBlock Text="Ajuste fino milimétrico e vinculação de dados" Style="{StaticResource TextoApoio}" Margin="0,0,0,12" />
+
+                                <!-- PROPRIEDADES DA FOLHA / ETIQUETA (quando nenhum elemento está selecionado) -->
+                                <Border Background="{StaticResource CorSuperficieSuave}" BorderBrush="{StaticResource CorBorda}" BorderThickness="1" CornerRadius="{StaticResource RaioMedio}" Padding="14" Margin="0,0,0,12"
+                                        Visibility="{Binding ElementoSelecionado, Converter={StaticResource NullParaColapsadoConverter}, ConverterParameter=invert}">
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                            <ui:SymbolIcon Symbol="DocumentPageBottomCenter24" FontSize="18" Foreground="{StaticResource CorPrimaria}" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                            <TextBlock Text="Propriedades da Folha" FontWeight="Bold" FontSize="13" Foreground="{StaticResource CorTexto}" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                        <TextBlock Text="Altere as dimensões e a orientação da folha da etiqueta em tempo real:" Style="{StaticResource TextoApoio}" Margin="0,0,0,12" />
+
+                                        <!-- Largura e Altura da Folha -->
+                                        <Grid Margin="0,0,0,10">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="8" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0">
+                                                <TextBlock Text="Largura (mm)" Style="{StaticResource Rotulo}" Margin="0,0,0,4" />
+                                                <TextBox Text="{Binding FolhaLarguraMm, UpdateSourceTrigger=LostFocus, StringFormat='{}{0:0.##}'}" KeyDown="FolhaTextBox_KeyDown" FontWeight="Bold" FontSize="13" Padding="6,4" TextAlignment="Center" ToolTip="Pressione Enter para aplicar" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="2">
+                                                <TextBlock Text="Altura (mm)" Style="{StaticResource Rotulo}" Margin="0,0,0,4" />
+                                                <TextBox Text="{Binding FolhaAlturaMm, UpdateSourceTrigger=LostFocus, StringFormat='{}{0:0.##}'}" KeyDown="FolhaTextBox_KeyDown" FontWeight="Bold" FontSize="13" Padding="6,4" TextAlignment="Center" ToolTip="Pressione Enter para aplicar" />
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <!-- Botão Inverter Orientação -->
+                                        <Button Command="{Binding AlternarOrientacaoFolhaCommand}" Style="{StaticResource BotaoSecundario}" HorizontalAlignment="Stretch" Margin="0,0,0,14" Padding="10,6">
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                <ui:SymbolIcon Symbol="ArrowSync24" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                                <TextBlock Text="Girar Folha (Paisagem / Retrato)" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </Button>
+
+                                        <!-- Predefinições Rápidas de Tamanho -->
+                                        <TextBlock Text="TAMANHOS RÁPIDOS" Foreground="{StaticResource CorTextoSuave}" FontSize="{StaticResource TamMicro}" FontWeight="Bold" Margin="0,0,0,6" />
+                                        <UniformGrid Columns="2" Margin="0,0,0,8">
+                                            <Button Command="{Binding DefinirTamanhoFolhaCommand}" CommandParameter="50x30" Style="{StaticResource BotaoSecundario}" Margin="0,0,3,4" Padding="4,5" Content="50 × 30 mm" FontSize="11" />
+                                            <Button Command="{Binding DefinirTamanhoFolhaCommand}" CommandParameter="40x25" Style="{StaticResource BotaoSecundario}" Margin="3,0,0,4" Padding="4,5" Content="40 × 25 mm" FontSize="11" />
+                                            <Button Command="{Binding DefinirTamanhoFolhaCommand}" CommandParameter="60x40" Style="{StaticResource BotaoSecundario}" Margin="0,0,3,4" Padding="4,5" Content="60 × 40 mm" FontSize="11" />
+                                            <Button Command="{Binding DefinirTamanhoFolhaCommand}" CommandParameter="100x50" Style="{StaticResource BotaoSecundario}" Margin="3,0,0,4" Padding="4,5" Content="100 × 50 mm" FontSize="11" />
+                                            <Button Command="{Binding DefinirTamanhoFolhaCommand}" CommandParameter="100x150" Style="{StaticResource BotaoSecundario}" Margin="0,0,3,0" Padding="4,5" Content="100 × 150 mm" FontSize="11" />
+                                            <Button Command="{Binding DefinirTamanhoFolhaCommand}" CommandParameter="30x20" Style="{StaticResource BotaoSecundario}" Margin="3,0,0,0" Padding="4,5" Content="30 × 20 mm (Joias)" FontSize="11" />
+                                        </UniformGrid>
+
+                                        <Border Background="{StaticResource CorDestaqueFundo}" BorderBrush="{StaticResource CorDestaqueBorda}" BorderThickness="1" CornerRadius="4" Padding="8,6" Margin="0,8,0,0">
+                                            <TextBlock Text="💡 A folha se ajusta instantaneamente no canvas central ao alterar as medidas." FontSize="10.5" Foreground="{StaticResource CorPrimariaPressionada}" TextWrapping="Wrap" />
+                                        </Border>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Quando há elemento selecionado -->
+                                <StackPanel Visibility="{Binding ElementoSelecionado, Converter={StaticResource NullParaColapsadoConverter}}">
+                                    <!-- Tipo do Elemento -->
+                                    <Grid Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Tipo do Objeto" Style="{StaticResource Rotulo}" Margin="0" VerticalAlignment="Center" />
+                                        <Border Grid.Column="1" Background="{StaticResource CorSelecaoSuave}" BorderBrush="{StaticResource CorSelecao}" BorderThickness="1" CornerRadius="{StaticResource RaioPequeno}" Padding="10,3">
+                                            <TextBlock Text="{Binding ElementoSelecionado.Tipo}" Foreground="{StaticResource CorPrimaria}" FontSize="{StaticResource TamPequeno}" FontWeight="Bold" />
+                                        </Border>
+                                    </Grid>
+
+                                    <!-- Nome da Camada / Elemento -->
+                                    <TextBlock Text="NOME DA CAMADA" Foreground="{StaticResource CorTextoSuave}" FontSize="{StaticResource TamMicro}" FontWeight="Bold" Margin="0,2,0,4" />
+                                    <TextBox Text="{Binding ElementoSelecionado.Nome, UpdateSourceTrigger=PropertyChanged}" FontWeight="SemiBold" Margin="0,0,0,10" />
+
+                                    <!-- Rotação do Elemento -->
+                                    <TextBlock Text="ROTAÇÃO DO OBJETO" Foreground="{StaticResource CorTextoSuave}" FontSize="{StaticResource TamMicro}" FontWeight="Bold" Margin="0,4,0,4" />
+                                    <UniformGrid Columns="4" Margin="0,0,0,10">
+                                        <Button Command="{Binding DefinirRotacaoCommand}" CommandParameter="0" Style="{StaticResource BotaoSecundario}" Padding="4,4" Margin="0,0,2,0" Content="0°" FontSize="11" />
+                                        <Button Command="{Binding DefinirRotacaoCommand}" CommandParameter="90" Style="{StaticResource BotaoSecundario}" Padding="4,4" Margin="2,0,2,0" Content="90°" FontSize="11" />
+                                        <Button Command="{Binding DefinirRotacaoCommand}" CommandParameter="180" Style="{StaticResource BotaoSecundario}" Padding="4,4" Margin="2,0,2,0" Content="180°" FontSize="11" />
+                                        <Button Command="{Binding DefinirRotacaoCommand}" CommandParameter="270" Style="{StaticResource BotaoSecundario}" Padding="4,4" Margin="2,0,0,0" Content="270°" FontSize="11" />
+                                    </UniformGrid>
+
+                                    <!-- Medidas CAD em mm -->
+                                    <TextBlock Text="POSIÇÃO &amp; DIMENSÕES (MM)" Foreground="{StaticResource CorTextoSuave}" FontSize="{StaticResource TamMicro}" FontWeight="Bold" Margin="0,6,0,6" />
+                                    <UniformGrid Columns="2" Margin="0,0,0,8">
+                                        <StackPanel Margin="0,0,4,0">
+                                            <TextBlock Text="Posição X (mm)" Style="{StaticResource Rotulo}" Margin="0,0,0,4" />
+                                            <TextBox Text="{Binding ElementoSelecionado.X, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:0.##}'}" />
+                                        </StackPanel>
+                                        <StackPanel Margin="4,0,0,0">
+                                            <TextBlock Text="Posição Y (mm)" Style="{StaticResource Rotulo}" Margin="0,0,0,4" />
+                                            <TextBox Text="{Binding ElementoSelecionado.Y, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:0.##}'}" />
+                                        </StackPanel>
+                                    </UniformGrid>
+                                    <UniformGrid Columns="2" Margin="0,0,0,10">
+                                        <StackPanel Margin="0,0,4,0">
+                                            <TextBlock Text="Largura (mm)" Style="{StaticResource Rotulo}" Margin="0,0,0,4" />
+                                            <TextBox Text="{Binding ElementoSelecionado.Largura, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:0.##}'}" />
+                                        </StackPanel>
+                                        <StackPanel Margin="4,0,0,0">
+                                            <TextBlock Text="Altura (mm)" Style="{StaticResource Rotulo}" Margin="0,0,0,4" />
+                                            <TextBox Text="{Binding ElementoSelecionado.Altura, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:0.##}'}" />
+                                        </StackPanel>
+                                    </UniformGrid>
+
+                                    <!-- PROPRIEDADES DE TEXTO -->
+                                    <StackPanel Visibility="{Binding ElementoSelecionado.Tipo, Converter={StaticResource TipoElementoVisibilidadeConverter}, ConverterParameter=Texto}">
+                                        <Border Style="{StaticResource SubsecaoCard}">
+                                            <StackPanel>
+                                                <TextBlock Text="DADOS DO TEXTO" FontWeight="Bold" Foreground="{StaticResource CorTexto}" FontSize="{StaticResource TamRotulo}" Margin="0,0,0,6" />
+
+                                                <TextBlock Text="Campo Vinculado do Produto" Style="{StaticResource Rotulo}" Margin="0,0,0,4" />
+                                                <ComboBox ItemsSource="{Binding VariaveisDisponiveis}"
+                                                          SelectedItem="{Binding ElementoSelecionado.Variavel, Mode=TwoWay}"
+                                                          Margin="0,0,0,8" />
+
+                                                <TextBlock Text="Texto / Máscara ({Nome}, {Preco})" Style="{StaticResource Rotulo}" Margin="0,0,0,4" />
+                                                <TextBox Text="{Binding ElementoSelecionado.Texto, UpdateSourceTrigger=PropertyChanged}"
+                                                         TextWrapping="Wrap" AcceptsReturn="True" Height="46" Margin="0,0,0,4" />
+
+                                                <TextBlock Text="Variáveis Rápidas (inserir no texto):" Style="{StaticResource TextoApoio}" FontSize="10" Margin="0,2,0,4" />
+                                                <WrapPanel Margin="0,0,0,8">
+                                                    <Button Command="{Binding InserirChipTextoCommand}" CommandParameter="{}{Nome}" Style="{StaticResource BotaoSecundario}" Content="+ {Nome}" Padding="5,2" Margin="0,0,4,4" FontSize="10" />
+                                                    <Button Command="{Binding InserirChipTextoCommand}" CommandParameter="R$ {Preco}" Style="{StaticResource BotaoSecundario}" Content="+ R$ {Preco}" Padding="5,2" Margin="0,0,4,4" FontSize="10" />
+                                                    <Button Command="{Binding InserirChipTextoCommand}" CommandParameter="{}{Ref}" Style="{StaticResource BotaoSecundario}" Content="+ {Ref}" Padding="5,2" Margin="0,0,4,4" FontSize="10" />
+                                                    <Button Command="{Binding InserirChipTextoCommand}" CommandParameter="{}{Tamanho}" Style="{StaticResource BotaoSecundario}" Content="+ {Tamanho}" Padding="5,2" Margin="0,0,4,4" FontSize="10" />
+                                                    <Button Command="{Binding InserirChipTextoCommand}" CommandParameter="{}{Codigo}" Style="{StaticResource BotaoSecundario}" Content="+ {Codigo}" Padding="5,2" Margin="0,0,4,4" FontSize="10" />
+                                                    <Button Command="{Binding InserirChipTextoCommand}" CommandParameter="{}{Loja}" Style="{StaticResource BotaoSecundario}" Content="+ {Loja}" Padding="5,2" Margin="0,0,4,4" FontSize="10" />
+                                                </WrapPanel>
+
+                                                <TextBlock Text="Família da Fonte (Fontes do Windows)" Style="{StaticResource Rotulo}" Margin="0,0,0,4" />
+                                                <ComboBox ItemsSource="{Binding FontesDisponiveis}" SelectedItem="{Binding ElementoSelecionado.Fonte, Mode=TwoWay}"
+                                                          IsEditable="True" MaxDropDownHeight="280" Margin="0,0,0,8">
+                                                    <ComboBox.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <TextBlock Text="{Binding}" FontFamily="{Binding}" FontSize="12.5" VerticalAlignment="Center" />
+                                                        </DataTemplate>
+                                                    </ComboBox.ItemTemplate>
+                                                </ComboBox>
+
+                                                <TextBlock Text="Cor do Texto" Style="{StaticResource Rotulo}" Margin="0,0,0,4" />
+                                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                                    <Button Command="{Binding DefinirCorTextoCommand}" CommandParameter="#000000" Style="{StaticResource BotaoSecundario}" Width="24" Height="24" Padding="0" Margin="0,0,4,0" ToolTip="Preto">
+                                                        <Ellipse Width="14" Height="14" Fill="#000000" Stroke="#94A3B8" StrokeThickness="1" />
+                                                    </Button>
+                                                    <Button Command="{Binding DefinirCorTextoCommand}" CommandParameter="#FFFFFF" Style="{StaticResource BotaoSecundario}" Width="24" Height="24" Padding="0" Margin="0,0,4,0" ToolTip="Branco">
+                                                        <Ellipse Width="14" Height="14" Fill="#FFFFFF" Stroke="#94A3B8" StrokeThickness="1" />
+                                                    </Button>
+                                                    <Button Command="{Binding DefinirCorTextoCommand}" CommandParameter="#DC2626" Style="{StaticResource BotaoSecundario}" Width="24" Height="24" Padding="0" Margin="0,0,4,0" ToolTip="Vermelho">
+                                                        <Ellipse Width="14" Height="14" Fill="#DC2626" />
+                                                    </Button>
+                                                    <Button Command="{Binding DefinirCorTextoCommand}" CommandParameter="#2563EB" Style="{StaticResource BotaoSecundario}" Width="24" Height="24" Padding="0" Margin="0,0,4,0" ToolTip="Azul">
+                                                        <Ellipse Width="14" Height="14" Fill="#2563EB" />
+                                                    </Button>
+                                                    <Button Command="{Binding DefinirCorTextoCommand}" CommandParameter="#16A34A" Style="{StaticResource BotaoSecundario}" Width="24" Height="24" Padding="0" Margin="0,0,8,0" ToolTip="Verde">
+                                                        <Ellipse Width="14" Height="14" Fill="#16A34A" />
+                                                    </Button>
+                                                    <TextBox Text="{Binding ElementoSelecionado.CorTexto, UpdateSourceTrigger=PropertyChanged}" Width="70" FontSize="11" Padding="4,2" VerticalAlignment="Center" ToolTip="Código Hexadecimal da cor" />
+                                                </StackPanel>
+
+                                                <TextBlock Text="Alinhamento Horizontal" Style="{StaticResource Rotulo}" Margin="0,0,0,4" />
+                                                <ComboBox ItemsSource="{Binding AlinhamentosDisponiveis}"
+                                                          SelectedItem="{Binding ElementoSelecionado.Alinhamento, Mode=TwoWay}"
+                                                          Margin="0,0,0,8" />
+
+                                                <TextBlock Text="Tamanho Real da Fonte (pt)" Style="{StaticResource Rotulo}" Margin="0,0,0,4" />
+                                                <TextBox Text="{Binding ElementoSelecionado.TamanhoFonte, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:0.#}'}" Margin="0,0,0,8" />
+
+                                                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                                    <CheckBox Content="Negrito" IsChecked="{Binding ElementoSelecionado.Negrito, Mode=TwoWay}" Margin="0,0,10,0" />
+                                                    <CheckBox Content="Itálico" IsChecked="{Binding ElementoSelecionado.Italico, Mode=TwoWay}" Margin="0,0,10,0" />
+                                                    <CheckBox Content="Riscado (Preço DE)" IsChecked="{Binding ElementoSelecionado.Riscado, Mode=TwoWay}" />
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Border>
+                                    </StackPanel>
+
+                                    <!-- PROPRIEDADES DE CÓDIGO DE BARRAS -->
+                                    <StackPanel Visibility="{Binding ElementoSelecionado.Tipo, Converter={StaticResource TipoElementoVisibilidadeConverter}, ConverterParameter=CodigoBarras}">
+                                        <Border Style="{StaticResource SubsecaoCard}">
+                                            <StackPanel>
+                                                <TextBlock Text="CÓDIGO DE BARRAS" FontWeight="Bold" Foreground="{StaticResource CorTexto}" FontSize="{StaticResource TamRotulo}" Margin="0,0,0,6" />
+
+                                                <TextBlock Text="Padrão do Código" Style="{StaticResource Rotulo}" Margin="0,0,0,4" />
+                                                <ComboBox ItemsSource="{Binding TiposCodigoDisponiveis}"
+                                                          SelectedItem="{Binding ElementoSelecionado.TipoCodigo, Mode=TwoWay}"
+                                                          Margin="0,0,0,8" />
+
+                                                <TextBlock Text="Campo Vinculado do Produto" Style="{StaticResource Rotulo}" Margin="0,0,0,4" />
+                                                <ComboBox ItemsSource="{Binding VariaveisDisponiveis}"
+                                                          SelectedItem="{Binding ElementoSelecionado.Variavel, Mode=TwoWay}"
+                                                          Margin="0,0,0,8" />
+
+                                                <TextBlock Text="Valor Fixo / Fallback" Style="{StaticResource Rotulo}" Margin="0,0,0,4" />
+                                                <TextBox Text="{Binding ElementoSelecionado.ValorCodigo, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,8" />
+
+                                                <CheckBox Content="Mostrar Texto Numérico Legível" IsChecked="{Binding ElementoSelecionado.MostrarTextoLegivel, Mode=TwoWay}" Margin="0,4,0,0" />
+                                            </StackPanel>
+                                        </Border>
+                                    </StackPanel>
+
+                                    <!-- PROPRIEDADES DE IMAGEM / LOGO -->
+                                    <StackPanel Visibility="{Binding ElementoSelecionado.Tipo, Converter={StaticResource TipoElementoVisibilidadeConverter}, ConverterParameter=Imagem}">
+                                        <Border Style="{StaticResource SubsecaoCard}">
+                                            <StackPanel>
+                                                <TextBlock Text="LOGOTIPO / IMAGEM" FontWeight="Bold" Foreground="{StaticResource CorTexto}" FontSize="{StaticResource TamRotulo}" Margin="0,0,0,6" />
+
+                                                <Button Command="{Binding TrocarImagemElementoCommand}" Style="{StaticResource BotaoSecundario}" Margin="0,4,0,8">
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <ui:SymbolIcon Symbol="FolderOpen24" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                                        <TextBlock Text="Escolher Imagem (PNG/JPG)..." VerticalAlignment="Center" />
+                                                    </StackPanel>
+                                                </Button>
+
+                                                <CheckBox Content="Manter Proporção Original" IsChecked="{Binding ElementoSelecionado.ManterProporcao, Mode=TwoWay}" Margin="0,4,0,0" />
+                                            </StackPanel>
+                                        </Border>
+                                    </StackPanel>
+
+                                    <!-- PROPRIEDADES DE FORMA -->
+                                    <StackPanel Visibility="{Binding ElementoSelecionado.Tipo, Converter={StaticResource TipoElementoVisibilidadeConverter}, ConverterParameter=Forma}">
+                                        <Border Style="{StaticResource SubsecaoCard}">
+                                            <StackPanel>
+                                                <TextBlock Text="FORMA GEOMÉTRICA" FontWeight="Bold" Foreground="{StaticResource CorTexto}" FontSize="{StaticResource TamRotulo}" Margin="0,0,0,6" />
+
+                                                <TextBlock Text="Espessura do Traço" Style="{StaticResource Rotulo}" Margin="0,0,0,4" />
+                                                <TextBox Text="{Binding ElementoSelecionado.EspessuraBorda, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:0.#}'}" Margin="0,0,0,8" />
+
+                                                <TextBlock Text="Cantos Arredondados (Raio mm)" Style="{StaticResource Rotulo}" Margin="0,0,0,4" />
+                                                <TextBox Text="{Binding ElementoSelecionado.RaioCanto, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:0.#}'}" Margin="0,0,0,8" />
+
+                                                <CheckBox Content="Preencher Fundo" IsChecked="{Binding ElementoSelecionado.Preenchido, Mode=TwoWay}" />
+                                            </StackPanel>
+                                        </Border>
+                                    </StackPanel>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- ABA 2: GERENCIADOR DE CAMADAS (PHOTOSHOP STYLE) -->
+                            <StackPanel>
+                                <StackPanel.Style>
+                                    <Style TargetType="StackPanel">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding AbaInspetorAtiva}" Value="Camadas">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </StackPanel.Style>
+
+                                <!-- Título do Painel de Camadas -->
+                                <TextBlock Text="Gerenciador de Camadas" Style="{StaticResource TituloSecao}" Margin="0,0,0,2" />
+                                <TextBlock Text="Controle de profundidade, bloqueio e visibilidade" Style="{StaticResource TextoApoio}" Margin="0,0,0,10" />
+
+                                <!-- Barra de Ferramentas das Camadas -->
+                                <Border Background="{StaticResource CorSuperficieSuave}" BorderBrush="{StaticResource CorBorda}" BorderThickness="1" CornerRadius="{StaticResource RaioPequeno}" Padding="6,4" Margin="0,0,0,10">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Button Command="{Binding SubirCamadaCommand}" Style="{StaticResource BotaoSecundario}" Width="26" Height="26" Padding="0" Margin="0,0,4,0" ToolTip="Subir camada / Avançar (Ctrl + ])" AutomationProperties.Name="Subir camada">
+                                                <ui:SymbolIcon Symbol="ArrowUp24" FontSize="13" />
+                                            </Button>
+                                            <Button Command="{Binding DescerCamadaCommand}" Style="{StaticResource BotaoSecundario}" Width="26" Height="26" Padding="0" Margin="0,0,6,0" ToolTip="Descer camada / Recuar (Ctrl + [)" AutomationProperties.Name="Descer camada">
+                                                <ui:SymbolIcon Symbol="ArrowDown24" FontSize="13" />
+                                            </Button>
+                                            <Button Command="{Binding AgruparCommand}" Style="{StaticResource BotaoSecundario}" Width="26" Height="26" Padding="0" Margin="0,0,4,0" ToolTip="Agrupar selecionados (Ctrl + G)" AutomationProperties.Name="Agrupar selecionados">
+                                                <ui:SymbolIcon Symbol="Group24" FontSize="13" />
+                                            </Button>
+                                            <Button Command="{Binding DesagruparCommand}" Style="{StaticResource BotaoSecundario}" Width="26" Height="26" Padding="0" Margin="0,0,6,0" ToolTip="Desagrupar objetos (Ctrl + Shift + G)" AutomationProperties.Name="Desagrupar objetos">
+                                                <ui:SymbolIcon Symbol="GroupDismiss24" FontSize="13" />
+                                            </Button>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Button Command="{Binding DuplicarSelecionadoCommand}" Style="{StaticResource BotaoSecundario}" Width="26" Height="26" Padding="0" Margin="0,0,4,0" ToolTip="Duplicar camada selecionada (Ctrl + D)" AutomationProperties.Name="Duplicar camada">
+                                                <ui:SymbolIcon Symbol="Copy24" FontSize="13" />
+                                            </Button>
+                                            <Button Command="{Binding ExcluirSelecionadoCommand}" Style="{StaticResource BotaoSecundario}" Width="26" Height="26" Padding="0" ToolTip="Excluir camada (Del)" AutomationProperties.Name="Excluir camada">
+                                                <ui:SymbolIcon Symbol="Delete24" FontSize="13" Foreground="{StaticResource CorPerigo}" />
+                                            </Button>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Lista de Camadas (Em ordem Z: Topo da lista = Frente da prancheta) -->
+                                <Border Background="White" BorderBrush="{StaticResource CorBorda}" BorderThickness="1" CornerRadius="{StaticResource RaioMedio}">
+                                    <ScrollViewer MaxHeight="450" VerticalScrollBarVisibility="Auto">
+                                        <ItemsControl ItemsSource="{Binding CamadasOrdenadas}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate DataType="{x:Type models:ElementoDesign}">
+                                                    <Border BorderBrush="{StaticResource CorBorda}" BorderThickness="0,0,0,1" Padding="8,6">
+                                                        <Border.Style>
+                                                            <Style TargetType="Border">
+                                                                <Setter Property="Background" Value="White" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                                        <Setter Property="Background" Value="#EFF6FF" />
+                                                                        <Setter Property="BorderBrush" Value="#2563EB" />
+                                                                    </DataTrigger>
+                                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                                        <Setter Property="Background" Value="{StaticResource CorSuperficieSuave}" />
+                                                                    </Trigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Border.Style>
+
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="*" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                            </Grid.ColumnDefinitions>
+
+                                                            <!-- Botão de Visibilidade (Olho) -->
+                                                            <Button Grid.Column="0"
+                                                                    Command="{Binding DataContext.AlternarVisibilidadeCamadaCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                                    CommandParameter="{Binding}"
+                                                                    Width="24" Height="24" Padding="0" Margin="0,0,4,0" Background="Transparent" BorderThickness="0" Cursor="Hand"
+                                                                    ToolTip="Ocultar / Mostrar na prancheta" AutomationProperties.Name="Alternar visibilidade da camada">
+                                                                <ui:SymbolIcon Symbol="Eye24" FontSize="14">
+                                                                    <ui:SymbolIcon.Style>
+                                                                        <Style TargetType="ui:SymbolIcon">
+                                                                            <Setter Property="Foreground" Value="#2563EB" />
+                                                                            <Style.Triggers>
+                                                                                <DataTrigger Binding="{Binding Visivel}" Value="False">
+                                                                                    <Setter Property="Foreground" Value="#CBD5E1" />
+                                                                                    <Setter Property="Symbol" Value="EyeOff24" />
+                                                                                </DataTrigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </ui:SymbolIcon.Style>
+                                                                </ui:SymbolIcon>
+                                                            </Button>
+
+                                                            <!-- Botão de Bloqueio (Cadeado) -->
+                                                            <Button Grid.Column="1"
+                                                                    Command="{Binding DataContext.AlternarBloqueioCamadaCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                                    CommandParameter="{Binding}"
+                                                                    Width="24" Height="24" Padding="0" Margin="0,0,6,0" Background="Transparent" BorderThickness="0" Cursor="Hand"
+                                                                    ToolTip="Bloquear / Desbloquear camada contra seleção e movimento" AutomationProperties.Name="Alternar bloqueio da camada">
+                                                                <ui:SymbolIcon Symbol="LockOpen24" FontSize="13">
+                                                                    <ui:SymbolIcon.Style>
+                                                                        <Style TargetType="ui:SymbolIcon">
+                                                                            <Setter Property="Foreground" Value="#94A3B8" />
+                                                                            <Style.Triggers>
+                                                                                <DataTrigger Binding="{Binding Bloqueado}" Value="True">
+                                                                                    <Setter Property="Foreground" Value="#D97706" />
+                                                                                    <Setter Property="Symbol" Value="LockClosed24" />
+                                                                                </DataTrigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </ui:SymbolIcon.Style>
+                                                                </ui:SymbolIcon>
+                                                            </Button>
+
+                                                            <!-- Ícone Distintivo do Tipo de Objeto -->
+                                                            <Border Grid.Column="2" Background="{StaticResource CorSuperficieSubtil}" CornerRadius="4" Width="24" Height="24" Margin="0,0,8,0" VerticalAlignment="Center">
+                                                                <ui:SymbolIcon Symbol="Document24" FontSize="12" Foreground="{StaticResource CorTextoSuave}" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                                    <ui:SymbolIcon.Style>
+                                                                        <Style TargetType="ui:SymbolIcon">
+                                                                            <Style.Triggers>
+                                                                                <DataTrigger Binding="{Binding Tipo}" Value="Texto">
+                                                                                    <Setter Property="Symbol" Value="TextFont24" />
+                                                                                    <Setter Property="Foreground" Value="#2563EB" />
+                                                                                </DataTrigger>
+                                                                                <DataTrigger Binding="{Binding Tipo}" Value="CodigoBarras">
+                                                                                    <Setter Property="Symbol" Value="BarcodeScanner24" />
+                                                                                    <Setter Property="Foreground" Value="#059669" />
+                                                                                </DataTrigger>
+                                                                                <DataTrigger Binding="{Binding Tipo}" Value="Imagem">
+                                                                                    <Setter Property="Symbol" Value="Image24" />
+                                                                                    <Setter Property="Foreground" Value="#7C3AED" />
+                                                                                </DataTrigger>
+                                                                                <DataTrigger Binding="{Binding Tipo}" Value="Retangulo">
+                                                                                    <Setter Property="Symbol" Value="Square24" />
+                                                                                    <Setter Property="Foreground" Value="#D97706" />
+                                                                                </DataTrigger>
+                                                                                <DataTrigger Binding="{Binding Tipo}" Value="Linha">
+                                                                                    <Setter Property="Symbol" Value="LineHorizontal124" />
+                                                                                    <Setter Property="Foreground" Value="#475569" />
+                                                                                </DataTrigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </ui:SymbolIcon.Style>
+                                                                </ui:SymbolIcon>
+                                                            </Border>
+
+                                                            <!-- Nome Editável da Camada & Seleção -->
+                                                            <TextBox Grid.Column="3" Text="{Binding Nome, UpdateSourceTrigger=PropertyChanged}"
+                                                                     Background="Transparent" BorderThickness="0" FontSize="12" FontWeight="SemiBold"
+                                                                     VerticalAlignment="Center" Padding="2,0" Foreground="{StaticResource CorTexto}">
+                                                                <TextBox.InputBindings>
+                                                                    <MouseBinding MouseAction="LeftClick"
+                                                                                  Command="{Binding DataContext.SelecionarElementoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                                                  CommandParameter="{Binding}" />
+                                                                </TextBox.InputBindings>
+                                                            </TextBox>
+
+                                                            <!-- Badge de Grupo (se pertencer a um grupo) -->
+                                                            <Border Grid.Column="4" Background="#EDE9FE" BorderBrush="#DDD6FE" BorderThickness="1" CornerRadius="4" Padding="5,1" Margin="4,0,0,0" VerticalAlignment="Center"
+                                                                    Visibility="{Binding GrupoId, Converter={StaticResource NullParaColapsadoConverter}}">
+                                                                <TextBlock Text="{Binding NomeGrupo, TargetNullValue='Grupo'}" FontSize="9.5" FontWeight="Bold" Foreground="#6D28D9" />
+                                                            </Border>
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </ScrollViewer>
+                                </Border>
+
+                                <Border Background="{StaticResource CorSuperficieSuave}" BorderBrush="{StaticResource CorBorda}" BorderThickness="1" CornerRadius="{StaticResource RaioPequeno}" Padding="10,8" Margin="0,10,0,0">
+                                    <TextBlock Text="💡 Selecione qualquer camada diretamente nesta lista para editar suas propriedades, mesmo que esteja sobreposta no canvas." FontSize="10.5" Foreground="{StaticResource CorTextoSuave}" TextWrapping="Wrap" />
+                                </Border>
+                            </StackPanel>
+                        </Grid>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+</UserControl>
