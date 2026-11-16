@@ -138,14 +138,14 @@
     <Style x:Key="BotaoOpcao" TargetType="RadioButton">
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="FontWeight" Value="SemiBold" />
-        <Setter Property="FontSize" Value="17" />
+        <Setter Property="FontSize" Value="{StaticResource TamCorpo}" />
         <Setter Property="Foreground" Value="{StaticResource CorTexto}" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="RadioButton">
                     <Border x:Name="borda" Background="{StaticResource CorPainel}" BorderBrush="{StaticResource CorBordaCampo}"
-                            BorderThickness="1" CornerRadius="{StaticResource RaioMedio}" Padding="8,11">
+                            BorderThickness="1" CornerRadius="{StaticResource RaioMedio}" Padding="12,8">
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
                     <ControlTemplate.Triggers>

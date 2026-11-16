@@ -167,7 +167,7 @@
                                         <ui:SymbolIcon Symbol="ShieldCheckmark24" Style="{StaticResource IconeDoMenu}" />
                                         <TextBlock Text="Licença &amp; Atualizador" VerticalAlignment="Center" />
                                     </StackPanel>
-                                    <Border Grid.Column="1" Background="#15803D" CornerRadius="10" Padding="6,1" VerticalAlignment="Center"
+                                    <Border Grid.Column="1" Background="{StaticResource CorPositivo}" CornerRadius="10" Padding="6,1" VerticalAlignment="Center"
                                             Visibility="{Binding TemAtualizacaoDisponivel, Converter={StaticResource BoolVis}}">
                                         <TextBlock Text="NOVA" FontSize="9.5" FontWeight="Bold" Foreground="White" />
                                     </Border>
@@ -276,11 +276,11 @@
                             <Border Style="{StaticResource PillContador}" Background="{StaticResource CorCabecalho}" BorderBrush="{StaticResource CorBorda}" BorderThickness="1">
                                 <TextBlock Text="{Binding TotalProdutos, StringFormat='{}Total: {0}'}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource CorTexto}" />
                             </Border>
-                            <Border Style="{StaticResource PillContador}" Background="#DCFCE7" BorderBrush="#86EFAC" BorderThickness="1">
-                                <TextBlock Text="{Binding ProdutosComCodigo, StringFormat='{}Com Código: {0}'}" FontSize="12" FontWeight="Bold" Foreground="#15803D" />
+                            <Border Style="{StaticResource PillContador}" Background="{StaticResource CorSucessoFundo}" BorderBrush="{StaticResource CorSucessoBorda}" BorderThickness="1">
+                                <TextBlock Text="{Binding ProdutosComCodigo, StringFormat='{}Com Código: {0}'}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource CorSucessoTexto}" />
                             </Border>
-                            <Border Style="{StaticResource PillContador}" Background="#FEF3C7" BorderBrush="#FCD34D" BorderThickness="1">
-                                <TextBlock Text="{Binding ProdutosSemCodigo, StringFormat='{}Sem Código: {0}'}" FontSize="12" FontWeight="Bold" Foreground="#B45309" />
+                            <Border Style="{StaticResource PillContador}" Background="{StaticResource CorAvisoFundo}" BorderBrush="{StaticResource CorAvisoBorda}" BorderThickness="1">
+                                <TextBlock Text="{Binding ProdutosSemCodigo, StringFormat='{}Sem Código: {0}'}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource CorAvisoTexto}" />
                             </Border>
                         </StackPanel>
                     </Grid>
@@ -375,13 +375,13 @@
                                                 <Border CornerRadius="{StaticResource RaioPequeno}" Padding="7,3" HorizontalAlignment="Left" ToolTip="{Binding DimensoesEtiquetaPersonalizada, StringFormat='{}Tamanho: {0}'}">
                                                     <Border.Style>
                                                         <Style TargetType="Border">
-                                                            <Setter Property="Background" Value="#F1F5F9" />
-                                                            <Setter Property="BorderBrush" Value="#CBD5E1" />
+                                                            <Setter Property="Background" Value="{StaticResource CorSuperficieSubtil}" />
+                                                            <Setter Property="BorderBrush" Value="{StaticResource CorBordaCampo}" />
                                                             <Setter Property="BorderThickness" Value="1" />
                                                             <Style.Triggers>
                                                                 <DataTrigger Binding="{Binding TemEtiquetaPersonalizada}" Value="True">
-                                                                    <Setter Property="Background" Value="#F3E8FF" />
-                                                                    <Setter Property="BorderBrush" Value="#C084FC" />
+                                                                    <Setter Property="Background" Value="{StaticResource CorTagExclusivaFundo}" />
+                                                                    <Setter Property="BorderBrush" Value="{StaticResource CorTagExclusivaBorda}" />
                                                                 </DataTrigger>
                                                             </Style.Triggers>
                                                         </Style>
@@ -393,7 +393,7 @@
                                                                     <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />
                                                                     <Style.Triggers>
                                                                         <DataTrigger Binding="{Binding TemEtiquetaPersonalizada}" Value="True">
-                                                                            <Setter Property="Foreground" Value="#7E22CE" />
+                                                                            <Setter Property="Foreground" Value="{StaticResource CorTagExclusivaTexto}" />
                                                                             <Setter Property="Symbol" Value="ShoppingBag24" />
                                                                         </DataTrigger>
                                                                     </Style.Triggers>
@@ -406,7 +406,7 @@
                                                                     <Setter Property="Foreground" Value="{StaticResource CorTexto}" />
                                                                     <Style.Triggers>
                                                                         <DataTrigger Binding="{Binding TemEtiquetaPersonalizada}" Value="True">
-                                                                            <Setter Property="Foreground" Value="#7E22CE" />
+                                                                            <Setter Property="Foreground" Value="{StaticResource CorTagExclusivaTexto}" />
                                                                             <Setter Property="FontWeight" Value="Bold" />
                                                                         </DataTrigger>
                                                                     </Style.Triggers>
@@ -638,7 +638,7 @@
                             </Grid>
 
                             <!-- Checkbox de integração com o Estúdio -->
-                            <Border Grid.Row="1" Background="#F8FAFC" CornerRadius="{StaticResource RaioPequeno}" Padding="12,10" Margin="0,0,0,14" BorderBrush="{StaticResource CorBorda}" BorderThickness="1">
+                            <Border Grid.Row="1" Background="{StaticResource CorSuperficieSuave}" CornerRadius="{StaticResource RaioPequeno}" Padding="12,10" Margin="0,0,0,14" BorderBrush="{StaticResource CorBorda}" BorderThickness="1">
                                 <CheckBox Content="Imprimir usando o modelo customizado ativo no Estúdio de Etiquetas (com imagens/logo, QR code e cores)"
                                           IsChecked="{Binding UsarModeloDesigner, Mode=TwoWay}"
                                           FontWeight="SemiBold" Foreground="{StaticResource CorPrimaria}" />

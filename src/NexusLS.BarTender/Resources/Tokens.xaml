@@ -41,12 +41,37 @@
     <SolidColorBrush x:Key="CorNegativo" Color="#B91C1C" />
     <SolidColorBrush x:Key="CorAlerta" Color="#FFF4CE" />
     <SolidColorBrush x:Key="CorAviso" Color="#B45309" />
-    <SolidColorBrush x:Key="CorAvisoFundo" Color="#FFF7E6" />
+    <SolidColorBrush x:Key="CorAvisoFundo" Color="#FEF3C7" />
+    <SolidColorBrush x:Key="CorAvisoBorda" Color="#FCD34D" />
+    <SolidColorBrush x:Key="CorAvisoTexto" Color="#B45309" />
     <SolidColorBrush x:Key="CorAtencaoFundo" Color="#FFEDD5" />
     <SolidColorBrush x:Key="CorAtencaoBorda" Color="#EA580C" />
     <SolidColorBrush x:Key="CorAtencaoTexto" Color="#9A3412" />
     <SolidColorBrush x:Key="CorSobreposicao" Color="#B3111827" /> <!-- véu atrás dos modais -->
     <SolidColorBrush x:Key="CorColunaFundo" Color="#ECEEF1" />
+
+    <!-- ===== Tokens Semânticos: Sucesso, Aviso, Destaque, Superfície e Tags (pronto para tema escuro) ===== -->
+    <SolidColorBrush x:Key="CorSucessoFundo" Color="#DCFCE7" />
+    <SolidColorBrush x:Key="CorSucessoBorda" Color="#86EFAC" />
+    <SolidColorBrush x:Key="CorSucessoTexto" Color="#15803D" />
+
+    <SolidColorBrush x:Key="CorDestaqueFundo" Color="#EFF6FF" />
+    <SolidColorBrush x:Key="CorDestaqueBorda" Color="#BFDBFE" />
+    <SolidColorBrush x:Key="CorDestaqueTexto" Color="#1D4ED8" />
+
+    <SolidColorBrush x:Key="CorTagExclusivaFundo" Color="#F3E8FF" />
+    <SolidColorBrush x:Key="CorTagExclusivaBorda" Color="#C084FC" />
+    <SolidColorBrush x:Key="CorTagExclusivaTexto" Color="#7E22CE" />
+
+    <SolidColorBrush x:Key="CorSuperficieSuave" Color="#F8FAFC" />
+    <SolidColorBrush x:Key="CorSuperficieSubtil" Color="#F1F5F9" />
+    <SolidColorBrush x:Key="CorSuperficieHover" Color="#F1F5F9" />
+    <SolidColorBrush x:Key="CorSuperficieDestaque" Color="#EEF2F6" />
+    <SolidColorBrush x:Key="CorFundoMesa" Color="#E2E8F0" />
+    <SolidColorBrush x:Key="CorInformacaoFundo" Color="#F0F9FF" />
+    <SolidColorBrush x:Key="CorInformacaoBorda" Color="#BAE6FD" />
+    <SolidColorBrush x:Key="CorInformacaoTexto" Color="#0284C7" />
+    <SolidColorBrush x:Key="CorInformacaoTitulo" Color="#0369A1" />
 
     <!-- Paleta categórica dos gráficos (pizzas): cores bem distintas entre si, na ordem de uso. "Outros" é sempre cinza. -->
     <SolidColorBrush x:Key="CorSerie1" Color="#2563EB" />
