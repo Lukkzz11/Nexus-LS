@@ -191,7 +191,7 @@ public class EditorDesenhoService
                 bi.Freeze();
                 imagem = bi;
             }
-            catch { }
+            catch (Exception exLog) { NexusLS.BarTender.App.Log($"EditorDesenhoService #1: {exLog.Message}"); }
         }
         else if (!string.IsNullOrWhiteSpace(el.CaminhoImagem) && File.Exists(el.CaminhoImagem))
         {
@@ -205,7 +205,7 @@ public class EditorDesenhoService
                 bi.Freeze();
                 imagem = bi;
             }
-            catch { }
+            catch (Exception exLog) { NexusLS.BarTender.App.Log($"EditorDesenhoService #2: {exLog.Message}"); }
         }
 
         if (imagem != null)

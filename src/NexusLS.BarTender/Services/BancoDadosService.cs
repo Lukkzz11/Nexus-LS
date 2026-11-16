@@ -35,6 +35,7 @@ public class BancoDadosService
             throw new ArgumentException("Caminho do banco de dados não pode ser vazio.", nameof(novoCaminho));
 
         CaminhoAtual = novoCaminho;
+        GerenciadorEtiquetasProdutoService.Invalidar();
 
         // Guarda a escolha: na próxima abertura o BarTender já abre no banco certo.
         var preferencias = PreferenciasBarTender.Carregar();
@@ -43,6 +44,29 @@ public class BancoDadosService
     }
 
     public bool BancoExiste() => File.Exists(CaminhoAtual);
+
+    /// <summary>
+    /// Hora (UTC) da última gravação no banco, olhando o arquivo e o diário -wal (no modo WAL a gravação
+    /// recente fica primeiro no -wal). Nulo se o banco não existe.
+    /// </summary>
+    public DateTime? UltimaGravacaoUtc()
+    {
+        try
+        {
+            DateTime? maior = null;
+            foreach (var arquivo in new[] { CaminhoAtual, CaminhoAtual + "-wal" })
+            {
+                if (!File.Exists(arquivo)) continue;
+                var t = File.GetLastWriteTimeUtc(arquivo);
+                if (maior is null || t > maior) maior = t;
+            }
+            return maior;
+        }
+        catch (IOException)
+        {
+            return null;
+        }
+    }
 
     private string? _caminhoPreparado;
 

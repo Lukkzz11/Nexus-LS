@@ -131,6 +131,7 @@ public partial class MainViewModel : ObservableObject
             ServicoLicencaNuvem.CaminhoPadrao());
 
         _dbService = dbService ?? new BancoDadosService();
+        GerenciadorEtiquetasProdutoService.Banco = _dbService;
         _caminhoBanco = _dbService.CaminhoAtual;
 
         ProdutosView = CollectionViewSource.GetDefaultView(TodosProdutos);
@@ -185,7 +186,7 @@ public partial class MainViewModel : ObservableObject
                     WorkingDirectory = Path.GetDirectoryName(exe)!
                 });
             }
-            catch { }
+            catch (Exception exLog) { NexusLS.BarTender.App.Log($"MainViewModel #1: {exLog.Message}"); }
         }
         else
         {
@@ -210,7 +211,7 @@ public partial class MainViewModel : ObservableObject
                 MensagemAtualizacao = $"Nova versão {res.Nova.Versao} disponível!";
             }
         }
-        catch { }
+        catch (Exception exLog) { NexusLS.BarTender.App.Log($"MainViewModel #2: {exLog.Message}"); }
     }
 
     public void CarregarImpressoras()
@@ -236,6 +237,7 @@ public partial class MainViewModel : ObservableObject
     {
         await RecarregarDadosAsync();
         AplicarPedidoDoNexus();
+        IniciarVigiaDoBanco();
         _ = VerificarAtualizacaoAsync();
     }
 
@@ -314,6 +316,7 @@ public partial class MainViewModel : ObservableObject
         try
         {
             CaminhoBanco = _dbService.CaminhoAtual;
+            GerenciadorEtiquetasProdutoService.Invalidar();
             BancoConectado = _dbService.BancoExiste();
             App.Log($"RecarregarDadosAsync: BancoConectado={BancoConectado}");
 
@@ -342,6 +345,7 @@ public partial class MainViewModel : ObservableObject
 
             AtualizarContadores();
             StatusBanco = $"Conectado ao Nexus LS ({TodosProdutos.Count} produtos ativos)";
+            MarcarDadosCarregados();
 
             CategoriasDisponiveis.Clear();
             CategoriasDisponiveis.Add("Todas");

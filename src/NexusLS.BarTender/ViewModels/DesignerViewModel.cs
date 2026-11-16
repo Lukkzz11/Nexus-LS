@@ -590,7 +590,7 @@ public partial class DesignerViewModel : ObservableObject
             PreviewImagem = EditorDesenhoService.RenderizarBitmap(Modelo, ProdutoAtual, tam, NomeLoja, escalaDpi: 2.5);
             ZplCodigo = EditorDesenhoService.GerarZpl(Modelo, ProdutoAtual, NomeLoja, 1, tam);
         }
-        catch { }
+        catch (Exception exLog) { NexusLS.BarTender.App.Log($"DesignerViewModel #1: {exLog.Message}"); }
     }
 
     [RelayCommand]

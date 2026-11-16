@@ -369,7 +369,7 @@ public partial class DesignerView : UserControl
                         bi.EndInit();
                         imgCtrl.Source = bi;
                     }
-                    catch { }
+                    catch (Exception exLog) { NexusLS.BarTender.App.Log($"DesignerView.xaml #1: {exLog.Message}"); }
                 }
                 else
                 {

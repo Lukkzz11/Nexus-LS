@@ -85,7 +85,7 @@ public partial class DesignerViewModel
                 _dialogo.Sucesso("Projeto salvo com sucesso!");
                 return;
             }
-            catch { }
+            catch (Exception exLog) { NexusLS.BarTender.App.Log($"DesignerViewModel.Arquivo #1: {exLog.Message}"); }
         }
         SalvarProjetoComo();
     }

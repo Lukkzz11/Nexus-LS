@@ -757,6 +757,41 @@ namespace NexusLS.Core.Migrations
                     b.ToTable("Devolucoes");
                 });
 
+            modelBuilder.Entity("NexusLS.Core.Models.EtiquetaProduto", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<double>("AlturaMm")
+                        .HasColumnType("REAL");
+
+                    b.Property<DateTime>("AtualizadoEm")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Json")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<double>("LarguraMm")
+                        .HasColumnType("REAL");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ProdutoId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProdutoId")
+                        .IsUnique();
+
+                    b.ToTable("EtiquetasProduto");
+                });
+
             modelBuilder.Entity("NexusLS.Core.Models.EventoPedido", b =>
                 {
                     b.Property<int>("Id")

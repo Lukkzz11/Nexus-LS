@@ -42,7 +42,7 @@ public partial class DesignerViewModel
             }
             _redoStack.Clear();
         }
-        catch { }
+        catch (Exception exLog) { NexusLS.BarTender.App.Log($"DesignerViewModel.UndoRedo #1: {exLog.Message}"); }
     }
 
     [RelayCommand]
@@ -99,6 +99,6 @@ public partial class DesignerViewModel
                 AtualizarPreview();
             }
         }
-        catch { }
+        catch (Exception exLog) { NexusLS.BarTender.App.Log($"DesignerViewModel.UndoRedo #2: {exLog.Message}"); }
     }
 }

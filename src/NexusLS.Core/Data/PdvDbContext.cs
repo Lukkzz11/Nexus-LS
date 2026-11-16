@@ -53,6 +53,7 @@ public class PdvDbContext : DbContext
     public DbSet<Devolucao> Devolucoes => Set<Devolucao>();
     public DbSet<ItemDevolucao> ItensDevolucao => Set<ItemDevolucao>();
     public DbSet<ValeTroca> ValesTroca => Set<ValeTroca>();
+    public DbSet<EtiquetaProduto> EtiquetasProduto => Set<EtiquetaProduto>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -234,6 +235,13 @@ public class PdvDbContext : DbContext
             e.Property(i => i.NomeProduto).IsRequired().HasMaxLength(200);
             e.Property(i => i.Tamanho).IsRequired().HasMaxLength(30);
             e.HasIndex(i => i.ItemVendaId);
+        });
+
+        modelBuilder.Entity<EtiquetaProduto>(e =>
+        {
+            e.Property(x => x.Nome).IsRequired().HasMaxLength(200);
+            e.Property(x => x.Json).IsRequired();
+            e.HasIndex(x => x.ProdutoId).IsUnique();
         });
 
         modelBuilder.Entity<ValeTroca>(e =>
