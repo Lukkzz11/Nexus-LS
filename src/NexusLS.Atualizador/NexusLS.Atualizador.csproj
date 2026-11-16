@@ -13,8 +13,8 @@
     <UseWPF>true</UseWPF>
     <AssemblyName>atualizador</AssemblyName>
     <Version>1.2.8</Version>
-    <Product>Nexus LS Atualizador e Ativador</Product>
-    <AssemblyTitle>Atualizador e Ativador Nexus LS</AssemblyTitle>
+    <Product>Nexus Hub - Atualizador e Licença</Product>
+    <AssemblyTitle>Nexus Hub - Atualizador e Licença</AssemblyTitle>
   </PropertyGroup>
 
   <ItemGroup>
