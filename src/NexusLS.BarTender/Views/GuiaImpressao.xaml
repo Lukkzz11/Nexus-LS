@@ -1,0 +1,102 @@
+<UserControl x:Class="NexusLS.BarTender.Views.GuiaImpressao"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
+
+    <UserControl.Resources>
+        <Style x:Key="NumeroPasso" TargetType="Border">
+            <Setter Property="Width" Value="24" />
+            <Setter Property="Height" Value="24" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Background" Value="{StaticResource CorPrimaria}" />
+            <Setter Property="Margin" Value="0,0,10,0" />
+            <Setter Property="VerticalAlignment" Value="Top" />
+        </Style>
+
+        <Style x:Key="TextoNumeroPasso" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource CorSobrePrimaria}" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <Style x:Key="TituloPasso" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Foreground" Value="{StaticResource CorTexto}" />
+        </Style>
+
+        <Style x:Key="TextoPasso" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="Margin" Value="0,2,0,0" />
+        </Style>
+    </UserControl.Resources>
+
+    <Border Background="{StaticResource CorSelecaoSuave}" BorderBrush="{StaticResource CorSelecao}" BorderThickness="1"
+            CornerRadius="{StaticResource RaioGrande}" Padding="18,14">
+        <StackPanel>
+            <Grid Margin="0,0,0,12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <ui:SymbolIcon Symbol="Lightbulb24" FontSize="18" Foreground="{StaticResource CorPrimaria}" Margin="0,0,8,0" VerticalAlignment="Center" />
+                    <TextBlock Text="Como imprimir etiquetas em 5 passos" FontWeight="Bold" FontSize="14" Foreground="{StaticResource CorTexto}" VerticalAlignment="Center" />
+                </StackPanel>
+                <Button Grid.Column="1" Command="{Binding FecharGuiaImpressaoCommand}" Style="{StaticResource BotaoSecundario}" Padding="12,5"
+                        AutomationProperties.Name="Fechar o guia de impressão">
+                    <TextBlock Text="Entendi" />
+                </Button>
+            </Grid>
+
+            <UniformGrid Columns="5">
+                <StackPanel Orientation="Horizontal" Margin="0,0,14,0">
+                    <Border Style="{StaticResource NumeroPasso}"><TextBlock Text="1" Style="{StaticResource TextoNumeroPasso}" /></Border>
+                    <StackPanel Width="150">
+                        <TextBlock Text="Escolha os produtos" Style="{StaticResource TituloPasso}" />
+                        <TextBlock Text="No Catálogo ERP, encontre o produto e escolha o tamanho." Style="{StaticResource TextoPasso}" />
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,14,0">
+                    <Border Style="{StaticResource NumeroPasso}"><TextBlock Text="2" Style="{StaticResource TextoNumeroPasso}" /></Border>
+                    <StackPanel Width="150">
+                        <TextBlock Text="Defina a quantidade" Style="{StaticResource TituloPasso}" />
+                        <TextBlock Text="Use − e + na linha do produto e clique em Fila." Style="{StaticResource TextoPasso}" />
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,14,0">
+                    <Border Style="{StaticResource NumeroPasso}"><TextBlock Text="3" Style="{StaticResource TextoNumeroPasso}" /></Border>
+                    <StackPanel Width="150">
+                        <TextBlock Text="Confira a fila" Style="{StaticResource TituloPasso}" />
+                        <TextBlock Text="Veja a miniatura, o tamanho e o total de etiquetas." Style="{StaticResource TextoPasso}" />
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,14,0">
+                    <Border Style="{StaticResource NumeroPasso}"><TextBlock Text="4" Style="{StaticResource TextoNumeroPasso}" /></Border>
+                    <StackPanel Width="150">
+                        <TextBlock Text="Escolha a impressora" Style="{StaticResource TituloPasso}" />
+                        <TextBlock Text="Térmica ou folha A4. Na A4, informe a etiqueta em que começa." Style="{StaticResource TextoPasso}" />
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal">
+                    <Border Style="{StaticResource NumeroPasso}"><TextBlock Text="5" Style="{StaticResource TextoNumeroPasso}" /></Border>
+                    <StackPanel Width="150">
+                        <TextBlock Text="Imprima" Style="{StaticResource TituloPasso}" />
+                        <TextBlock Text="Clique em IMPRIMIR e confirme no diálogo do Windows." Style="{StaticResource TextoPasso}" />
+                    </StackPanel>
+                </StackPanel>
+            </UniformGrid>
+
+            <TextBlock Style="{StaticResource TextoPasso}" Margin="0,12,0,0"
+                       Text="Dica: para sair com o seu desenho (logo, QR code, cores), deixe marcada a opção de usar o modelo do Estúdio. A impressora não aparece na lista? Instale-a no Windows e clique em Atualizar." />
+        </StackPanel>
+    </Border>
+</UserControl>

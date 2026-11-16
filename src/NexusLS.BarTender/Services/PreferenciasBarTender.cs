@@ -11,6 +11,9 @@ public sealed class PreferenciasBarTender
 {
     public string? CaminhoBanco { get; set; }
 
+    /// <summary>O operador já viu (e fechou) o passo a passo de impressão da Fila.</summary>
+    public bool GuiaImpressaoVisto { get; set; }
+
     public static string CaminhoPadrao() => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "NexusLS",

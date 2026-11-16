@@ -7,6 +7,7 @@
         xmlns:vm="clr-namespace:NexusLS.BarTender.ViewModels"
         xmlns:conv="clr-namespace:NexusLS.BarTender.Converters"
         xmlns:designer="clr-namespace:NexusLS.BarTender.Views.Designer"
+        xmlns:views="clr-namespace:NexusLS.BarTender.Views"
         mc:Ignorable="d"
         Title="Nexus BarTender · Estúdio de Etiquetas &amp; Códigos de Barras"
         Height="860" Width="1440" MinHeight="680" MinWidth="1100"
@@ -545,9 +546,11 @@
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <Grid Grid.Row="0" Margin="0,0,0,14">
+                    <StackPanel Grid.Row="0" Margin="0,0,0,14">
+                    <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
@@ -556,13 +559,25 @@
                             <TextBlock Text="Revise a quantidade de cópias por item antes de enviar para a impressora térmica ou folha A4." Style="{StaticResource TextoApoio}" Margin="0,2,0,0" />
                         </StackPanel>
 
-                        <Button Grid.Column="1" Command="{Binding LimparFilaCommand}" Style="{StaticResource BotaoSecundario}" Padding="12,6">
+                        <Button Grid.Column="1" Command="{Binding AlternarGuiaImpressaoCommand}" Style="{StaticResource BotaoSecundario}" Padding="12,6" Margin="0,0,8,0"
+                                ToolTip="Passo a passo para imprimir as etiquetas" AutomationProperties.Name="Como imprimir">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Symbol="Lightbulb24" FontSize="15" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                <TextBlock Text="Como imprimir" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button Grid.Column="2" Command="{Binding LimparFilaCommand}" Style="{StaticResource BotaoSecundario}" Padding="12,6">
                             <StackPanel Orientation="Horizontal">
                                 <ui:SymbolIcon Symbol="Delete24" FontSize="15" Margin="0,0,6,0" VerticalAlignment="Center" />
                                 <TextBlock Text="Limpar Toda a Fila" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
                     </Grid>
+
+                    <views:GuiaImpressao Margin="0,14,0,0"
+                                         Visibility="{Binding MostrarGuiaImpressao, Converter={StaticResource BoolParaVisibilidadeConverter}}" />
+                    </StackPanel>
 
                     <Border Grid.Row="1" Style="{StaticResource Painel}" Padding="0" Margin="0,0,0,14">
                         <Grid>
@@ -654,7 +669,9 @@
                                                Foreground="{StaticResource CorTexto}" HorizontalAlignment="Center" />
                                     <TextBlock Text="Adicione produtos do catálogo ou monte um layout no Estúdio de Etiquetas para imprimir."
                                                Style="{StaticResource TextoApoio}" HorizontalAlignment="Center"
-                                               Margin="0,6,0,20" TextAlignment="Center" />
+                                               Margin="0,6,0,12" TextAlignment="Center" />
+                                    <TextBlock Style="{StaticResource TextoApoio}" HorizontalAlignment="Center" TextAlignment="Center" Margin="0,0,0,20"
+                                               Text="Passo a passo: escolha o produto e o tamanho no Catálogo, defina a quantidade, clique em Fila, volte aqui, escolha a impressora e clique em IMPRIMIR." />
                                     <Button Command="{Binding IrParaCatalogoCommand}" Style="{StaticResource BotaoPrimario}"
                                             Padding="18,10" HorizontalAlignment="Center" ToolTip="Ir para a aba Catálogo ERP"
                                             AutomationProperties.Name="Ir ao Catálogo de Produtos">

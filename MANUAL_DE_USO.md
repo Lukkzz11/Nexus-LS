@@ -85,6 +85,36 @@ O segredo e a permissão ficam protegidos pelo Windows neste computador. **(a co
 ### Google Agenda
 Na tela **Agenda**, o botão **Enviar o dia ao Google Agenda** cria no seu Google Agenda principal os compromissos do dia escolhido; enviar de novo atualiza os mesmos eventos (sem duplicar) e remover um compromisso apaga o evento também. Para isso, no Google Cloud ative também a **Google Calendar API**. Quem já tinha conectado o Google antes desta versão precisa **desconectar e conectar de novo** (a permissão da agenda é nova). Gmail ainda não tem integração.
 
+## 6.1 Imprimir etiquetas (Nexus BarTender)
+
+O **Nexus BarTender** é o programa onde as etiquetas são **criadas e impressas**: o **Estúdio de Etiquetas** desenha o modelo (nome, preço, código de barras, logo, QR code, cores) e a **Fila de Impressão** manda para a impressora. Ele lê os produtos do mesmo banco do Nexus; se o Nexus vender ou mudar estoque com o BarTender aberto, clique em **Atualizar** (rodapé do menu lateral) para ver os números novos.
+
+**Passo a passo para imprimir**
+
+1. Abra o **Catálogo ERP** e ache o produto (busca por nome, referência ou código; há filtro por categoria e por "com/sem código").
+2. Na coluna **Tamanho** escolha o tamanho. **Todos os tamanhos** cria uma etiqueta para cada tamanho da grade.
+3. Defina a quantidade com **−** e **+** e clique em **Fila**. Para puxar a grade pelo estoque da loja, use **Puxar estoque da loja**.
+4. Abra **Fila de Impressão** e confira: miniatura da etiqueta, tamanho, preço e o total de etiquetas. Ajuste as quantidades se precisar.
+5. Escolha a **impressora**. Em folha A4, informe em **Posição inicial** o número da etiqueta em que começar (assim você reaproveita uma folha já usada).
+6. Clique em **IMPRIMIR ETIQUETAS NO WINDOWS** e confirme no diálogo do Windows. Deixe marcada a opção de usar o modelo do Estúdio se quiser sair com o seu desenho (logo, QR code, cores).
+
+O botão **Como imprimir** (topo da Fila) mostra esses passos de novo. Ele aparece sozinho só na primeira vez.
+
+**Pelo Nexus:** na tela **Etiquetas** do Nexus, o botão **Imprimir no BarTender** abre o BarTender com a fila já montada, direto na Fila de Impressão. Criar e editar modelos é só no BarTender.
+
+**Bobina térmica ou folha A4**
+
+- **Bobina térmica** (50x30, 40x25, 60x40...): escolha o formato em **Configurações** do BarTender e a impressora térmica na Fila. Cada etiqueta sai numa página do tamanho da bobina.
+- **Folha A4** (várias etiquetas por folha): escolha o formato A4 e use a **Posição inicial** para não desperdiçar etiquetas da folha.
+
+**Código de barras:** produto sem código aparece como "Sem Código". Use **Gerar Código EAN-13** (um produto) ou **Gerar Códigos para Todos sem Código** (em lote; o programa faz uma cópia de segurança do banco antes).
+
+**Se a impressora não aparece ou não imprime**
+
+- Confira se ela está instalada no Windows (Configurações do Windows > Impressoras) e clique em **Atualizar** no BarTender.
+- Se o papel sair com tamanho errado, ajuste o tamanho do papel nas propriedades da impressora no diálogo do Windows (alguns drivers de impressora térmica não aceitam o ajuste automático).
+- Teste com uma etiqueta só antes de imprimir um lote grande.
+
 ## 7. Se algo der errado
 
 - **Mensagem vermelha:** leia o texto, ele diz o que corrigir.
