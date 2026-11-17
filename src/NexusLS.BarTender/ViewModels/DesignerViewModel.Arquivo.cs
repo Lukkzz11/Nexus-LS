@@ -28,16 +28,39 @@ public partial class DesignerViewModel
 
         try
         {
+            // Aplica a regra inteligente: converte o tamanho exemplificado (ex: "42") e o código de barras
+            // em variáveis dinâmicas por tamanho, preservando a referência cadastrada intacta.
+            AplicarRegrasInteligentesDeGrade();
+
             var ok = GerenciadorEtiquetasProdutoService.SalvarEtiquetaProduto(ProdutoAtual.Id, Modelo);
             if (ok)
             {
                 ProdutoTemEtiquetaExclusiva = true;
 
-                // Atualizar o item correspondente no catálogo sincronizado
-                var itemCat = ListaProdutosCatalog.FirstOrDefault(i => i.Id == ProdutoAtual.Id);
-                itemCat?.AtualizarInfoEtiqueta();
+                // Se houver outros produtos no catálogo com a mesma Referência, aplica o modelo a todos eles
+                var refAtual = ProdutoAtual.Referencia?.Trim();
+                foreach (var itemCat in ListaProdutosCatalog)
+                {
+                    if (itemCat.Id == ProdutoAtual.Id)
+                    {
+                        itemCat.AtualizarInfoEtiqueta();
+                    }
+                    else if (!string.IsNullOrWhiteSpace(refAtual) &&
+                             string.Equals(itemCat.Referencia?.Trim(), refAtual, StringComparison.OrdinalIgnoreCase))
+                    {
+                        GerenciadorEtiquetasProdutoService.SalvarEtiquetaProduto(itemCat.Id, Modelo);
+                        itemCat.AtualizarInfoEtiqueta();
+                    }
+                }
 
-                _dialogo.Sucesso($"Etiqueta salva para {ProdutoAtual.Nome}!\n\nO modelo vale para todos os tamanhos do produto. Em cada um, só o tamanho e o código de barras mudam; nome e referência continuam os mesmos.");
+                ElementoPropriedadeAlterada?.Invoke(this, EventArgs.Empty);
+                AtualizarPreview();
+
+                var listaTamanhos = TamanhosParaTesteDisponiveis.Count > 0
+                    ? string.Join(", ", TamanhosParaTesteDisponiveis)
+                    : "todos os tamanhos";
+
+                _dialogo.Sucesso($"Etiqueta salva para {ProdutoAtual.Nome} e aplicada aos tamanhos ({listaTamanhos})! O tamanho e o código de barras mudam automaticamente em cada tamanho.");
             }
         }
         catch (Exception ex)

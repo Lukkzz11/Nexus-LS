@@ -4,6 +4,7 @@ using System.Windows.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NexusLS.BarTender.Models;
+using NexusLS.BarTender.Models.Designer;
 using NexusLS.BarTender.Services;
 using NexusLS.Core.Etiquetas;
 using NexusLS.Core.Models;
@@ -153,16 +154,23 @@ public partial class MainViewModel
 
     public void AtualizarMiniaturasFila()
     {
-        var modelo = UsarModeloDesigner ? DesignerVM.Modelo : null;
         foreach (var item in FilaImpressao)
         {
-            item.Miniatura = EditorDesenhoService.GerarMiniatura(item.Produto, item.Tamanho, modelo, Config);
+            AtualizarMiniaturaItem(item);
         }
     }
 
     private void AtualizarMiniaturaItem(ItemFila item)
     {
-        var modelo = UsarModeloDesigner ? DesignerVM.Modelo : null;
+        ModeloEtiquetaDesign? modelo = null;
+        if (UsarModeloDesigner)
+        {
+            if (GerenciadorEtiquetasProdutoService.TemEtiquetaPersonalizada(item.Produto.Id))
+            {
+                modelo = GerenciadorEtiquetasProdutoService.CarregarEtiquetaProduto(item.Produto.Id);
+            }
+            modelo ??= DesignerVM.Modelo;
+        }
         item.Miniatura = EditorDesenhoService.GerarMiniatura(item.Produto, item.Tamanho, modelo, Config);
     }
 

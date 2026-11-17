@@ -88,6 +88,7 @@ public partial class DesignerView : UserControl
             e.PropertyName == nameof(DesignerViewModel.FolhaLarguraMm) ||
             e.PropertyName == nameof(DesignerViewModel.FolhaAlturaMm) ||
             e.PropertyName == nameof(DesignerViewModel.ProdutoAtual) ||
+            e.PropertyName == nameof(DesignerViewModel.TamanhoParaTeste) ||
             e.PropertyName == nameof(DesignerViewModel.MostrarDadosReais) ||
             e.PropertyName == nameof(DesignerViewModel.MostrarGrade))
         {
@@ -324,8 +325,9 @@ public partial class DesignerView : UserControl
         switch (el.Tipo)
         {
             case TipoElemento.Texto:
+                var tamAtivo = VM?.TamanhoParaTeste;
                 var textoExibicao = (VM?.MostrarDadosReais ?? true)
-                    ? EditorDesenhoService.ResolverTexto(el, VM?.ProdutoAtual, null, VM?.NomeLoja ?? "NEXUS LS")
+                    ? EditorDesenhoService.ResolverTexto(el, VM?.ProdutoAtual, tamAtivo, VM?.NomeLoja ?? "NEXUS LS")
                     : el.Texto;
 
                 var txt = new TextBlock
@@ -413,7 +415,7 @@ public partial class DesignerView : UserControl
                 break;
 
             case TipoElemento.CodigoBarras:
-                var cod = EditorDesenhoService.ResolverCodigo(el, VM?.ProdutoAtual);
+                var cod = EditorDesenhoService.ResolverCodigo(el, VM?.ProdutoAtual, VM?.TamanhoParaTeste);
                 var altPx = Math.Max(20, (int)altDip * 2);
                 var largPx = Math.Max(40, (int)largDip * 2);
                 var bmpBarcode = BarcodeGeneratorService.Gerar(cod, el.TipoCodigo, largPx, altPx, margem: 0);
@@ -640,13 +642,25 @@ public partial class DesignerView : UserControl
         {
             if (salvar)
             {
-                el.Texto = tb.Text;
+                var digitado = tb.Text?.Trim() ?? "";
+                if (el.Variavel == VariavelEtiqueta.Tamanho &&
+                    !string.IsNullOrEmpty(digitado) &&
+                    VM.TamanhosParaTesteDisponiveis.Any(t => string.Equals(t, digitado, StringComparison.OrdinalIgnoreCase)))
+                {
+                    VM.TamanhoParaTeste = VM.TamanhosParaTesteDisponiveis.First(t => string.Equals(t, digitado, StringComparison.OrdinalIgnoreCase));
+                    el.Texto = "{Tamanho}";
+                }
+                else
+                {
+                    el.Texto = tb.Text ?? "";
+                    VM.AplicarRegrasInteligentesDeGrade();
+                }
             }
             container.Child = conteudoOriginal;
             if (conteudoOriginal is TextBlock txtOriginal)
             {
                 txtOriginal.Text = (VM.MostrarDadosReais)
-                    ? EditorDesenhoService.ResolverTexto(el, VM.ProdutoAtual, null, VM.NomeLoja)
+                    ? EditorDesenhoService.ResolverTexto(el, VM.ProdutoAtual, VM.TamanhoParaTeste, VM.NomeLoja)
                     : el.Texto;
             }
             VM.AtualizarPreview();
@@ -1028,6 +1042,14 @@ public partial class DesignerView : UserControl
         if (isCtrl && !isShift && e.Key == Key.N)
         {
             VM.AbrirNovoDocumentoCommand.Execute(null);
+            e.Handled = true;
+            return;
+        }
+
+        // CTRL + P: Ir para a tela de Impressão (Fila de Impressão)
+        if (isCtrl && !isShift && e.Key == Key.P)
+        {
+            VM.IrParaImpressaoRapidaCommand.Execute(null);
             e.Handled = true;
             return;
         }

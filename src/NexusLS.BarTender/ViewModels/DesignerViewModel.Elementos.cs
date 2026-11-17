@@ -148,6 +148,32 @@ public partial class DesignerViewModel
     }
 
     [RelayCommand]
+    public void AdicionarTamanho()
+    {
+        RegistrarSnapshot();
+        var larg = Math.Max(10.0, Modelo.LarguraMm - 4.0);
+        var alt = Math.Min(15.0, Math.Max(6.0, Modelo.AlturaMm * 0.25));
+        var el = new ElementoDesign
+        {
+            Nome = "Tamanho",
+            Tipo = TipoElemento.Texto,
+            Texto = "{Tamanho}",
+            Variavel = VariavelEtiqueta.Tamanho,
+            X = 2.0,
+            Y = Math.Max(2.0, Math.Round((Modelo.AlturaMm * 0.22) * 2) / 2.0),
+            Largura = larg,
+            Altura = alt,
+            TamanhoFonte = 28.0,
+            Negrito = true,
+            Alinhamento = TextAlignment.Center
+        };
+        Modelo.Elementos.Add(el);
+        NotificarCamadasAlteradas();
+        SelecionarElemento(el);
+        AtualizarPreview();
+    }
+
+    [RelayCommand]
     public void AdicionarImagem()
     {
         var ofd = new OpenFileDialog
@@ -361,15 +387,19 @@ public partial class DesignerViewModel
             string conteudo;
             if (ModalCodigoOrigemProduto)
             {
+                var tamModal = !string.IsNullOrWhiteSpace(TamanhoParaTeste) && TamanhoParaTeste != "Sem tamanho"
+                    ? TamanhoParaTeste
+                    : null;
+
                 conteudo = ModalCodigoVariavel switch
                 {
-                    VariavelEtiqueta.CodigoBarras => ProdutoAtual?.CodigoBarras ?? "7891234567890",
+                    VariavelEtiqueta.CodigoBarras => CodigoBarrasTamanho.Resolver(ProdutoAtual, tamModal) ?? ProdutoAtual?.CodigoBarras ?? "7891234567890",
                     VariavelEtiqueta.CodigoInterno => ProdutoAtual?.CodigoInterno ?? "INT-0001",
-                    VariavelEtiqueta.Referencia => ProdutoAtual?.Referencia ?? "REF-8606",
+                    VariavelEtiqueta.Referencia => CodigoBarrasTamanho.ResolverReferencia(ProdutoAtual, tamModal) ?? ProdutoAtual?.Referencia ?? "REF-8606",
                     VariavelEtiqueta.NomeProduto => ProdutoAtual?.Nome ?? "CAMISA DRYFIT",
                     VariavelEtiqueta.PrecoVarejo => ProdutoAtual != null ? (ProdutoAtual.PrecoVendaCentavos / 100.0).ToString("F2") : "49.90",
                     VariavelEtiqueta.NomeLoja => !string.IsNullOrWhiteSpace(NomeLoja) ? NomeLoja : "NEXUS LS",
-                    _ => ProdutoAtual?.CodigoBarras ?? "7891234567890"
+                    _ => CodigoBarrasTamanho.Resolver(ProdutoAtual, tamModal) ?? ProdutoAtual?.CodigoBarras ?? "7891234567890"
                 };
 
                 if (string.IsNullOrWhiteSpace(conteudo))
@@ -640,6 +670,12 @@ public partial class DesignerViewModel
         if (!Enum.TryParse<VariavelEtiqueta>(nomeVariavel, out var variavel))
         {
             variavel = VariavelEtiqueta.NomeProduto;
+        }
+
+        if (variavel == VariavelEtiqueta.Tamanho)
+        {
+            AdicionarTamanho();
+            return;
         }
 
         var (textoPadrao, largPadrao, altPadrao, fontePadrao, negrito) = variavel switch

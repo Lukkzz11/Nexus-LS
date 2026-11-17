@@ -40,6 +40,13 @@
                             </StackPanel>
                         </Button>
 
+                        <Button Command="{Binding AdicionarTamanhoCommand}" Style="{StaticResource BotaoToolbox}" ToolTip="Insere o tamanho selecionado (muda automaticamente para cada tamanho da grade)">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <ui:SymbolIcon Symbol="TextExpand24" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                <TextBlock Text="Tamanho" FontWeight="SemiBold" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+
                         <Button Command="{Binding AdicionarCodigoBarrasCommand}" Style="{StaticResource BotaoToolbox}">
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                 <ui:SymbolIcon Symbol="BarcodeScanner24" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center" />

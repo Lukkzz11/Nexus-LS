@@ -339,14 +339,20 @@ public class EditorDesenhoService
 
         if (el.Variavel != VariavelEtiqueta.Nenhuma)
         {
+            var tamLimpo = !string.IsNullOrWhiteSpace(tamanho) && !string.Equals(tamanho, Tamanhos.SemTamanho, StringComparison.OrdinalIgnoreCase)
+                ? tamanho
+                : "";
+
             return el.Variavel switch
             {
                 VariavelEtiqueta.NomeProduto => produto.Nome,
                 VariavelEtiqueta.PrecoVarejo => Dinheiro.Formatar(produto.PrecoVendaCentavos),
                 VariavelEtiqueta.PrecoAtacado => produto.PrecoAtacadoCentavos > 0 ? Dinheiro.Formatar(produto.PrecoAtacadoCentavos) : "",
                 VariavelEtiqueta.Referencia => produto.Referencia ?? "",
-                VariavelEtiqueta.Tamanho => tamanho ?? "",
-                VariavelEtiqueta.CodigoBarras => CodigoBarrasTamanho.Resolver(produto, tamanho) ?? "",
+                VariavelEtiqueta.Tamanho => !string.IsNullOrEmpty(tamLimpo)
+                    ? (baseTexto.Contains("{Tamanho}") ? baseTexto.Replace("{Tamanho}", tamLimpo) : tamLimpo)
+                    : "",
+                VariavelEtiqueta.CodigoBarras => ResolverCodigo(el, produto, tamanho),
                 VariavelEtiqueta.CodigoInterno => produto.CodigoInterno ?? "",
                 VariavelEtiqueta.NomeLoja => nomeLoja,
                 _ => baseTexto
@@ -407,6 +413,17 @@ public class EditorDesenhoService
         if (el.Variavel == VariavelEtiqueta.PrecoVarejo)
         {
             return TextoBr.Numero(produto.PrecoVendaCentavos / 100.0, "F2");
+        }
+
+        // Quando o produto tem Referência e há um tamanho selecionado (e o símbolo não é EAN-13 fixo),
+        // o código de barras é ligado diretamente à Referência + Número Interno do Tamanho (ex: 1402 + 1 -> 14021).
+        if (el.TipoCodigo != TipoSimboloCodigo.Ean13 &&
+            !string.IsNullOrWhiteSpace(produto.Referencia) &&
+            !string.IsNullOrWhiteSpace(tamanho) &&
+            !string.Equals(tamanho, Tamanhos.SemTamanho, StringComparison.OrdinalIgnoreCase))
+        {
+            var codRefTamanho = CodigoBarrasTamanho.ResolverReferencia(produto, tamanho);
+            if (!string.IsNullOrWhiteSpace(codRefTamanho)) return codRefTamanho;
         }
 
         // Padrão: código oficial do produto/tamanho (EAN-13, referência, código curto ou código interno).

@@ -536,4 +536,102 @@ public class BarTenderTests : IDisposable
         // Código de barras
         Assert.Contains("7891234567895", zpl);
     }
+
+    [Fact]
+    public void DesignerViewModel_RegraInteligenteGrade_ConverteTamanhoFixoEAtribuiCodigoPorReferenciaETamanho()
+    {
+        var bermuda = new Produto
+        {
+            Id = 45,
+            Nome = "BERMUDA CARGO",
+            Referencia = "1402",
+            PrecoVendaCentavos = 7000,
+            Tamanhos = new List<ProdutoTamanho>
+            {
+                new() { Tamanho = "Sem tamanho", Ordem = 0, Estoque = 0 },
+                new() { Tamanho = "42", Ordem = 1, Estoque = 6 },
+                new() { Tamanho = "44", Ordem = 2, Estoque = 8 },
+                new() { Tamanho = "46", Ordem = 3, Estoque = 8 },
+                new() { Tamanho = "48", Ordem = 4, Estoque = 12 },
+                new() { Tamanho = "50", Ordem = 5, Estoque = 2 }
+            }
+        };
+
+        var vm = new DesignerViewModel();
+        vm.DefinirProduto(bermuda, "LIFESURF", carregarEtiquetaSalvaSeHouver: false);
+
+        // "Sem tamanho" com estoque zero deve ser ocultado quando o produto tem tamanhos reais
+        Assert.DoesNotContain("Sem tamanho", vm.TamanhosParaTesteDisponiveis);
+        Assert.Equal(new[] { "42", "44", "46", "48", "50" }, vm.TamanhosParaTesteDisponiveis);
+
+        // Simula o usuário criando um texto livre com "42" (como na amostra da foto)
+        vm.Modelo = NexusLS.BarTender.Models.Designer.ModeloEtiquetaDesign.CriarEmBranco(35, 60, "Tag 1402");
+        var elTamanhoDigitado = new NexusLS.BarTender.Models.Designer.ElementoDesign
+        {
+            Tipo = NexusLS.BarTender.Models.Designer.TipoElemento.Texto,
+            Variavel = NexusLS.BarTender.Models.Designer.VariavelEtiqueta.Nenhuma,
+            Texto = "42",
+            TamanhoFonte = 47.6,
+            Largura = 74.7,
+            X = 10.5,
+            Y = 8
+        };
+        var elRef = new NexusLS.BarTender.Models.Designer.ElementoDesign
+        {
+            Tipo = NexusLS.BarTender.Models.Designer.TipoElemento.Texto,
+            Variavel = NexusLS.BarTender.Models.Designer.VariavelEtiqueta.Referencia,
+            Texto = "{Ref}"
+        };
+        var elBarcode = new NexusLS.BarTender.Models.Designer.ElementoDesign
+        {
+            Tipo = NexusLS.BarTender.Models.Designer.TipoElemento.CodigoBarras,
+            Variavel = NexusLS.BarTender.Models.Designer.VariavelEtiqueta.CodigoBarras,
+            TipoCodigo = NexusLS.BarTender.Models.Designer.TipoSimboloCodigo.Code128
+        };
+        vm.Modelo.Elementos.Add(elTamanhoDigitado);
+        vm.Modelo.Elementos.Add(elRef);
+        vm.Modelo.Elementos.Add(elBarcode);
+
+        // Ao aplicar a regra inteligente (chamada ao salvar ou trocar tamanho):
+        vm.AplicarRegrasInteligentesDeGrade();
+
+        // O texto livre "42" vira variável dinâmica {Tamanho} e se ajusta dentro da folha de 35mm
+        Assert.Equal(NexusLS.BarTender.Models.Designer.VariavelEtiqueta.Tamanho, elTamanhoDigitado.Variavel);
+        Assert.Equal("{Tamanho}", elTamanhoDigitado.Texto);
+        Assert.True(elTamanhoDigitado.Largura <= 35.0);
+
+        // Para cada tamanho da grade, o tamanho muda e o código de barras é Referência + Ordem, mas a Referência continua "1402"
+        Assert.Equal("42", EditorDesenhoService.ResolverTexto(elTamanhoDigitado, bermuda, "42", "LIFESURF"));
+        Assert.Equal("1402", EditorDesenhoService.ResolverTexto(elRef, bermuda, "42", "LIFESURF"));
+        Assert.Equal("14021", EditorDesenhoService.ResolverCodigo(elBarcode, bermuda, "42"));
+
+        Assert.Equal("44", EditorDesenhoService.ResolverTexto(elTamanhoDigitado, bermuda, "44", "LIFESURF"));
+        Assert.Equal("1402", EditorDesenhoService.ResolverTexto(elRef, bermuda, "44", "LIFESURF"));
+        Assert.Equal("14022", EditorDesenhoService.ResolverCodigo(elBarcode, bermuda, "44"));
+
+        Assert.Equal("50", EditorDesenhoService.ResolverTexto(elTamanhoDigitado, bermuda, "50", "LIFESURF"));
+        Assert.Equal("1402", EditorDesenhoService.ResolverTexto(elRef, bermuda, "50", "LIFESURF"));
+        Assert.Equal("14025", EditorDesenhoService.ResolverCodigo(elBarcode, bermuda, "50"));
+
+        // A referência cadastrada no produto não foi alterada
+        Assert.Equal("1402", bermuda.Referencia);
+    }
+
+    [Fact]
+    public void DesignerViewModel_AdicionarTamanho_InsereElementoVinculadoQueMudaComTamanhoSelecionado()
+    {
+        var vm = new DesignerViewModel();
+        vm.TamanhoParaTeste = "G";
+        var qtdAntes = vm.Modelo.Elementos.Count;
+
+        vm.AdicionarTamanhoCommand.Execute(null);
+
+        Assert.Equal(qtdAntes + 1, vm.Modelo.Elementos.Count);
+        var inserido = vm.Modelo.Elementos.Last();
+        Assert.Equal(NexusLS.BarTender.Models.Designer.VariavelEtiqueta.Tamanho, inserido.Variavel);
+        Assert.Equal("G", EditorDesenhoService.ResolverTexto(inserido, null, vm.TamanhoParaTeste, "NEXUS"));
+
+        vm.TamanhoParaTeste = "GG";
+        Assert.Equal("GG", EditorDesenhoService.ResolverTexto(inserido, null, vm.TamanhoParaTeste, "NEXUS"));
+    }
 }

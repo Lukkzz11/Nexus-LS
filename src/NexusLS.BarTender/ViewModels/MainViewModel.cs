@@ -123,7 +123,10 @@ public partial class MainViewModel : ObservableObject
     public MainViewModel(BancoDadosService? dbService, IDialogoService? dialogoService = null)
     {
         _dialogo = dialogoService ?? DialogoService.Instancia;
-        _designerVM = new DesignerViewModel(_dialogo);
+        _designerVM = new DesignerViewModel(_dialogo)
+        {
+            SolicitarIrParaImpressao = IrParaFilaImpressaoAtalho
+        };
 
         var http = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(10) };
         _licencaNuvem = new ServicoLicencaNuvem(
@@ -408,6 +411,14 @@ public partial class MainViewModel : ObservableObject
 
     [RelayCommand]
     public void IrParaFila() => TelaAtiva = "Fila";
+
+    [RelayCommand]
+    public void IrParaFilaImpressaoAtalho()
+    {
+        UsarModeloDesigner = true;
+        AtualizarMiniaturasFila();
+        TelaAtiva = "Fila";
+    }
 
     [RelayCommand]
     public void IrParaConfiguracoes() => TelaAtiva = "Configuracoes";

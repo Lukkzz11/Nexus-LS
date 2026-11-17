@@ -44,28 +44,55 @@ public partial class DesignerViewModel : ObservableObject
 
     public ObservableCollection<string> TamanhosParaTesteDisponiveis { get; } = new()
     {
-        "Sem tamanho", "P", "M", "G", "GG"
+        "P", "M", "G", "GG"
     };
 
-    partial void OnTamanhoParaTesteChanged(string value) => AtualizarPreview();
+    public Action? SolicitarIrParaImpressao { get; set; }
+
+    [RelayCommand]
+    public void IrParaImpressaoRapida() => SolicitarIrParaImpressao?.Invoke();
+
+    partial void OnTamanhoParaTesteChanged(string value)
+    {
+        AplicarRegrasInteligentesDeGrade();
+        AtualizarPreview();
+        if (ModalCodigoAberto)
+        {
+            AtualizarModalCodigoPreview();
+        }
+    }
 
     partial void OnProdutoAtualChanged(Produto? value)
     {
         TamanhosParaTesteDisponiveis.Clear();
         if (value?.Tamanhos != null && value.Tamanhos.Count > 0)
         {
-            foreach (var t in value.Tamanhos)
+            var temTamanhosReais = value.Tamanhos.Any(t =>
+                !string.IsNullOrWhiteSpace(t.Tamanho) &&
+                !string.Equals(t.Tamanho.Trim(), Tamanhos.SemTamanho, StringComparison.OrdinalIgnoreCase));
+
+            foreach (var t in value.Tamanhos.OrderBy(x => x.Ordem))
             {
-                if (!string.IsNullOrWhiteSpace(t.Tamanho) && !TamanhosParaTesteDisponiveis.Contains(t.Tamanho))
+                var nomeTam = t.Tamanho?.Trim();
+                if (string.IsNullOrWhiteSpace(nomeTam)) continue;
+
+                // Se o produto possui grade real (ex: 42 ao 50, P ao GG) e a linha "Sem tamanho" está zerada, oculta "Sem tamanho"
+                if (temTamanhosReais &&
+                    string.Equals(nomeTam, Tamanhos.SemTamanho, StringComparison.OrdinalIgnoreCase) &&
+                    t.Estoque <= 0)
                 {
-                    TamanhosParaTesteDisponiveis.Add(t.Tamanho);
+                    continue;
+                }
+
+                if (!TamanhosParaTesteDisponiveis.Contains(nomeTam))
+                {
+                    TamanhosParaTesteDisponiveis.Add(nomeTam);
                 }
             }
         }
 
         if (TamanhosParaTesteDisponiveis.Count == 0)
         {
-            TamanhosParaTesteDisponiveis.Add("Sem tamanho");
             TamanhosParaTesteDisponiveis.Add("P");
             TamanhosParaTesteDisponiveis.Add("M");
             TamanhosParaTesteDisponiveis.Add("G");
@@ -564,8 +591,13 @@ public partial class DesignerViewModel : ObservableObject
                 {
                     Modelo = salva;
                     PresetSelecionado = salva.Nome;
+                    AplicarRegrasInteligentesDeGrade();
                     InscreverEventosModelo();
                 }
+            }
+            else
+            {
+                AplicarRegrasInteligentesDeGrade();
             }
         }
         else
@@ -578,6 +610,104 @@ public partial class DesignerViewModel : ObservableObject
         }
 
         AtualizarPreview();
+    }
+
+    /// <summary>
+    /// Regra inteligente de grade: garante que elementos de tamanho (mesmo digitados como texto livre, ex: "42")
+    /// e códigos de barras fiquem dinâmicos por tamanho (Referência + Ordem do Tamanho), mantendo a Referência original intacta.
+    /// </summary>
+    public void AplicarRegrasInteligentesDeGrade()
+    {
+        if (Modelo?.Elementos == null) return;
+
+        var refProduto = ProdutoAtual?.Referencia?.Trim();
+        var tamanhosGrade = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var t in TamanhosParaTesteDisponiveis)
+        {
+            if (!string.IsNullOrWhiteSpace(t) && !string.Equals(t, Tamanhos.SemTamanho, StringComparison.OrdinalIgnoreCase))
+                tamanhosGrade.Add(t.Trim());
+        }
+
+        if (ProdutoAtual?.Tamanhos != null)
+        {
+            foreach (var t in ProdutoAtual.Tamanhos)
+            {
+                if (!string.IsNullOrWhiteSpace(t.Tamanho) && !string.Equals(t.Tamanho.Trim(), Tamanhos.SemTamanho, StringComparison.OrdinalIgnoreCase))
+                    tamanhosGrade.Add(t.Tamanho.Trim());
+            }
+        }
+
+        var tamanhosPadraoVestuario = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "PP", "P", "M", "G", "GG", "XG", "XXG", "EG", "EGG", "G1", "G2", "G3", "U", "UN",
+            "34", "36", "38", "40", "42", "44", "46", "48", "50", "52", "54", "56"
+        };
+
+        bool alterou = false;
+
+        foreach (var el in Modelo.Elementos)
+        {
+            if (el.Tipo == TipoElemento.Texto)
+            {
+                var txt = el.Texto?.Trim() ?? "";
+
+                if (el.Variavel == VariavelEtiqueta.Nenhuma && !string.IsNullOrEmpty(txt))
+                {
+                    // Se o texto livre é exatamente a referência do produto, vincula à variável Referência (mantendo-a fixa no cadastro)
+                    if (!string.IsNullOrEmpty(refProduto) && string.Equals(txt, refProduto, StringComparison.OrdinalIgnoreCase))
+                    {
+                        el.Variavel = VariavelEtiqueta.Referencia;
+                        el.Texto = "{Ref}";
+                        alterou = true;
+                    }
+                    // Se o texto livre é um tamanho da grade do produto (ex: digitou "42" na etiqueta da Bermuda Cargo)
+                    else if (tamanhosGrade.Contains(txt) || (el.TamanhoFonte >= 16.0 && tamanhosPadraoVestuario.Contains(txt)))
+                    {
+                        el.Variavel = VariavelEtiqueta.Tamanho;
+                        el.Texto = "{Tamanho}";
+                        if (string.IsNullOrWhiteSpace(el.Nome) || el.Nome.StartsWith("Texto", StringComparison.OrdinalIgnoreCase))
+                        {
+                            el.Nome = "Tamanho";
+                        }
+                        alterou = true;
+                    }
+                }
+
+                // Se é o elemento de Tamanho e a caixa ultrapassava a folha (ex: Largura 74.7 numa folha de 35mm), centraliza na folha
+                if (el.Variavel == VariavelEtiqueta.Tamanho && (el.Largura > Modelo.LarguraMm || el.X + el.Largura > Modelo.LarguraMm + 2.0))
+                {
+                    el.X = 2.0;
+                    el.Largura = Math.Max(10.0, Modelo.LarguraMm - 4.0);
+                    el.Alinhamento = TextAlignment.Center;
+                    alterou = true;
+                }
+            }
+            else if (el.Tipo == TipoElemento.CodigoBarras && el.TipoCodigo != TipoSimboloCodigo.QrCode)
+            {
+                // Garante que o código de barras dependa de Referência + Tamanho quando não for um código externo fixo
+                if (el.Variavel == VariavelEtiqueta.Nenhuma &&
+                    (string.IsNullOrWhiteSpace(el.ValorCodigo) ||
+                     el.ValorCodigo == "7891234567890" ||
+                     (!string.IsNullOrEmpty(refProduto) && string.Equals(el.ValorCodigo.Trim(), refProduto, StringComparison.OrdinalIgnoreCase))))
+                {
+                    el.Variavel = VariavelEtiqueta.CodigoBarras;
+                    el.ValorCodigo = null;
+                    alterou = true;
+                }
+
+                if (!string.IsNullOrEmpty(refProduto) && el.TipoCodigo == TipoSimboloCodigo.Ean13 && refProduto.Length < 12)
+                {
+                    el.TipoCodigo = TipoSimboloCodigo.Code128;
+                    alterou = true;
+                }
+            }
+        }
+
+        if (alterou)
+        {
+            ElementoPropriedadeAlterada?.Invoke(this, EventArgs.Empty);
+        }
     }
 
     public void AtualizarPreview()

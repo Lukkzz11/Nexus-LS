@@ -21,6 +21,10 @@
         <vm:MainViewModel />
     </ui:FluentWindow.DataContext>
 
+    <ui:FluentWindow.InputBindings>
+        <KeyBinding Key="P" Modifiers="Ctrl" Command="{Binding IrParaFilaImpressaoAtalhoCommand}" />
+    </ui:FluentWindow.InputBindings>
+
     <ui:FluentWindow.Resources>
         <!-- Estilo de item do menu lateral idêntico ao Nexus LS -->
         <Style x:Key="ItemDoMenu" TargetType="Button" BasedOn="{StaticResource BotaoMenu}">
