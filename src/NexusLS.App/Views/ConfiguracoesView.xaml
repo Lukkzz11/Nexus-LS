@@ -108,6 +108,101 @@
                         </Border>
                     </StackPanel>
                 </ScrollViewer>
+                <ScrollViewer x:Name="PgComissoes" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="0,16,12,0">
+                    <StackPanel MaxWidth="860" HorizontalAlignment="Left" Margin="0,0,0,24">
+                        <Border Style="{StaticResource Painel}" Margin="0,0,0,16" Visibility="{Binding TemComissoes, Converter={StaticResource BoolVis}}">
+                            <StackPanel>
+                                <TextBlock Text="Regra da comissão" FontSize="18" FontWeight="SemiBold" />
+                                <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
+                                           Text="A comissão é um percentual da venda líquida de cada vendedor (o nome que aparece nas vendas). Quem não tem percentual próprio usa o padrão." />
+                                <TextBlock Text="Comissão padrão (% da venda líquida, 0 = não paga)" Style="{StaticResource Rotulo}" TextWrapping="Wrap" />
+                                <TextBox Text="{Binding ComissaoPadraoTexto, UpdateSourceTrigger=PropertyChanged}" Width="120" HorizontalAlignment="Left"
+                                         AutomationProperties.Name="Comissão padrão" />
+                                <CheckBox Margin="0,14,0,0" IsChecked="{Binding ComissaoDescontaDevolucoes}">
+                                    <TextBlock Text="Descontar da comissão o que o vendedor teve devolvido no período" TextWrapping="Wrap" />
+                                </CheckBox>
+                                <TextBlock Text="Percentual de cada vendedor (em branco = usa o padrão)" Style="{StaticResource Rotulo}" Margin="0,16,0,4" />
+                                <ItemsControl ItemsSource="{Binding VendedoresComissao}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="0,3">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="220" />
+                                                    <ColumnDefinition Width="110" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{Binding Nome}" VerticalAlignment="Center" />
+                                                <TextBox Grid.Column="1" Text="{Binding PercentualTexto, UpdateSourceTrigger=PropertyChanged}"
+                                                         AutomationProperties.Name="Percentual do vendedor" />
+                                                <TextBlock Grid.Column="2" Text="%" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <Button Content="Salvar regra" Style="{StaticResource BotaoPrimario}" Margin="0,16,0,0" HorizontalAlignment="Left"
+                                        Command="{Binding SalvarComissaoCommand}" />
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource Painel}" Visibility="{Binding TemComissoes, Converter={StaticResource BoolVis}}">
+                            <StackPanel>
+                                <TextBlock Text="Fechamento do mês" FontSize="18" FontWeight="SemiBold" />
+                                <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
+                                           Text="Mostra quanto cada vendedor tem de comissão no mês, pelas regras acima. Só calcula: o pagamento você faz por fora." />
+                                <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                                    <ComboBox ItemsSource="{Binding MesesComissao}" DisplayMemberPath="Texto" SelectedItem="{Binding MesSelecionado}"
+                                              Width="220" Padding="8,7" AutomationProperties.Name="Mês" />
+                                    <Button Content="Calcular" Style="{StaticResource BotaoPrimario}" Margin="8,0,0,0" Command="{Binding CalcularComissaoCommand}" />
+                                    <Button Content="Copiar para planilha" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0" Command="{Binding CopiarComissaoCommand}" />
+                                </StackPanel>
+                                <StackPanel Visibility="{Binding TemResultadoComissao, Converter={StaticResource BoolVis}}" Margin="0,14,0,0">
+                                    <Grid Margin="0,0,0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" /><ColumnDefinition Width="60" /><ColumnDefinition Width="110" />
+                                            <ColumnDefinition Width="110" /><ColumnDefinition Width="60" /><ColumnDefinition Width="110" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Vendedor" Style="{StaticResource Rotulo}" />
+                                        <TextBlock Grid.Column="1" Text="Vendas" Style="{StaticResource Rotulo}" TextAlignment="Right" />
+                                        <TextBlock Grid.Column="2" Text="Vendido" Style="{StaticResource Rotulo}" TextAlignment="Right" />
+                                        <TextBlock Grid.Column="3" Text="Devolvido" Style="{StaticResource Rotulo}" TextAlignment="Right" />
+                                        <TextBlock Grid.Column="4" Text="%" Style="{StaticResource Rotulo}" TextAlignment="Right" />
+                                        <TextBlock Grid.Column="5" Text="Comissão" Style="{StaticResource Rotulo}" TextAlignment="Right" />
+                                    </Grid>
+                                    <ItemsControl ItemsSource="{Binding ResultadoComissao}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Margin="0,3">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" /><ColumnDefinition Width="60" /><ColumnDefinition Width="110" />
+                                                        <ColumnDefinition Width="110" /><ColumnDefinition Width="60" /><ColumnDefinition Width="110" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Text="{Binding Vendedor}" TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock Grid.Column="1" Text="{Binding Vendas}" TextAlignment="Right" />
+                                                    <TextBlock Grid.Column="2" Text="{Binding Vendido}" TextAlignment="Right" />
+                                                    <TextBlock Grid.Column="3" Text="{Binding Devolvido}" TextAlignment="Right" />
+                                                    <TextBlock Grid.Column="4" Text="{Binding Percentual}" TextAlignment="Right" />
+                                                    <TextBlock Grid.Column="5" Text="{Binding Comissao}" TextAlignment="Right" FontWeight="SemiBold" />
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <TextBlock Text="{Binding ResumoComissao}" Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,10,0,0" />
+                                </StackPanel>
+                                <TextBlock Text="{Binding MensagemComissao}" TextWrapping="Wrap" Margin="0,10,0,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{StaticResource CorPositivo}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding MensagemComissaoEhErro}" Value="True">
+                                                    <Setter Property="Foreground" Value="{StaticResource CorNegativo}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
                 <ScrollViewer x:Name="PgSeguranca" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="0,16,12,0">
                     <StackPanel MaxWidth="760" HorizontalAlignment="Left" Margin="0,0,0,24">
                         <Border Style="{StaticResource Painel}" Margin="0,0,0,16" Visibility="{Binding TemSeguranca, Converter={StaticResource BoolVis}}">

@@ -112,6 +112,7 @@ public partial class GestaoViewModel : ObservableObject
         config.UsarPreferencias(_servicos.Preferencias, z => { Zoom = z; _aoMudarZoom(z); }, _licencaTexto);
         config.AbrirPasta = pasta => System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", "\"" + pasta + "\"") { UseShellExecute = true });
         config.UsarSeguranca(_servicos.Seguranca);
+        config.UsarComissoes(_servicos.Comissoes, _servicos.Funcionarios);
         config.UsarGoogle(_servicos.Google, url => System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true }));
         Abrir(config, ItemMenu.Configuracoes);
     }

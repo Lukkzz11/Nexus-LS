@@ -34,8 +34,21 @@ public class ConfiguracaoSeguranca
     /// <summary>Limite de crédito que já vem preenchido ao cadastrar um cliente novo. 0 = sem limite.</summary>
     public long LimiteCreditoPadraoCentavos { get; set; }
 
+    /// <summary>Comissão padrão (% da venda líquida) de quem não tem percentual próprio. 0 = não paga.</summary>
+    public decimal ComissaoPadraoPercent { get; set; }
+
+    /// <summary>Percentual próprio de cada vendedor (pelo nome, como aparece nas vendas). Quem não está aqui usa o padrão.</summary>
+    public Dictionary<string, decimal> ComissaoPorVendedor { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>Tirar da comissão o que o vendedor teve devolvido no período. Ligado por padrão.</summary>
+    public bool ComissaoDescontaDevolucoes { get; set; } = true;
+
     public void Validar()
     {
+        if (ComissaoPadraoPercent < 0 || ComissaoPadraoPercent > 100)
+            throw new RegraDeNegocioException("A comissão padrão deve ficar entre 0 e 100%.");
+        if (ComissaoPorVendedor.Values.Any(p => p < 0 || p > 100))
+            throw new RegraDeNegocioException("A comissão de cada vendedor deve ficar entre 0 e 100%.");
         if (MultaAtrasoPercent < 0 || MultaAtrasoPercent > 100)
             throw new RegraDeNegocioException("A multa por atraso deve ficar entre 0 e 100%.");
         if (JurosMesPercent < 0 || JurosMesPercent > 100)
@@ -81,7 +94,9 @@ public class ConfiguracaoSegurancaStore
         try
         {
             if (!File.Exists(_caminho)) return new();
-            return JsonSerializer.Deserialize<ConfiguracaoSeguranca>(File.ReadAllText(_caminho)) ?? new();
+            var c = JsonSerializer.Deserialize<ConfiguracaoSeguranca>(File.ReadAllText(_caminho)) ?? new();
+            c.ComissaoPorVendedor = new Dictionary<string, decimal>(c.ComissaoPorVendedor ?? new(), StringComparer.OrdinalIgnoreCase);
+            return c;
         }
         catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException)
         {
