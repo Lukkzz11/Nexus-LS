@@ -30,7 +30,9 @@ public enum TipoAtividade
     ClientesImportados = 25,
     ClienteDaVendaAlterado = 26,
     DevolucaoRegistrada = 27,
-    DevolucaoCancelada = 28
+    DevolucaoCancelada = 28,
+    LoginEfetuado = 29,
+    LoginFalhou = 30
 }
 
 /// <summary>

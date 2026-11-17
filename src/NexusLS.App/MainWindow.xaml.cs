@@ -9,6 +9,45 @@ namespace NexusLS.App;
 public partial class MainWindow : FluentWindow
 {
     private bool _semTravaDeCaixa;
+    private DateTime _ultimaAtividade = DateTime.Now;
+
+    /// <summary>
+    /// Depois de alguns minutos sem mouse nem teclado (se a preferência estiver ligada), fecha a Gestão e pede o PIN de novo.
+    /// Só vale com login ativo; sem funcionários cadastrados não há quem bloquear.
+    /// </summary>
+    private void IniciarBloqueioPorInatividade(ViewModels.MainViewModel vm)
+    {
+        System.Windows.Input.InputManager.Current.PreProcessInput += (_, e) =>
+        {
+            if (e.StagingItem.Input is System.Windows.Input.MouseEventArgs or System.Windows.Input.KeyboardEventArgs)
+                _ultimaAtividade = DateTime.Now;
+        };
+        var relogio = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(15) };
+        var bloqueando = false;
+        relogio.Tick += (_, _) =>
+        {
+            if (bloqueando || !Seguranca.Sessao.LoginAtivo || Seguranca.Sessao.Atual is null) return;
+            if (!NexusLS.Core.Seguranca.RegrasSeguranca.Ocioso(_ultimaAtividade, DateTime.Now, App.Servicos.Seguranca.Carregar().MinutosInatividade)) return;
+
+            // A Gestão devolve a sessão do balcão ao fechar; por isso ela fecha antes de bloquear.
+            foreach (var g in System.Windows.Application.Current.Windows.OfType<Views.GestaoWindow>().ToList()) g.Close();
+            // Outra janela aberta (Pix, impressão, diálogo): espera ela terminar em vez de empilhar o PIN por cima.
+            if (System.Windows.Application.Current.Windows.OfType<System.Windows.Window>().Any(w => w != this && w.IsVisible)) return;
+
+            bloqueando = true;
+            try
+            {
+                Seguranca.Sessao.Sair();
+                do { vm.TrocarUsuarioCommand.Execute(null); } while (Seguranca.Sessao.Atual is null);
+            }
+            finally
+            {
+                _ultimaAtividade = DateTime.Now;
+                bloqueando = false;
+            }
+        };
+        relogio.Start();
+    }
 
     public MainWindow()
     {
@@ -24,6 +63,7 @@ public partial class MainWindow : FluentWindow
         };
         vm.AbrirJanelaGestao = item => Views.GestaoWindow.Abrir(App.Servicos, this, item, vm.Zoom, z => vm.Zoom = z, () => vm.LicencaTexto);
         vm.AtualizarLicenca();
+        IniciarBloqueioPorInatividade(vm);
         vm.AoDetectarLicencaInvalidaNaNuvem = mensagem =>
         {
             Dispatcher.Invoke(() =>

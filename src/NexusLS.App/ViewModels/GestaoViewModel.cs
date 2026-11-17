@@ -111,6 +111,7 @@ public partial class GestaoViewModel : ObservableObject
         var config = new ConfiguracoesViewModel(_servicos.Configuracao, _servicos.Cupons, _servicos.Backup, dialogos, limpar, _servicos.Atualizacao);
         config.UsarPreferencias(_servicos.Preferencias, z => { Zoom = z; _aoMudarZoom(z); }, _licencaTexto);
         config.AbrirPasta = pasta => System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", "\"" + pasta + "\"") { UseShellExecute = true });
+        config.UsarSeguranca(_servicos.Seguranca);
         config.UsarGoogle(_servicos.Google, url => System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true }));
         Abrir(config, ItemMenu.Configuracoes);
     }

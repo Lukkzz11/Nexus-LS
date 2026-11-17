@@ -174,11 +174,17 @@ public class FuncionarioService
 
         if (!Confere(pin ?? "", f.PinHash, out var legado))
         {
-            _tentativas.RegistrarFalha(id, agora);
+            var falhas = _tentativas.RegistrarFalha(id, agora);
+            AtividadeService.Registrar(db, TipoAtividade.LoginFalhou,
+                falhas == 0 ? $"PIN incorreto: {f.Nome} ficou bloqueado por {(int)TempoDeBloqueio.TotalSeconds} segundos." : $"PIN incorreto para {f.Nome}.",
+                operador: f.Nome, agora: agora);
+            await db.SaveChangesAsync();
             throw new RegraDeNegocioException("PIN incorreto.");
         }
 
         _tentativas.Limpar(id);
+        AtividadeService.Registrar(db, TipoAtividade.LoginEfetuado, $"{f.Nome} entrou no sistema.", operador: f.Nome, agora: agora);
+        await db.SaveChangesAsync();
 
         // Rehash transparente: o primeiro login certo de um hash antigo regrava no formato v2.
         // O PIN continua o mesmo; só a forma de guardar fica mais forte.

@@ -50,6 +50,7 @@ public sealed class ContainerDeServicos
     public PosicaoFinanceiraService Posicao { get; }
     public CupomService Cupons { get; }
     public NexusLS.Core.Backup.GestorBackup Backup { get; }
+    public NexusLS.Core.Seguranca.ConfiguracaoSegurancaStore Seguranca { get; }
     public NexusLS.Core.Atualizacao.AtualizadorService Atualizador { get; }
     public NexusLS.App.ViewModels.AtualizacaoViewModel Atualizacao { get; }
     public LimpezaService Limpeza { get; }
@@ -125,6 +126,7 @@ public sealed class ContainerDeServicos
         ChequesEmitidos = new(fabrica);
         Posicao = new(fabrica);
         Cupons = new(fabrica, Configuracao, new ImpressoraWindows());
+        Seguranca = new(NexusLS.Core.Seguranca.ConfiguracaoSegurancaStore.CaminhoPadrao());
         Backup = new(
             new NexusLS.Core.Backup.BackupService(CaminhoBanco.Padrao()),
             new NexusLS.Core.Backup.ConfiguracaoBackupStore(NexusLS.Core.Backup.ConfiguracaoBackupStore.CaminhoPadrao()));

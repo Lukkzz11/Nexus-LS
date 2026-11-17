@@ -63,8 +63,7 @@ public partial class ConfiguracoesView : UserControl
         }),
         ("EQUIPE E SEGURANÇA", new[]
         {
-            new Entrada("seguranca", "Segurança", SymbolRegular.LockClosed24, null, "Proteção do PDV e da gestão.",
-                new[] { "Bloquear a tela do PDV após alguns minutos parado", "Limite de tentativas de PIN e registro de acessos", "Esconder o botão Gestão de quem não tem acesso" }),
+            new Entrada("seguranca", "Segurança", SymbolRegular.LockClosed24, "PgSeguranca"),
         }),
         ("DADOS E NUVEM", new[]
         {
@@ -89,7 +88,7 @@ public partial class ConfiguracoesView : UserControl
     private readonly Dictionary<string, System.Windows.Controls.Button> _botoesMenu = new();
 
     private IEnumerable<FrameworkElement> Paginas() =>
-        new FrameworkElement[] { PgLoja, PgAparencia, PgVendas, PgParametros, PgBackup, PgSistema, PgAtalhos, PgDados, PgBreve };
+        new FrameworkElement[] { PgLoja, PgAparencia, PgVendas, PgParametros, PgBackup, PgSistema, PgAtalhos, PgDados, PgSeguranca, PgBreve };
 
     private void MontarMenu()
     {

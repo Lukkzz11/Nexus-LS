@@ -29,6 +29,45 @@
             </Border>
 
             <Grid Grid.Column="1">
+                <ScrollViewer x:Name="PgSeguranca" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="0,16,12,0">
+                    <StackPanel MaxWidth="760" HorizontalAlignment="Left" Margin="0,0,0,24">
+                        <Border Style="{StaticResource Painel}" Margin="0,0,0,16" Visibility="{Binding TemSeguranca, Converter={StaticResource BoolVis}}">
+                            <StackPanel>
+                                <TextBlock Text="Bloqueio e acesso" FontSize="18" FontWeight="SemiBold" />
+                                <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
+                                           Text="Vale para este computador. Só funciona quando há funcionários cadastrados (sem eles, o programa abre direto, como sempre)." />
+                                <TextBlock Text="Pedir o PIN de novo depois de quantos minutos parado? (0 = nunca)" Style="{StaticResource Rotulo}" TextWrapping="Wrap" />
+                                <TextBox Text="{Binding MinutosInatividadeTexto, UpdateSourceTrigger=PropertyChanged}" Width="120" HorizontalAlignment="Left"
+                                         AutomationProperties.Name="Minutos de inatividade" />
+                                <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
+                                           Text="Parado = sem mexer no mouse nem no teclado. A Gestão fecha sozinha e o PIN é pedido na tela principal." />
+                                <CheckBox Margin="0,16,0,0" IsChecked="{Binding EsconderGestaoSemAcesso}">
+                                    <TextBlock Text="Esconder o botão Gestão de quem não tem acesso (desligado: o botão aparece e pede o PIN de um gerente)" TextWrapping="Wrap" />
+                                </CheckBox>
+                                <Button Content="Salvar" Style="{StaticResource BotaoPrimario}" Margin="0,16,0,0" HorizontalAlignment="Left"
+                                        Command="{Binding SalvarSegurancaCommand}" />
+                                <TextBlock Text="{Binding MensagemSeguranca}" TextWrapping="Wrap" Margin="0,10,0,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{StaticResource CorPositivo}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding MensagemSegurancaEhErro}" Value="True">
+                                                    <Setter Property="Foreground" Value="{StaticResource CorNegativo}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource Painel}">
+                            <StackPanel>
+                                <TextBlock Text="PIN errado e registro de acessos" FontSize="18" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding LimiteDePinTexto}" Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,6,0,0" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
                 <!-- Como no ERP PDV Life: cartões à esquerda (identificação, endereço, comprovante, impressão) e a prévia fiel do cupom à direita -->
                 <Grid x:Name="PgLoja" Margin="0,16,0,0">
                     <Grid.ColumnDefinitions>

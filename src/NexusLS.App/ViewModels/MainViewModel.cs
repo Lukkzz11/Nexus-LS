@@ -148,6 +148,9 @@ public partial class MainViewModel : ObservableObject
     public bool VerFuncionarios => Sessao.Pode(Permissao.Funcionarios);
 
     // Os títulos de grupo do menu só aparecem se sobrou algum item dentro.
+    /// <summary>O botão Gestão. Só some quando a preferência pede e quem está no balcão não tem acesso a nada da gestão.</summary>
+    public bool VerGestao => !(Sessao.LoginAtivo && !(Sessao.Atual?.PodeAlguma(Permissoes.Gestao) ?? false) && _servicos.Seguranca.Carregar().EsconderGestaoSemAcesso);
+
     public bool VerSecaoVendas => VerPdv || VerCaixa || VerRelatorios;
     public bool VerSecaoEstoque => VerEstoque || VerCompras;
     public bool VerSecaoGestao => VerClientes || VerFinanceiro || VerRelatorios || VerFuncionarios || VerConfiguracoes;
@@ -173,7 +176,7 @@ public partial class MainViewModel : ObservableObject
         {
             nameof(VerPdv), nameof(VerCaixa), nameof(VerEstoque), nameof(VerCompras), nameof(VerClientes), nameof(VerFinanceiro),
             nameof(VerRelatorios), nameof(VerConfiguracoes), nameof(VerFuncionarios), nameof(VerSecaoVendas), nameof(VerSecaoEstoque),
-            nameof(VerSecaoGestao), nameof(TemUsuario), nameof(UsuarioTexto)
+            nameof(VerSecaoGestao), nameof(VerGestao), nameof(TemUsuario), nameof(UsuarioTexto)
         }) OnPropertyChanged(nome);
     }
 }

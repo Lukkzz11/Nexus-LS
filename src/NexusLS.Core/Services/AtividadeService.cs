@@ -42,6 +42,8 @@ public class AtividadeService
         TipoAtividade.FuncionarioDesativado => "Funcionário desativado",
         TipoAtividade.FuncionarioReativado => "Funcionário reativado",
         TipoAtividade.PinRedefinido => "PIN redefinido",
+        TipoAtividade.LoginEfetuado => "Entrada no sistema",
+        TipoAtividade.LoginFalhou => "PIN incorreto",
         TipoAtividade.DadosApagados => "Dados apagados",
         TipoAtividade.TransferenciaCancelada => "Transferência cancelada",
         TipoAtividade.LiquidacaoEstornada => "Liquidação de cartão estornada",

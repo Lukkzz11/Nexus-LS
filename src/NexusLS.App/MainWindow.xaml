@@ -150,8 +150,8 @@
                         </StackPanel>
                     </Button>
 
-                    <TextBlock Text="GESTÃO" Style="{StaticResource SecaoMenu}" />
-                    <Button Tag="Gestao" AutomationProperties.Name="Gestão" ToolTip="Relatórios, financeiro, funcionários e configurações. Pede o PIN de um gerente ou administrador." Style="{StaticResource ItemDoMenu}" Command="{Binding AbrirGestaoCommand}">
+                    <TextBlock Text="GESTÃO" Style="{StaticResource SecaoMenu}" Visibility="{Binding VerGestao, Converter={StaticResource BoolVis}}" />
+                    <Button Tag="Gestao" Visibility="{Binding VerGestao, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Gestão" ToolTip="Relatórios, financeiro, funcionários e configurações. Pede o PIN de um gerente ou administrador." Style="{StaticResource ItemDoMenu}" Command="{Binding AbrirGestaoCommand}">
                         <StackPanel Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="LockClosed24" Style="{StaticResource IconeDoMenu}" />
                             <TextBlock Text="Gestão" VerticalAlignment="Center" />

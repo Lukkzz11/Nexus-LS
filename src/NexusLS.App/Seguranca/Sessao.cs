@@ -23,6 +23,9 @@ public static class Sessao
         Mudou?.Invoke();
     }
 
+    /// <summary>Avisa as telas que algo da segurança mudou (por exemplo, uma preferência) para elas se redesenharem.</summary>
+    public static void Notificar() => Mudou?.Invoke();
+
     public static void Entrar(Funcionario funcionario)
     {
         Atual = funcionario;
