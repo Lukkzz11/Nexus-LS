@@ -1402,7 +1402,7 @@ public partial class MainWindow : Window
                 catch { }
             }
             if (vivos == 0) return true;
-            Thread.Sleep(500);
+            EsperarSemTravar(500);
         }
 
         foreach (var p in processos)
@@ -1411,6 +1411,17 @@ public partial class MainWindow : Window
             catch { }
         }
         return true;
+    }
+
+    /// <summary>Espera sem congelar a janela: segue atendendo cliques e redesenhando enquanto aguarda.</summary>
+    private static void EsperarSemTravar(int milissegundos)
+    {
+        var fim = DateTime.UtcNow.AddMilliseconds(milissegundos);
+        while (DateTime.UtcNow < fim)
+        {
+            Application.Current?.Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.Background);
+            Thread.Sleep(20);
+        }
     }
 
     /// <summary>Avisa que o programa não fechou e que nada foi trocado.</summary>
