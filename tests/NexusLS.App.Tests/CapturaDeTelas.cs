@@ -318,9 +318,14 @@ internal static class Capturador
     public static void SalvarInicio(InicioViewModel vm, string caminho, int largura = 1400, int altura = 900) =>
         Desenhar(() => new InicioView { DataContext = vm }, caminho, largura, altura);
 
+    private static readonly string[] PaginasConfig = { "loja", "vendas", "parametros", "backup", "sistema" };
+
+    /// <summary>Desenha uma página das Configurações pela posição na lista (0 loja, 1 vendas, 2 parâmetros, 3 backup, 4 sistema).</summary>
     public static void SalvarConfiguracoesAba(ConfiguracoesViewModel vm, int aba, string caminho, int largura = 1400, int altura = 820) =>
-        Desenhar(() => new ConfiguracoesView { DataContext = vm }, caminho, largura, altura,
-            tela => ((System.Windows.Controls.TabControl)System.Windows.LogicalTreeHelper.GetChildren(tela).Cast<object>().OfType<System.Windows.Controls.Grid>().First().Children.OfType<System.Windows.Controls.TabControl>().First()).SelectedIndex = aba);
+        SalvarConfiguracoesPagina(vm, PaginasConfig[aba], caminho, largura, altura);
+
+    public static void SalvarConfiguracoesPagina(ConfiguracoesViewModel vm, string pagina, string caminho, int largura = 1400, int altura = 820) =>
+        Desenhar(() => new ConfiguracoesView { DataContext = vm }, caminho, largura, altura, tela => ((ConfiguracoesView)tela).Ir(pagina));
 
     public static void SalvarConfiguracoes(ConfiguracoesViewModel vm, string caminho, int largura = 1400, int altura = 820) =>
         Desenhar(() => new ConfiguracoesView { DataContext = vm }, caminho, largura, altura);
