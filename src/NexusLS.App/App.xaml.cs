@@ -225,11 +225,26 @@ public partial class App : Application
         relogio.Start();
     }
 
+    /// <summary>Cópia fora do computador: se o Drive está conectado, manda o backup automático recém-feito. Falha aqui nunca atrapalha a venda.</summary>
+    private static async Task EnviarAoDriveSeConfiguradoAsync(NexusLS.Core.Backup.InfoBackup? feito)
+    {
+        try
+        {
+            if (feito is null || !Servicos.Backup.Configuracao.EnviarAoDrive || !Servicos.Google.Configuracao.Conectado) return;
+            await Servicos.Google.EnviarBackupAsync(feito.Caminho);
+        }
+        catch (Exception ex)
+        {
+            NexusLS.Core.Diagnostico.RegistroDeLog.Erro("Backup feito, mas o envio ao Google Drive falhou.", ex);
+        }
+    }
+
     private static async Task VerificarBackupAutomaticoAsync()
     {
         try
         {
-            await Servicos.Backup.FazerSeEstiverNaHoraAsync();
+            var feito = await Servicos.Backup.FazerSeEstiverNaHoraAsync();
+            await EnviarAoDriveSeConfiguradoAsync(feito);
         }
         catch (Exception ex)
         {

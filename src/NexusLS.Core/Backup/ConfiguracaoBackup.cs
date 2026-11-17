@@ -22,6 +22,9 @@ public class ConfiguracaoBackup
     /// <summary>Quantos backups comuns (manual e automático) ficam guardados; os mais antigos são apagados.</summary>
     public int Manter { get; set; } = 20;
 
+    /// <summary>Se o Google Drive estiver conectado, envia para lá cada backup automático (cópia fora do computador).</summary>
+    public bool EnviarAoDrive { get; set; } = true;
+
     /// <summary>Horário local do último backup concluído (qualquer motivo comum).</summary>
     public DateTime? UltimoBackup { get; set; }
 

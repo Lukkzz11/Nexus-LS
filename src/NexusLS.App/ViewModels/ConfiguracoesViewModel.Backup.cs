@@ -67,6 +67,8 @@ public partial class ConfiguracoesViewModel
     [ObservableProperty] private string _mensagemBackup = "";
     [ObservableProperty] private bool _mensagemBackupEhErro;
 
+    [ObservableProperty] private bool _enviarAoDrive = true;
+
     private void CarregarBackup()
     {
         IntervaloSelecionado = IntervalosBackup[4];
@@ -75,6 +77,7 @@ public partial class ConfiguracoesViewModel
         var c = _backup.Configuracao;
         PastaBackup = c.Pasta;
         ManterTexto = c.Manter.ToString();
+        EnviarAoDrive = c.EnviarAoDrive;
         IntervaloSelecionado = IntervalosBackup.FirstOrDefault(i => i.Horas == c.IntervaloHoras)
                                ?? new OpcaoIntervaloBackup($"A cada {c.IntervaloHoras} horas", c.IntervaloHoras);
         AtualizarListaBackup();
@@ -114,7 +117,7 @@ public partial class ConfiguracoesViewModel
     {
         if (!int.TryParse(ManterTexto.Trim(), out var manter))
             throw new RegraDeNegocioException("Informe quantos backups guardar (um número inteiro).");
-        return new ConfiguracaoBackup { Pasta = PastaBackup.Trim(), IntervaloHoras = IntervaloSelecionado.Horas, Manter = manter };
+        return new ConfiguracaoBackup { Pasta = PastaBackup.Trim(), IntervaloHoras = IntervaloSelecionado.Horas, Manter = manter, EnviarAoDrive = EnviarAoDrive };
     }
 
     [RelayCommand]
