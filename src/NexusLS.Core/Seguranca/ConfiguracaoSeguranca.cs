@@ -25,8 +25,23 @@ public class ConfiguracaoSeguranca
     /// <summary>Cancelar uma venda exige o PIN de um gerente ou administrador (se quem cancela não for um).</summary>
     public bool PinGerenteParaCancelar { get; set; }
 
+    /// <summary>Multa única sobre o que está vencido (%). 0 = não cobra.</summary>
+    public decimal MultaAtrasoPercent { get; set; }
+
+    /// <summary>Juros por mês de atraso (%), contados por dia sobre o saldo vencido. 0 = não cobra.</summary>
+    public decimal JurosMesPercent { get; set; }
+
+    /// <summary>Limite de crédito que já vem preenchido ao cadastrar um cliente novo. 0 = sem limite.</summary>
+    public long LimiteCreditoPadraoCentavos { get; set; }
+
     public void Validar()
     {
+        if (MultaAtrasoPercent < 0 || MultaAtrasoPercent > 100)
+            throw new RegraDeNegocioException("A multa por atraso deve ficar entre 0 e 100%.");
+        if (JurosMesPercent < 0 || JurosMesPercent > 100)
+            throw new RegraDeNegocioException("Os juros ao mês devem ficar entre 0 e 100%.");
+        if (LimiteCreditoPadraoCentavos < 0)
+            throw new RegraDeNegocioException("O limite de crédito padrão não pode ser negativo.");
         if (SangriaMaximaSemGerenteCentavos < 0)
             throw new RegraDeNegocioException("O limite de sangria não pode ser negativo.");
         if (DescontoMaximoSemGerentePercent < 0 || DescontoMaximoSemGerentePercent > 100)

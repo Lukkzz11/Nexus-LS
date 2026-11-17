@@ -30,7 +30,14 @@ public partial class ConfiguracoesViewModel
     [ObservableProperty] private string _mensagemDescontoRegras = "";
     [ObservableProperty] private bool _mensagemDescontoRegrasEhErro;
 
-    public string LimiteDePinTexto =>
+    // Crediário
+    [ObservableProperty] private string _multaAtrasoTexto = "0";
+    [ObservableProperty] private string _jurosMesTexto = "0";
+    [ObservableProperty] private string _limiteCreditoPadraoTexto = "";
+    [ObservableProperty] private string _mensagemCrediario = "";
+    [ObservableProperty] private bool _mensagemCrediarioEhErro;
+
+    public string LimiteDePinTexto =
         $"Depois de {FuncionarioService.MaxTentativas} PINs errados seguidos, o funcionário fica bloqueado por {(int)FuncionarioService.TempoDeBloqueio.TotalSeconds} segundos (mesmo se o programa for fechado e aberto). Cada entrada e cada erro ficam registrados em Atividades.";
 
     public void UsarSeguranca(ConfiguracaoSegurancaStore store)
@@ -42,6 +49,9 @@ public partial class ConfiguracoesViewModel
         SangriaMaximaTexto = c.SangriaMaximaSemGerenteCentavos > 0 ? Dinheiro.Formatar(c.SangriaMaximaSemGerenteCentavos).Replace("R$", "").Trim() : "";
         PinGerenteParaCancelar = c.PinGerenteParaCancelar;
         DescontoMaximoTexto = c.DescontoMaximoSemGerentePercent.ToString();
+        MultaAtrasoTexto = TextoBr.Numero(c.MultaAtrasoPercent, "0.##");
+        JurosMesTexto = TextoBr.Numero(c.JurosMesPercent, "0.##");
+        LimiteCreditoPadraoTexto = c.LimiteCreditoPadraoCentavos > 0 ? Dinheiro.FormatarParaEdicao(c.LimiteCreditoPadraoCentavos) : "";
         OnPropertyChanged(nameof(TemSeguranca));
     }
 
@@ -91,6 +101,28 @@ public partial class ConfiguracoesViewModel
         },
         (m, erro) => { MensagemCaixaRegrasEhErro = erro; MensagemCaixaRegras = m; },
         () => "Salvo. As regras valem já na próxima operação.");
+
+    private static decimal LerPercentual(string texto, string nome)
+    {
+        var t = string.IsNullOrWhiteSpace(texto) ? "0" : texto.Trim().Replace("%", "");
+        if (!decimal.TryParse(t, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.GetCultureInfo("pt-BR"), out var v))
+            throw new RegraDeNegocioException($"{nome}: digite só números, como 2 ou 1,5.");
+        return v;
+    }
+
+    [RelayCommand]
+    private void SalvarCrediario() => SalvarRegras(
+        c =>
+        {
+            c.MultaAtrasoPercent = LerPercentual(MultaAtrasoTexto, "Multa por atraso");
+            c.JurosMesPercent = LerPercentual(JurosMesTexto, "Juros ao mês");
+            long limite = 0;
+            if (!string.IsNullOrWhiteSpace(LimiteCreditoPadraoTexto) && !Dinheiro.TentarConverter(LimiteCreditoPadraoTexto, out limite))
+                throw new RegraDeNegocioException("Limite de crédito padrão inválido. Digite algo como 500,00 (em branco = sem limite).");
+            c.LimiteCreditoPadraoCentavos = limite;
+        },
+        (m, erro) => { MensagemCrediarioEhErro = erro; MensagemCrediario = m; },
+        () => "Salvo. A multa e os juros aparecem na ficha de quem está com título vencido; o limite vale para clientes novos.");
 
     [RelayCommand]
     private void SalvarDescontoRegras() => SalvarRegras(

@@ -189,7 +189,8 @@ public partial class ClientesViewModel : ViewModelBase
         Email = "";
         Telefone = "";
         Observacao = "";
-        LimiteTexto = "";
+        var limitePadrao = NexusLS.App.Seguranca.Alcada.Config().LimiteCreditoPadraoCentavos;
+        LimiteTexto = limitePadrao > 0 ? Dinheiro.FormatarParaEdicao(limitePadrao) : "";   // cliente novo já vem com o limite padrão da loja
         Cidade = Estado = Endereco = Numero = Bairro = Complemento = Cep = InscricaoEstadual = "";
         CreditoAtualTexto = Dinheiro.Formatar(0);
         NovoCreditoTexto = "";
@@ -311,7 +312,17 @@ public partial class ClientesViewModel : ViewModelBase
         ResumoDivida = conta.Titulos.Count == 0
             ? "Sem vendas a prazo."
             : $"Deve {Dinheiro.Formatar(conta.SaldoDevedorCentavos)} · Já pagou {Dinheiro.Formatar(conta.TotalPagoCentavos)}"
-              + (vencido > 0 ? $"\nVENCIDO: {Dinheiro.Formatar(vencido)}" : "");
+              + (vencido > 0 ? $"\nVENCIDO: {Dinheiro.Formatar(vencido)}" + TextoEncargos(conta, agora) : "");
+    }
+
+    /// <summary>Quanto de multa e juros caberia cobrar pelo atraso, pelas taxas das Configurações. Vazio se não há taxa.</summary>
+    private static string TextoEncargos(ContaCliente conta, DateTime agora)
+    {
+        var cfg = NexusLS.App.Seguranca.Alcada.Config();
+        var e = EncargosAtraso.Calcular(conta.Titulos, agora, cfg.MultaAtrasoPercent, cfg.JurosMesPercent);
+        return e.TotalCentavos <= 0
+            ? ""
+            : $"\nMulta e juros do atraso: {Dinheiro.Formatar(e.TotalCentavos)} (multa {Dinheiro.Formatar(e.MultaCentavos)} + juros {Dinheiro.Formatar(e.JurosCentavos)}) · a cobrar por fora, não entra na dívida";
     }
 
     /// <summary>Muda o crédito do cliente aberto para o saldo digitado. Exige motivo; vai para o histórico e para a trilha de atividades.</summary>

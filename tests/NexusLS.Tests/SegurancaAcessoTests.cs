@@ -112,3 +112,60 @@ public sealed class AlcadaRegrasTests
         finally { File.Delete(arq); }
     }
 }
+
+public class EncargosAtrasoTests
+{
+    private static readonly DateTime Hoje = new(2026, 11, 17);
+
+    private static TituloAReceber Titulo(DateTime vencimento, long total, long pago = 0) =>
+        new(1, vencimento.AddDays(-30), vencimento, total, pago);
+
+    [Fact]
+    public void Titulo_em_dia_ou_quitado_nao_gera_encargos()
+    {
+        var e = EncargosAtraso.Calcular(new[] { Titulo(Hoje.AddDays(5), 10000), Titulo(Hoje.AddDays(-10), 10000, pago: 10000) }, Hoje, 2m, 1m);
+        Assert.Equal(0, e.TotalCentavos);
+    }
+
+    [Fact]
+    public void Vencido_cobra_multa_uma_vez_e_juros_por_dia()
+    {
+        // saldo R$ 100,00, 15 dias de atraso, multa 2%, juros 3% ao mês: multa 2,00; juros 100 * 3% * 15/30 = 1,50
+        var e = EncargosAtraso.Calcular(new[] { Titulo(Hoje.AddDays(-15), 10000) }, Hoje, 2m, 3m);
+        Assert.Equal(200, e.MultaCentavos);
+        Assert.Equal(150, e.JurosCentavos);
+        Assert.Equal(350, e.TotalCentavos);
+    }
+
+    [Fact]
+    public void Encargos_incidem_so_sobre_o_saldo_que_falta()
+    {
+        var e = EncargosAtraso.Calcular(new[] { Titulo(Hoje.AddDays(-30), 10000, pago: 6000) }, Hoje, 10m, 0m);
+        Assert.Equal(400, e.MultaCentavos);   // 10% de R$ 40,00
+    }
+
+    [Fact]
+    public void Sem_taxa_nao_cobra_nada()
+    {
+        Assert.Equal(0, EncargosAtraso.Calcular(new[] { Titulo(Hoje.AddDays(-90), 50000) }, Hoje, 0m, 0m).TotalCentavos);
+    }
+
+    [Fact]
+    public void Taxas_do_crediario_persistem_e_valores_ruins_sao_recusados()
+    {
+        var arq = Path.Combine(Path.GetTempPath(), "nexus-cred-" + Guid.NewGuid().ToString("N") + ".json");
+        try
+        {
+            var store = new ConfiguracaoSegurancaStore(arq);
+            store.Salvar(new ConfiguracaoSeguranca { MultaAtrasoPercent = 2m, JurosMesPercent = 1.5m, LimiteCreditoPadraoCentavos = 50000 });
+            var c = new ConfiguracaoSegurancaStore(arq).Carregar();
+            Assert.Equal(2m, c.MultaAtrasoPercent);
+            Assert.Equal(1.5m, c.JurosMesPercent);
+            Assert.Equal(50000, c.LimiteCreditoPadraoCentavos);
+            Assert.Throws<RegraDeNegocioException>(() => store.Salvar(new ConfiguracaoSeguranca { MultaAtrasoPercent = 101m }));
+            Assert.Throws<RegraDeNegocioException>(() => store.Salvar(new ConfiguracaoSeguranca { JurosMesPercent = -1m }));
+            Assert.Throws<RegraDeNegocioException>(() => store.Salvar(new ConfiguracaoSeguranca { LimiteCreditoPadraoCentavos = -1 }));
+        }
+        finally { File.Delete(arq); }
+    }
+}

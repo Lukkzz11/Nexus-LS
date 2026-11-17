@@ -67,6 +67,47 @@
                         </Border>
                     </StackPanel>
                 </ScrollViewer>
+                <ScrollViewer x:Name="PgCrediario" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="0,16,12,0">
+                    <StackPanel MaxWidth="760" HorizontalAlignment="Left" Margin="0,0,0,24">
+                        <Border Style="{StaticResource Painel}" Margin="0,0,0,16" Visibility="{Binding TemSeguranca, Converter={StaticResource BoolVis}}">
+                            <StackPanel>
+                                <TextBlock Text="Atraso e limite de crédito" FontSize="18" FontWeight="SemiBold" />
+                                <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
+                                           Text="Valem para as vendas a prazo. A multa e os juros aparecem na ficha do cliente com título vencido, como valor a cobrar por fora; eles não mudam a dívida registrada." />
+                                <TextBlock Text="Multa por atraso (% do saldo vencido, cobrada uma vez)" Style="{StaticResource Rotulo}" TextWrapping="Wrap" />
+                                <TextBox Text="{Binding MultaAtrasoTexto, UpdateSourceTrigger=PropertyChanged}" Width="120" HorizontalAlignment="Left"
+                                         AutomationProperties.Name="Multa por atraso" />
+                                <TextBlock Text="Juros ao mês (% do saldo vencido, contados por dia de atraso)" Style="{StaticResource Rotulo}" TextWrapping="Wrap" />
+                                <TextBox Text="{Binding JurosMesTexto, UpdateSourceTrigger=PropertyChanged}" Width="120" HorizontalAlignment="Left"
+                                         AutomationProperties.Name="Juros ao mês" />
+                                <TextBlock Text="Limite de crédito dos clientes novos (R$, em branco = sem limite)" Style="{StaticResource Rotulo}" TextWrapping="Wrap" />
+                                <TextBox Text="{Binding LimiteCreditoPadraoTexto, UpdateSourceTrigger=PropertyChanged}" Width="160" HorizontalAlignment="Left"
+                                         AutomationProperties.Name="Limite de crédito padrão" />
+                                <Button Content="Salvar" Style="{StaticResource BotaoPrimario}" Margin="0,16,0,0" HorizontalAlignment="Left"
+                                        Command="{Binding SalvarCrediarioCommand}" />
+                                <TextBlock Text="{Binding MensagemCrediario}" TextWrapping="Wrap" Margin="0,10,0,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{StaticResource CorPositivo}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding MensagemCrediarioEhErro}" Value="True">
+                                                    <Setter Property="Foreground" Value="{StaticResource CorNegativo}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource Painel}">
+                            <StackPanel>
+                                <TextBlock Text="Como funciona hoje" FontSize="18" FontWeight="SemiBold" />
+                                <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,6,0,0"
+                                           Text="O prazo da venda a prazo é de 30 dias (dá para ajustar o vencimento de cada título na ficha do cliente). O limite de cada cliente fica no cadastro dele, e a venda é barrada quando passa dele. Os títulos vencidos aparecem destacados na tela Início." />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
                 <ScrollViewer x:Name="PgSeguranca" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="0,16,12,0">
                     <StackPanel MaxWidth="760" HorizontalAlignment="Left" Margin="0,0,0,24">
                         <Border Style="{StaticResource Painel}" Margin="0,0,0,16" Visibility="{Binding TemSeguranca, Converter={StaticResource BoolVis}}">
