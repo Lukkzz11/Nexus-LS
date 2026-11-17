@@ -56,6 +56,14 @@ public class FuncionarioService
         _tentativas = tentativas ?? new TentativasLoginStore();
     }
 
+    /// <summary>Anota na trilha que um gerente autorizou algo que o balcão não podia fazer sozinho (quem pediu fica como operador).</summary>
+    public async Task RegistrarAutorizacaoAsync(Funcionario gerente, string motivo)
+    {
+        await using var db = await _fabrica.CreateDbContextAsync();
+        AtividadeService.Registrar(db, TipoAtividade.AutorizacaoGerente, $"{gerente.Nome} autorizou: {motivo}", agora: _agora());
+        await db.SaveChangesAsync();
+    }
+
     /// <summary>Se existe algum funcionário cadastrado, o programa pede o PIN ao abrir. Sem nenhum, abre direto (como sempre foi).</summary>
     public async Task<bool> ExigeLoginAsync()
     {

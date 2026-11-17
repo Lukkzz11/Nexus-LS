@@ -2,6 +2,7 @@
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using NexusLS.App.Seguranca;
 using NexusLS.Core.Models;
 using NexusLS.Core.Services;
 
@@ -78,6 +79,15 @@ public partial class PdvViewModel
         catch (RegraDeNegocioException ex)
         {
             MostrarErro(ex.Message);
+            return;
+        }
+
+        // Desconto grande demais para o balcão dar sozinho: só com um gerente.
+        var limiteDesconto = Alcada.Config().DescontoMaximoSemGerentePercent;
+        if (NexusLS.Core.Seguranca.RegrasSeguranca.DescontoPrecisaDeGerente(_descontoResolvido.ValorEmCentavos, _carrinho.SubtotalCentavos, limiteDesconto)
+            && !Alcada.Solicitar($"Desconto de {Dinheiro.Formatar(_descontoResolvido.ValorEmCentavos)} na venda (acima de {limiteDesconto}%)."))
+        {
+            MostrarErro($"Desconto acima de {limiteDesconto}% precisa da autorização de um gerente.");
             return;
         }
 

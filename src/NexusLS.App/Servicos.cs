@@ -150,6 +150,8 @@ public sealed class ContainerDeServicos
             NexusLS.Core.Vitrine.ServicoCatalogoWeb.PastaImagensPadrao(),
             new NexusLS.Core.Sincronizacao.Firebase.EnviadorFotoConfiguravel(Firebase, _httpFirebase),
             (NexusLS.Core.Vitrine.IPublicadorVitrineCompleta)PublicadorVitrine);
+        NexusLS.App.Seguranca.Alcada.Config = () => Seguranca.Carregar();
+        NexusLS.App.Seguranca.Alcada.Solicitar = NexusLS.App.Seguranca.Alcada.PedirNaTela;
         NexusLS.App.ViewModels.PdvViewModel.DescontoPorPecaPadrao = () => Preferencias.Carregar().DescontoPorPecaCentavos;
         var googleStore = new NexusLS.Core.Google.GoogleStore(NexusLS.Core.Google.GoogleStore.CaminhoPadrao(), new NexusLS.App.Seguranca.ProtetorDpapi());
         var googleAuth = new NexusLS.Core.Google.GoogleOAuth(_httpFirebase, googleStore);

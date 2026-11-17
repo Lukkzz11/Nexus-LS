@@ -46,8 +46,7 @@ public partial class ConfiguracoesView : UserControl
         {
             new Entrada("vendas", "Vendas", SymbolRegular.Cart24, "PgVendas"),
             new Entrada("parametros", "Parâmetros", SymbolRegular.Options24, "PgParametros"),
-            new Entrada("caixa", "Caixa", SymbolRegular.Money24, null, "Regras de abertura, sangria e cancelamento.",
-                new[] { "Abertura obrigatória do caixa antes de vender", "Valor máximo de sangria sem gerente", "PIN de gerente para cancelar venda ou dar desconto acima do limite" }),
+            new Entrada("caixa", "Caixa", SymbolRegular.Money24, "PgCaixa"),
             new Entrada("crediario", "Crediário e clientes", SymbolRegular.People24, null, "Venda a prazo e cobrança.",
                 new[] { "Juros e multa por atraso", "Limite de crédito padrão por cliente", "Lembrete de vencimento" }),
             new Entrada("comissoes", "Comissões", SymbolRegular.Calculator24, null, "Pagamento por venda, ligado aos funcionários.",
@@ -88,7 +87,7 @@ public partial class ConfiguracoesView : UserControl
     private readonly Dictionary<string, System.Windows.Controls.Button> _botoesMenu = new();
 
     private IEnumerable<FrameworkElement> Paginas() =>
-        new FrameworkElement[] { PgLoja, PgAparencia, PgVendas, PgParametros, PgBackup, PgSistema, PgAtalhos, PgDados, PgSeguranca, PgBreve };
+        new FrameworkElement[] { PgLoja, PgAparencia, PgVendas, PgParametros, PgBackup, PgSistema, PgAtalhos, PgDados, PgSeguranca, PgCaixa, PgBreve };
 
     private void MontarMenu()
     {

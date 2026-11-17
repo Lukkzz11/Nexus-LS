@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using NexusLS.App.Seguranca;
 using NexusLS.Core.Models;
 using NexusLS.Core.Services;
 
@@ -220,6 +221,12 @@ public partial class FechamentoViewModel : ViewModelBase
     {
         if (!Dinheiro.TentarConverter(MovimentoValorTexto, out var valor))
             throw new RegraDeNegocioException("Valor inválido. Digite um valor como 20,00.");
+
+        // Retirada grande (sangria ou despesa): acima do limite do balcão, só com um gerente.
+        if (MovimentoSelecionado.Tipo is TipoMovimentoCaixa.Sangria or TipoMovimentoCaixa.Despesa
+            && NexusLS.Core.Seguranca.RegrasSeguranca.RetiradaPrecisaDeGerente(valor, Alcada.Config().SangriaMaximaSemGerenteCentavos)
+            && !Alcada.Solicitar($"Retirada de {Dinheiro.Formatar(valor)} do caixa (acima de {Dinheiro.Formatar(Alcada.Config().SangriaMaximaSemGerenteCentavos)})."))
+            throw new RegraDeNegocioException("Retirada acima do limite: precisa da autorização de um gerente.");
 
         await _caixa.RegistrarMovimentoAsync(MovimentoSelecionado.Tipo, valor, MovimentoDescricao);
         MovimentoValorTexto = "";

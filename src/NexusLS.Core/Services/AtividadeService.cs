@@ -44,6 +44,7 @@ public class AtividadeService
         TipoAtividade.PinRedefinido => "PIN redefinido",
         TipoAtividade.LoginEfetuado => "Entrada no sistema",
         TipoAtividade.LoginFalhou => "PIN incorreto",
+        TipoAtividade.AutorizacaoGerente => "Autorização de gerente",
         TipoAtividade.DadosApagados => "Dados apagados",
         TipoAtividade.TransferenciaCancelada => "Transferência cancelada",
         TipoAtividade.LiquidacaoEstornada => "Liquidação de cartão estornada",

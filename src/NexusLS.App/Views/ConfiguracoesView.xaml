@@ -29,6 +29,44 @@
             </Border>
 
             <Grid Grid.Column="1">
+                <ScrollViewer x:Name="PgCaixa" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="0,16,12,0">
+                    <StackPanel MaxWidth="760" HorizontalAlignment="Left" Margin="0,0,0,24">
+                        <Border Style="{StaticResource Painel}" Margin="0,0,0,16" Visibility="{Binding TemSeguranca, Converter={StaticResource BoolVis}}">
+                            <StackPanel>
+                                <TextBlock Text="Regras do caixa" FontSize="18" FontWeight="SemiBold" />
+                                <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
+                                           Text="Quando a regra pede um gerente, aparece a tela de PIN e só um gerente ou administrador libera. Cada autorização fica registrada em Atividades. Sem funcionários cadastrados, nada é pedido." />
+                                <TextBlock Text="Retirada (sangria ou despesa) acima de quanto precisa de gerente? (R$, em branco = sem limite)" Style="{StaticResource Rotulo}" TextWrapping="Wrap" />
+                                <TextBox Text="{Binding SangriaMaximaTexto, UpdateSourceTrigger=PropertyChanged}" Width="160" HorizontalAlignment="Left"
+                                         AutomationProperties.Name="Sangria máxima sem gerente" />
+                                <CheckBox Margin="0,16,0,0" IsChecked="{Binding PinGerenteParaCancelar}">
+                                    <TextBlock Text="Cancelar uma venda exige o PIN de um gerente (quando quem cancela não é gerente nem administrador)" TextWrapping="Wrap" />
+                                </CheckBox>
+                                <Button Content="Salvar" Style="{StaticResource BotaoPrimario}" Margin="0,16,0,0" HorizontalAlignment="Left"
+                                        Command="{Binding SalvarCaixaRegrasCommand}" />
+                                <TextBlock Text="{Binding MensagemCaixaRegras}" TextWrapping="Wrap" Margin="0,10,0,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{StaticResource CorPositivo}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding MensagemCaixaRegrasEhErro}" Value="True">
+                                                    <Setter Property="Foreground" Value="{StaticResource CorNegativo}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource Painel}">
+                            <StackPanel>
+                                <TextBlock Text="Abertura do caixa" FontSize="18" FontWeight="SemiBold" />
+                                <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,6,0,0"
+                                           Text="O Nexus já exige o caixa aberto, e do dia de hoje, para finalizar uma venda. O troco inicial padrão fica em Parâmetros." />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
                 <ScrollViewer x:Name="PgSeguranca" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="0,16,12,0">
                     <StackPanel MaxWidth="760" HorizontalAlignment="Left" Margin="0,0,0,24">
                         <Border Style="{StaticResource Painel}" Margin="0,0,0,16" Visibility="{Binding TemSeguranca, Converter={StaticResource BoolVis}}">
@@ -228,6 +266,30 @@
                         </CheckBox>
                     </StackPanel>
                 </Border>
+                                            <Border Style="{StaticResource Painel}" Margin="0,0,0,16" Visibility="{Binding TemSeguranca, Converter={StaticResource BoolVis}}">
+                            <StackPanel>
+                                <TextBlock Text="Limite de desconto" FontSize="18" FontWeight="SemiBold" />
+                                <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
+                                           Text="Desconto acima deste percentual da venda só com a autorização de um gerente ou administrador (PIN). Gerente e administrador não precisam pedir." />
+                                <TextBlock Text="Desconto máximo sem gerente (% da venda, 0 = sem limite)" Style="{StaticResource Rotulo}" TextWrapping="Wrap" />
+                                <TextBox Text="{Binding DescontoMaximoTexto, UpdateSourceTrigger=PropertyChanged}" Width="120" HorizontalAlignment="Left"
+                                         AutomationProperties.Name="Desconto máximo sem gerente" />
+                                <Button Content="Salvar limite" Style="{StaticResource BotaoPrimario}" Margin="0,16,0,0" HorizontalAlignment="Left"
+                                        Command="{Binding SalvarDescontoRegrasCommand}" />
+                                <TextBlock Text="{Binding MensagemDescontoRegras}" TextWrapping="Wrap" Margin="0,10,0,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{StaticResource CorPositivo}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding MensagemDescontoRegrasEhErro}" Value="True">
+                                                    <Setter Property="Foreground" Value="{StaticResource CorNegativo}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </ScrollViewer>
                 <ScrollViewer x:Name="PgParametros" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="0,16,12,0">

@@ -32,7 +32,8 @@ public enum TipoAtividade
     DevolucaoRegistrada = 27,
     DevolucaoCancelada = 28,
     LoginEfetuado = 29,
-    LoginFalhou = 30
+    LoginFalhou = 30,
+    AutorizacaoGerente = 31
 }
 
 /// <summary>

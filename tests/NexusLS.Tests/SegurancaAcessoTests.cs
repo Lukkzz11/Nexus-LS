@@ -76,3 +76,39 @@ public sealed class SegurancaAcessoTests : IDisposable
         Assert.Contains(lista, a => a.Tipo == TipoAtividade.LoginEfetuado && a.Operador == "Ana");
     }
 }
+
+public sealed class AlcadaRegrasTests
+{
+    [Theory]
+    [InlineData(30000, 0, false)]       // sem limite
+    [InlineData(30000, 30000, false)]   // no limite ainda pode
+    [InlineData(30001, 30000, true)]
+    public void Retirada_acima_do_limite_precisa_de_gerente(long valor, long limite, bool esperado) =>
+        Assert.Equal(esperado, RegrasSeguranca.RetiradaPrecisaDeGerente(valor, limite));
+
+    [Theory]
+    [InlineData(1000, 10000, 0, false)]    // sem limite
+    [InlineData(1000, 10000, 10, false)]   // 10% exatos podem
+    [InlineData(1001, 10000, 10, true)]
+    [InlineData(500, 0, 10, false)]        // carrinho vazio
+    public void Desconto_acima_do_percentual_precisa_de_gerente(long desconto, long subtotal, int limite, bool esperado) =>
+        Assert.Equal(esperado, RegrasSeguranca.DescontoPrecisaDeGerente(desconto, subtotal, limite));
+
+    [Fact]
+    public void Regras_novas_persistem_e_valores_ruins_sao_recusados()
+    {
+        var arq = Path.Combine(Path.GetTempPath(), "nexus-alc-" + Guid.NewGuid().ToString("N") + ".json");
+        try
+        {
+            var store = new ConfiguracaoSegurancaStore(arq);
+            store.Salvar(new ConfiguracaoSeguranca { SangriaMaximaSemGerenteCentavos = 30000, DescontoMaximoSemGerentePercent = 15, PinGerenteParaCancelar = true });
+            var c = new ConfiguracaoSegurancaStore(arq).Carregar();
+            Assert.Equal(30000, c.SangriaMaximaSemGerenteCentavos);
+            Assert.Equal(15, c.DescontoMaximoSemGerentePercent);
+            Assert.True(c.PinGerenteParaCancelar);
+            Assert.Throws<RegraDeNegocioException>(() => store.Salvar(new ConfiguracaoSeguranca { DescontoMaximoSemGerentePercent = 101 }));
+            Assert.Throws<RegraDeNegocioException>(() => store.Salvar(new ConfiguracaoSeguranca { SangriaMaximaSemGerenteCentavos = -1 }));
+        }
+        finally { File.Delete(arq); }
+    }
+}

@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using NexusLS.App.Seguranca;
 using NexusLS.Core.Models;
 using NexusLS.Core.Services;
 
@@ -260,6 +261,9 @@ public partial class VendasViewModel : ViewModelBase
                         + "O fechamento antigo não muda; depois do cancelamento, refaça a conferência desse caixa.";
         var dados = PedirCancelamento(pergunta);
         if (dados is null) return;
+
+        if (Alcada.Config().PinGerenteParaCancelar && !Alcada.Solicitar($"Cancelar a venda #{venda.Id} de {Dinheiro.Formatar(venda.TotalCentavos)}."))
+            throw new RegraDeNegocioException("Cancelamento não autorizado: precisa do PIN de um gerente.");
 
         await _vendas.CancelarAsync(venda.Id, dados.Motivo, dados.DevolverEstoque);
         await CarregarAsync();

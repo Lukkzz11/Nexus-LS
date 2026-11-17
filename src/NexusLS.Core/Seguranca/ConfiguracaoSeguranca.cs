@@ -16,8 +16,21 @@ public class ConfiguracaoSeguranca
     /// <summary>Se ligado, quem não tem acesso à Gestão nem vê o botão (desligado: o botão aparece e pede o PIN de um gerente).</summary>
     public bool EsconderGestaoSemAcesso { get; set; }
 
+    /// <summary>Retirada de dinheiro (sangria ou despesa) acima disto precisa de gerente. 0 = sem limite.</summary>
+    public long SangriaMaximaSemGerenteCentavos { get; set; }
+
+    /// <summary>Desconto acima deste percentual da venda precisa de gerente. 0 = sem limite.</summary>
+    public int DescontoMaximoSemGerentePercent { get; set; }
+
+    /// <summary>Cancelar uma venda exige o PIN de um gerente ou administrador (se quem cancela não for um).</summary>
+    public bool PinGerenteParaCancelar { get; set; }
+
     public void Validar()
     {
+        if (SangriaMaximaSemGerenteCentavos < 0)
+            throw new RegraDeNegocioException("O limite de sangria não pode ser negativo.");
+        if (DescontoMaximoSemGerentePercent < 0 || DescontoMaximoSemGerentePercent > 100)
+            throw new RegraDeNegocioException("O desconto máximo sem gerente deve ficar entre 0 (sem limite) e 100%.");
         if (MinutosInatividade < 0 || MinutosInatividade > InatividadeMaximaMinutos)
             throw new RegraDeNegocioException($"O bloqueio por inatividade deve ficar entre 0 (desligado) e {InatividadeMaximaMinutos} minutos.");
     }
@@ -25,6 +38,14 @@ public class ConfiguracaoSeguranca
 
 public static class RegrasSeguranca
 {
+    /// <summary>A retirada passou do limite que o balcão pode fazer sozinho? Sem limite (0), nunca.</summary>
+    public static bool RetiradaPrecisaDeGerente(long valorCentavos, long limiteCentavos) =>
+        limiteCentavos > 0 && valorCentavos > limiteCentavos;
+
+    /// <summary>O desconto passou do percentual que o balcão pode dar sozinho? Sem limite (0), nunca.</summary>
+    public static bool DescontoPrecisaDeGerente(long descontoCentavos, long subtotalCentavos, int limitePercentual) =>
+        limitePercentual > 0 && subtotalCentavos > 0 && descontoCentavos * 100 > subtotalCentavos * limitePercentual;
+
     /// <summary>Está parado tempo demais? Com o recurso desligado (0 minuto) nunca está.</summary>
     public static bool Ocioso(DateTime ultimaAtividade, DateTime agora, int minutos) =>
         minutos > 0 && agora - ultimaAtividade >= TimeSpan.FromMinutes(minutos);
