@@ -104,7 +104,13 @@ public partial class GestaoViewModel : ObservableObject
     {
         var erp = new ImportacaoErpViewModel(_servicos.ErpConfig, _servicos.ContaErp, _servicos.CriarImportadorErp)
         {
-            PedirLogin = () => Views.LoginFirebaseWindow.PedirErp(_servicos.ContaErp, System.Windows.Application.Current?.MainWindow)
+            PedirLogin = () => Views.LoginFirebaseWindow.PedirErp(_servicos.ContaErp, System.Windows.Application.Current?.MainWindow),
+            FabricaBanco = _servicos.FabricaBanco,
+            EscolherArquivoLife = () =>
+            {
+                var d = new Microsoft.Win32.OpenFileDialog { Title = "Escolha o arquivo exportado pelo Life", Filter = "Exportação do Life (*.json)|*.json|Todos os arquivos|*.*" };
+                return d.ShowDialog() == true ? d.FileName : null;
+            }
         };
         Abrir(new CatalogoOnlineViewModel(_servicos.Firebase, _servicos.Sincronizador, _servicos.SincronizacaoRepo, _servicos.DestinoCatalogo, _servicos.Configuracao, _servicos.Operacional, erp, _servicos.Fotos), ItemMenu.CatalogoOnline);
     }

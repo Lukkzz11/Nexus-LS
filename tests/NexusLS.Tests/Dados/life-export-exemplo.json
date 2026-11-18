@@ -1,0 +1,42 @@
+{
+  "formato": "nexus-life-export",
+  "versao": 1,
+  "empresaId": "lifesurf-principal",
+  "geradoEm": "2026-11-18T12:00:00.000Z",
+  "colecoes": {
+    "produtos": [
+      {
+        "id": "prod-1", "nome": "Camiseta Surf", "categoria": "Camisetas", "referencia": "CS-01", "codigoBarras": "7891234567895",
+        "precoVarejo": 59.9, "precoAtacado": 45, "custoUnitario": 22.5, "ativo": true,
+        "gradeTamanhos": { "P": 3, "M": 5, "G": 2 }, "estoqueTotal": 10, "atualizadoEm": "2026-11-17T10:00:00.000Z"
+      },
+      {
+        "id": "prod-2", "nome": "Bone Aba Reta", "categoria": "Acessorios", "referencia": "BN-02",
+        "precoVarejo": 39.9, "ativo": true, "estoqueTotal": 7, "atualizadoEm": "2026-11-17T10:05:00.000Z"
+      }
+    ],
+    "clientes": [
+      {
+        "id": "cli-1", "nome": "Ana Souza", "documento": "12345678901", "telefone": "81999990000", "cidade": "Recife", "estado": "pe",
+        "limiteCredito": 500, "ativo": true, "criadoEm": "2026-10-01T09:00:00.000Z", "atualizadoEm": "2026-11-01T09:00:00.000Z"
+      }
+    ],
+    "caixas_fechamentos": [
+      { "id": "turno-1", "abertoEm": "2026-11-17T11:00:00.000Z", "fechadoEm": "2026-11-17T20:00:00.000Z", "trocoInicial": 100, "operador": "ana", "status": "fechado", "criadoEm": "2026-11-17T11:00:00.000Z" }
+    ],
+    "vendas": [
+      {
+        "id": "venda-1", "dataHoraVenda": "2026-11-17T14:00:00.000Z", "criadoEm": "2026-11-17T14:00:00.000Z",
+        "itens": [ { "id": "prod-1", "nome": "Camiseta Surf", "tamanho": "M", "quantidade": 2, "precoUnitario": 59.9, "subtotal": 119.8 } ],
+        "subtotal": 119.8, "desconto": 0, "total": 119.8, "formaPagamento": "pix", "tipoVenda": "varejo",
+        "cliente": { "id": "cli-1", "nome": "Ana Souza" }, "operador": "ana"
+      }
+    ],
+    "funcionarios": [ { "id": "func-1", "nome": "Ana", "pin": "1234", "senha": "segredo" } ],
+    "contas_receber": [],
+    "contas_pagar": [],
+    "transacoes_financeiras": [],
+    "pedidos": [],
+    "fornecedores": [ { "id": "forn-1", "nome": "Tecidos SA" } ]
+  }
+}

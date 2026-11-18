@@ -47,8 +47,15 @@ public sealed class ImportadorErp
     private readonly IFonteErp _fonte;
     private readonly Func<DateTime> _agora;
 
-    public ImportadorErp(IDbContextFactory<PdvDbContext> fabrica, IFonteErp fonte, Func<DateTime>? agora = null)
+    private readonly bool _usarCursores;
+
+    /// <param name="usarCursores">
+    /// false = lê tudo o que a fonte entrega e não lê nem grava os cursores de data (fonte que é um arquivo: o cursor do
+    /// Firestore não pode andar por causa de um arquivo antigo, e o arquivo não deve ser filtrado por ele).
+    /// </param>
+    public ImportadorErp(IDbContextFactory<PdvDbContext> fabrica, IFonteErp fonte, Func<DateTime>? agora = null, bool usarCursores = true)
     {
+        _usarCursores = usarCursores;
         _fabrica = fabrica;
         _fonte = fonte;
         _agora = agora ?? (() => DateTime.UtcNow);
@@ -87,10 +94,11 @@ public sealed class ImportadorErp
         var leuTudo = false;
         foreach (var campo in campos)
         {
+            if (!_usarCursores && campo != campos[0]) continue; // sem cursor uma leitura completa basta
             var chave = $"{colecao}:{campo}";
             DateTime? cursor;
             await using (var db = await _fabrica.CreateDbContextAsync(ct))
-                cursor = (await db.ImportacaoErpCursores.AsNoTracking().FirstOrDefaultAsync(c => c.Chave == chave, ct))?.Valor;
+                cursor = !_usarCursores ? null : (await db.ImportacaoErpCursores.AsNoTracking().FirstOrDefaultAsync(c => c.Chave == chave, ct))?.Valor;
 
             var primeira = cursor is null;
             if (primeira && leuTudo) // a leitura completa deste campo já trouxe tudo: só marca o ponto de partida
@@ -116,7 +124,7 @@ public sealed class ImportadorErp
                 await using (var db = await _fabrica.CreateDbContextAsync(ct))
                 {
                     await GravarPaginaAsync(db, colecao, docs, aplicar, resumo, r, ct);
-                    await SalvarCursorAsync(db, chave, proximo, ct);
+                    if (_usarCursores) await SalvarCursorAsync(db, chave, proximo, ct);
                     await db.SaveChangesAsync(ct);
                 }
 

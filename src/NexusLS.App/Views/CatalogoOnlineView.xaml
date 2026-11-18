@@ -139,6 +139,17 @@
                                     IsEnabled="{Binding PodeImportar}" Command="{Binding ImportarCommand}" />
                             <Button Content="Sair da conta do ERP" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0" Command="{Binding SairDoErpCommand}" />
                         </StackPanel>
+
+                        <TextBlock Text="Sem acesso direto ao ERP? Importe o arquivo exportado pelo Life." Style="{StaticResource Rotulo}" Margin="0,16,0,0" />
+                        <Button Content="Importar arquivo do Life..." Style="{StaticResource BotaoSecundario}" HorizontalAlignment="Left" Margin="0,4,0,0"
+                                IsEnabled="{Binding PodeEscolherArquivo}" Command="{Binding ImportarArquivoLifeCommand}" />
+                        <StackPanel Visibility="{Binding TemPreviaArquivo, Converter={StaticResource BoolVis}}" Margin="0,8,0,0">
+                            <TextBlock Text="{Binding PreviaArquivo}" TextWrapping="Wrap" />
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                <Button Content="Confirmar importação" Style="{StaticResource BotaoPrimario}" Command="{Binding ConfirmarArquivoLifeCommand}" />
+                                <Button Content="Cancelar" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0" Command="{Binding CancelarArquivoLifeCommand}" />
+                            </StackPanel>
+                        </StackPanel>
                     </StackPanel>
                     <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" />
                     <TextBlock Text="{Binding Resultado}" TextWrapping="Wrap" Margin="0,8,0,0" />
