@@ -126,3 +126,13 @@ public class TrechoDoDreConverter : IMultiValueConverter
     public object[] ConvertBack(object value, Type[] targetTypes, object? parameter, CultureInfo culture) =>
         throw new NotSupportedException();
 }
+
+/// <summary>Foto do funcionário (bytes JPEG) para o que a tela desenha. Sem foto, não desenha nada.</summary>
+public class FotoParaImagemConverter : IValueConverter
+{
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        FotoFuncionario.ParaImagem(value as byte[]);
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}

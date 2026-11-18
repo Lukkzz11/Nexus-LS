@@ -288,12 +288,25 @@ public sealed class CapturaFuncionarios : IDisposable
         var servico = new FuncionarioService(_banco.Fabrica);
         var (admin, _) = await servico.CriarPrimeiroAdministradorAsync("Dona Maria", "1234");
         NexusLS.App.Seguranca.Sessao.Entrar(admin);
-        await servico.CadastrarAsync(new DadosFuncionario("Ana Paula", PerfilFuncionario.OperadorDeCaixa, Cargo: "Caixa"), "4321");
+        byte[]? foto = null;
+        Capturador.Rodar(() =>
+        {
+            var px = new byte[200 * 200 * 4];
+            for (var y = 0; y < 200; y++)
+                for (var x = 0; x < 200; x++) { var i = (y * 200 + x) * 4; px[i] = (byte)(x + 40); px[i + 1] = (byte)(y + 40); px[i + 2] = 180; px[i + 3] = 255; }
+            var bmp = System.Windows.Media.Imaging.BitmapSource.Create(200, 200, 96, 96, System.Windows.Media.PixelFormats.Bgra32, null, px, 800);
+            var enc = new System.Windows.Media.Imaging.PngBitmapEncoder();
+            enc.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bmp));
+            using var ms = new MemoryStream(); enc.Save(ms);
+            foto = NexusLS.App.FotoFuncionario.Preparar(ms.ToArray());
+        });
+        await servico.CadastrarAsync(new DadosFuncionario("Ana Paula", PerfilFuncionario.OperadorDeCaixa, Cargo: "Caixa",
+            Ficha: new FichaFuncionario(Cpf: "529.982.247-25", Cidade: "Recife", Estado: "PE", Foto: foto)), "4321");
         await servico.CadastrarAsync(new DadosFuncionario("Rui Costa", PerfilFuncionario.Personalizado, Permissao.Estoque | Permissao.Compras, "Estoquista"), "5555");
 
         var vm = new FuncionariosViewModel(servico);
         await vm.Carregamento;
-        vm.Selecionado = vm.Funcionarios.First(f => f.Nome == "Rui Costa");
+        vm.Selecionado = vm.Funcionarios.First(f => f.Nome == "Ana Paula");
 
         Capturador.Desenhar(() => new NexusLS.App.Views.FuncionariosView { DataContext = vm }, Path.Combine(saida, "funcionarios.png"), 1500, 820);
     }

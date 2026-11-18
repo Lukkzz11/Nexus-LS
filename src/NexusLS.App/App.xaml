@@ -20,6 +20,7 @@
             <conv:FormaPagamentoConverter x:Key="FormaPag" />
             <conv:IgualAoTagConverter x:Key="IgualTag" />
             <conv:BoolInversoVisibilidadeConverter x:Key="BoolInverso" />
+            <conv:FotoParaImagemConverter x:Key="FotoImg" />
             <BooleanToVisibilityConverter x:Key="BoolVis" />
 
             <!-- Regra do MVVM no WPF: quando a janela mostra um ViewModel, o WPF procura aqui

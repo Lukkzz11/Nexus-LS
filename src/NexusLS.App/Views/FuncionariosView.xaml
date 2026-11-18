@@ -40,8 +40,22 @@
                     Visibility="{Binding LoginAtivo, Converter={StaticResource BoolVis}}">
                 <DataGrid ItemsSource="{Binding Funcionarios}" SelectedItem="{Binding Selecionado, Mode=TwoWay}"
                           AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" HeadersVisibility="Column"
-                          BorderThickness="0" Background="Transparent" AutomationProperties.Name="Lista de funcionários">
+                          BorderThickness="0" Background="Transparent" ScrollViewer.HorizontalScrollBarVisibility="Disabled" AutomationProperties.Name="Lista de funcionários">
                     <DataGrid.Columns>
+                        <DataGridTemplateColumn Header="" Width="52">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Grid Width="32" Height="32">
+                                        <Ellipse Fill="{StaticResource CorFundo}" Stroke="{StaticResource CorTextoSuave}" StrokeThickness="0.5" />
+                                        <Ellipse>
+                                            <Ellipse.Fill>
+                                                <ImageBrush ImageSource="{Binding Foto, Mode=OneWay, Converter={StaticResource FotoImg}}" Stretch="UniformToFill" />
+                                            </Ellipse.Fill>
+                                        </Ellipse>
+                                    </Grid>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
                         <DataGridTextColumn Header="Nome" Binding="{Binding Nome, Mode=OneWay}" Width="3*" MinWidth="130" />
                         <DataGridTextColumn Header="Cargo" Binding="{Binding Cargo, Mode=OneWay}" Width="2*" MinWidth="90" />
                         <DataGridTextColumn Header="Perfil" Binding="{Binding PerfilTexto, Mode=OneWay}" Width="2*" MinWidth="100" />
