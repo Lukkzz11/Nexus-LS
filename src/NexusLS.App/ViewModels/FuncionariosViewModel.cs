@@ -63,6 +63,87 @@ public partial class FuncionariosViewModel : ViewModelBase
     [ObservableProperty] private string _pinNovo = "";
     [ObservableProperty] private string _pinConfirmacao = "";
 
+    // ----- Ficha pessoal -----
+    [ObservableProperty] private string _cpf = "";
+    [ObservableProperty] private string _rg = "";
+    [ObservableProperty] private DateTime? _dataNascimento;
+    [ObservableProperty] private string _email = "";
+    [ObservableProperty] private string _cep = "";
+    [ObservableProperty] private string _endereco = "";
+    [ObservableProperty] private string _numero = "";
+    [ObservableProperty] private string _complemento = "";
+    [ObservableProperty] private string _bairro = "";
+    [ObservableProperty] private string _cidade = "";
+    [ObservableProperty] private string _estado = "";
+    [ObservableProperty] private DateTime? _dataAdmissao;
+    [ObservableProperty] private string _salarioTexto = "";
+    [ObservableProperty] private string _contatoEmergenciaNome = "";
+    [ObservableProperty] private string _contatoEmergenciaTelefone = "";
+    [ObservableProperty] private string _observacao = "";
+
+    private byte[]? _foto;
+    [ObservableProperty] private System.Windows.Media.Imaging.BitmapSource? _fotoImagem;
+    public bool TemFoto => _foto is not null;
+
+    /// <summary>A tela escolhe o arquivo da foto (devolve nulo se cancelar).</summary>
+    public Func<string?> EscolherArquivoFoto { get; set; } = () =>
+    {
+        var d = new Microsoft.Win32.OpenFileDialog { Title = "Escolher a foto do funcionário", Filter = "Imagens|*.png;*.jpg;*.jpeg;*.bmp|Todos os arquivos|*.*" };
+        return d.ShowDialog() == true ? d.FileName : null;
+    };
+
+    public void DefinirFoto(byte[]? arquivo)
+    {
+        _foto = arquivo is { Length: > 0 } ? FotoFuncionario.Preparar(arquivo) : null;
+        FotoImagem = FotoFuncionario.ParaImagem(_foto);
+        OnPropertyChanged(nameof(TemFoto));
+    }
+
+    [RelayCommand]
+    private Task EscolherFotoAsync() => ExecutarAsync(() =>
+    {
+        var caminho = EscolherArquivoFoto();
+        if (string.IsNullOrWhiteSpace(caminho)) return Task.CompletedTask;
+        DefinirFoto(System.IO.File.ReadAllBytes(caminho));
+        MostrarSucesso("Foto carregada. Clique em Salvar para guardar.");
+        return Task.CompletedTask;
+    });
+
+    [RelayCommand]
+    private void RemoverFoto() => DefinirFoto(null);
+
+    private FichaFuncionario MontarFicha()
+    {
+        long? salario = null;
+        if (!string.IsNullOrWhiteSpace(SalarioTexto))
+        {
+            if (!Dinheiro.TentarConverter(SalarioTexto, out var c)) throw new RegraDeNegocioException("O salário não parece um valor. Exemplo: 1.800,00");
+            salario = c;
+        }
+        return new FichaFuncionario(Cpf, Rg, DataNascimento, Email, Cep, Endereco, Numero, Complemento, Bairro, Cidade, Estado,
+            DataAdmissao, salario, ContatoEmergenciaNome, ContatoEmergenciaTelefone, Observacao, _foto);
+    }
+
+    private void CarregarFicha(Funcionario f)
+    {
+        Cpf = ValidadorDocumento.Formatar(f.Cpf); Rg = f.Rg ?? ""; DataNascimento = f.DataNascimento; Email = f.Email ?? "";
+        Cep = f.Cep ?? ""; Endereco = f.Endereco ?? ""; Numero = f.Numero ?? ""; Complemento = f.Complemento ?? "";
+        Bairro = f.Bairro ?? ""; Cidade = f.Cidade ?? ""; Estado = f.Estado ?? "";
+        DataAdmissao = f.DataAdmissao;
+        SalarioTexto = f.SalarioCentavos is { } s ? Dinheiro.FormatarParaEdicao(s) : "";
+        ContatoEmergenciaNome = f.ContatoEmergenciaNome ?? ""; ContatoEmergenciaTelefone = f.ContatoEmergenciaTelefone ?? "";
+        Observacao = f.Observacao ?? "";
+        _foto = f.Foto; FotoImagem = FotoFuncionario.ParaImagem(_foto); OnPropertyChanged(nameof(TemFoto));
+    }
+
+    private void LimparFicha()
+    {
+        Cpf = Rg = Email = Cep = Endereco = Numero = Complemento = Bairro = Cidade = Estado = SalarioTexto =
+            ContatoEmergenciaNome = ContatoEmergenciaTelefone = Observacao = "";
+        DataNascimento = DataAdmissao = null;
+        _foto = null; FotoImagem = null; OnPropertyChanged(nameof(TemFoto));
+    }
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Editando))]
     [NotifyPropertyChangedFor(nameof(TituloFormulario))]
@@ -106,6 +187,7 @@ public partial class FuncionariosViewModel : ViewModelBase
         Nome = value.Nome;
         Cargo = value.Cargo ?? "";
         Telefone = value.Telefone ?? "";
+        CarregarFicha(value);
         PinNovo = PinConfirmacao = "";
         PerfilSelecionado = Perfis.First(p => p.Perfil == value.Perfil);
         if (value.Perfil == PerfilFuncionario.Personalizado)
@@ -120,6 +202,7 @@ public partial class FuncionariosViewModel : ViewModelBase
         EditandoId = null;
         EditandoAtivo = true;
         Nome = Cargo = Telefone = PinNovo = PinConfirmacao = "";
+        LimparFicha();
         PerfilSelecionado = LoginAtivo ? Perfis[3] : Perfis[0]; // novo funcionário começa como Vendedor; o primeiro é administrador
         Mensagem = "";
         _silenciar = true;
@@ -176,7 +259,7 @@ public partial class FuncionariosViewModel : ViewModelBase
     {
         if (!LoginAtivo) { await AtivarLoginAsync(); return; }
 
-        var dados = new DadosFuncionario(Nome, PerfilSelecionado.Perfil, PermissoesMarcadas(), Cargo, Telefone);
+        var dados = new DadosFuncionario(Nome, PerfilSelecionado.Perfil, PermissoesMarcadas(), Cargo, Telefone, LoginAtivo ? MontarFicha() : null);
         if (EditandoId is int id)
         {
             ConferirPin(obrigatorio: false);

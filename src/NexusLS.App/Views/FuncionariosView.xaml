@@ -14,7 +14,7 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="16" />
-            <ColumnDefinition Width="420" />
+            <ColumnDefinition Width="460" />
         </Grid.ColumnDefinitions>
 
         <Grid>
@@ -64,6 +64,50 @@
                         <TextBox Text="{Binding Cargo, UpdateSourceTrigger=PropertyChanged}" />
                         <TextBlock Text="Telefone (opcional)" Style="{StaticResource Rotulo}" />
                         <TextBox Text="{Binding Telefone, UpdateSourceTrigger=PropertyChanged}" />
+                        <Border Width="110" Height="110" HorizontalAlignment="Left" Margin="0,12,0,0" CornerRadius="8" BorderThickness="1"
+                                BorderBrush="{StaticResource CorTextoSuave}" Background="{StaticResource CorFundo}" ClipToBounds="True">
+                            <Grid>
+                                <TextBlock Text="Sem foto" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource CorTextoSuave}" />
+                                <Image Source="{Binding FotoImagem}" Stretch="UniformToFill" AutomationProperties.Name="Foto do funcionário" />
+                            </Grid>
+                        </Border>
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <Button Content="Escolher foto..." Style="{StaticResource BotaoSecundario}" Command="{Binding EscolherFotoCommand}" />
+                            <Button Content="Remover" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0" Command="{Binding RemoverFotoCommand}"
+                                    Visibility="{Binding TemFoto, Converter={StaticResource BoolVis}}" />
+                        </StackPanel>
+                        <TextBlock Text="CPF (opcional)" Style="{StaticResource Rotulo}" />
+                        <TextBox Text="{Binding Cpf, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="CPF (opcional)" />
+                        <TextBlock Text="RG (opcional)" Style="{StaticResource Rotulo}" />
+                        <TextBox Text="{Binding Rg, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="RG (opcional)" />
+                        <TextBlock Text="Data de nascimento" Style="{StaticResource Rotulo}" />
+                        <DatePicker SelectedDate="{Binding DataNascimento}" AutomationProperties.Name="Data de nascimento" />
+                        <TextBlock Text="E-mail (opcional)" Style="{StaticResource Rotulo}" />
+                        <TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="E-mail (opcional)" />
+                        <TextBlock Text="CEP" Style="{StaticResource Rotulo}" />
+                        <TextBox Text="{Binding Cep, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="CEP" />
+                        <TextBlock Text="Endereço" Style="{StaticResource Rotulo}" />
+                        <TextBox Text="{Binding Endereco, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Endereço" />
+                        <TextBlock Text="Número" Style="{StaticResource Rotulo}" />
+                        <TextBox Text="{Binding Numero, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Número" />
+                        <TextBlock Text="Complemento" Style="{StaticResource Rotulo}" />
+                        <TextBox Text="{Binding Complemento, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Complemento" />
+                        <TextBlock Text="Bairro" Style="{StaticResource Rotulo}" />
+                        <TextBox Text="{Binding Bairro, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Bairro" />
+                        <TextBlock Text="Cidade" Style="{StaticResource Rotulo}" />
+                        <TextBox Text="{Binding Cidade, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Cidade" />
+                        <TextBlock Text="Estado (sigla, ex.: SP)" Style="{StaticResource Rotulo}" />
+                        <TextBox Text="{Binding Estado, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Estado (sigla, ex.: SP)" MaxLength="2" />
+                        <TextBlock Text="Data de admissão" Style="{StaticResource Rotulo}" />
+                        <DatePicker SelectedDate="{Binding DataAdmissao}" AutomationProperties.Name="Data de admissão" />
+                        <TextBlock Text="Salário combinado (opcional)" Style="{StaticResource Rotulo}" />
+                        <TextBox Text="{Binding SalarioTexto, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Salário combinado (opcional)" />
+                        <TextBlock Text="Contato de emergência: nome" Style="{StaticResource Rotulo}" />
+                        <TextBox Text="{Binding ContatoEmergenciaNome, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Contato de emergência: nome" />
+                        <TextBlock Text="Contato de emergência: telefone" Style="{StaticResource Rotulo}" />
+                        <TextBox Text="{Binding ContatoEmergenciaTelefone, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Contato de emergência: telefone" />
+                        <TextBlock Text="Observações" Style="{StaticResource Rotulo}" />
+                        <TextBox Text="{Binding Observacao, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Observações" TextWrapping="Wrap" AcceptsReturn="True" MinHeight="60" MaxLength="500" />
 
                         <TextBlock Text="Perfil" Style="{StaticResource Rotulo}" />
                         <ComboBox ItemsSource="{Binding Perfis}" DisplayMemberPath="Nome" SelectedItem="{Binding PerfilSelecionado}"

@@ -1,3 +1,5 @@
+using NexusLS.Core.Services;
+
 namespace NexusLS.Core.Models;
 
 /// <summary>O que o funcionário pode abrir ou fazer. Os valores ficam gravados no banco: nunca reaproveitar nem mudar um número.</summary>
@@ -96,6 +98,31 @@ public class Funcionario
 
     public bool Ativo { get; set; } = true;
     public DateTime DataCadastro { get; set; }
+
+    // ----- Ficha pessoal (tudo opcional; não tem efeito no login nem nas permissões) -----
+    public string? Cpf { get; set; }
+    public string? Rg { get; set; }
+    public DateTime? DataNascimento { get; set; }
+    public string? Email { get; set; }
+    public string? Cep { get; set; }
+    public string? Endereco { get; set; }
+    public string? Numero { get; set; }
+    public string? Complemento { get; set; }
+    public string? Bairro { get; set; }
+    public string? Cidade { get; set; }
+    public string? Estado { get; set; }
+    public DateTime? DataAdmissao { get; set; }
+
+    /// <summary>Salário combinado, em centavos. Só informação da ficha: nada no Nexus calcula folha.</summary>
+    public long? SalarioCentavos { get; set; }
+    public string? ContatoEmergenciaNome { get; set; }
+    public string? ContatoEmergenciaTelefone { get; set; }
+    public string? Observacao { get; set; }
+
+    /// <summary>Foto já reduzida (JPEG). Fica no banco, então entra no backup.</summary>
+    public byte[]? Foto { get; set; }
+
+    public string CpfFormatado => ValidadorDocumento.Formatar(Cpf);
 
     public Permissao PermissoesEfetivas => Perfil == PerfilFuncionario.Personalizado ? PermissoesPersonalizadas : Permissoes.DoPerfil(Perfil);
 

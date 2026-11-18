@@ -8,12 +8,22 @@ using NexusLS.Core.Seguranca;
 
 namespace NexusLS.Core.Services;
 
+/// <summary>A ficha pessoal do funcionário. Tudo opcional. Em <see cref="DadosFuncionario"/>, nulo = não mexer na ficha.</summary>
+public record FichaFuncionario(
+    string? Cpf = null, string? Rg = null, DateTime? DataNascimento = null, string? Email = null,
+    string? Cep = null, string? Endereco = null, string? Numero = null, string? Complemento = null,
+    string? Bairro = null, string? Cidade = null, string? Estado = null,
+    DateTime? DataAdmissao = null, long? SalarioCentavos = null,
+    string? ContatoEmergenciaNome = null, string? ContatoEmergenciaTelefone = null,
+    string? Observacao = null, byte[]? Foto = null);
+
 public record DadosFuncionario(
     string Nome,
     PerfilFuncionario Perfil,
     Permissao PermissoesPersonalizadas = Permissao.Nenhuma,
     string? Cargo = null,
-    string? Telefone = null);
+    string? Telefone = null,
+    FichaFuncionario? Ficha = null);
 
 /// <summary>Quem está usando o programa agora. Os serviços gravam o nome nas vendas, no caixa e nos cancelamentos.</summary>
 public static class OperadorAtual
@@ -100,6 +110,7 @@ public class FuncionarioService
     {
         ValidarNome(dados.Nome);
         ValidarPin(pin);
+        ValidarFicha(dados.Ficha);
         await using var db = await _fabrica.CreateDbContextAsync();
         await GarantirNomeLivreAsync(db, dados.Nome, null);
 
@@ -116,6 +127,7 @@ public class FuncionarioService
     public async Task EditarAsync(int id, DadosFuncionario dados)
     {
         ValidarNome(dados.Nome);
+        ValidarFicha(dados.Ficha);
         await using var db = await _fabrica.CreateDbContextAsync();
         var f = await ObterAsync(db, id);
         await GarantirNomeLivreAsync(db, dados.Nome, id);
@@ -264,6 +276,41 @@ public class FuncionarioService
         f.PermissoesPersonalizadas = d.Perfil == PerfilFuncionario.Personalizado ? d.PermissoesPersonalizadas & Permissoes.Todas : Permissao.Nenhuma;
         f.Cargo = string.IsNullOrWhiteSpace(d.Cargo) ? null : d.Cargo.Trim();
         f.Telefone = string.IsNullOrWhiteSpace(d.Telefone) ? null : d.Telefone.Trim();
+        if (d.Ficha is { } x)
+        {
+            static string? T(string? s) => string.IsNullOrWhiteSpace(s) ? null : s.Trim();
+            f.Cpf = T(x.Cpf) is { } cpf ? ValidadorDocumento.SoDigitos(cpf) : null;
+            f.Rg = T(x.Rg); f.DataNascimento = x.DataNascimento?.Date; f.Email = T(x.Email);
+            f.Cep = T(x.Cep); f.Endereco = T(x.Endereco); f.Numero = T(x.Numero); f.Complemento = T(x.Complemento);
+            f.Bairro = T(x.Bairro); f.Cidade = T(x.Cidade); f.Estado = T(x.Estado)?.ToUpperInvariant();
+            f.DataAdmissao = x.DataAdmissao?.Date; f.SalarioCentavos = x.SalarioCentavos;
+            f.ContatoEmergenciaNome = T(x.ContatoEmergenciaNome); f.ContatoEmergenciaTelefone = T(x.ContatoEmergenciaTelefone);
+            f.Observacao = T(x.Observacao);
+            f.Foto = x.Foto is { Length: > 0 } ? x.Foto : null;
+        }
+    }
+
+    public const int FotoMaximaBytes = 300 * 1024;
+
+    private static void ValidarFicha(FichaFuncionario? x)
+    {
+        if (x is null) return;
+        if (!string.IsNullOrWhiteSpace(x.Cpf) && !ValidadorDocumento.CpfValido(x.Cpf))
+            throw new RegraDeNegocioException("CPF inválido: confira os números.");
+        if (!string.IsNullOrWhiteSpace(x.Email) && !(x.Email.Contains('@') && x.Email.Contains('.') && !x.Email.Contains(' ')))
+            throw new RegraDeNegocioException("E-mail inválido.");
+        if (!string.IsNullOrWhiteSpace(x.Estado) && !(x.Estado.Trim().Length == 2 && x.Estado.Trim().All(char.IsAsciiLetter)))
+            throw new RegraDeNegocioException("O estado é a sigla com 2 letras (ex.: SP).");
+        if (x.DataNascimento is { } n && (n.Date > DateTime.Today || n.Year < 1900))
+            throw new RegraDeNegocioException("Data de nascimento inválida.");
+        if (x.DataAdmissao is { } a && a.Year < 1950)
+            throw new RegraDeNegocioException("Data de admissão inválida.");
+        if (x.SalarioCentavos is < 0)
+            throw new RegraDeNegocioException("O salário não pode ser negativo.");
+        if (x.Foto is { Length: > FotoMaximaBytes })
+            throw new RegraDeNegocioException("A foto é grande demais. Escolha outra imagem.");
+        if ((x.Observacao?.Length ?? 0) > 500)
+            throw new RegraDeNegocioException("A observação pode ter no máximo 500 caracteres.");
     }
 
     private static async Task<Funcionario> ObterAsync(PdvDbContext db, int id) =>

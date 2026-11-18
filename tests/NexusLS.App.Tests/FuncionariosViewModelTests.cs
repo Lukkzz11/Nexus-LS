@@ -252,3 +252,100 @@ public sealed class PermissoesDoMenuTests : IDisposable
         Assert.True(Sessao.Pode(Permissao.CancelarVendas));
     }
 }
+
+public sealed class FichaFuncionarioVmTests : IDisposable
+{
+    private readonly BancoDeTeste _banco = new();
+    public FichaFuncionarioVmTests() { Sessao.Sair(); Sessao.DefinirLoginAtivo(false); }
+    public void Dispose() { Sessao.Sair(); Sessao.DefinirLoginAtivo(false); _banco.Dispose(); }
+
+    [Fact]
+    public async Task Cadastra_com_ficha_e_ao_selecionar_a_ficha_volta_ao_formulario()
+    {
+        var servico = new FuncionarioService(_banco.Fabrica);
+        var (admin, _) = await servico.CriarPrimeiroAdministradorAsync("Dona Maria", "1234");
+        Sessao.Entrar(admin);
+        var vm = new FuncionariosViewModel(servico);
+        await vm.Carregamento;
+        vm.NovoCommand.Execute(null);
+        vm.Nome = "Ana"; vm.Cpf = "529.982.247-25"; vm.SalarioTexto = "1.800,00"; vm.Cidade = "Recife"; vm.Estado = "pe";
+        vm.DataNascimento = new DateTime(1995, 3, 10);
+        vm.PinNovo = vm.PinConfirmacao = "4321";
+        await vm.SalvarCommand.ExecuteAsync(null);
+        Assert.False(vm.MensagemEhErro, vm.Mensagem);
+
+        var salvo = (await servico.ListarAsync()).Single(f => f.Nome == "Ana");
+        Assert.Equal(180000, salvo.SalarioCentavos);
+        Assert.Equal("PE", salvo.Estado);
+
+        vm.Selecionado = vm.Funcionarios.Single(f => f.Nome == "Ana");
+        Assert.Equal("529.982.247-25", vm.Cpf);
+        Assert.Equal("1.800,00", vm.SalarioTexto);
+        Assert.Equal(new DateTime(1995, 3, 10), vm.DataNascimento);
+    }
+
+    [Fact]
+    public async Task Salario_que_nao_e_valor_mostra_erro_e_nao_salva()
+    {
+        var servico = new FuncionarioService(_banco.Fabrica);
+        var (admin, _) = await servico.CriarPrimeiroAdministradorAsync("Dona Maria", "1234");
+        Sessao.Entrar(admin);
+        var vm = new FuncionariosViewModel(servico);
+        await vm.Carregamento;
+        vm.NovoCommand.Execute(null);
+        vm.Nome = "Ana"; vm.SalarioTexto = "abc"; vm.PinNovo = vm.PinConfirmacao = "4321";
+        await vm.SalvarCommand.ExecuteAsync(null);
+        Assert.True(vm.MensagemEhErro);
+        Assert.DoesNotContain(await servico.ListarAsync(), f => f.Nome == "Ana");
+    }
+}
+
+public sealed class FotoFuncionarioTests
+{
+    private static byte[] PngGrande()
+    {
+        byte[]? bytes = null;
+        Capturador.Rodar(() =>
+        {
+            var pixels = new byte[800 * 400 * 4];
+            Array.Fill(pixels, (byte)200);
+            var bmp = System.Windows.Media.Imaging.BitmapSource.Create(800, 400, 96, 96, System.Windows.Media.PixelFormats.Bgra32, null, pixels, 800 * 4);
+            var enc = new System.Windows.Media.Imaging.PngBitmapEncoder();
+            enc.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bmp));
+            using var ms = new System.IO.MemoryStream();
+            enc.Save(ms);
+            bytes = ms.ToArray();
+        });
+        return bytes!;
+    }
+
+    [Fact]
+    public void Foto_grande_e_reduzida_para_jpeg_pequeno()
+    {
+        var original = PngGrande();
+        byte[]? pronta = null;
+        System.Windows.Media.Imaging.BitmapSource? imagem = null;
+        Capturador.Rodar(() =>
+        {
+            pronta = NexusLS.App.FotoFuncionario.Preparar(original);
+            imagem = NexusLS.App.FotoFuncionario.ParaImagem(pronta);
+        });
+        Assert.True(pronta!.Length < FuncionarioService.FotoMaximaBytes);
+        Assert.Equal(0xFF, pronta[0]);   // assinatura JPEG
+        Assert.Equal(0xD8, pronta[1]);
+        Assert.Equal(320, imagem!.PixelWidth);
+        Assert.Equal(160, imagem.PixelHeight);
+    }
+
+    [Fact]
+    public void Arquivo_que_nao_e_imagem_da_erro_claro()
+    {
+        Exception? erro = null;
+        Capturador.Rodar(() =>
+        {
+            try { NexusLS.App.FotoFuncionario.Preparar(new byte[] { 1, 2, 3, 4 }); }
+            catch (Exception ex) { erro = ex; }
+        });
+        Assert.IsType<RegraDeNegocioException>(erro);
+    }
+}
