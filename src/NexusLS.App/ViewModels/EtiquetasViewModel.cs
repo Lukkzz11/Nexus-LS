@@ -71,6 +71,14 @@ public partial class EtiquetasViewModel : ViewModelBase
         AtualizarResumo();
     }
 
+    /// <summary>Aplica o que a loja deixou como padrão (formato de papel e preço de atacado). Formato que não existe mais é ignorado.</summary>
+    public void AplicarPadroes(string? nomeFormato, bool precoAtacado)
+    {
+        var f = string.IsNullOrWhiteSpace(nomeFormato) ? null : Formatos.FirstOrDefault(x => x.Nome == nomeFormato);
+        if (f is not null) FormatoSelecionado = f;
+        PrecoAtacado = precoAtacado;
+    }
+
     /// <summary>A tela imprime: recebe as etiquetas, o formato e a primeira posição; devolve false se a pessoa cancelou.</summary>
     public Func<IReadOnlyList<ItemEtiqueta>, FormatoEtiqueta, int, bool> ImprimirEtiquetas { get; set; } = (_, _, _) => false;
 

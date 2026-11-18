@@ -287,6 +287,37 @@
                         </Border>
                     </StackPanel>
                 </ScrollViewer>
+                <ScrollViewer x:Name="PgEtiquetas" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="0,16,12,0">
+                    <StackPanel MaxWidth="860" HorizontalAlignment="Left" Margin="0,0,0,24">
+                        <Border Style="{StaticResource Painel}" Visibility="{Binding TemSeguranca, Converter={StaticResource BoolVis}}">
+                            <StackPanel>
+                                <TextBlock Text="Padrão da tela de Etiquetas" FontSize="18" FontWeight="SemiBold" />
+                                <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
+                                           Text="É o que a tela de Etiquetas já abre escolhido. Dá para trocar na hora, sem mexer aqui. A impressora e o desenho da etiqueta ficam no Nexus BarTender." />
+                                <TextBlock Text="Formato do papel" Style="{StaticResource Rotulo}" Margin="0,14,0,4" />
+                                <ComboBox ItemsSource="{Binding FormatosEtiqueta}" SelectedItem="{Binding FormatoEtiquetaPadrao}"
+                                          Width="360" HorizontalAlignment="Left" Padding="8,7" AutomationProperties.Name="Formato do papel" />
+                                <CheckBox Margin="0,14,0,0" IsChecked="{Binding EtiquetaPrecoAtacado}">
+                                    <TextBlock Text="Já abrir com o preço de atacado marcado" TextWrapping="Wrap" />
+                                </CheckBox>
+                                <Button Content="Salvar" Style="{StaticResource BotaoPrimario}" Margin="0,16,0,0" HorizontalAlignment="Left"
+                                        Command="{Binding SalvarEtiquetasCommand}" />
+                                <TextBlock Text="{Binding MensagemEtiquetas}" TextWrapping="Wrap" Margin="0,10,0,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{StaticResource CorPositivo}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding MensagemEtiquetasEhErro}" Value="True">
+                                                    <Setter Property="Foreground" Value="{StaticResource CorNegativo}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
                 <ScrollViewer x:Name="PgSeguranca" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="0,16,12,0">
                     <StackPanel MaxWidth="760" HorizontalAlignment="Left" Margin="0,0,0,24">
                         <Border Style="{StaticResource Painel}" Margin="0,0,0,16" Visibility="{Binding TemSeguranca, Converter={StaticResource BoolVis}}">

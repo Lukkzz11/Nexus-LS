@@ -39,8 +39,7 @@ public partial class ConfiguracoesView : UserControl
         {
             new Entrada("loja", "Loja e cupom", SymbolRegular.Building24, "PgLoja"),
             new Entrada("aparencia", "Aparência", SymbolRegular.Color24, "PgAparencia"),
-            new Entrada("etiquetas", "Etiquetas", SymbolRegular.Tag24, null, "Padrão do Nexus BarTender para todas as etiquetas.",
-                new[] { "Impressora e tamanho padrão da etiqueta", "O que aparece: preço, código de barras, tamanho, nome da loja" }),
+            new Entrada("etiquetas", "Etiquetas", SymbolRegular.Tag24, "PgEtiquetas"),
         }),
         ("VENDAS E CAIXA", new[]
         {
@@ -83,7 +82,7 @@ public partial class ConfiguracoesView : UserControl
     private readonly Dictionary<string, System.Windows.Controls.Button> _botoesMenu = new();
 
     private IEnumerable<FrameworkElement> Paginas() =>
-        new FrameworkElement[] { PgLoja, PgAparencia, PgVendas, PgParametros, PgBackup, PgSistema, PgAtalhos, PgDados, PgSeguranca, PgCaixa, PgCrediario, PgComissoes, PgEstoque, PgNotificacoes, PgBreve };
+        new FrameworkElement[] { PgLoja, PgAparencia, PgVendas, PgParametros, PgBackup, PgSistema, PgAtalhos, PgDados, PgSeguranca, PgCaixa, PgCrediario, PgComissoes, PgEstoque, PgNotificacoes, PgEtiquetas, PgBreve };
 
     private void MontarMenu()
     {

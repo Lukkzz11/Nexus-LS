@@ -25,6 +25,12 @@ public class ConfiguracaoSeguranca
 
     /// <summary>Ao abrir, avisa se o último backup é mais velho que <see cref="DiasBackupAtrasado"/> dias (ou se nunca foi feito).</summary>
     public bool AvisarBackupAtrasado { get; set; } = true;
+
+    /// <summary>Nome do formato de papel que a tela de Etiquetas já abre escolhido. Vazio = o de bobina 50 × 30.</summary>
+    public string? EtiquetaFormatoPadrao { get; set; }
+
+    /// <summary>A tela de Etiquetas já abre com "preço de atacado" marcado.</summary>
+    public bool EtiquetaPrecoAtacadoPadrao { get; set; }
     public int DiasBackupAtrasado { get; set; } = 3;
 
     /// <summary>Retirada de dinheiro (sangria ou despesa) acima disto precisa de gerente. 0 = sem limite.</summary>

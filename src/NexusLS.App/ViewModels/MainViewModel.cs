@@ -105,7 +105,13 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand] private void IrParaCalculadoraPrecos() => Abrir(new CalculadoraPrecosViewModel(_servicos.Produtos, new NexusLS.Core.Services.ParametrosCalculadoraStore(NexusLS.Core.Services.ParametrosCalculadoraStore.CaminhoPadrao())), ItemMenu.CalculadoraPrecos);
     [RelayCommand] private void IrParaCompras() => Abrir(new ComprasViewModel(_servicos.Compras, _servicos.Produtos, _servicos.Fornecedores), ItemMenu.Compras);
     [RelayCommand] private void IrParaFornecedores() => Abrir(new FornecedoresViewModel(_servicos.Fornecedores), ItemMenu.Fornecedores);
-    [RelayCommand] private void IrParaEtiquetas() => Abrir(new EtiquetasViewModel(_servicos.Produtos, _servicos.ModelosEtiqueta), ItemMenu.Etiquetas);
+    [RelayCommand] private void IrParaEtiquetas()
+    {
+        var etiquetas = new EtiquetasViewModel(_servicos.Produtos, _servicos.ModelosEtiqueta);
+        var cfg = _servicos.Seguranca.Carregar();
+        etiquetas.AplicarPadroes(cfg.EtiquetaFormatoPadrao, cfg.EtiquetaPrecoAtacadoPadrao);
+        Abrir(etiquetas, ItemMenu.Etiquetas);
+    }
 
     // Gestão: abre numa janela própria, com PIN (ver GestaoWindow.Abrir)
     /// <summary>A MainWindow define: abrir a janela de Gestão precisa da janela dona e do zoom.</summary>

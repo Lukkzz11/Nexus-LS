@@ -144,3 +144,71 @@ public sealed class NotificacoesConfigTests : IDisposable
         Assert.True(vm.MensagemNotificacoesEhErro);
     }
 }
+
+public sealed class EtiquetasConfigTests : IDisposable
+{
+    private readonly BancoDeTeste _banco = new();
+    private readonly string _arquivo = Path.Combine(Path.GetTempPath(), "nexus_etq_" + Guid.NewGuid().ToString("N") + ".json");
+    private readonly string _modelos = Path.Combine(Path.GetTempPath(), "nexus_modelos_" + Guid.NewGuid().ToString("N") + ".json");
+
+    public void Dispose()
+    {
+        _banco.Dispose();
+        foreach (var f in new[] { _arquivo, _modelos }) { try { File.Delete(f); } catch (IOException) { } }
+    }
+
+    private ConfiguracoesViewModel Criar()
+    {
+        ConfiguracoesViewModel? vm = null;
+        Capturador.Rodar(() =>
+        {
+            var config = new ConfiguracaoService(_banco.Fabrica);
+            vm = new ConfiguracoesViewModel(config, new CupomService(_banco.Fabrica, config, new ImpressoraDeMentira()));
+            vm.UsarSeguranca(new ConfiguracaoSegurancaStore(_arquivo));
+            vm.UsarEtiquetas(new NexusLS.Core.Etiquetas.ModeloEtiquetaStore(_modelos));
+        });
+        return vm!;
+    }
+
+    [Fact]
+    public void Sem_escolha_salva_a_pagina_mostra_a_bobina_50x30()
+    {
+        var vm = Criar();
+        Assert.Equal(NexusLS.Core.Etiquetas.FormatoEtiqueta.Bobina50x30.Nome, vm.FormatoEtiquetaPadrao);
+        Assert.Contains(NexusLS.Core.Etiquetas.FormatoEtiqueta.FolhaA4Tres_por_Sete.Nome, vm.FormatosEtiqueta);
+    }
+
+    [Fact]
+    public void Salvar_grava_formato_e_preco_e_a_tela_de_etiquetas_abre_assim()
+    {
+        var vm = Criar();
+        vm.FormatoEtiquetaPadrao = NexusLS.Core.Etiquetas.FormatoEtiqueta.FolhaA4Tres_por_Sete.Nome;
+        vm.EtiquetaPrecoAtacado = true;
+        vm.SalvarEtiquetasCommand.Execute(null);
+
+        var lida = new ConfiguracaoSegurancaStore(_arquivo).Carregar();
+        Assert.Equal(NexusLS.Core.Etiquetas.FormatoEtiqueta.FolhaA4Tres_por_Sete.Nome, lida.EtiquetaFormatoPadrao);
+        Assert.True(lida.EtiquetaPrecoAtacadoPadrao);
+
+        EtiquetasViewModel? tela = null;
+        Capturador.Rodar(() =>
+        {
+            tela = new EtiquetasViewModel(new ProdutoService(_banco.Fabrica));
+            tela.AplicarPadroes(lida.EtiquetaFormatoPadrao, lida.EtiquetaPrecoAtacadoPadrao);
+        });
+        Assert.Equal(NexusLS.Core.Etiquetas.FormatoEtiqueta.FolhaA4Tres_por_Sete, tela!.FormatoSelecionado);
+        Assert.True(tela.PrecoAtacado);
+    }
+
+    [Fact]
+    public void Formato_que_nao_existe_mais_e_ignorado()
+    {
+        EtiquetasViewModel? tela = null;
+        Capturador.Rodar(() =>
+        {
+            tela = new EtiquetasViewModel(new ProdutoService(_banco.Fabrica));
+            tela.AplicarPadroes("Modelo apagado", false);
+        });
+        Assert.Equal(NexusLS.Core.Etiquetas.FormatoEtiqueta.Bobina50x30, tela!.FormatoSelecionado);
+    }
+}
