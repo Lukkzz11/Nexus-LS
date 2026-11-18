@@ -10,329 +10,298 @@
 
     <UserControl.Resources>
         <Style x:Key="BotaoRibbon" TargetType="Button" BasedOn="{StaticResource BotaoSecundario}">
-            <Setter Property="Padding" Value="9,6" />
-            <Setter Property="Margin" Value="0,0,4,0" />
-            <Setter Property="FontSize" Value="{StaticResource TamPequeno}" />
+            <Setter Property="Padding" Value="7,5" />
+            <Setter Property="Margin" Value="0,0,3,0" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Height" Value="28" />
+        </Style>
+
+        <Style x:Key="BotaoIconeRibbon" TargetType="Button" BasedOn="{StaticResource BotaoSecundario}">
+            <Setter Property="Width" Value="28" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0,0,3,0" />
+        </Style>
+
+        <Style x:Key="RotuloGrupoRibbon" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="9" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0,3,0,0" />
         </Style>
     </UserControl.Resources>
 
-        <!-- ==================== 0: BARRA DE COMANDOS / RIBBON ==================== -->
-        <StackPanel>
-            <!-- BARRA DE VÍNCULO DO PRODUTO ATIVO (quando aberto pelo catálogo) -->
-            <Border Background="{StaticResource CorDestaqueFundo}" BorderBrush="{StaticResource CorDestaqueBorda}" BorderThickness="0,0,0,1" Padding="14,6"
-                    Visibility="{Binding ModoProdutoAtivo, Converter={StaticResource BoolParaVisibilidadeConverter}}">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Border Background="{StaticResource CorSelecao}" BorderBrush="{StaticResource CorDestaqueBorda}" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,8,0">
-                            <StackPanel Orientation="Horizontal">
-                                <ui:SymbolIcon Symbol="Tag24" FontSize="14" Foreground="{StaticResource CorDestaqueTexto}" Margin="0,0,4,0" VerticalAlignment="Center" />
-                                <TextBlock Text="PRODUTO DO SISTEMA:" FontWeight="Bold" FontSize="10.5" Foreground="{StaticResource CorDestaqueTexto}" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </Border>
-
-                        <TextBlock Text="{Binding NomeProdutoAtivo}" FontWeight="Bold" FontSize="13" Foreground="{StaticResource CorTexto}" VerticalAlignment="Center" />
-                        <TextBlock Text="{Binding RefProdutoAtivo, StringFormat='{} (REF: {0})'}" Foreground="{StaticResource CorTextoSuave}" FontSize="11" VerticalAlignment="Center" Margin="4,0,10,0" />
-
-                        <!-- Badge se tem etiqueta cadastrada -->
-                        <Border Background="{StaticResource CorSucessoFundo}" BorderBrush="{StaticResource CorSucessoBorda}" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,8,0"
-                                Visibility="{Binding ProdutoTemEtiquetaExclusiva, Converter={StaticResource BoolParaVisibilidadeConverter}}">
-                            <StackPanel Orientation="Horizontal">
-                                <ui:SymbolIcon Symbol="Checkmark24" FontSize="13" Foreground="{StaticResource CorSucessoTexto}" Margin="0,0,4,0" VerticalAlignment="Center" />
-                                <TextBlock Text="Etiqueta Exclusiva Vinculada" FontWeight="Bold" FontSize="10.5" Foreground="{StaticResource CorSucessoTexto}" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </Border>
-
-                        <Border Background="{StaticResource CorAvisoFundo}" BorderBrush="{StaticResource CorAvisoBorda}" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,8,0">
-                            <Border.Style>
-                                <Style TargetType="Border">
-                                    <Setter Property="Visibility" Value="Collapsed" />
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding ProdutoTemEtiquetaExclusiva}" Value="False">
-                                            <Setter Property="Visibility" Value="Visible" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Border.Style>
-                            <TextBlock Text="Usando Modelo Padrão Global" FontSize="10.5" FontWeight="SemiBold" Foreground="{StaticResource CorAvisoTexto}" VerticalAlignment="Center" />
-                        </Border>
-                    </StackPanel>
-
-                    <!-- Botões de Ação para o Produto -->
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Button Command="{Binding SalvarEtiquetaNoProdutoCommand}" Style="{StaticResource BotaoPrimario}" Padding="12,5" Margin="0,0,6,0"
-                                ToolTip="Cadastrar este layout como etiqueta exclusiva deste produto no sistema">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <ui:SymbolIcon Symbol="Save24" FontSize="14" Margin="0,0,5,0" VerticalAlignment="Center" />
-                                <TextBlock Text="Salvar Etiqueta Neste Produto" FontWeight="Bold" FontSize="11.5" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
-
-                        <Button Command="{Binding RestaurarEtiquetaPadraoProdutoCommand}" Style="{StaticResource BotaoSecundario}" Padding="10,5" FontSize="11.5"
-                                Visibility="{Binding ProdutoTemEtiquetaExclusiva, Converter={StaticResource BoolParaVisibilidadeConverter}}"
-                                ToolTip="Remover a etiqueta exclusiva deste produto e voltar a usar a etiqueta padrão">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <ui:SymbolIcon Symbol="ArrowCounterclockwise24" FontSize="13" Margin="0,0,4,0" VerticalAlignment="Center" />
-                                <TextBlock Text="Restaurar Padrão" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
-                    </StackPanel>
-                </Grid>
-            </Border>
-
-            <!-- Barra de Ribbon Principal -->
-            <Border Background="{StaticResource CorPainel}" BorderBrush="{StaticResource CorBorda}" BorderThickness="0,0,0,1" Padding="12,8">
+    <!-- ==================== 0: BARRA DE COMANDOS / RIBBON ==================== -->
+    <StackPanel>
+        <!-- BARRA DE VÍNCULO DO PRODUTO ATIVO (quando aberto pelo catálogo) -->
+        <Border Background="{StaticResource CorDestaqueFundo}" BorderBrush="{StaticResource CorDestaqueBorda}" BorderThickness="0,0,0,1" Padding="14,5"
+                Visibility="{Binding ModoProdutoAtivo, Converter={StaticResource BoolParaVisibilidadeConverter}}">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <!-- Modelos e Galeria -->
-                    <ColumnDefinition Width="Auto" />
-                    <!-- Divisor -->
-                    <ColumnDefinition Width="Auto" />
-                    <!-- Alinhamentos e Camadas -->
-                    <ColumnDefinition Width="Auto" />
-                    <!-- Divisor -->
-                    <ColumnDefinition Width="Auto" />
-                    <!-- Ações de Edição -->
-                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
-                    <!-- Zoom e Impressão / Arquivo -->
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <!-- Grupo 1: Seleção de Modelo & Criação (Estilo Illustrator / Corel) -->
-                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Command="{Binding AbrirNovoDocumentoCommand}" Style="{StaticResource BotaoPrimario}" Padding="13,7" Margin="0,0,8,0" ToolTip="Criar nova folha / modelo de etiqueta (Ctrl+N)">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <ui:SymbolIcon Symbol="Add24" FontSize="16" Margin="0,0,6,0" VerticalAlignment="Center" />
-                            <TextBlock Text="Novo Documento" FontWeight="Bold" VerticalAlignment="Center" />
-                            <Border Background="{StaticResource CorPrimariaPressionada}" CornerRadius="4" Padding="5,1" Margin="6,0,0,0" VerticalAlignment="Center">
-                                <TextBlock Text="Ctrl+N" Foreground="White" FontSize="9" FontWeight="Bold" />
-                            </Border>
-                        </StackPanel>
-                    </Button>
-
-                    <Button Command="{Binding AbrirGaleriaModelosCommand}" Style="{StaticResource BotaoSecundario}" Padding="10,7" Margin="0,0,8,0" ToolTip="Ver catálogo completo de modelos e predefinições">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <ui:SymbolIcon Symbol="Sparkle24" FontSize="15" Margin="0,0,6,0" VerticalAlignment="Center" />
-                            <TextBlock Text="Predefinições" FontWeight="SemiBold" VerticalAlignment="Center" />
-                            <Border Background="{StaticResource CorSelecaoSuave}" CornerRadius="4" Padding="5,1" Margin="6,0,0,0" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding CatalogoModelos.Count}" Foreground="{StaticResource CorPrimaria}" FontSize="10" FontWeight="Black" />
-                            </Border>
-                        </StackPanel>
-                    </Button>
-
-                    <ComboBox ItemsSource="{Binding PresetsDisponiveis}" SelectedItem="{Binding PresetSelecionado}" Width="220" Margin="0,0,8,0"
-                              SelectionChanged="PresetComboBox_SelectionChanged" ToolTip="Trocar layout atual rapidamente" />
-
-                    <!-- Controles Diretos da Folha / Etiqueta (Largura × Altura editável e Orientação estilo Corel) -->
-                    <Border Background="{StaticResource CorSuperficieSuave}" BorderBrush="{StaticResource CorBorda}" BorderThickness="1" CornerRadius="{StaticResource RaioPequeno}" Padding="6,2" VerticalAlignment="Center">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="L:" FontSize="10.5" FontWeight="Bold" Foreground="{StaticResource CorTextoSuave}" VerticalAlignment="Center" Margin="0,0,3,0" />
-                            <TextBox Text="{Binding FolhaLarguraMm, UpdateSourceTrigger=LostFocus, StringFormat='{}{0:0.##}'}" KeyDown="FolhaTextBox_KeyDown" Width="40" Height="24" Padding="2,0" FontSize="11" FontWeight="Bold" TextAlignment="Center" VerticalContentAlignment="Center" ToolTip="Largura da Folha (mm) - Pressione Enter para aplicar" />
-                            <TextBlock Text=" × A:" FontSize="10.5" FontWeight="Bold" Foreground="{StaticResource CorTextoSuave}" VerticalAlignment="Center" Margin="3,0,3,0" />
-                            <TextBox Text="{Binding FolhaAlturaMm, UpdateSourceTrigger=LostFocus, StringFormat='{}{0:0.##}'}" KeyDown="FolhaTextBox_KeyDown" Width="40" Height="24" Padding="2,0" FontSize="11" FontWeight="Bold" TextAlignment="Center" VerticalContentAlignment="Center" ToolTip="Altura da Folha (mm) - Pressione Enter para aplicar" />
-                            <TextBlock Text=" mm" FontSize="10.5" Foreground="{StaticResource CorTextoSuave}" VerticalAlignment="Center" Margin="2,0,6,0" />
-                            <Button Command="{Binding AlternarOrientacaoFolhaCommand}" Style="{StaticResource BotaoSecundario}" Width="24" Height="24" Padding="0" ToolTip="Inverter Orientação (Paisagem / Retrato)" AutomationProperties.Name="Inverter Orientação">
-                                <ui:SymbolIcon Symbol="ArrowSync24" FontSize="12" />
-                            </Button>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Background="{StaticResource CorSelecao}" BorderBrush="{StaticResource CorDestaqueBorda}" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,8,0">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Tag24" FontSize="13" Foreground="{StaticResource CorDestaqueTexto}" Margin="0,0,4,0" VerticalAlignment="Center" />
+                            <TextBlock Text="PRODUTO DO SISTEMA:" FontWeight="Bold" FontSize="10.5" Foreground="{StaticResource CorDestaqueTexto}" VerticalAlignment="Center" />
                         </StackPanel>
                     </Border>
-                </StackPanel>
 
-                <!-- Divisor 1 -->
-                <Border Grid.Column="1" Width="1" Background="{StaticResource CorBorda}" Margin="10,2" />
+                    <TextBlock Text="{Binding NomeProdutoAtivo}" FontWeight="Bold" FontSize="13" Foreground="{StaticResource CorTexto}" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding RefProdutoAtivo, StringFormat='{} (REF: {0})'}" Foreground="{StaticResource CorTextoSuave}" FontSize="11" VerticalAlignment="Center" Margin="4,0,10,0" />
 
-                <!-- Grupo 2: Alinhamento do Elemento Selecionado (Atalhos Corel) -->
-                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="ALINHAR:" Foreground="{StaticResource CorTextoSuave}" FontWeight="SemiBold" FontSize="{StaticResource TamMicro}" VerticalAlignment="Center" Margin="0,0,6,0" />
-
-                    <Button Command="{Binding CentralizarNaPaginaCommand}" Style="{StaticResource BotaoRibbon}" ToolTip="Centralizar no centro da etiqueta (P)">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <ui:SymbolIcon Symbol="Maximize24" FontSize="13" Margin="0,0,4,0" VerticalAlignment="Center" />
-                            <TextBlock Text="Pág (P)" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    <!-- Badge se tem etiqueta cadastrada -->
+                    <Border Background="{StaticResource CorSucessoFundo}" BorderBrush="{StaticResource CorSucessoBorda}" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,8,0"
+                            Visibility="{Binding ProdutoTemEtiquetaExclusiva, Converter={StaticResource BoolParaVisibilidadeConverter}}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Checkmark24" FontSize="12" Foreground="{StaticResource CorSucessoTexto}" Margin="0,0,4,0" VerticalAlignment="Center" />
+                            <TextBlock Text="Etiqueta Exclusiva Vinculada" FontWeight="Bold" FontSize="10.5" Foreground="{StaticResource CorSucessoTexto}" VerticalAlignment="Center" />
                         </StackPanel>
-                    </Button>
+                    </Border>
 
-                    <Button Command="{Binding CentralizarHorizontalmenteCommand}" Style="{StaticResource BotaoRibbon}" ToolTip="Centralizar Horizontalmente na Etiqueta (C)">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <ui:SymbolIcon Symbol="AlignCenterHorizontal24" FontSize="13" Margin="0,0,4,0" VerticalAlignment="Center" />
-                            <TextBlock Text="Centro H (C)" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-
-                    <Button Command="{Binding CentralizarVerticalmenteCommand}" Style="{StaticResource BotaoRibbon}" ToolTip="Centralizar Verticalmente na Etiqueta (E)">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <ui:SymbolIcon Symbol="AlignCenterVertical24" FontSize="13" Margin="0,0,4,0" VerticalAlignment="Center" />
-                            <TextBlock Text="Centro V (E)" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-
-                    <Button Command="{Binding AlinharEsquerdaCommand}" Style="{StaticResource BotaoRibbon}" ToolTip="Alinhar à Esquerda na margem (L)">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <ui:SymbolIcon Symbol="AlignLeft24" FontSize="13" Margin="0,0,4,0" VerticalAlignment="Center" />
-                            <TextBlock Text="Esq (L)" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-
-                    <Button Command="{Binding AlinharDireitaCommand}" Style="{StaticResource BotaoRibbon}" ToolTip="Alinhar à Direita na margem (R)">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <ui:SymbolIcon Symbol="AlignRight24" FontSize="13" Margin="0,0,4,0" VerticalAlignment="Center" />
-                            <TextBlock Text="Dir (R)" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-
-                    <Button Command="{Binding AlinharTopoCommand}" Style="{StaticResource BotaoRibbon}" ToolTip="Alinhar ao Topo (T)">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <ui:SymbolIcon Symbol="ArrowUp24" FontSize="13" Margin="0,0,4,0" VerticalAlignment="Center" />
-                            <TextBlock Text="Topo (T)" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-
-                    <Button Command="{Binding AlinharBaseCommand}" Style="{StaticResource BotaoRibbon}" ToolTip="Alinhar à Base (B)">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <ui:SymbolIcon Symbol="ArrowDown24" FontSize="13" Margin="0,0,4,0" VerticalAlignment="Center" />
-                            <TextBlock Text="Base (B)" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-
-                    <Button Command="{Binding TrazerParaFrenteCommand}" Style="{StaticResource BotaoRibbon}" ToolTip="Trazer elemento para o topo (Shift+PageUp)">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <ui:SymbolIcon Symbol="ArrowSortUp24" FontSize="13" Margin="0,0,4,0" VerticalAlignment="Center" />
-                            <TextBlock Text="Frente" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-
-                    <Button Command="{Binding EnviarParaTrasCommand}" Style="{StaticResource BotaoRibbon}" ToolTip="Enviar elemento para trás (Shift+PageDown)">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <ui:SymbolIcon Symbol="ArrowSortDown24" FontSize="13" Margin="0,0,4,0" VerticalAlignment="Center" />
-                            <TextBlock Text="Trás" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-                </StackPanel>
-
-                <!-- Divisor 2 -->
-                <Border Grid.Column="3" Width="1" Background="{StaticResource CorBorda}" Margin="10,2" />
-
-                <!-- Grupo 3: Ações de Edição (Mão, Desfazer, Refazer, Copiar, Colar, Duplicar, Agrupar, Excluir) -->
-                <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Command="{Binding AlternarFerramentaMaoCommand}" ToolTip="Ferramenta Mão para arrastar e navegar na área de trabalho (H)">
-                        <Button.Style>
-                            <Style TargetType="Button" BasedOn="{StaticResource BotaoRibbon}">
+                    <Border Background="{StaticResource CorAvisoFundo}" BorderBrush="{StaticResource CorAvisoBorda}" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,8,0">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Visibility" Value="Collapsed" />
                                 <Style.Triggers>
-                                    <DataTrigger Binding="{Binding FerramentaMaoAtiva}" Value="True">
-                                        <Setter Property="Background" Value="{StaticResource CorSelecao}" />
-                                        <Setter Property="BorderBrush" Value="#2563EB" />
-                                        <Setter Property="Foreground" Value="{StaticResource CorDestaqueTexto}" />
+                                    <DataTrigger Binding="{Binding ProdutoTemEtiquetaExclusiva}" Value="False">
+                                        <Setter Property="Visibility" Value="Visible" />
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
-                        </Button.Style>
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <ui:SymbolIcon Symbol="HandRight24" FontSize="14" Margin="0,0,4,0" VerticalAlignment="Center" />
-                            <TextBlock Text="Mão (H)" FontWeight="SemiBold" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-
-                    <Button Command="{Binding DesfazerCommand}" Style="{StaticResource BotaoRibbon}" ToolTip="Desfazer última ação (Ctrl+Z)">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <ui:SymbolIcon Symbol="ArrowUndo24" FontSize="14" Margin="0,0,4,0" VerticalAlignment="Center" />
-                            <TextBlock Text="Desfazer" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-
-                    <Button Command="{Binding RefazerCommand}" Style="{StaticResource BotaoRibbon}" ToolTip="Refazer ação (Ctrl+Y)">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <ui:SymbolIcon Symbol="ArrowRedo24" FontSize="14" Margin="0,0,4,0" VerticalAlignment="Center" />
-                            <TextBlock Text="Refazer" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-
-                    <Button Command="{Binding CopiarCommand}" Style="{StaticResource BotaoRibbon}" ToolTip="Copiar selecionado (Ctrl+C)">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <ui:SymbolIcon Symbol="Copy24" FontSize="14" Margin="0,0,4,0" VerticalAlignment="Center" />
-                            <TextBlock Text="Copiar" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-
-                    <Button Command="{Binding ColarCommand}" Style="{StaticResource BotaoRibbon}" ToolTip="Colar objeto (Ctrl+V)">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <ui:SymbolIcon Symbol="ClipboardPaste24" FontSize="14" Margin="0,0,4,0" VerticalAlignment="Center" />
-                            <TextBlock Text="Colar" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-
-                    <Button Command="{Binding AgruparCommand}" Style="{StaticResource BotaoRibbon}" ToolTip="Agrupar objetos (Ctrl+G)">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <ui:SymbolIcon Symbol="Group24" FontSize="14" Margin="0,0,4,0" VerticalAlignment="Center" />
-                            <TextBlock Text="Agrupar" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-
-                    <Button Command="{Binding DesagruparCommand}" Style="{StaticResource BotaoRibbon}" ToolTip="Desagrupar objetos (Ctrl+Shift+G)">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <ui:SymbolIcon Symbol="GroupDismiss24" FontSize="14" Margin="0,0,4,0" VerticalAlignment="Center" />
-                            <TextBlock Text="Desagrupar" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-
-                    <Button Command="{Binding DuplicarSelecionadoCommand}" Style="{StaticResource BotaoRibbon}" ToolTip="Duplicar elemento (Ctrl+D)">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <ui:SymbolIcon Symbol="DocumentCopy24" FontSize="14" Margin="0,0,4,0" VerticalAlignment="Center" />
-                            <TextBlock Text="Duplicar" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-
-                    <Button Command="{Binding ExcluirSelecionadoCommand}" Style="{StaticResource BotaoRibbon}" ToolTip="Remover elemento (Del)">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <ui:SymbolIcon Symbol="Delete24" FontSize="14" Margin="0,0,4,0" VerticalAlignment="Center" Foreground="{StaticResource CorPerigo}" />
-                            <TextBlock Text="Excluir" VerticalAlignment="Center" Foreground="{StaticResource CorPerigo}" />
-                        </StackPanel>
-                    </Button>
+                        </Border.Style>
+                        <TextBlock Text="Usando Modelo Padrão Global" FontSize="10.5" FontWeight="SemiBold" Foreground="{StaticResource CorAvisoTexto}" VerticalAlignment="Center" />
+                    </Border>
                 </StackPanel>
 
-                <!-- Grupo 4: Zoom, Impressão Rápida e Arquivo -->
-                <StackPanel Grid.Column="6" Orientation="Horizontal" VerticalAlignment="Center">
-                    <!-- Zoom Controls (Corel Style) -->
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
-                        <Button Command="{Binding ZoomAjustarCommand}" Style="{StaticResource BotaoSecundario}" Content="Ajustar (F4)" Height="26" Padding="6,0" Margin="0,0,4,0" FontSize="10.5" ToolTip="Enquadrar etiqueta inteira na tela (F4)" />
-                        <Button Command="{Binding ZoomMenosCommand}" Style="{StaticResource BotaoSecundario}" Width="26" Height="26" Padding="0" ToolTip="Reduzir zoom">
-                            <ui:SymbolIcon Symbol="Subtract24" FontSize="13" />
-                        </Button>
-                        <Button Command="{Binding ZoomPadraoCommand}" Style="{StaticResource BotaoSecundario}" Content="{Binding ZoomNivel, StringFormat='{}{0:P0}'}" Height="26" Padding="6,0" Margin="4,0" FontSize="11" ToolTip="Restaurar zoom 200%" />
-                        <Button Command="{Binding ZoomMaisCommand}" Style="{StaticResource BotaoSecundario}" Width="26" Height="26" Padding="0" ToolTip="Aumentar zoom">
-                            <ui:SymbolIcon Symbol="Add24" FontSize="13" />
-                        </Button>
-                        <Button Command="{Binding Zoom100Command}" Style="{StaticResource BotaoSecundario}" Content="100%" Height="26" Padding="5,0" Margin="4,0,0,0" FontSize="10.5" ToolTip="Zoom 100% (tamanho real)" />
-                        <Button Command="{Binding Zoom300Command}" Style="{StaticResource BotaoSecundario}" Content="300%" Height="26" Padding="5,0" Margin="4,0,0,0" FontSize="10.5" ToolTip="Zoom 300% (detalhe máximo)" />
-                    </StackPanel>
-
-                    <!-- Impressão de Teste -->
-                    <Button Command="{Binding ImprimirTesteCommand}" Style="{StaticResource BotaoPrimario}" Padding="12,6" Margin="0,0,8,0" ToolTip="Disparar impressão de 1 teste na impressora padrão">
+                <!-- Botões de Ação para o Produto -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Command="{Binding SalvarEtiquetaNoProdutoCommand}" Style="{StaticResource BotaoPrimario}" Padding="12,5" Margin="0,0,6,0"
+                            ToolTip="Cadastrar este layout como etiqueta exclusiva deste produto e aplicar a todos os tamanhos da referência">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <ui:SymbolIcon Symbol="Print24" FontSize="16" Margin="0,0,6,0" VerticalAlignment="Center" />
-                            <TextBlock Text="Imprimir Teste" FontWeight="Bold" VerticalAlignment="Center" />
+                            <ui:SymbolIcon Symbol="Save24" FontSize="14" Margin="0,0,5,0" VerticalAlignment="Center" />
+                            <TextBlock Text="Salvar Etiqueta Neste Produto" FontWeight="Bold" FontSize="11.5" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
 
-                    <Button Command="{Binding SalvarModeloCommand}" Style="{StaticResource BotaoSecundario}" Padding="10,6" Margin="0,0,4,0" ToolTip="Salvar layout em arquivo JSON">
+                    <Button Command="{Binding RestaurarEtiquetaPadraoProdutoCommand}" Style="{StaticResource BotaoSecundario}" Padding="10,5" FontSize="11.5"
+                            Visibility="{Binding ProdutoTemEtiquetaExclusiva, Converter={StaticResource BoolParaVisibilidadeConverter}}"
+                            ToolTip="Remover a etiqueta exclusiva deste produto e voltar a usar a etiqueta padrão">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <ui:SymbolIcon Symbol="Save24" FontSize="14" Margin="0,0,4,0" VerticalAlignment="Center" />
-                            <TextBlock Text="Salvar" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-
-                    <Button Command="{Binding CarregarModeloCommand}" Style="{StaticResource BotaoSecundario}" Padding="10,6" ToolTip="Abrir layout salvo em arquivo JSON">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <ui:SymbolIcon Symbol="FolderOpen24" FontSize="14" Margin="0,0,4,0" VerticalAlignment="Center" />
-                            <TextBlock Text="Abrir" VerticalAlignment="Center" />
+                            <ui:SymbolIcon Symbol="ArrowCounterclockwise24" FontSize="13" Margin="0,0,4,0" VerticalAlignment="Center" />
+                            <TextBlock Text="Restaurar Padrão" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
                 </StackPanel>
             </Grid>
+        </Border>
+
+        <!-- Barra de Ribbon Principal Organizada em Grupos -->
+        <Border Background="{StaticResource CorPainel}" BorderBrush="{StaticResource CorBorda}" BorderThickness="0,0,0,1" Padding="10,6">
+            <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
+
+                <!-- GRUPO 1: DOCUMENTO & FOLHA -->
+                <StackPanel Margin="0,0,6,0">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Command="{Binding AbrirNovoDocumentoCommand}" Style="{StaticResource BotaoPrimario}" Height="28" Padding="10,0" Margin="0,0,5,0" ToolTip="Criar nova folha / modelo de etiqueta (Ctrl+N)">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <ui:SymbolIcon Symbol="Add24" FontSize="14" Margin="0,0,5,0" VerticalAlignment="Center" />
+                                <TextBlock Text="Novo" FontWeight="Bold" FontSize="11.5" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding AbrirGaleriaModelosCommand}" Style="{StaticResource BotaoRibbon}" ToolTip="Ver catálogo completo de modelos e predefinições">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <ui:SymbolIcon Symbol="Sparkle24" FontSize="13" Margin="0,0,4,0" VerticalAlignment="Center" />
+                                <TextBlock Text="Modelos" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                <Border Background="{StaticResource CorSelecaoSuave}" CornerRadius="4" Padding="4,0" Margin="4,0,0,0" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding CatalogoModelos.Count}" Foreground="{StaticResource CorPrimaria}" FontSize="9.5" FontWeight="Black" />
+                                </Border>
+                            </StackPanel>
+                        </Button>
+
+                        <ComboBox ItemsSource="{Binding PresetsDisponiveis}" SelectedItem="{Binding PresetSelecionado}" Width="165" Height="28" FontSize="11" Margin="0,0,5,0"
+                                  SelectionChanged="PresetComboBox_SelectionChanged" ToolTip="Trocar layout atual rapidamente" />
+
+                        <Border Background="{StaticResource CorSuperficieSuave}" BorderBrush="{StaticResource CorBorda}" BorderThickness="1" CornerRadius="{StaticResource RaioPequeno}" Padding="5,1" Height="28" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="L:" FontSize="10" FontWeight="Bold" Foreground="{StaticResource CorTextoSuave}" VerticalAlignment="Center" Margin="0,0,2,0" />
+                                <TextBox Text="{Binding FolhaLarguraMm, UpdateSourceTrigger=LostFocus, StringFormat='{}{0:0.##}'}" KeyDown="FolhaTextBox_KeyDown" Width="34" Height="22" Padding="1,0" FontSize="11" FontWeight="Bold" TextAlignment="Center" VerticalContentAlignment="Center" ToolTip="Largura da Folha (mm)" />
+                                <TextBlock Text="×A:" FontSize="10" FontWeight="Bold" Foreground="{StaticResource CorTextoSuave}" VerticalAlignment="Center" Margin="3,0,2,0" />
+                                <TextBox Text="{Binding FolhaAlturaMm, UpdateSourceTrigger=LostFocus, StringFormat='{}{0:0.##}'}" KeyDown="FolhaTextBox_KeyDown" Width="34" Height="22" Padding="1,0" FontSize="11" FontWeight="Bold" TextAlignment="Center" VerticalContentAlignment="Center" ToolTip="Altura da Folha (mm)" />
+                                <TextBlock Text="mm" FontSize="9.5" Foreground="{StaticResource CorTextoSuave}" VerticalAlignment="Center" Margin="2,0,4,0" />
+                                <Button Command="{Binding AlternarOrientacaoFolhaCommand}" Style="{StaticResource BotaoSecundario}" Width="22" Height="22" Padding="0" ToolTip="Inverter Orientação (Paisagem / Retrato)" AutomationProperties.Name="Inverter Orientação">
+                                    <ui:SymbolIcon Symbol="ArrowSync24" FontSize="11" />
+                                </Button>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                    <TextBlock Text="DOCUMENTO &amp; FOLHA" Style="{StaticResource RotuloGrupoRibbon}" />
+                </StackPanel>
+
+                <Border Width="1" Height="36" Background="{StaticResource CorBorda}" Margin="4,0,8,0" />
+
+                <!-- GRUPO 2: EDIÇÃO & HISTÓRICO -->
+                <StackPanel Margin="0,0,6,0">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Command="{Binding AlternarFerramentaMaoCommand}" ToolTip="Ferramenta Mão para arrastar a área (H ou Segurar Espaço)" AutomationProperties.Name="Ferramenta Mão">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource BotaoIconeRibbon}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding FerramentaMaoAtiva}" Value="True">
+                                            <Setter Property="Background" Value="{StaticResource CorSelecao}" />
+                                            <Setter Property="BorderBrush" Value="{StaticResource CorPrimaria}" />
+                                            <Setter Property="Foreground" Value="{StaticResource CorDestaqueTexto}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                            <ui:SymbolIcon Symbol="HandRight24" FontSize="14" />
+                        </Button>
+
+                        <Button Command="{Binding DesfazerCommand}" Style="{StaticResource BotaoIconeRibbon}" ToolTip="Desfazer (Ctrl+Z)" AutomationProperties.Name="Desfazer">
+                            <ui:SymbolIcon Symbol="ArrowUndo24" FontSize="14" />
+                        </Button>
+
+                        <Button Command="{Binding RefazerCommand}" Style="{StaticResource BotaoIconeRibbon}" ToolTip="Refazer (Ctrl+Y)" AutomationProperties.Name="Refazer">
+                            <ui:SymbolIcon Symbol="ArrowRedo24" FontSize="14" />
+                        </Button>
+
+                        <Button Command="{Binding CopiarCommand}" Style="{StaticResource BotaoIconeRibbon}" ToolTip="Copiar (Ctrl+C)" AutomationProperties.Name="Copiar">
+                            <ui:SymbolIcon Symbol="Copy24" FontSize="14" />
+                        </Button>
+
+                        <Button Command="{Binding ColarCommand}" Style="{StaticResource BotaoIconeRibbon}" ToolTip="Colar (Ctrl+V)" AutomationProperties.Name="Colar">
+                            <ui:SymbolIcon Symbol="ClipboardPaste24" FontSize="14" />
+                        </Button>
+
+                        <Button Command="{Binding DuplicarSelecionadoCommand}" Style="{StaticResource BotaoIconeRibbon}" ToolTip="Duplicar objeto (Ctrl+D)" AutomationProperties.Name="Duplicar">
+                            <ui:SymbolIcon Symbol="DocumentCopy24" FontSize="14" />
+                        </Button>
+
+                        <Button Command="{Binding AgruparCommand}" Style="{StaticResource BotaoIconeRibbon}" ToolTip="Agrupar selecionados (Ctrl+G)" AutomationProperties.Name="Agrupar">
+                            <ui:SymbolIcon Symbol="Group24" FontSize="14" />
+                        </Button>
+
+                        <Button Command="{Binding DesagruparCommand}" Style="{StaticResource BotaoIconeRibbon}" ToolTip="Desagrupar objetos (Ctrl+Shift+G)" AutomationProperties.Name="Desagrupar">
+                            <ui:SymbolIcon Symbol="GroupDismiss24" FontSize="14" />
+                        </Button>
+
+                        <Button Command="{Binding ExcluirSelecionadoCommand}" Style="{StaticResource BotaoIconeRibbon}" ToolTip="Excluir selecionado (Del)" AutomationProperties.Name="Excluir">
+                            <ui:SymbolIcon Symbol="Delete24" FontSize="14" Foreground="{StaticResource CorPerigo}" />
+                        </Button>
+                    </StackPanel>
+                    <TextBlock Text="HISTÓRICO &amp; EDIÇÃO" Style="{StaticResource RotuloGrupoRibbon}" />
+                </StackPanel>
+
+                <Border Width="1" Height="36" Background="{StaticResource CorBorda}" Margin="4,0,8,0" />
+
+                <!-- GRUPO 3: ALINHAR, DISTRIBUIR & ORDEM -->
+                <StackPanel Margin="0,0,6,0">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Command="{Binding CentralizarNaPaginaCommand}" Style="{StaticResource BotaoIconeRibbon}" ToolTip="Centralizar no centro da etiqueta (P)" AutomationProperties.Name="Centralizar na página">
+                            <ui:SymbolIcon Symbol="Maximize24" FontSize="14" />
+                        </Button>
+
+                        <Button Command="{Binding CentralizarHorizontalmenteCommand}" Style="{StaticResource BotaoIconeRibbon}" ToolTip="Centralizar Horizontalmente (C)" AutomationProperties.Name="Centralizar horizontalmente">
+                            <ui:SymbolIcon Symbol="AlignCenterHorizontal24" FontSize="14" />
+                        </Button>
+
+                        <Button Command="{Binding CentralizarVerticalmenteCommand}" Style="{StaticResource BotaoIconeRibbon}" ToolTip="Centralizar Verticalmente (E)" AutomationProperties.Name="Centralizar verticalmente">
+                            <ui:SymbolIcon Symbol="AlignCenterVertical24" FontSize="14" />
+                        </Button>
+
+                        <Button Command="{Binding AlinharEsquerdaCommand}" Style="{StaticResource BotaoIconeRibbon}" ToolTip="Alinhar à Esquerda (L)" AutomationProperties.Name="Alinhar à esquerda">
+                            <ui:SymbolIcon Symbol="AlignLeft24" FontSize="14" />
+                        </Button>
+
+                        <Button Command="{Binding AlinharDireitaCommand}" Style="{StaticResource BotaoIconeRibbon}" ToolTip="Alinhar à Direita (R)" AutomationProperties.Name="Alinhar à direita">
+                            <ui:SymbolIcon Symbol="AlignRight24" FontSize="14" />
+                        </Button>
+
+                        <Button Command="{Binding AlinharTopoCommand}" Style="{StaticResource BotaoIconeRibbon}" ToolTip="Alinhar ao Topo (T)" AutomationProperties.Name="Alinhar ao topo">
+                            <ui:SymbolIcon Symbol="ArrowUp24" FontSize="14" />
+                        </Button>
+
+                        <Button Command="{Binding AlinharBaseCommand}" Style="{StaticResource BotaoIconeRibbon}" ToolTip="Alinhar à Base (B)" AutomationProperties.Name="Alinhar à base">
+                            <ui:SymbolIcon Symbol="ArrowDown24" FontSize="14" />
+                        </Button>
+
+                        <Button Command="{Binding DistribuirHorizontalmenteCommand}" Style="{StaticResource BotaoIconeRibbon}" ToolTip="Distribuir objetos uniformemente na horizontal" AutomationProperties.Name="Distribuir horizontalmente">
+                            <ui:SymbolIcon Symbol="AlignSpaceEvenlyHorizontal24" FontSize="14" />
+                        </Button>
+
+                        <Button Command="{Binding DistribuirVerticalmenteCommand}" Style="{StaticResource BotaoIconeRibbon}" ToolTip="Distribuir objetos uniformemente na vertical" AutomationProperties.Name="Distribuir verticalmente">
+                            <ui:SymbolIcon Symbol="AlignSpaceEvenlyVertical24" FontSize="14" />
+                        </Button>
+
+                        <Button Command="{Binding TrazerParaFrenteCommand}" Style="{StaticResource BotaoIconeRibbon}" ToolTip="Trazer para a Frente (Ctrl+Shift+])" AutomationProperties.Name="Trazer para a frente">
+                            <ui:SymbolIcon Symbol="ArrowSortUp24" FontSize="14" />
+                        </Button>
+
+                        <Button Command="{Binding EnviarParaTrasCommand}" Style="{StaticResource BotaoIconeRibbon}" ToolTip="Enviar para Trás (Ctrl+Shift+[)" AutomationProperties.Name="Enviar para trás">
+                            <ui:SymbolIcon Symbol="ArrowSortDown24" FontSize="14" />
+                        </Button>
+                    </StackPanel>
+                    <TextBlock Text="ALINHAR, DISTRIBUIR &amp; ORDEM" Style="{StaticResource RotuloGrupoRibbon}" />
+                </StackPanel>
+
+                <Border Width="1" Height="36" Background="{StaticResource CorBorda}" Margin="4,0,8,0" />
+
+                <!-- GRUPO 4: ZOOM & ESCALA -->
+                <StackPanel Margin="0,0,6,0">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Command="{Binding Zoom100Command}" Style="{StaticResource BotaoRibbon}" Content="100%" Padding="6,0" ToolTip="Zoom 100% (Escala real)" />
+                        <Button Command="{Binding Zoom200Command}" Style="{StaticResource BotaoRibbon}" Content="200%" Padding="6,0" ToolTip="Zoom 200% (Padrão)" />
+                        <Button Command="{Binding ZoomAjustarCommand}" Style="{StaticResource BotaoRibbon}" Content="Ajustar (F4)" Padding="6,0" ToolTip="Ajustar etiqueta inteira na tela (F4)" />
+                        <Button Command="{Binding ZoomMenosCommand}" Style="{StaticResource BotaoIconeRibbon}" ToolTip="Reduzir zoom (Ctrl + Roda)" AutomationProperties.Name="Reduzir zoom">
+                            <ui:SymbolIcon Symbol="Subtract24" FontSize="13" />
+                        </Button>
+                        <Border Background="{StaticResource CorSuperficieSuave}" BorderBrush="{StaticResource CorBorda}" BorderThickness="1" CornerRadius="4" Padding="6,0" Height="28" Margin="0,0,3,0">
+                            <TextBlock Text="{Binding ZoomNivel, StringFormat='{}{0:P0}'}" FontWeight="Bold" FontSize="11" VerticalAlignment="Center" />
+                        </Border>
+                        <Button Command="{Binding ZoomMaisCommand}" Style="{StaticResource BotaoIconeRibbon}" ToolTip="Aumentar zoom (Ctrl + Roda)" AutomationProperties.Name="Aumentar zoom">
+                            <ui:SymbolIcon Symbol="Add24" FontSize="13" />
+                        </Button>
+                    </StackPanel>
+                    <TextBlock Text="ZOOM &amp; ESCALA" Style="{StaticResource RotuloGrupoRibbon}" />
+                </StackPanel>
+
+                <Border Width="1" Height="36" Background="{StaticResource CorBorda}" Margin="4,0,8,0" />
+
+                <!-- GRUPO 5: IMPRESSÃO & ARQUIVO -->
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Command="{Binding AbrirPreviaImpressaoCommand}" Style="{StaticResource BotaoRibbon}" Padding="9,0" ToolTip="Conferir pré-visualização de todas as etiquetas da grade na folha">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <ui:SymbolIcon Symbol="Eye24" FontSize="14" Foreground="{StaticResource CorPrimaria}" Margin="0,0,5,0" VerticalAlignment="Center" />
+                                <TextBlock Text="Prévia da Folha" FontWeight="SemiBold" Foreground="{StaticResource CorPrimaria}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding ImprimirTesteCommand}" Style="{StaticResource BotaoPrimario}" Height="28" Padding="10,0" Margin="0,0,4,0" ToolTip="Imprimir 1 etiqueta de teste na impressora padrão">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <ui:SymbolIcon Symbol="Print24" FontSize="14" Margin="0,0,5,0" VerticalAlignment="Center" />
+                                <TextBlock Text="Imprimir Teste" FontWeight="Bold" FontSize="11" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding SalvarModeloCommand}" Style="{StaticResource BotaoIconeRibbon}" ToolTip="Salvar layout em arquivo JSON (Ctrl+S)" AutomationProperties.Name="Salvar arquivo">
+                            <ui:SymbolIcon Symbol="Save24" FontSize="14" />
+                        </Button>
+
+                        <Button Command="{Binding CarregarModeloCommand}" Style="{StaticResource BotaoIconeRibbon}" ToolTip="Abrir layout salvo em arquivo JSON" AutomationProperties.Name="Abrir arquivo">
+                            <ui:SymbolIcon Symbol="FolderOpen24" FontSize="14" />
+                        </Button>
+                    </StackPanel>
+                    <TextBlock Text="IMPRESSÃO &amp; ARQUIVO" Style="{StaticResource RotuloGrupoRibbon}" />
+                </StackPanel>
+
+            </WrapPanel>
         </Border>
     </StackPanel>
 </UserControl>

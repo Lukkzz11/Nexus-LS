@@ -47,6 +47,9 @@ public partial class ElementoDesign : ObservableObject
     [ObservableProperty]
     private TextAlignment _alinhamento = TextAlignment.Left;
 
+    [ObservableProperty]
+    private double _espacamentoLetras = 0.0;
+
     // Propriedades para TipoElemento.Imagem
     [ObservableProperty]
     private string? _caminhoImagem;
@@ -118,6 +121,28 @@ public partial class ElementoDesign : ObservableObject
     [ObservableProperty]
     private bool _isSelected;
 
+    [JsonIgnore]
+    public string ResumoCamada => Tipo switch
+    {
+        TipoElemento.Texto => Variavel != VariavelEtiqueta.Nenhuma
+            ? $"Campo: {Variavel} ({TamanhoFonte:0.#}pt)"
+            : $"\"{(Texto.Length > 18 ? Texto[..18] + "…" : Texto)}\" ({TamanhoFonte:0.#}pt)",
+        TipoElemento.CodigoBarras => TipoCodigo == TipoSimboloCodigo.QrCode
+            ? $"QR Code · {Largura:0.#}×{Altura:0.#} mm"
+            : $"{TipoCodigo} · {(Variavel != VariavelEtiqueta.Nenhuma ? Variavel.ToString() : ValorCodigo ?? "Auto")}",
+        TipoElemento.Imagem => $"Imagem · {Largura:0.#}×{Altura:0.#} mm",
+        TipoElemento.Retangulo => $"Moldura · {Largura:0.#}×{Altura:0.#} mm",
+        TipoElemento.Linha => $"Linha · {Largura:0.#} mm",
+        _ => $"{Largura:0.#}×{Altura:0.#} mm"
+    };
+
+    partial void OnTextoChanged(string value) => OnPropertyChanged(nameof(ResumoCamada));
+    partial void OnVariavelChanged(VariavelEtiqueta value) => OnPropertyChanged(nameof(ResumoCamada));
+    partial void OnTamanhoFonteChanged(double value) => OnPropertyChanged(nameof(ResumoCamada));
+    partial void OnLarguraChanged(double value) => OnPropertyChanged(nameof(ResumoCamada));
+    partial void OnAlturaChanged(double value) => OnPropertyChanged(nameof(ResumoCamada));
+    partial void OnTipoCodigoChanged(TipoSimboloCodigo value) => OnPropertyChanged(nameof(ResumoCamada));
+
     public ElementoDesign Clonar()
     {
         return new ElementoDesign
@@ -140,6 +165,7 @@ public partial class ElementoDesign : ObservableObject
             Italico = this.Italico,
             Riscado = this.Riscado,
             Alinhamento = this.Alinhamento,
+            EspacamentoLetras = this.EspacamentoLetras,
             CaminhoImagem = this.CaminhoImagem,
             ImagemBase64 = this.ImagemBase64,
             ManterProporcao = this.ManterProporcao,

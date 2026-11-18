@@ -23,11 +23,16 @@ public partial class DesignerView : UserControl
     private AdornerLayer? _camadaAdorner;
     private ElementoAdorner? _adornerAtual;
 
-    // Controle de Navegação Pan (Mãozinha estilo CAD / Corel)
+    // Controle de Navegação Pan (Mãozinha estilo CAD / Corel + Barra de Espaço)
     private bool _estaEmPan;
+    private bool _espacoPressionado;
     private Point _pontoInicialPan;
     private double _offsetInicialPanH;
     private double _offsetInicialPanV;
+
+    // Guias Magnéticas Inteligentes (Smart Guides)
+    private Line? _guiaMagneticaV;
+    private Line? _guiaMagneticaH;
 
     public DesignerView()
     {
@@ -45,6 +50,8 @@ public partial class DesignerView : UserControl
         {
             win.PreviewKeyDown -= Window_PreviewKeyDown;
             win.PreviewKeyDown += Window_PreviewKeyDown;
+            win.PreviewKeyUp -= Window_PreviewKeyUp;
+            win.PreviewKeyUp += Window_PreviewKeyUp;
         }
         ReconstruirCanvas();
     }
@@ -55,6 +62,7 @@ public partial class DesignerView : UserControl
         if (win != null)
         {
             win.PreviewKeyDown -= Window_PreviewKeyDown;
+            win.PreviewKeyUp -= Window_PreviewKeyUp;
         }
     }
 
@@ -118,6 +126,7 @@ public partial class DesignerView : UserControl
     private void AtualizarAdornerParaSelecionado()
     {
         RemoverAdorner();
+        DesenharReguas();
         if (VM?.ElementoSelecionado == null || EditorCanvas == null) return;
 
         foreach (UIElement child in EditorCanvas.Children)
@@ -213,6 +222,31 @@ public partial class DesignerView : UserControl
 
         var pincelTicks = new SolidColorBrush(Color.FromRgb(0x94, 0xA3, 0xB8)); // slate-400
         var pincelTexto = new SolidColorBrush(Color.FromRgb(0x47, 0x55, 0x69)); // slate-600
+
+        // Destaca nas réguas a faixa ocupada pelo elemento selecionado
+        if (VM.ElementoSelecionado != null)
+        {
+            var sel = VM.ElementoSelecionado;
+            var faixaH = new Rectangle
+            {
+                Width = Math.Max(2, EditorDesenhoService.Dip(sel.Largura) * zoom),
+                Height = 24,
+                Fill = new SolidColorBrush(Color.FromArgb(0x28, 0x25, 0x63, 0xEB))
+            };
+            Canvas.SetLeft(faixaH, EditorDesenhoService.Dip(sel.X) * zoom);
+            Canvas.SetTop(faixaH, 0);
+            ReguaHorizontalCanvas.Children.Add(faixaH);
+
+            var faixaV = new Rectangle
+            {
+                Width = 24,
+                Height = Math.Max(2, EditorDesenhoService.Dip(sel.Altura) * zoom),
+                Fill = new SolidColorBrush(Color.FromArgb(0x28, 0x25, 0x63, 0xEB))
+            };
+            Canvas.SetLeft(faixaV, 0);
+            Canvas.SetTop(faixaV, EditorDesenhoService.Dip(sel.Y) * zoom);
+            ReguaVerticalCanvas.Children.Add(faixaV);
+        }
 
         // Régua Horizontal (X em mm)
         for (int mm = 0; mm <= (int)Math.Ceiling(largMm); mm++)
@@ -326,9 +360,10 @@ public partial class DesignerView : UserControl
         {
             case TipoElemento.Texto:
                 var tamAtivo = VM?.TamanhoParaTeste;
-                var textoExibicao = (VM?.MostrarDadosReais ?? true)
+                var textoBase = (VM?.MostrarDadosReais ?? true)
                     ? EditorDesenhoService.ResolverTexto(el, VM?.ProdutoAtual, tamAtivo, VM?.NomeLoja ?? "NEXUS LS")
                     : el.Texto;
+                var textoExibicao = EditorDesenhoService.AplicarEspacamento(textoBase, el.EspacamentoLetras);
 
                 var txt = new TextBlock
                 {
@@ -581,12 +616,40 @@ public partial class DesignerView : UserControl
                 var novoX = Math.Round((_origemXMm + dxMm) / step) * step;
                 var novoY = Math.Round((_origemYMm + dyMm) / step) * step;
 
+                var largFolha = VM?.Modelo.LarguraMm ?? 50.0;
+                var altFolha = VM?.Modelo.AlturaMm ?? 30.0;
+
                 // Margem livre para permitir reposicionar elementos
                 var margemLivre = 20.0;
-                var limiteX = (VM?.Modelo.LarguraMm ?? 50.0) + margemLivre;
-                var limiteY = (VM?.Modelo.AlturaMm ?? 30.0) + margemLivre;
+                var limiteX = largFolha + margemLivre;
+                var limiteY = altFolha + margemLivre;
                 novoX = Math.Clamp(novoX, -margemLivre, limiteX);
                 novoY = Math.Clamp(novoY, -margemLivre, limiteY);
+
+                // Guias Magnéticas Inteligentes (Smart Guides) quando o Imã está ativo
+                double? snapGuiaXMm = null;
+                double? snapGuiaYMm = null;
+
+                if (VM?.SnapGrade ?? true)
+                {
+                    var centroXEl = novoX + (el.Largura / 2.0);
+                    var centroYEl = novoY + (el.Altura / 2.0);
+                    var centroXFolha = largFolha / 2.0;
+                    var centroYFolha = altFolha / 2.0;
+
+                    if (Math.Abs(centroXEl - centroXFolha) <= 0.8)
+                    {
+                        novoX = Math.Round(centroXFolha - (el.Largura / 2.0), 1);
+                        snapGuiaXMm = centroXFolha;
+                    }
+                    if (Math.Abs(centroYEl - centroYFolha) <= 0.8)
+                    {
+                        novoY = Math.Round(centroYFolha - (el.Altura / 2.0), 1);
+                        snapGuiaYMm = centroYFolha;
+                    }
+                }
+
+                AtualizarGuiasMagneticas(snapGuiaXMm, snapGuiaYMm, largFolha, altFolha);
 
                 el.X = novoX;
                 el.Y = novoY;
@@ -595,6 +658,7 @@ public partial class DesignerView : UserControl
                 Canvas.SetTop(element, EditorDesenhoService.Dip(el.Y));
 
                 _camadaAdorner?.Update();
+                DesenharReguas();
 
                 VM?.AtualizarCoordenadasMouse(novoX, novoY);
             }
@@ -607,12 +671,72 @@ public partial class DesignerView : UserControl
                 _estaArrastando = false;
                 _elementoSendoArrastado = null;
                 element.ReleaseMouseCapture();
+                OcultarGuiasMagneticas();
                 if (VM != null) VM.EmOperacaoInterativa = false;
                 _camadaAdorner?.Update();
+                DesenharReguas();
                 VM?.RegistrarSnapshot();
                 VM?.AtualizarPreview();
             }
         };
+    }
+
+    private void AtualizarGuiasMagneticas(double? xMm, double? yMm, double largFolhaMm, double altFolhaMm)
+    {
+        if (EditorCanvas == null) return;
+
+        if (xMm.HasValue)
+        {
+            _guiaMagneticaV ??= new Line
+            {
+                Stroke = new SolidColorBrush(Color.FromRgb(0xEC, 0x48, 0x99)), // magenta/rosa de precisão
+                StrokeThickness = 0.9,
+                StrokeDashArray = new DoubleCollection { 3, 2 },
+                IsHitTestVisible = false
+            };
+            var xDip = EditorDesenhoService.Dip(xMm.Value);
+            _guiaMagneticaV.X1 = xDip;
+            _guiaMagneticaV.X2 = xDip;
+            _guiaMagneticaV.Y1 = 0;
+            _guiaMagneticaV.Y2 = EditorDesenhoService.Dip(altFolhaMm);
+            if (!EditorCanvas.Children.Contains(_guiaMagneticaV))
+                EditorCanvas.Children.Add(_guiaMagneticaV);
+        }
+        else if (_guiaMagneticaV != null && EditorCanvas.Children.Contains(_guiaMagneticaV))
+        {
+            EditorCanvas.Children.Remove(_guiaMagneticaV);
+        }
+
+        if (yMm.HasValue)
+        {
+            _guiaMagneticaH ??= new Line
+            {
+                Stroke = new SolidColorBrush(Color.FromRgb(0xEC, 0x48, 0x99)),
+                StrokeThickness = 0.9,
+                StrokeDashArray = new DoubleCollection { 3, 2 },
+                IsHitTestVisible = false
+            };
+            var yDip = EditorDesenhoService.Dip(yMm.Value);
+            _guiaMagneticaH.X1 = 0;
+            _guiaMagneticaH.X2 = EditorDesenhoService.Dip(largFolhaMm);
+            _guiaMagneticaH.Y1 = yDip;
+            _guiaMagneticaH.Y2 = yDip;
+            if (!EditorCanvas.Children.Contains(_guiaMagneticaH))
+                EditorCanvas.Children.Add(_guiaMagneticaH);
+        }
+        else if (_guiaMagneticaH != null && EditorCanvas.Children.Contains(_guiaMagneticaH))
+        {
+            EditorCanvas.Children.Remove(_guiaMagneticaH);
+        }
+    }
+
+    private void OcultarGuiasMagneticas()
+    {
+        if (EditorCanvas == null) return;
+        if (_guiaMagneticaV != null && EditorCanvas.Children.Contains(_guiaMagneticaV))
+            EditorCanvas.Children.Remove(_guiaMagneticaV);
+        if (_guiaMagneticaH != null && EditorCanvas.Children.Contains(_guiaMagneticaH))
+            EditorCanvas.Children.Remove(_guiaMagneticaH);
     }
 
     private void IniciarEdicaoTextoInline(Border? container, ElementoDesign el)
@@ -982,6 +1106,34 @@ public partial class DesignerView : UserControl
         UserControl_KeyDown(sender, e);
     }
 
+    private void Window_PreviewKeyUp(object sender, KeyEventArgs e)
+    {
+        UserControl_KeyUp(sender, e);
+    }
+
+    private void UserControl_KeyUp(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Space && _espacoPressionado)
+        {
+            _espacoPressionado = false;
+            _estaEmPan = false;
+            if (VM != null)
+            {
+                VM.FerramentaMaoAtiva = false;
+            }
+            if (CanvasScrollViewer != null)
+            {
+                CanvasScrollViewer.ReleaseMouseCapture();
+                CanvasScrollViewer.Cursor = Cursors.Arrow;
+            }
+            if (EditorCanvas != null)
+            {
+                EditorCanvas.Cursor = Cursors.Arrow;
+            }
+            e.Handled = true;
+        }
+    }
+
     private void FolhaTextBox_KeyDown(object sender, KeyEventArgs e)
     {
         if (e.Key == Key.Enter && sender is TextBox tb)
@@ -1127,6 +1279,20 @@ public partial class DesignerView : UserControl
             return;
         }
 
+        // BARRA DE ESPAÇO (segurar): Ativa temporariamente a Ferramenta Mão para mover a prancheta
+        if (e.Key == Key.Space && !isCtrl && !isAlt)
+        {
+            if (!_espacoPressionado)
+            {
+                _espacoPressionado = true;
+                VM.FerramentaMaoAtiva = true;
+                if (CanvasScrollViewer != null) CanvasScrollViewer.Cursor = Cursors.Hand;
+                if (EditorCanvas != null) EditorCanvas.Cursor = Cursors.Hand;
+            }
+            e.Handled = true;
+            return;
+        }
+
         // H: Ativar/Alternar Ferramenta Mão (Hand Tool)
         if (e.Key == Key.H && !isCtrl && !isAlt)
         {
@@ -1146,6 +1312,12 @@ public partial class DesignerView : UserControl
         // ESC: Fechar Modais se abertos, ou desselecionar / sair da Ferramenta Mão
         if (e.Key == Key.Escape)
         {
+            if (VM.PreviaImpressaoAberta)
+            {
+                VM.PreviaImpressaoAberta = false;
+                e.Handled = true;
+                return;
+            }
             if (VM.ModalCodigoAberto)
             {
                 VM.ModalCodigoAberto = false;

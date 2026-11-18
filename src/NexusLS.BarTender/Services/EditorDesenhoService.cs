@@ -19,6 +19,15 @@ public class EditorDesenhoService
     public static double Dip(double mm) => mm * DipPorMm;
     public static double Mm(double dip) => dip / DipPorMm;
 
+    public static string AplicarEspacamento(string texto, double espacamento)
+    {
+        if (string.IsNullOrEmpty(texto) || espacamento <= 0.1 || texto.Length <= 1)
+            return texto;
+
+        var separador = espacamento >= 2.0 ? " " : espacamento >= 1.0 ? "\u2009" : "\u200A";
+        return string.Join(separador, texto.ToCharArray());
+    }
+
     private static readonly Typeface FontePadrao = new("Segoe UI");
 
     public static void Desenhar(
@@ -138,7 +147,7 @@ public class EditorDesenhoService
         string nomeLoja,
         double x, double y, double larg, double alt)
     {
-        var textoFinal = ResolverTexto(el, produto, tamanho, nomeLoja);
+        var textoFinal = AplicarEspacamento(ResolverTexto(el, produto, tamanho, nomeLoja), el.EspacamentoLetras);
         if (string.IsNullOrEmpty(textoFinal)) return;
 
         var peso = el.Negrito ? FontWeights.Bold : FontWeights.Normal;

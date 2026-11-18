@@ -634,4 +634,81 @@ public class BarTenderTests : IDisposable
         vm.TamanhoParaTeste = "GG";
         Assert.Equal("GG", EditorDesenhoService.ResolverTexto(inserido, null, vm.TamanhoParaTeste, "NEXUS"));
     }
+
+    [Fact]
+    public void DesignerViewModel_DistribuirHorizontalmenteEVerticalmente_CalculaPosicoesUniformes()
+    {
+        var vm = new DesignerViewModel();
+        vm.Modelo = NexusLS.BarTender.Models.Designer.ModeloEtiquetaDesign.CriarEmBranco(50, 60, "Teste Distribuicao");
+
+        var e1 = new NexusLS.BarTender.Models.Designer.ElementoDesign { Nome = "E1", X = 2, Y = 5, Largura = 6, Altura = 5, IsSelected = true };
+        var e2 = new NexusLS.BarTender.Models.Designer.ElementoDesign { Nome = "E2", X = 10, Y = 12, Largura = 6, Altura = 5, IsSelected = true };
+        var e3 = new NexusLS.BarTender.Models.Designer.ElementoDesign { Nome = "E3", X = 42, Y = 45, Largura = 6, Altura = 5, IsSelected = true };
+
+        vm.Modelo.Elementos.Add(e1);
+        vm.Modelo.Elementos.Add(e2);
+        vm.Modelo.Elementos.Add(e3);
+
+        vm.DistribuirHorizontalmenteCommand.Execute(null);
+        // minX = 2, maxX = 48 (42+6), larguras = 18, livre = 28, passo = 14 -> E2.X = 2 + 6 + 14 = 22
+        Assert.Equal(2.0, e1.X);
+        Assert.Equal(22.0, e2.X);
+        Assert.Equal(42.0, e3.X);
+
+        vm.DistribuirVerticalmenteCommand.Execute(null);
+        // minY = 5, maxY = 50 (45+5), alturas = 15, livre = 30, passo = 15 -> E2.Y = 5 + 5 + 15 = 25
+        Assert.Equal(5.0, e1.Y);
+        Assert.Equal(25.0, e2.Y);
+        Assert.Equal(45.0, e3.Y);
+    }
+
+    [Fact]
+    public void DesignerViewModel_AbrirPreviaImpressao_GeraTodasAsEtiquetasDaGradeParaConferencia()
+    {
+        var bermuda = new Produto
+        {
+            Id = 45,
+            Nome = "BERMUDA CARGO",
+            Referencia = "1402",
+            PrecoVendaCentavos = 7000,
+            Tamanhos = new List<ProdutoTamanho>
+            {
+                new() { Tamanho = "42", Ordem = 1, Estoque = 6 },
+                new() { Tamanho = "44", Ordem = 2, Estoque = 8 },
+                new() { Tamanho = "46", Ordem = 3, Estoque = 8 }
+            }
+        };
+
+        var vm = new DesignerViewModel();
+        vm.DefinirProduto(bermuda, "LIFESURF", carregarEtiquetaSalvaSeHouver: false);
+        vm.Modelo = NexusLS.BarTender.Models.Designer.ModeloEtiquetaDesign.CriarTagVestuarioRefTamanho35x60();
+
+        vm.AbrirPreviaImpressaoCommand.Execute(null);
+
+        Assert.True(vm.PreviaImpressaoAberta);
+        Assert.Equal(3, vm.ItensPreviaImpressao.Count);
+        Assert.Equal("42", vm.ItensPreviaImpressao[0].Tamanho);
+        Assert.Equal("14021", vm.ItensPreviaImpressao[0].CodigoBarras);
+        Assert.Equal("44", vm.ItensPreviaImpressao[1].Tamanho);
+        Assert.Equal("14022", vm.ItensPreviaImpressao[1].CodigoBarras);
+        Assert.Equal("46", vm.ItensPreviaImpressao[2].Tamanho);
+        Assert.Equal("14023", vm.ItensPreviaImpressao[2].CodigoBarras);
+    }
+
+    [Fact]
+    public void ElementoDesign_EspacamentoLetrasEResumoCamada_FuncionamCorretamente()
+    {
+        var el = new NexusLS.BarTender.Models.Designer.ElementoDesign
+        {
+            Nome = "Marca",
+            Tipo = NexusLS.BarTender.Models.Designer.TipoElemento.Texto,
+            Texto = "LIFESURF",
+            TamanhoFonte = 12,
+            EspacamentoLetras = 1.5
+        };
+
+        Assert.Contains("LIFESURF", el.ResumoCamada);
+        var textoEspacado = EditorDesenhoService.AplicarEspacamento(el.Texto, el.EspacamentoLetras);
+        Assert.True(textoEspacado.Length > el.Texto.Length);
+    }
 }

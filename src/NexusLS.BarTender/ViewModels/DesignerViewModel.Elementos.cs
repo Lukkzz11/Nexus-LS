@@ -597,6 +597,99 @@ public partial class DesignerViewModel
     }
 
     [RelayCommand]
+    public void DistribuirHorizontalmente()
+    {
+        var alvos = Modelo.Elementos.Where(e => e.IsSelected && e.Visivel && !e.Bloqueado).OrderBy(e => e.X).ToList();
+        if (alvos.Count < 3)
+        {
+            alvos = Modelo.Elementos.Where(e => e.Visivel && !e.Bloqueado).OrderBy(e => e.X).ToList();
+        }
+        if (alvos.Count < 3) return;
+
+        RegistrarSnapshot();
+        var minX = alvos.First().X;
+        var maxX = alvos.Last().X + alvos.Last().Largura;
+        var somaLarguras = alvos.Sum(e => e.Largura);
+        var espacoLivre = Math.Max(0, (maxX - minX) - somaLarguras);
+        var passo = espacoLivre / (alvos.Count - 1);
+
+        var xAtual = minX;
+        foreach (var el in alvos)
+        {
+            el.X = Math.Round(xAtual, 1);
+            xAtual += el.Largura + passo;
+        }
+        AtualizarPreview();
+    }
+
+    [RelayCommand]
+    public void DistribuirVerticalmente()
+    {
+        var alvos = Modelo.Elementos.Where(e => e.IsSelected && e.Visivel && !e.Bloqueado).OrderBy(e => e.Y).ToList();
+        if (alvos.Count < 3)
+        {
+            alvos = Modelo.Elementos.Where(e => e.Visivel && !e.Bloqueado).OrderBy(e => e.Y).ToList();
+        }
+        if (alvos.Count < 3) return;
+
+        RegistrarSnapshot();
+        var minY = alvos.First().Y;
+        var maxY = alvos.Last().Y + alvos.Last().Altura;
+        var somaAlturas = alvos.Sum(e => e.Altura);
+        var espacoLivre = Math.Max(0, (maxY - minY) - somaAlturas);
+        var passo = espacoLivre / (alvos.Count - 1);
+
+        var yAtual = minY;
+        foreach (var el in alvos)
+        {
+            el.Y = Math.Round(yAtual, 1);
+            yAtual += el.Altura + passo;
+        }
+        AtualizarPreview();
+    }
+
+    [RelayCommand]
+    public void DefinirAlinhamentoTexto(string alinhamento)
+    {
+        if (ElementoSelecionado == null) return;
+        if (Enum.TryParse<TextAlignment>(alinhamento, true, out var align))
+        {
+            RegistrarSnapshot();
+            ElementoSelecionado.Alinhamento = align;
+            AtualizarPreview();
+        }
+    }
+
+    [RelayCommand]
+    public void DefinirCorFundo(string hex)
+    {
+        if (ElementoSelecionado == null) return;
+        RegistrarSnapshot();
+        ElementoSelecionado.CorFundo = hex;
+        ElementoSelecionado.Preenchido = true;
+        AtualizarPreview();
+    }
+
+    [RelayCommand]
+    public void AlternarBloqueioSelecionado()
+    {
+        if (ElementoSelecionado == null) return;
+        RegistrarSnapshot();
+        ElementoSelecionado.Bloqueado = !ElementoSelecionado.Bloqueado;
+        NotificarCamadasAlteradas();
+        AtualizarPreview();
+    }
+
+    [RelayCommand]
+    public void AlternarProporcaoSelecionado()
+    {
+        if (ElementoSelecionado == null) return;
+        RegistrarSnapshot();
+        ElementoSelecionado.ManterProporcao = !ElementoSelecionado.ManterProporcao;
+        AtualizarPreview();
+    }
+
+    [RelayCommand]
     public void AvancarCamada()
     {
         if (ElementoSelecionado == null) return;
