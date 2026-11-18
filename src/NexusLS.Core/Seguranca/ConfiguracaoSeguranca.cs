@@ -29,6 +29,9 @@ public class ConfiguracaoSeguranca
     /// <summary>Ao abrir, avisa quantos clientes estão com o crediário vencido e quanto é.</summary>
     public bool AvisarCrediarioAoAbrir { get; set; } = true;
 
+    /// <summary>Ao abrir, avisa os aniversariantes (de hoje e da semana) entre os funcionários, para quem gerencia funcionários.</summary>
+    public bool AvisarAniversariantes { get; set; } = true;
+
     /// <summary>Nome do formato de papel que a tela de Etiquetas já abre escolhido. Vazio = o de bobina 50 × 30.</summary>
     public string? EtiquetaFormatoPadrao { get; set; }
 

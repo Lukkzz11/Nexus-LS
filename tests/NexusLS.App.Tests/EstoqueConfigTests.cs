@@ -131,6 +131,19 @@ public sealed class NotificacoesConfigTests : IDisposable
     }
 
     [Fact]
+    public void Aviso_de_aniversariantes_vem_ligado_e_a_caixinha_grava_e_recarrega()
+    {
+        var vm = Criar();
+        Assert.True(vm.AvisarAniversariantes);
+
+        vm.AvisarAniversariantes = false;
+        vm.SalvarNotificacoesCommand.Execute(null);
+
+        Assert.False(new ConfiguracaoSegurancaStore(_arquivo).Carregar().AvisarAniversariantes);
+        Assert.False(Criar().AvisarAniversariantes);
+    }
+
+    [Fact]
     public void Valor_invalido_mostra_erro_e_nao_grava()
     {
         var vm = Criar();

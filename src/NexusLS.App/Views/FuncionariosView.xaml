@@ -33,8 +33,12 @@
                            Text="O login está desligado: qualquer pessoa que abrir o programa pode tudo. Para ligar, crie o primeiro administrador no painel ao lado. Depois disso o programa passa a pedir o PIN ao abrir e cada funcionário só vê o que o perfil permite." />
             </Border>
 
-            <CheckBox Grid.Row="2" Content="Mostrar desativados" Margin="0,0,0,10" IsChecked="{Binding MostrarInativos}"
-                      Visibility="{Binding LoginAtivo, Converter={StaticResource BoolVis}}" />
+            <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,10"
+                        Visibility="{Binding LoginAtivo, Converter={StaticResource BoolVis}}">
+                <CheckBox Content="Mostrar desativados" VerticalAlignment="Center" IsChecked="{Binding MostrarInativos}" />
+                <Button Content="Exportar CSV" Style="{StaticResource BotaoSecundario}" Margin="16,0,0,0" Command="{Binding ExportarCommand}"
+                        AutomationProperties.Name="Exportar funcionários para CSV" />
+            </StackPanel>
 
             <Border Grid.Row="3" Style="{StaticResource Painel}" Padding="0"
                     Visibility="{Binding LoginAtivo, Converter={StaticResource BoolVis}}">
