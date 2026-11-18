@@ -818,6 +818,18 @@
                                 <Button Content="Enviar o backup selecionado (ou o mais recente) ao Drive" Style="{StaticResource BotaoSecundario}"
                                         Margin="0,10,0,0" HorizontalAlignment="Left" Command="{Binding EnviarBackupAoDriveCommand}" />
 
+                                <Button Content="Limpar backups antigos do Drive..." Style="{StaticResource BotaoSecundario}"
+                                        Margin="0,10,0,0" HorizontalAlignment="Left" Command="{Binding LimparBackupsAntigosDriveCommand}" />
+                                <StackPanel Visibility="{Binding TemPlanoLimpezaDrive, Converter={StaticResource BoolVis}}" Margin="0,10,0,0">
+                                    <TextBlock Text="Estes backups seriam apagados do Drive:" Style="{StaticResource Rotulo}" />
+                                    <ListBox ItemsSource="{Binding PreviaLimpezaDrive}" MaxHeight="180" AutomationProperties.Name="Backups do Drive que seriam apagados" />
+                                    <TextBlock Text="{Binding ResumoLimpezaDrive}" TextWrapping="Wrap" Margin="0,6,0,0" />
+                                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                        <Button Content="Apagar estes backups do Drive" Style="{StaticResource BotaoPrimario}" Command="{Binding ConfirmarLimpezaDriveCommand}" />
+                                        <Button Content="Cancelar" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0" Command="{Binding CancelarLimpezaDriveCommand}" />
+                                    </StackPanel>
+                                </StackPanel>
+
                                 <TextBlock Text="{Binding MensagemGoogle}" TextWrapping="Wrap" Margin="0,10,0,0">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">

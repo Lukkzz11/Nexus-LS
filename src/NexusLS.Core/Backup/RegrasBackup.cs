@@ -15,6 +15,9 @@ public record InfoBackup(string Caminho, DateTime Data, MotivoBackup Motivo, lon
     public string Nome => Path.GetFileName(Caminho);
 }
 
+/// <summary>Um arquivo de backup guardado no Google Drive (datas em UTC).</summary>
+public record ArquivoDrive(string Id, string Nome, DateTime CriadoUtc, DateTime ModificadoUtc, long Bytes);
+
 /// <summary>
 /// Regras puras do backup (nomes, quando fazer, o que apagar): não mexem em arquivo nem em banco,
 /// por isso são fáceis de testar. Datas sempre no horário LOCAL.
@@ -91,6 +94,32 @@ public static class RegrasBackup
             .Where(b => b.Motivo is MotivoBackup.Manual or MotivoBackup.Automatico)
             .OrderByDescending(b => b.Data)
             .Skip(manter)
+            .ToList();
+    }
+
+    /// <summary>Mínimo de backups que a limpeza do Drive SEMPRE deixa, não importa o que for pedido.</summary>
+    public const int MinimoNoDrive = 3;
+    public const int DiasPadraoNoDrive = 30;
+
+    /// <summary>
+    /// Quais backups do Drive podem ser apagados. Fica protegido: os <see cref="MinimoNoDrive"/> (ou <paramref name="manterRecentes"/>,
+    /// se maior) mais recentes, tudo que é mais novo que <paramref name="dias"/> dias e qualquer arquivo que não seja backup
+    /// manual/automático do Nexus (cópias de segurança e arquivos de nome estranho nunca entram). O mais recente nunca é apagado.
+    /// A data usada é a de criação no Drive (UTC).
+    /// </summary>
+    public static IReadOnlyList<ArquivoDrive> SelecionarDoDriveParaApagar(IEnumerable<ArquivoDrive> todos, DateTime agoraUtc,
+        int dias = DiasPadraoNoDrive, int? manterRecentes = null)
+    {
+        var reconhecidos = todos
+            .Where(a => TentarLerNome(a.Nome, out _, out _))
+            .OrderByDescending(a => a.CriadoUtc).ThenByDescending(a => a.Nome, StringComparer.Ordinal)
+            .ToList();
+        var protegerTop = Math.Max(MinimoNoDrive, manterRecentes ?? 0);
+        var limite = agoraUtc.AddDays(-Math.Max(1, dias));
+        return reconhecidos
+            .Skip(protegerTop)
+            .Where(a => a.CriadoUtc < limite)
+            .Where(a => TentarLerNome(a.Nome, out _, out var motivo) && motivo is MotivoBackup.Manual or MotivoBackup.Automatico)
             .ToList();
     }
 
