@@ -349,11 +349,28 @@ public partial class MainWindow : Window
     {
         try
         {
+            var asm = typeof(MainWindow).Assembly;
             var exe = Environment.ProcessPath;
-            var vi = exe is not null && File.Exists(exe) ? FileVersionInfo.GetVersionInfo(exe) : null;
-            return (vi?.ProductVersion ?? vi?.FileVersion ?? "").Split('+')[0] is { Length: > 0 } v ? v : "—";
+            if (exe is not null && File.Exists(exe) && !exe.EndsWith("dotnet.exe", StringComparison.OrdinalIgnoreCase))
+            {
+                var vi = FileVersionInfo.GetVersionInfo(exe);
+                var v = (vi.ProductVersion ?? vi.FileVersion ?? "").Split('+')[0];
+                if (!string.IsNullOrWhiteSpace(v) && v != "1.0.0") return v;
+            }
+
+            var infoVer = System.Reflection.CustomAttributeExtensions.GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>(asm)?.InformationalVersion;
+            if (!string.IsNullOrWhiteSpace(infoVer))
+            {
+                var v = infoVer.Split('+')[0].Trim();
+                if (v.Length > 0 && v != "1.0.0") return v;
+            }
+
+            var ver = asm.GetName().Version;
+            if (ver != null && ver != new Version(1, 0, 0, 0)) return $"{ver.Major}.{ver.Minor}.{ver.Build}";
+
+            return "1.2.29";
         }
-        catch (Exception) { return "—"; }
+        catch (Exception) { return "1.2.29"; }
     }
 
     private static string LocalizarExecutavelPadrao()
@@ -760,11 +777,39 @@ public partial class MainWindow : Window
             var hwid = LicencaService.CodigoDaMaquina();
             Clipboard.SetText(hwid);
             TxtStatusGeral.Text = $"Código deste computador ({hwid}) copiado para a área de transferência!";
-            BtnCopiarHwid.Content = "✓ HWID Copiado!";
+            JanelaDialogo.Mostrar("HWID Copiado", $"Código identificador deste computador copiado:\n\n{hwid}", TipoDialogo.Informacao, this);
         }
         catch (Exception ex)
         {
             JanelaDialogo.Mostrar("Aviso", "Não foi possível copiar o código: " + ex.Message, TipoDialogo.Aviso, this);
+        }
+    }
+
+    private void BtnCopiarDadosLicenca_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var hwid = LicencaService.CodigoDaMaquina();
+            var chave = string.IsNullOrWhiteSpace(TxtChaveLicenca.Text) ? "—" : TxtChaveLicenca.Text.Trim();
+            var relatorio =
+                "=== INFORMAÇÕES DA LICENÇA NEXUS ===\r\n" +
+                $"Cliente: {TxtLicencaCliente.Text}\r\n" +
+                $"Empresa: {TxtLicencaEmpresa.Text}\r\n" +
+                $"Plano: {TxtLicencaPlano.Text}\r\n" +
+                $"Validade: {TxtLicencaValidade.Text}\r\n" +
+                $"Dispositivos Autorizados: {TxtLicencaDispositivos.Text}\r\n" +
+                $"HWID deste Computador: {hwid}\r\n" +
+                $"Chave da Licença: {chave}\r\n" +
+                $"Status: {TxtStatusGeral.Text}\r\n" +
+                "=====================================";
+
+            Clipboard.SetText(relatorio);
+            TxtStatusGeral.Text = "Dados completos da licença copiados para a área de transferência!";
+            JanelaDialogo.Mostrar("Licença Copiada", "As informações completas da licença foram copiadas para a área de transferência.", TipoDialogo.Sucesso, this);
+        }
+        catch (Exception ex)
+        {
+            JanelaDialogo.Mostrar("Aviso", "Não foi possível copiar as informações: " + ex.Message, TipoDialogo.Aviso, this);
         }
     }
 

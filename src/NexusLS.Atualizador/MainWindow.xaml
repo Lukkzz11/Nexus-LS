@@ -507,6 +507,9 @@
                     <!-- Seção Nexus LS -->
                     <Border Style="{StaticResource CardBranco}" Padding="24" Margin="0,0,0,20">
                         <StackPanel>
+                            <!-- Faixa Superior Fluent Blue -->
+                            <Border Height="3" Background="#0067B8" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="-24,-24,-24,18" CornerRadius="8,8,0,0" />
+
                             <Grid Margin="0,0,0,16">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -579,6 +582,9 @@
                     <!-- Seção Nexus BarTender -->
                     <Border Style="{StaticResource CardBranco}" Padding="24">
                         <StackPanel>
+                            <!-- Faixa Superior Esmeralda -->
+                            <Border Height="3" Background="#059669" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="-24,-24,-24,18" CornerRadius="8,8,0,0" />
+
                             <Grid Margin="0,0,0,16">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -656,6 +662,9 @@
                     <!-- Bloco de Ativação -->
                     <Border Style="{StaticResource CardBranco}" Padding="24" Margin="0,0,0,20">
                         <StackPanel>
+                            <!-- Faixa Superior Fluent Blue -->
+                            <Border Height="3" Background="#0067B8" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="-24,-24,-24,18" CornerRadius="8,8,0,0" />
+
                             <TextBlock Text="Ativação da Licença Comercial" FontSize="16" FontWeight="Bold" Foreground="#0F172A" />
                             <TextBlock Text="Informe a chave da assinatura fornecida para autorizar o uso dos sistemas Nexus neste computador." FontSize="12" Foreground="#64748B" Margin="0,3,0,16" />
 
@@ -716,6 +725,9 @@
                     <!-- Bloco de Detalhes da Licença e HWID -->
                     <Border Style="{StaticResource CardBranco}" Padding="24">
                         <StackPanel>
+                            <!-- Faixa Superior Fluent Blue -->
+                            <Border Height="3" Background="#0067B8" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="-24,-24,-24,18" CornerRadius="8,8,0,0" />
+
                             <TextBlock Text="Dados da Licença e Terminais Autorizados" FontSize="16" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,16" />
 
                             <Grid Margin="0,0,0,18">
@@ -773,13 +785,22 @@
                                             <TextBlock x:Name="TxtNomeComputador" Text=" • Terminal" FontSize="12" Foreground="#64748B" VerticalAlignment="Center" Margin="8,0,0,0" />
                                         </StackPanel>
                                     </StackPanel>
-                                    <Button Grid.Column="1" x:Name="BtnCopiarHwid" Style="{StaticResource BotaoSecundario}"
-                                            Padding="14,8" VerticalAlignment="Center" Click="BtnCopiarHwid_Click">
-                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                            <Path Data="{StaticResource IconeCopiar}" Width="13" Height="13" Fill="#334155" Stretch="Uniform" Margin="0,0,6,0" VerticalAlignment="Center" />
-                                            <TextBlock Text="Copiar HWID" VerticalAlignment="Center" />
-                                        </StackPanel>
-                                    </Button>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Button x:Name="BtnCopiarHwid" Style="{StaticResource BotaoSecundario}"
+                                                Padding="14,8" Margin="0,0,8,0" VerticalAlignment="Center" Click="BtnCopiarHwid_Click">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <Path Data="{StaticResource IconeCopiar}" Width="13" Height="13" Fill="#334155" Stretch="Uniform" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                                <TextBlock Text="Copiar HWID" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button x:Name="BtnCopiarDadosLicenca" Style="{StaticResource BotaoSecundario}"
+                                                Padding="14,8" VerticalAlignment="Center" Click="BtnCopiarDadosLicenca_Click">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <Path Data="{StaticResource IconeChave}" Width="13" Height="13" Fill="#0067B8" Stretch="Uniform" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                                <TextBlock Text="Copiar Dados da Licença" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </Button>
+                                    </StackPanel>
                                 </Grid>
                             </Border>
 
@@ -1000,6 +1021,9 @@
                 <StackPanel MaxWidth="880" HorizontalAlignment="Left">
                     <Border Style="{StaticResource CardBranco}" Padding="30" Margin="0,0,0,20">
                         <StackPanel>
+                            <!-- Faixa Superior Fluent Blue -->
+                            <Border Height="3" Background="#0067B8" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="-30,-30,-30,22" CornerRadius="8,8,0,0" />
+
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
                                 <Border Background="#EFF6FF" BorderBrush="#DBEAFE" BorderThickness="1"
                                         CornerRadius="14" Width="64" Height="64" Margin="0,0,18,0" VerticalAlignment="Center">

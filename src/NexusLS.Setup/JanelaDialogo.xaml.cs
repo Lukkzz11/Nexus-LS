@@ -77,13 +77,13 @@ public partial class JanelaDialogo : Window
                 break;
 
             default:
-                BorderIcone.Background = new SolidColorBrush(Color.FromRgb(0xF0, 0xF9, 0xFF));
-                PathIcone.Fill = new SolidColorBrush(Color.FromRgb(0x02, 0x84, 0xC7));
+                BorderIcone.Background = new SolidColorBrush(Color.FromRgb(0xEF, 0xF6, 0xFF));
+                PathIcone.Fill = new SolidColorBrush(Color.FromRgb(0x00, 0x67, 0xB8));
                 PathIcone.Data = Geometry.Parse("M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z");
                 BtnCancelar.Visibility = Visibility.Collapsed;
                 BtnConfirmar.Content = "OK";
-                BtnConfirmar.Background = new SolidColorBrush(Color.FromRgb(0x02, 0x84, 0xC7));
-                BtnConfirmar.BorderBrush = new SolidColorBrush(Color.FromRgb(0x02, 0x84, 0xC7));
+                BtnConfirmar.Background = new SolidColorBrush(Color.FromRgb(0x00, 0x67, 0xB8));
+                BtnConfirmar.BorderBrush = new SolidColorBrush(Color.FromRgb(0x00, 0x67, 0xB8));
                 break;
         }
     }

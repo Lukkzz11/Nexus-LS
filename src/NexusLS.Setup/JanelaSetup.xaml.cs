@@ -151,22 +151,22 @@ public partial class JanelaSetup : Window
         {
             case 1:
                 BtnAvancar.Content = "Avançar >";
-                BtnAvancar.Background = new SolidColorBrush(Color.FromRgb(0x25, 0x63, 0xEB));
-                BtnAvancar.BorderBrush = new SolidColorBrush(Color.FromRgb(0x25, 0x63, 0xEB));
+                BtnAvancar.Background = new SolidColorBrush(Color.FromRgb(0x00, 0x67, 0xB8));
+                BtnAvancar.BorderBrush = new SolidColorBrush(Color.FromRgb(0x00, 0x67, 0xB8));
                 BtnAvancar.IsEnabled = _licencaValidada != null && _licencaValidada.Ativa;
                 break;
 
             case 2:
                 BtnAvancar.Content = "Avançar >";
-                BtnAvancar.Background = new SolidColorBrush(Color.FromRgb(0x25, 0x63, 0xEB));
-                BtnAvancar.BorderBrush = new SolidColorBrush(Color.FromRgb(0x25, 0x63, 0xEB));
+                BtnAvancar.Background = new SolidColorBrush(Color.FromRgb(0x00, 0x67, 0xB8));
+                BtnAvancar.BorderBrush = new SolidColorBrush(Color.FromRgb(0x00, 0x67, 0xB8));
                 BtnAvancar.IsEnabled = ChkAceitoTermos.IsChecked == true;
                 break;
 
             case 3:
                 BtnAvancar.Content = "Avançar >";
-                BtnAvancar.Background = new SolidColorBrush(Color.FromRgb(0x25, 0x63, 0xEB));
-                BtnAvancar.BorderBrush = new SolidColorBrush(Color.FromRgb(0x25, 0x63, 0xEB));
+                BtnAvancar.Background = new SolidColorBrush(Color.FromRgb(0x00, 0x67, 0xB8));
+                BtnAvancar.BorderBrush = new SolidColorBrush(Color.FromRgb(0x00, 0x67, 0xB8));
                 BtnAvancar.IsEnabled = !string.IsNullOrWhiteSpace(TxtCaminhoPasta.Text);
                 break;
 
