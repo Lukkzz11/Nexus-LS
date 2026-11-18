@@ -34,6 +34,7 @@ public sealed class ContainerDeServicos
     public RelatorioCaixaPeriodoService RelatorioCaixa { get; }
     public DemonstrativoService Demonstrativo { get; }
     public DesempenhoService Desempenho { get; }
+    public ResumoVendasService ResumoVendas { get; }
     public ProducaoService Producao { get; }
     public AgendaService Agenda { get; }
     public FinanceiroService Financeiro { get; }
@@ -113,6 +114,7 @@ public sealed class ContainerDeServicos
         RelatorioCaixa = new(fabrica);
         Demonstrativo = new(fabrica);
         Desempenho = new(fabrica);
+        ResumoVendas = new(fabrica);
         Producao = new(fabrica, Produtos);
         Agenda = new(fabrica);
         Financeiro = new(fabrica);

@@ -1,4 +1,4 @@
-<UserControl x:Class="NexusLS.App.Views.DesempenhoVendasView"
+﻿<UserControl x:Class="NexusLS.App.Views.DesempenhoVendasView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:v="clr-namespace:NexusLS.App.Views">
@@ -32,6 +32,26 @@
                 <TextBlock Text="{Binding Rotulo}" FontSize="10" HorizontalAlignment="Center" Margin="0,4,0,0" TextTrimming="CharacterEllipsis" />
             </StackPanel>
         </DataTemplate>
+
+        <DataTemplate x:Key="CartaoIndicador">
+                            <Border Style="{StaticResource Painel}">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Titulo}" Opacity="0.75" />
+                                    <TextBlock Text="{Binding Valor}" FontSize="22" FontWeight="SemiBold" Margin="0,4,0,4" />
+                                    <TextBlock Text="{Binding Variacao}" FontSize="12">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Subiu}" Value="True"><Setter Property="Foreground" Value="{StaticResource CorPositivo}" /></DataTrigger>
+                                                    <DataTrigger Binding="{Binding Caiu}" Value="True"><Setter Property="Foreground" Value="{StaticResource CorNegativo}" /></DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+                                </DataTemplate>
 
         <DataTemplate x:Key="LinhaDeRanking">
             <Grid Margin="0,3">
@@ -94,31 +114,10 @@
             <StackPanel Margin="0,0,8,0">
                 <!-- Indicadores -->
                 <!-- os indicadores se repartem na largura toda (5 lado a lado em tela larga) -->
-                <ItemsControl ItemsSource="{Binding Indicadores}" Margin="0,0,0,12">
+                <ItemsControl ItemsSource="{Binding Indicadores}" ItemTemplate="{StaticResource CartaoIndicador}" Margin="0,0,0,12">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate><v:GradeDeCartoes LarguraMinima="220" MaximoColunas="5" Espaco="12" IgualarAltura="True" /></ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Border Style="{StaticResource Painel}">
-                                <StackPanel>
-                                    <TextBlock Text="{Binding Titulo}" Opacity="0.75" />
-                                    <TextBlock Text="{Binding Valor}" FontSize="22" FontWeight="SemiBold" Margin="0,4,0,4" />
-                                    <TextBlock Text="{Binding Variacao}" FontSize="12">
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding Subiu}" Value="True"><Setter Property="Foreground" Value="{StaticResource CorPositivo}" /></DataTrigger>
-                                                    <DataTrigger Binding="{Binding Caiu}" Value="True"><Setter Property="Foreground" Value="{StaticResource CorNegativo}" /></DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
-                                </StackPanel>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
                 </ItemsControl>
                 <TextBlock Text="{Binding AvisoLucro}" Foreground="DarkOrange" TextWrapping="Wrap" Margin="0,0,0,12" />
 
@@ -184,6 +183,98 @@
                         </StackPanel>
                     </Border>
                 </UniformGrid>
+
+                <!-- Resumo completo de vendas -->
+                <Border Style="{StaticResource Painel}" Margin="0,0,0,12">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Resumo completo de vendas" Style="{StaticResource Subtitulo}" Margin="0" FontSize="16" VerticalAlignment="Center" />
+                            <Button Grid.Column="1" Content="Exportar resumo (CSV)" Style="{StaticResource BotaoSecundario}" Padding="12,6"
+                                    Command="{Binding ExportarResumoCommand}" AutomationProperties.Name="Exportar resumo de vendas em CSV" />
+                        </Grid>
+                        <TextBlock Text="Considera o período escolhido, sem os filtros acima. Vendas canceladas ficam fora dos totais." Opacity="0.75" TextWrapping="Wrap" Margin="0,0,0,10" />
+
+                        <ItemsControl ItemsSource="{Binding ResumoIndicadores}" ItemTemplate="{StaticResource CartaoIndicador}" Margin="0,0,0,8">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><v:GradeDeCartoes LarguraMinima="220" MaximoColunas="3" Espaco="12" IgualarAltura="True" /></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                        <TextBlock Text="{Binding ResumoCancelamentos}" Opacity="0.75" TextWrapping="Wrap" Margin="0,0,0,12" />
+
+                        <UniformGrid Columns="2">
+                            <StackPanel Margin="0,0,12,12">
+                                <TextBlock Text="Total por forma de pagamento" Style="{StaticResource Subtitulo}" />
+                                <ItemsControl ItemsSource="{Binding ResumoFormas}" ItemTemplate="{StaticResource LinhaDeRanking}" />
+                            </StackPanel>
+                            <StackPanel Margin="12,0,0,12">
+                                <TextBlock Text="Melhores dias da semana" Style="{StaticResource Subtitulo}" />
+                                <ItemsControl ItemsSource="{Binding ResumoDias}" ItemTemplate="{StaticResource LinhaDeRanking}" />
+                                <TextBlock Text="Melhores horários" Style="{StaticResource Subtitulo}" Margin="0,12,0,8" />
+                                <ItemsControl ItemsSource="{Binding ResumoHorarios}" ItemTemplate="{StaticResource LinhaDeRanking}" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,12,12">
+                                <TextBlock Text="Mais vendidos por quantidade" Style="{StaticResource Subtitulo}" />
+                                <ItemsControl ItemsSource="{Binding ResumoPorQuantidade}" ItemTemplate="{StaticResource LinhaDeRanking}" />
+                            </StackPanel>
+                            <StackPanel Margin="12,0,0,12">
+                                <TextBlock Text="Mais vendidos por valor" Style="{StaticResource Subtitulo}" />
+                                <ItemsControl ItemsSource="{Binding ResumoPorValor}" ItemTemplate="{StaticResource LinhaDeRanking}" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,12,0">
+                                <TextBlock Text="Por vendedor" Style="{StaticResource Subtitulo}" />
+                                <ItemsControl ItemsSource="{Binding ResumoVendedores}" ItemTemplate="{StaticResource LinhaDeRanking}" />
+                                <TextBlock Text="{Binding AvisoVendedores}" TextWrapping="Wrap" Opacity="0.75" />
+                            </StackPanel>
+                        </UniformGrid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Pesquisa por referência/produto -->
+                <Border Style="{StaticResource Painel}" Margin="0,0,0,12">
+                    <StackPanel>
+                        <TextBlock Text="Pesquisar referência/produto" Style="{StaticResource Subtitulo}" FontSize="16" />
+                        <TextBox Text="{Binding PesquisaReferencia, UpdateSourceTrigger=PropertyChanged}" MaxWidth="460" HorizontalAlignment="Left" Width="460"
+                                 AutomationProperties.Name="Pesquisar referência ou produto" ToolTip="Referência, código interno, código de barras ou nome" />
+                        <TextBlock Text="Digite a referência, o código ou parte do nome. Mostra o que foi vendido no período escolhido." Opacity="0.75" Margin="0,6,0,0" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding BuscaAviso}" Foreground="DarkOrange" Margin="0,8,0,0" TextWrapping="Wrap" />
+                        <StackPanel Margin="0,10,0,0">
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding TemBusca}" Value="True"><Setter Property="Visibility" Value="Visible" /></DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <TextBlock Text="{Binding BuscaTotais}" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,10" TextWrapping="Wrap" />
+                            <TextBlock Text="Por variação (tamanho)" Style="{StaticResource Subtitulo}" />
+                            <ItemsControl ItemsSource="{Binding BuscaVariacoes}" ItemTemplate="{StaticResource LinhaDeRanking}" Margin="0,0,0,10" />
+                            <TextBlock Text="Vendas em que apareceu" Style="{StaticResource Subtitulo}" />
+                            <ItemsControl ItemsSource="{Binding BuscaVendas}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,3">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="160" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="90" />
+                                                <ColumnDefinition Width="120" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding Data}" />
+                                            <TextBlock Grid.Column="1" Text="{Binding Numero}" />
+                                            <TextBlock Grid.Column="2" Text="{Binding Quantidade}" Opacity="0.75" />
+                                            <TextBlock Grid.Column="3" Text="{Binding Valor}" TextAlignment="Right" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
             </StackPanel>
         </ScrollViewer>
 
