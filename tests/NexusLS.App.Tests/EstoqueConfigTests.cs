@@ -212,3 +212,50 @@ public sealed class EtiquetasConfigTests : IDisposable
         Assert.Equal(NexusLS.Core.Etiquetas.FormatoEtiqueta.Bobina50x30, tela!.FormatoSelecionado);
     }
 }
+
+public sealed class IntegracoesConfigTests : IDisposable
+{
+    private readonly BancoDeTeste _banco = new();
+    private readonly string _pasta = Path.Combine(Path.GetTempPath(), "nexus_integ_" + Guid.NewGuid().ToString("N"));
+    public void Dispose() { _banco.Dispose(); try { Directory.Delete(_pasta, true); } catch (IOException) { } }
+
+    private ConfiguracoesViewModel Criar(Func<string?> pasta)
+    {
+        ConfiguracoesViewModel? vm = null;
+        Capturador.Rodar(() =>
+        {
+            var config = new ConfiguracaoService(_banco.Fabrica);
+            vm = new ConfiguracoesViewModel(config, new CupomService(_banco.Fabrica, config, new ImpressoraDeMentira()));
+            vm.EscolherPastaContador = pasta;
+            vm.UsarIntegracoes(new PacoteContador(_banco.Fabrica), () => new[] { ("Google", "Conectado."), ("ERP", "Ainda não configurado.") });
+        });
+        return vm!;
+    }
+
+    [Fact]
+    public void Lista_a_situacao_de_cada_servico_e_sugere_o_mes_passado()
+    {
+        var vm = Criar(() => null);
+        Assert.Equal(2, vm.Integracoes.Count);
+        Assert.Equal("Conectado.", vm.Integracoes[0].Situacao);
+        Assert.Equal(new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1).AddMonths(-1), vm.MesContador!.Inicio);
+    }
+
+    [Fact]
+    public async Task Exportar_grava_os_arquivos_na_pasta_escolhida()
+    {
+        var vm = Criar(() => _pasta);
+        await vm.ExportarContadorCommand.ExecuteAsync(null);
+        Assert.False(vm.MensagemIntegracoesEhErro);
+        Assert.Contains("3 arquivos", vm.MensagemIntegracoes);
+        Assert.Equal(3, Directory.GetFiles(_pasta, "*.csv").Length);
+    }
+
+    [Fact]
+    public async Task Cancelar_a_escolha_da_pasta_nao_faz_nada()
+    {
+        var vm = Criar(() => null);
+        await vm.ExportarContadorCommand.ExecuteAsync(null);
+        Assert.Equal("", vm.MensagemIntegracoes);
+    }
+}

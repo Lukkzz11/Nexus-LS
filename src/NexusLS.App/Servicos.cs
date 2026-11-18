@@ -52,6 +52,7 @@ public sealed class ContainerDeServicos
     public NexusLS.Core.Backup.GestorBackup Backup { get; }
     public NexusLS.Core.Seguranca.ConfiguracaoSegurancaStore Seguranca { get; }
     public ComissaoService Comissoes { get; }
+    public PacoteContador Contador { get; }
     public NexusLS.Core.Atualizacao.AtualizadorService Atualizador { get; }
     public NexusLS.App.ViewModels.AtualizacaoViewModel Atualizacao { get; }
     public LimpezaService Limpeza { get; }
@@ -121,6 +122,7 @@ public sealed class ContainerDeServicos
         Pedidos = new(fabrica);
         Funcionarios = new(fabrica);
         Comissoes = new(fabrica);
+        Contador = new(fabrica);
         Atividades = new(fabrica);
         ContasFinanceiras = new(fabrica);
         Cartoes = new(fabrica);

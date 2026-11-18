@@ -63,8 +63,7 @@ public partial class ConfiguracoesView : UserControl
         ("DADOS E NUVEM", new[]
         {
             new Entrada("backup", "Backup e nuvem", SymbolRegular.CloudArrowUp24, "PgBackup"),
-            new Entrada("integracoes", "Integrações", SymbolRegular.PlugConnected24, null, "Outros serviços e troca de dados.",
-                new[] { "Exportar para o contador", "Importar do ERP antigo" }),
+            new Entrada("integracoes", "Integrações", SymbolRegular.PlugConnected24, "PgIntegracoes"),
             new Entrada("comunicacao", "Comunicação", SymbolRegular.Chat24, null, "Mensagens prontas para o cliente.",
                 new[] { "Texto padrão de recibo, cobrança e aniversário (WhatsApp e e-mail)" }),
             new Entrada("dados", "Apagar dados", SymbolRegular.ShieldCheckmark24, "PgDados"),
@@ -82,7 +81,7 @@ public partial class ConfiguracoesView : UserControl
     private readonly Dictionary<string, System.Windows.Controls.Button> _botoesMenu = new();
 
     private IEnumerable<FrameworkElement> Paginas() =>
-        new FrameworkElement[] { PgLoja, PgAparencia, PgVendas, PgParametros, PgBackup, PgSistema, PgAtalhos, PgDados, PgSeguranca, PgCaixa, PgCrediario, PgComissoes, PgEstoque, PgNotificacoes, PgEtiquetas, PgBreve };
+        new FrameworkElement[] { PgLoja, PgAparencia, PgVendas, PgParametros, PgBackup, PgSistema, PgAtalhos, PgDados, PgSeguranca, PgCaixa, PgCrediario, PgComissoes, PgEstoque, PgNotificacoes, PgEtiquetas, PgIntegracoes, PgBreve };
 
     private void MontarMenu()
     {

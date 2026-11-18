@@ -318,6 +318,57 @@
                         </Border>
                     </StackPanel>
                 </ScrollViewer>
+                <ScrollViewer x:Name="PgIntegracoes" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="0,16,12,0">
+                    <StackPanel MaxWidth="860" HorizontalAlignment="Left" Margin="0,0,0,24">
+                        <Border Style="{StaticResource Painel}" Margin="0,0,0,16" Visibility="{Binding TemIntegracoes, Converter={StaticResource BoolVis}}">
+                            <StackPanel>
+                                <TextBlock Text="Serviços ligados ao Nexus" FontSize="18" FontWeight="SemiBold" />
+                                <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
+                                           Text="Só mostra a situação. Cada serviço é configurado onde sempre foi: Google em Backup, Mercado Pago em Pagamentos, nuvem e ERP na tela de conexão." />
+                                <ItemsControl ItemsSource="{Binding Integracoes}" Margin="0,10,0,0">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="0,4">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="300" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{Binding Nome}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                                <TextBlock Grid.Column="1" Text="{Binding Situacao}" Foreground="{StaticResource CorTextoSuave}" TextWrapping="Wrap" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <Button Content="Atualizar" Style="{StaticResource BotaoSecundario}" Margin="0,12,0,0" HorizontalAlignment="Left"
+                                        Command="{Binding AtualizarIntegracoesCommand}" />
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource Painel}" Visibility="{Binding TemIntegracoes, Converter={StaticResource BoolVis}}">
+                            <StackPanel>
+                                <TextBlock Text="Exportar para o contador" FontSize="18" FontWeight="SemiBold" />
+                                <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
+                                           Text="Gera 3 planilhas do mês (abrem direto no Excel): vendas, itens vendidos e contas a pagar e a receber. As canceladas vêm marcadas na coluna Situação. As contas entram pela data de vencimento." />
+                                <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                                    <ComboBox ItemsSource="{Binding MesesContador}" DisplayMemberPath="Texto" SelectedItem="{Binding MesContador}"
+                                              Width="220" Padding="8,7" AutomationProperties.Name="Mês" />
+                                    <Button Content="Exportar..." Style="{StaticResource BotaoPrimario}" Margin="8,0,0,0" Command="{Binding ExportarContadorCommand}" />
+                                </StackPanel>
+                                <TextBlock Text="{Binding MensagemIntegracoes}" TextWrapping="Wrap" Margin="0,10,0,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{StaticResource CorPositivo}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding MensagemIntegracoesEhErro}" Value="True">
+                                                    <Setter Property="Foreground" Value="{StaticResource CorNegativo}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
                 <ScrollViewer x:Name="PgSeguranca" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="0,16,12,0">
                     <StackPanel MaxWidth="760" HorizontalAlignment="Left" Margin="0,0,0,24">
                         <Border Style="{StaticResource Painel}" Margin="0,0,0,16" Visibility="{Binding TemSeguranca, Converter={StaticResource BoolVis}}">

@@ -116,6 +116,13 @@ public partial class GestaoViewModel : ObservableObject
         config.UsarEstoque(_servicos.Estoque);
         config.UsarNotificacoes();
         config.UsarEtiquetas(_servicos.ModelosEtiqueta);
+        config.UsarIntegracoes(_servicos.Contador, () => new (string, string)[]
+        {
+            ("Google Drive (backup e agenda)", _servicos.Google.Situacao()),
+            ("Nuvem Firebase (catálogo e sincronização)", _servicos.Firebase.Carregar().EstaCompleta ? "Configurada." : "Ainda não configurada."),
+            ("Mercado Pago (Pix)", _servicos.PagamentosConfig.Ler() is { MercadoPagoAtivo: true, TemToken: true } ? "Ativo." : "Desligado ou sem token."),
+            ("ERP (importação e envio)", _servicos.ErpConfig.Carregar().EstaCompleta ? "Configurado." : "Ainda não configurado."),
+        });
         config.UsarGoogle(_servicos.Google, url => System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true }));
         Abrir(config, ItemMenu.Configuracoes);
     }
