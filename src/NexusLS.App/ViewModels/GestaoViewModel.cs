@@ -113,6 +113,7 @@ public partial class GestaoViewModel : ObservableObject
         config.AbrirPasta = pasta => System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", "\"" + pasta + "\"") { UseShellExecute = true });
         config.UsarSeguranca(_servicos.Seguranca);
         config.UsarComissoes(_servicos.Comissoes, _servicos.Funcionarios);
+        config.UsarEstoque(_servicos.Estoque);
         config.UsarGoogle(_servicos.Google, url => System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true }));
         Abrir(config, ItemMenu.Configuracoes);
     }

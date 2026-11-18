@@ -203,6 +203,49 @@
                         </Border>
                     </StackPanel>
                 </ScrollViewer>
+                <ScrollViewer x:Name="PgEstoque" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="0,16,12,0">
+                    <StackPanel MaxWidth="860" HorizontalAlignment="Left" Margin="0,0,0,24">
+                        <Border Style="{StaticResource Painel}" Margin="0,0,0,16" Visibility="{Binding TemEstoqueConfig, Converter={StaticResource BoolVis}}">
+                            <StackPanel>
+                                <TextBlock Text="Aviso de estoque baixo" FontSize="18" FontWeight="SemiBold" />
+                                <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
+                                           Text="Produto fica abaixo do mínimo quando o estoque atual é menor que o estoque mínimo dele. O mínimo de cada produto é definido no cadastro; o valor sugerido para produtos novos fica em Parâmetros." />
+                                <CheckBox Margin="0,14,0,0" IsChecked="{Binding AvisarEstoqueBaixo}">
+                                    <TextBlock Text="Avisar ao abrir o Nexus quando houver produto abaixo do mínimo" TextWrapping="Wrap" />
+                                </CheckBox>
+                                <Button Content="Salvar" Style="{StaticResource BotaoPrimario}" Margin="0,16,0,0" HorizontalAlignment="Left"
+                                        Command="{Binding SalvarEstoqueCommand}" />
+                                <TextBlock Text="{Binding MensagemEstoque}" TextWrapping="Wrap" Margin="0,10,0,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{StaticResource CorPositivo}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding MensagemEstoqueEhErro}" Value="True">
+                                                    <Setter Property="Foreground" Value="{StaticResource CorNegativo}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource Painel}" Visibility="{Binding TemEstoqueConfig, Converter={StaticResource BoolVis}}">
+                            <StackPanel>
+                                <TextBlock Text="Situação agora" FontSize="18" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding ResumoEstoqueBaixo}" Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0" />
+                                <ItemsControl ItemsSource="{Binding ListaEstoqueBaixo}" Margin="0,10,0,0">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding}" Margin="0,2" TextTrimming="CharacterEllipsis" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <Button Content="Atualizar" Style="{StaticResource BotaoSecundario}" Margin="0,12,0,0" HorizontalAlignment="Left"
+                                        Command="{Binding AtualizarEstoqueBaixoCommand}" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
                 <ScrollViewer x:Name="PgSeguranca" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="0,16,12,0">
                     <StackPanel MaxWidth="760" HorizontalAlignment="Left" Margin="0,0,0,24">
                         <Border Style="{StaticResource Painel}" Margin="0,0,0,16" Visibility="{Binding TemSeguranca, Converter={StaticResource BoolVis}}">

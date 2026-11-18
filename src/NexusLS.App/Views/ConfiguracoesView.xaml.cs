@@ -49,8 +49,7 @@ public partial class ConfiguracoesView : UserControl
             new Entrada("caixa", "Caixa", SymbolRegular.Money24, "PgCaixa"),
             new Entrada("crediario", "Crediário e clientes", SymbolRegular.People24, "PgCrediario"),
             new Entrada("comissoes", "Comissões", SymbolRegular.Calculator24, "PgComissoes"),
-            new Entrada("estoque", "Estoque e produtos", SymbolRegular.Box24, null, "Alertas e padrões do cadastro.",
-                new[] { "Aviso de estoque baixo", "Unidades e tamanhos padrão (PP, P, M, G…)" }),
+            new Entrada("estoque", "Estoque e produtos", SymbolRegular.Box24, "PgEstoque"),
         }),
         ("PAGAMENTOS E FISCAL", new[]
         {
@@ -85,7 +84,7 @@ public partial class ConfiguracoesView : UserControl
     private readonly Dictionary<string, System.Windows.Controls.Button> _botoesMenu = new();
 
     private IEnumerable<FrameworkElement> Paginas() =>
-        new FrameworkElement[] { PgLoja, PgAparencia, PgVendas, PgParametros, PgBackup, PgSistema, PgAtalhos, PgDados, PgSeguranca, PgCaixa, PgCrediario, PgComissoes, PgBreve };
+        new FrameworkElement[] { PgLoja, PgAparencia, PgVendas, PgParametros, PgBackup, PgSistema, PgAtalhos, PgDados, PgSeguranca, PgCaixa, PgCrediario, PgComissoes, PgEstoque, PgBreve };
 
     private void MontarMenu()
     {

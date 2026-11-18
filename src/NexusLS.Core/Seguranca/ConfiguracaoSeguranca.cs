@@ -16,6 +16,9 @@ public class ConfiguracaoSeguranca
     /// <summary>Se ligado, quem não tem acesso à Gestão nem vê o botão (desligado: o botão aparece e pede o PIN de um gerente).</summary>
     public bool EsconderGestaoSemAcesso { get; set; }
 
+    /// <summary>Ao abrir o Nexus, avisa se há produtos abaixo do estoque mínimo. Ligado por padrão.</summary>
+    public bool AvisarEstoqueBaixoAoAbrir { get; set; } = true;
+
     /// <summary>Retirada de dinheiro (sangria ou despesa) acima disto precisa de gerente. 0 = sem limite.</summary>
     public long SangriaMaximaSemGerenteCentavos { get; set; }
 

@@ -107,6 +107,8 @@ public partial class MainWindow : FluentWindow
         vm.AbrirConexaoBanco = () => new Views.ConexaoBancoWindow(App.Servicos.Firebase, App.Servicos.Operacional) { Owner = this }.ShowDialog() == true;
         vm.AtualizarBanco();
 
+        Loaded += async (_, _) => await AvisarEstoqueBaixoAsync(vm);
+
         // Atualização: as perguntas ficam aqui (janela); a consulta ao abrir é silenciosa e nunca atrapalha o uso.
         vm.Atualizacao.Confirmar = texto =>
             System.Windows.MessageBox.Show(this, texto, "Atualizar o Nexus", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question) == System.Windows.MessageBoxResult.Yes;
@@ -117,5 +119,26 @@ public partial class MainWindow : FluentWindow
         // Sincronização: o login do Firebase é opcional ("Continuar sem entrar"); a fila espera até alguém entrar.
         vm.Sincronizacao.PedirLogin = () => Views.LoginFirebaseWindow.Pedir(App.Servicos.Login, this);
         Loaded += async (_, _) => await vm.Sincronizacao.IniciarAsync();
+    }
+
+    /// <summary>Ao abrir, avisa uma vez se há produto abaixo do estoque mínimo (se a loja deixou ligado). Nunca atrapalha a abertura.</summary>
+    private async Task AvisarEstoqueBaixoAsync(ViewModels.MainViewModel vm)
+    {
+        try
+        {
+            if (!App.Servicos.Seguranca.Carregar().AvisarEstoqueBaixoAoAbrir || !Seguranca.Sessao.Pode(NexusLS.Core.Models.Permissao.Estoque)) return;
+            var baixos = await App.Servicos.Estoque.ListarAbaixoDoMinimoAsync();
+            if (baixos.Count == 0) return;
+            var nomes = string.Join("\n", baixos.Take(5).Select(p => $"• {p.Nome} (estoque {p.EstoqueAtual}, mínimo {p.EstoqueMinimo})"));
+            var mais = baixos.Count > 5 ? $"\n... e mais {baixos.Count - 5}." : "";
+            var r = System.Windows.MessageBox.Show(this,
+                $"{baixos.Count} produto(s) abaixo do estoque mínimo:\n\n{nomes}{mais}\n\nAbrir o estoque agora?",
+                "Estoque baixo", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Information);
+            if (r == System.Windows.MessageBoxResult.Yes) vm.IrParaEstoqueCommand.Execute(null);
+        }
+        catch (Exception)
+        {
+            // O aviso é só um lembrete: se não der para consultar, o Nexus abre normalmente.
+        }
     }
 }
