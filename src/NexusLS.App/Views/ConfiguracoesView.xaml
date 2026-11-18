@@ -1,4 +1,4 @@
-<UserControl x:Class="NexusLS.App.Views.ConfiguracoesView"
+﻿<UserControl x:Class="NexusLS.App.Views.ConfiguracoesView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:v="clr-namespace:NexusLS.App.Views">
@@ -374,8 +374,10 @@
                             <StackPanel>
                                 <TextBlock Text="Resumo do dia para o celular" FontSize="18" FontWeight="SemiBold" />
                                 <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
-                                           Text="Gera uma página com as vendas de hoje, caixa, contas, crediário e estoque baixo, pronta para ler no celular. Salve numa pasta do Google Drive ou mande o arquivo por WhatsApp ou e-mail. É uma foto do momento: gere de novo para atualizar." />
-                                <Button Content="Gerar resumo..." Style="{StaticResource BotaoPrimario}" Margin="0,12,0,0" HorizontalAlignment="Left"
+                                           Text="Gera uma página com as vendas de hoje, comparação com ontem, mais vendidos, caixa, contas, crediário e estoque baixo, pronta para ler no celular. Salve numa pasta do Google Drive ou mande o arquivo por WhatsApp ou e-mail. É uma foto do momento: gere de novo para atualizar." />
+                                <CheckBox Content="Salvar com a data no nome (resumo-AAAA-MM-DD.html)" Margin="0,10,0,0"
+                                          IsChecked="{Binding ResumoCelularComData}" />
+                                <Button Content="Gerar resumo..." Style="{StaticResource BotaoPrimario}" Margin="0,10,0,0" HorizontalAlignment="Left"
                                         Command="{Binding GerarResumoCelularCommand}" />
                                 <TextBlock Text="{Binding MensagemResumoCelular}" TextWrapping="Wrap" Margin="0,10,0,0">
                                     <TextBlock.Style>
