@@ -18,6 +18,11 @@ public static class AvisosAoAbrir
         return partes.Count == 0 ? null : "Contas a pagar: " + string.Join("; ", partes) + ".";
     }
 
+    /// <summary>Frase sobre o crediário vencido, ou nulo se ninguém está devendo vencido.</summary>
+    public static string? Crediario(int clientesComVencida, long vencidaCentavos) =>
+        clientesComVencida <= 0 || vencidaCentavos <= 0 ? null
+            : $"Crediário vencido: {clientesComVencida} cliente(s), {Dinheiro.Formatar(vencidaCentavos)}.";
+
     /// <summary>Frase sobre o backup se o último é mais velho que <paramref name="dias"/> (ou nunca houve), senão nulo.</summary>
     public static string? Backup(DateTime? ultimo, DateTime agora, int dias)
     {

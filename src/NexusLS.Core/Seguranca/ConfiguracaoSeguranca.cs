@@ -26,6 +26,9 @@ public class ConfiguracaoSeguranca
     /// <summary>Ao abrir, avisa se o último backup é mais velho que <see cref="DiasBackupAtrasado"/> dias (ou se nunca foi feito).</summary>
     public bool AvisarBackupAtrasado { get; set; } = true;
 
+    /// <summary>Ao abrir, avisa quantos clientes estão com o crediário vencido e quanto é.</summary>
+    public bool AvisarCrediarioAoAbrir { get; set; } = true;
+
     /// <summary>Nome do formato de papel que a tela de Etiquetas já abre escolhido. Vazio = o de bobina 50 × 30.</summary>
     public string? EtiquetaFormatoPadrao { get; set; }
 

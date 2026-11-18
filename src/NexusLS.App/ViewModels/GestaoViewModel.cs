@@ -129,6 +129,7 @@ public partial class GestaoViewModel : ObservableObject
         config.UsarComunicacao();
         config.UsarEtiquetas(_servicos.ModelosEtiqueta);
         config.UsarFiscal();
+        config.UsarResumoCelular(_servicos.Inicio);
         config.UsarIntegracoes(_servicos.Contador, () => new (string, string)[]
         {
             ("Google Drive (backup e agenda)", _servicos.Google.Situacao()),

@@ -261,6 +261,9 @@
                                     <TextBox Text="{Binding DiasContasTexto, UpdateSourceTrigger=PropertyChanged}" Width="60" Margin="8,0" AutomationProperties.Name="Dias de aviso das contas" />
                                     <TextBlock Text="dia(s)  (0 = só hoje)" VerticalAlignment="Center" />
                                 </StackPanel>
+                                <CheckBox Margin="0,18,0,0" IsChecked="{Binding AvisarCrediario}">
+                                    <TextBlock Text="Avisar quantos clientes estão com o crediário vencido" TextWrapping="Wrap" />
+                                </CheckBox>
                                 <CheckBox Margin="0,18,0,0" IsChecked="{Binding AvisarBackupAtrasado}">
                                     <TextBlock Text="Avisar quando o backup estiver atrasado" TextWrapping="Wrap" />
                                 </CheckBox>
@@ -359,6 +362,27 @@
                                             <Setter Property="Foreground" Value="{StaticResource CorPositivo}" />
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding MensagemIntegracoesEhErro}" Value="True">
+                                                    <Setter Property="Foreground" Value="{StaticResource CorNegativo}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource Painel}" Margin="0,12,0,0" Visibility="{Binding TemResumoCelular, Converter={StaticResource BoolVis}}">
+                            <StackPanel>
+                                <TextBlock Text="Resumo do dia para o celular" FontSize="18" FontWeight="SemiBold" />
+                                <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
+                                           Text="Gera uma página com as vendas de hoje, caixa, contas, crediário e estoque baixo, pronta para ler no celular. Salve numa pasta do Google Drive ou mande o arquivo por WhatsApp ou e-mail. É uma foto do momento: gere de novo para atualizar." />
+                                <Button Content="Gerar resumo..." Style="{StaticResource BotaoPrimario}" Margin="0,12,0,0" HorizontalAlignment="Left"
+                                        Command="{Binding GerarResumoCelularCommand}" />
+                                <TextBlock Text="{Binding MensagemResumoCelular}" TextWrapping="Wrap" Margin="0,10,0,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{StaticResource CorPositivo}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding MensagemResumoCelularEhErro}" Value="True">
                                                     <Setter Property="Foreground" Value="{StaticResource CorNegativo}" />
                                                 </DataTrigger>
                                             </Style.Triggers>

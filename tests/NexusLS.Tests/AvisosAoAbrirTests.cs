@@ -57,4 +57,14 @@ public sealed class AvisosAoAbrirTests : IDisposable
         var l = await new FinanceiroService(_banco.Fabrica).ListarContasAPagarProximasAsync(3, Hoje);
         Assert.Equal(new long[] { 100, 200 }, l.Select(x => x.ValorCentavos).ToArray());
     }
+
+    [Fact]
+    public void Crediario_so_avisa_quando_ha_vencido()
+    {
+        Assert.Null(AvisosAoAbrir.Crediario(0, 0));
+        Assert.Null(AvisosAoAbrir.Crediario(2, 0));
+        var f = AvisosAoAbrir.Crediario(2, 15000);
+        Assert.Contains("2 cliente(s)", f);
+        Assert.Contains("150,00", f);
+    }
 }
