@@ -36,6 +36,24 @@ public class ConfiguracaoSeguranca
     public string? MensagemCobranca { get; set; }
     public int DiasBackupAtrasado { get; set; } = 3;
 
+    /// <summary>Regime tributário da empresa (chave de <see cref="Services.PreparoFiscal.Regimes"/>). Vazio = ainda não informado.</summary>
+    public string? FiscalRegime { get; set; }
+
+    /// <summary>"Homologacao" (teste, sem valor fiscal) ou "Producao". Começa em homologação.</summary>
+    public string FiscalAmbiente { get; set; } = Services.PreparoFiscal.Homologacao;
+
+    /// <summary>Série da NFC-e (1 a 999).</summary>
+    public int FiscalSerie { get; set; } = 1;
+
+    /// <summary>Identificador do CSC (só o número; o código secreto NÃO é guardado aqui).</summary>
+    public string? FiscalCscId { get; set; }
+
+    /// <summary>NCM (8 dígitos) que já vem preenchido em produto novo.</summary>
+    public string? FiscalNcmPadrao { get; set; }
+
+    /// <summary>CFOP (4 dígitos) padrão das vendas. Vazio = 5102 (venda de mercadoria).</summary>
+    public string? FiscalCfopPadrao { get; set; }
+
     /// <summary>Retirada de dinheiro (sangria ou despesa) acima disto precisa de gerente. 0 = sem limite.</summary>
     public long SangriaMaximaSemGerenteCentavos { get; set; }
 
@@ -65,6 +83,18 @@ public class ConfiguracaoSeguranca
 
     public void Validar()
     {
+        if (!string.IsNullOrWhiteSpace(FiscalRegime) && !Services.PreparoFiscal.Regimes.ContainsKey(FiscalRegime))
+            throw new RegraDeNegocioException("Regime tributário desconhecido.");
+        if (FiscalAmbiente != Services.PreparoFiscal.Homologacao && FiscalAmbiente != Services.PreparoFiscal.Producao)
+            throw new RegraDeNegocioException("O ambiente fiscal deve ser homologação ou produção.");
+        if (FiscalSerie < 1 || FiscalSerie > 999)
+            throw new RegraDeNegocioException("A série da nota deve ficar entre 1 e 999.");
+        if (!string.IsNullOrWhiteSpace(FiscalCscId) && (!FiscalCscId.All(char.IsAsciiDigit) || FiscalCscId.Length > 6))
+            throw new RegraDeNegocioException("O ID do CSC é só o número (até 6 dígitos).");
+        if (!string.IsNullOrWhiteSpace(FiscalNcmPadrao) && !(FiscalNcmPadrao.Length == 8 && FiscalNcmPadrao.All(char.IsAsciiDigit)))
+            throw new RegraDeNegocioException("O NCM tem 8 números.");
+        if (!string.IsNullOrWhiteSpace(FiscalCfopPadrao) && !(FiscalCfopPadrao.Length == 4 && FiscalCfopPadrao.All(char.IsAsciiDigit)))
+            throw new RegraDeNegocioException("O CFOP tem 4 números.");
         if ((MensagemCobranca?.Length ?? 0) > Services.MensagensCliente.MaximoCaracteres)
             throw new RegraDeNegocioException($"A mensagem de cobrança pode ter no máximo {Services.MensagensCliente.MaximoCaracteres} letras.");
         if (DiasAvisoContas < 0 || DiasAvisoContas > 60)

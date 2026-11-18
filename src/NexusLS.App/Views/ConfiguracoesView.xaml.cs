@@ -53,8 +53,7 @@ public partial class ConfiguracoesView : UserControl
         ("PAGAMENTOS E FISCAL", new[]
         {
             new Entrada("pagamentos", "Pagamentos (Pix)", SymbolRegular.Payment24, null),
-            new Entrada("fiscal", "Fiscal", SymbolRegular.DocumentText24, null, "Preparação para a nota fiscal (NFC-e).",
-                new[] { "Regime tributário, inscrição estadual e série", "Certificado digital", "Emissão de NFC-e direto do PDV" }),
+            new Entrada("fiscal", "Fiscal", SymbolRegular.DocumentText24, "PgFiscal"),
         }),
         ("EQUIPE E SEGURANÇA", new[]
         {
@@ -80,7 +79,7 @@ public partial class ConfiguracoesView : UserControl
     private readonly Dictionary<string, System.Windows.Controls.Button> _botoesMenu = new();
 
     private IEnumerable<FrameworkElement> Paginas() =>
-        new FrameworkElement[] { PgLoja, PgAparencia, PgVendas, PgParametros, PgBackup, PgSistema, PgAtalhos, PgDados, PgSeguranca, PgCaixa, PgCrediario, PgComissoes, PgEstoque, PgNotificacoes, PgEtiquetas, PgIntegracoes, PgComunicacao, PgBreve };
+        new FrameworkElement[] { PgLoja, PgAparencia, PgVendas, PgParametros, PgBackup, PgSistema, PgAtalhos, PgDados, PgSeguranca, PgCaixa, PgCrediario, PgComissoes, PgEstoque, PgNotificacoes, PgEtiquetas, PgIntegracoes, PgComunicacao, PgFiscal, PgBreve };
 
     private void MontarMenu()
     {

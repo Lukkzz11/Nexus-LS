@@ -341,3 +341,64 @@ public sealed class ComunicacaoConfigTests : IDisposable
         Assert.Contains("telefone válido", vm.Mensagem);
     }
 }
+
+public sealed class FiscalConfigTests : IDisposable
+{
+    private readonly BancoDeTeste _banco = new();
+    private readonly string _arquivo = Path.Combine(Path.GetTempPath(), "nexus_fis_" + Guid.NewGuid().ToString("N") + ".json");
+
+    public void Dispose()
+    {
+        NexusLS.App.Seguranca.Alcada.Config = () => new();
+        _banco.Dispose();
+        try { File.Delete(_arquivo); } catch (IOException) { }
+    }
+
+    private ConfiguracoesViewModel CriarConfig()
+    {
+        ConfiguracoesViewModel? vm = null;
+        Capturador.Rodar(() =>
+        {
+            var config = new ConfiguracaoService(_banco.Fabrica);
+            vm = new ConfiguracoesViewModel(config, new CupomService(_banco.Fabrica, config, new ImpressoraDeMentira()));
+            vm.UsarSeguranca(new ConfiguracaoSegurancaStore(_arquivo));
+            vm.UsarFiscal();
+        });
+        return vm!;
+    }
+
+    [Fact]
+    public void Comeca_em_homologacao_serie_1_e_com_pendencias()
+    {
+        var vm = CriarConfig();
+        Assert.Equal("Homologação (teste)", vm.AmbienteFiscal);
+        Assert.Equal("1", vm.SerieFiscal);
+        Assert.Contains(vm.ChecklistFiscal, l => l.StartsWith("✖") && l.Contains("Regime"));
+    }
+
+    [Fact]
+    public void Salvar_grava_e_o_regime_completa_o_item_da_lista()
+    {
+        var vm = CriarConfig();
+        vm.RegimeFiscal = "Simples Nacional";
+        vm.SerieFiscal = "2";
+        vm.CscIdFiscal = "1";
+        vm.NcmPadraoFiscal = "22021000";
+        vm.SalvarFiscalCommand.Execute(null);
+        var c = new ConfiguracaoSegurancaStore(_arquivo).Carregar();
+        Assert.Equal("SimplesNacional", c.FiscalRegime);
+        Assert.Equal(2, c.FiscalSerie);
+        Assert.Equal("22021000", c.FiscalNcmPadrao);
+        Assert.Contains(vm.ChecklistFiscal, l => l.StartsWith("✔") && l.Contains("Regime"));
+    }
+
+    [Fact]
+    public void Ncm_invalido_nao_salva()
+    {
+        var vm = CriarConfig();
+        vm.NcmPadraoFiscal = "123";
+        vm.SalvarFiscalCommand.Execute(null);
+        Assert.True(vm.MensagemFiscalEhErro);
+        Assert.Null(new ConfiguracaoSegurancaStore(_arquivo).Carregar().FiscalNcmPadrao);
+    }
+}

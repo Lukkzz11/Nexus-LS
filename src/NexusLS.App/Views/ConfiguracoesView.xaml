@@ -404,6 +404,51 @@
                         </Border>
                     </StackPanel>
                 </ScrollViewer>
+                <ScrollViewer x:Name="PgFiscal" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="0,16,12,0">
+                    <StackPanel MaxWidth="860" HorizontalAlignment="Left" Margin="0,0,0,24">
+                        <Border Style="{StaticResource Painel}" Visibility="{Binding TemSeguranca, Converter={StaticResource BoolVis}}">
+                            <StackPanel>
+                                <TextBlock Text="Preparação para a NFC-e" FontSize="18" FontWeight="SemiBold" />
+                                <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
+                                           Text="O Nexus ainda não emite nota fiscal. Aqui você deixa os dados prontos. O certificado digital e o código secreto do CSC não são guardados aqui: ficam para a etapa de emissão." />
+                                <TextBlock Text="Regime tributário" Style="{StaticResource Rotulo}" Margin="0,14,0,4" />
+                                <ComboBox ItemsSource="{Binding RegimesFiscais}" SelectedItem="{Binding RegimeFiscal}" Width="260" HorizontalAlignment="Left" Padding="8,7" AutomationProperties.Name="Regime tributário" />
+                                <TextBlock Text="Ambiente" Style="{StaticResource Rotulo}" Margin="0,12,0,4" />
+                                <ComboBox ItemsSource="{Binding AmbientesFiscais}" SelectedItem="{Binding AmbienteFiscal}" Width="260" HorizontalAlignment="Left" Padding="8,7" AutomationProperties.Name="Ambiente" />
+                                <TextBlock Text="Série da nota" Style="{StaticResource Rotulo}" Margin="0,12,0,4" />
+                                <TextBox Text="{Binding SerieFiscal, UpdateSourceTrigger=PropertyChanged}" Width="100" HorizontalAlignment="Left" Padding="8,7" AutomationProperties.Name="Série da nota" />
+                                <TextBlock Text="ID do CSC (só o número)" Style="{StaticResource Rotulo}" Margin="0,12,0,4" />
+                                <TextBox Text="{Binding CscIdFiscal, UpdateSourceTrigger=PropertyChanged}" Width="140" HorizontalAlignment="Left" Padding="8,7" AutomationProperties.Name="ID do CSC (só o número)" />
+                                <TextBlock Text="NCM padrão (8 números)" Style="{StaticResource Rotulo}" Margin="0,12,0,4" />
+                                <TextBox Text="{Binding NcmPadraoFiscal, UpdateSourceTrigger=PropertyChanged}" Width="160" HorizontalAlignment="Left" Padding="8,7" AutomationProperties.Name="NCM padrão (8 números)" />
+                                <TextBlock Text="CFOP padrão (4 números, vazio = 5102)" Style="{StaticResource Rotulo}" Margin="0,12,0,4" />
+                                <TextBox Text="{Binding CfopPadraoFiscal, UpdateSourceTrigger=PropertyChanged}" Width="160" HorizontalAlignment="Left" Padding="8,7" AutomationProperties.Name="CFOP padrão (4 números, vazio = 5102)" />
+                                <Button Content="Salvar" Style="{StaticResource BotaoPrimario}" Margin="0,16,0,0" HorizontalAlignment="Left"
+                                        Command="{Binding SalvarFiscalCommand}" />
+                                <TextBlock Text="{Binding MensagemFiscal}" TextWrapping="Wrap" Margin="0,10,0,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{StaticResource CorPositivo}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding MensagemFiscalEhErro}" Value="True">
+                                                    <Setter Property="Foreground" Value="{StaticResource CorNegativo}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource Painel}" Margin="0,12,0,0" Visibility="{Binding TemSeguranca, Converter={StaticResource BoolVis}}">
+                            <StackPanel>
+                                <TextBlock Text="O que já está pronto" FontSize="18" FontWeight="SemiBold" />
+                                <ItemsControl ItemsSource="{Binding ChecklistFiscal}" Margin="0,8,0,0" />
+                                <Button Content="Conferir de novo" Style="{StaticResource BotaoSecundario}" Margin="0,12,0,0" HorizontalAlignment="Left"
+                                        Command="{Binding AtualizarChecklistFiscalCommand}" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
                 <ScrollViewer x:Name="PgSeguranca" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="0,16,12,0">
                     <StackPanel MaxWidth="760" HorizontalAlignment="Left" Margin="0,0,0,24">
                         <Border Style="{StaticResource Painel}" Margin="0,0,0,16" Visibility="{Binding TemSeguranca, Converter={StaticResource BoolVis}}">
