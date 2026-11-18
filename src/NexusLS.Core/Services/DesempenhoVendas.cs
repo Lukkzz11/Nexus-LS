@@ -88,13 +88,8 @@ public static class DesempenhoVendas
                     "Venda sem itens detalhados", RelatorioService.SemCategoria, 0, v.TotalCentavos, null));
                 continue;
             }
-            long alocado = 0;
-            for (var i = 0; i < itens.Count; i++)
+            foreach (var (item, valor) in ValoresLiquidos(v, itens, somaBruto))
             {
-                var item = itens[i];
-                var valor = i == itens.Count - 1 ? v.TotalCentavos - alocado
-                    : (long)Math.Round((decimal)item.TotalCentavos * v.TotalCentavos / somaBruto, MidpointRounding.AwayFromZero);
-                alocado += valor;
                 produtos.TryGetValue(item.ProdutoId, out var cad);
                 long? custo = item.CustoUnitarioCentavos ?? (cad.Custo > 0 ? cad.Custo : null);
                 if (custo is <= 0) custo = null;
@@ -103,6 +98,22 @@ public static class DesempenhoVendas
             }
         }
         return linhas;
+    }
+
+    /// <summary>O total da venda (desconto/acréscimo inclusos) rateado pelo valor bruto de cada item; a diferença de centavos fica no último.</summary>
+    public static List<(ItemVenda Item, long Valor)> ValoresLiquidos(Venda v, List<ItemVenda> itens, long somaBruto)
+    {
+        var r = new List<(ItemVenda, long)>();
+        long alocado = 0;
+        for (var i = 0; i < itens.Count; i++)
+        {
+            var item = itens[i];
+            var valor = i == itens.Count - 1 ? v.TotalCentavos - alocado
+                : (long)Math.Round((decimal)item.TotalCentavos * v.TotalCentavos / somaBruto, MidpointRounding.AwayFromZero);
+            alocado += valor;
+            r.Add((item, valor));
+        }
+        return r;
     }
 
     // ------------------------------------------------------------------ indicadores

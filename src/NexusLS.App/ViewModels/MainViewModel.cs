@@ -94,7 +94,7 @@ public partial class MainViewModel : ObservableObject
         new FechamentoViewModel(_servicos.Caixa, _servicos.Configuracao, _servicos.RelatorioCaixa), _servicos.Clientes, _servicos.Configuracao), ItemMenu.Caixa);
     [RelayCommand] private void IrParaTrocas() => Abrir(new TrocasViewModel(_servicos.Trocas, _servicos.Cupons), ItemMenu.Trocas);
     [RelayCommand] private void IrParaPedidos() => Abrir(new PedidosViewModel(_servicos.Pedidos, _servicos.Produtos, _servicos.Clientes, _servicos.Cupons), ItemMenu.Pedidos);
-    [RelayCommand] private void IrParaDesempenho() => Abrir(new DesempenhoVendasViewModel(_servicos.Desempenho), ItemMenu.Desempenho);
+    [RelayCommand] private void IrParaDesempenho() => Abrir(new DesempenhoVendasViewModel(_servicos.Desempenho, resumo: _servicos.ResumoVendas), ItemMenu.Desempenho);
     [RelayCommand] private void IrParaMaisVendidos() => Abrir(new MaisVendidosViewModel(_servicos.Relatorios), ItemMenu.MaisVendidos);
 
     // Estoque

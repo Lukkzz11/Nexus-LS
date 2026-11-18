@@ -17,6 +17,9 @@ public sealed record Indicador(string Titulo, string Valor, string Variacao, boo
 /// <summary>Uma linha dos rankings (mais vendidos, menos vendidos, sem venda).</summary>
 public sealed record LinhaRanking(string Nome, string Detalhe);
 
+/// <summary>Uma venda onde apareceu a referência pesquisada.</summary>
+public sealed record LinhaVendaBusca(string Data, string Numero, string Quantidade, string Valor);
+
 /// <summary>
 /// Desempenho de vendas: indicadores do período contra o anterior, vendas no tempo, rankings e quebras por categoria,
 /// forma de pagamento e quem vendeu. Os gráficos são barras desenhadas pela própria tela (sem biblioteca).
@@ -25,13 +28,18 @@ public partial class DesempenhoVendasViewModel : ViewModelBase
 {
     private static readonly CultureInfo PtBr = CultureInfo.GetCultureInfo("pt-BR");
     private readonly DesempenhoService _servico;
+    private readonly ResumoVendasService? _resumo;
+    private ResumoVendas.Completo? _ultimoResumo;
+    private ResumoVendas.ResultadoBusca? _ultimaBusca;
+    private int _versaoResumo;
     private readonly Func<DateTime> _hoje;
     private int _versao;
     private bool _definindo; // true enquanto um atalho troca período e datas de uma vez (carrega só no fim)
 
-    public DesempenhoVendasViewModel(DesempenhoService servico, Func<DateTime>? hoje = null)
+    public DesempenhoVendasViewModel(DesempenhoService servico, Func<DateTime>? hoje = null, ResumoVendasService? resumo = null)
     {
         _servico = servico;
+        _resumo = resumo;
         _hoje = hoje ?? (() => DateTime.Today);
         _ate = _hoje().Date;
         _de = _ate.Value.AddDays(-29);
@@ -47,6 +55,27 @@ public partial class DesempenhoVendasViewModel : ViewModelBase
     public ObservableCollection<LinhaRanking> MaisVendidosLista { get; } = new();
     public ObservableCollection<LinhaRanking> MenosVendidosLista { get; } = new();
     public ObservableCollection<LinhaRanking> SemVendasLista { get; } = new();
+
+    // Resumo completo de vendas e pesquisa por referência/produto
+    public ObservableCollection<Indicador> ResumoIndicadores { get; } = new();
+    public ObservableCollection<LinhaRanking> ResumoFormas { get; } = new();
+    public ObservableCollection<LinhaRanking> ResumoDias { get; } = new();
+    public ObservableCollection<LinhaRanking> ResumoHorarios { get; } = new();
+    public ObservableCollection<LinhaRanking> ResumoPorQuantidade { get; } = new();
+    public ObservableCollection<LinhaRanking> ResumoPorValor { get; } = new();
+    public ObservableCollection<LinhaRanking> ResumoVendedores { get; } = new();
+    public ObservableCollection<LinhaRanking> BuscaVariacoes { get; } = new();
+    public ObservableCollection<LinhaVendaBusca> BuscaVendas { get; } = new();
+
+    [ObservableProperty] private string _pesquisaReferencia = "";
+    [ObservableProperty] private string _buscaTotais = "";
+    [ObservableProperty] private string _buscaAviso = "";
+    [ObservableProperty] private string _resumoCancelamentos = "";
+    [ObservableProperty] private string _avisoVendedores = "";
+    [ObservableProperty] private bool _temBusca;
+    [ObservableProperty] private bool _temResumo;
+
+    partial void OnPesquisaReferenciaChanged(string value) => _ = ExecutarAsync(CarregarResumoAsync);
 
     private const string Todas = "Todas";
     private bool _preenchendoFiltros;
@@ -206,6 +235,76 @@ public partial class DesempenhoVendasViewModel : ViewModelBase
         Preencher(MaisVendidosLista, r.MaisVendidos.Select(p => new LinhaRanking(p.Nome, $"{p.Pecas} peça(s) · {Dinheiro.Formatar(p.ValorCentavos)}")));
         Preencher(MenosVendidosLista, r.MenosVendidos.Select(p => new LinhaRanking(p.Nome, $"{p.Pecas} peça(s) · {Dinheiro.Formatar(p.ValorCentavos)}")));
         Preencher(SemVendasLista, r.SemVendas.Select(p => new LinhaRanking(p.Nome, $"{p.Categoria} · estoque {p.Estoque}")));
+        await CarregarResumoAsync();
+    });
+
+    /// <summary>Resumo completo (sem os filtros acima) e pesquisa por referência, do período escolhido.</summary>
+    private async Task CarregarResumoAsync()
+    {
+        if (_resumo is null || De is not DateTime de || Ate is not DateTime ate) return;
+        var versao = ++_versaoResumo;
+        var periodo = Resolver(TipoPeriodo.Personalizado, _hoje(), de, ate);
+        var (r, busca) = await _resumo.GerarAsync(periodo, PesquisaReferencia);
+        if (versao != _versaoResumo) return;
+        _ultimoResumo = r;
+        _ultimaBusca = busca;
+        TemResumo = r.Vendas.Atual > 0 || r.Canceladas > 0;
+
+        ResumoIndicadores.Clear();
+        ResumoIndicadores.Add(Montar("Total vendido", Dinheiro.Formatar(r.Total.Atual), r.Total.VariacaoPct));
+        ResumoIndicadores.Add(Montar("Número de vendas", r.Vendas.Atual.ToString(PtBr), r.Vendas.VariacaoPct));
+        ResumoIndicadores.Add(Montar("Ticket médio", Dinheiro.Formatar(r.TicketMedio.Atual), r.TicketMedio.VariacaoPct));
+        ResumoIndicadores.Add(Montar("Peças vendidas", r.Pecas.Atual.ToString(PtBr), r.Pecas.VariacaoPct));
+        ResumoIndicadores.Add(new Indicador("Descontos concedidos", Dinheiro.Formatar(r.DescontosCentavos), "", false, false));
+        ResumoIndicadores.Add(new Indicador("Período anterior", Dinheiro.Formatar(r.Total.Anterior),
+            $"{r.Anterior.Inicio:dd/MM} a {r.Anterior.Fim:dd/MM}", false, false));
+        ResumoCancelamentos = r.Canceladas > 0
+            ? $"{r.Canceladas} venda(s) cancelada(s), {Dinheiro.Formatar(r.CanceladasCentavos)}, fora de todos os totais acima."
+            : "Nenhuma venda cancelada no período.";
+
+        var pt = PtBr.DateTimeFormat;
+        Preencher(ResumoFormas, r.PorForma.Select(f => new LinhaRanking(SelecaoPagamento.Nome(f.Forma), $"{Dinheiro.Formatar(f.ValorCentavos)} · {f.Vendas} venda(s)")));
+        Preencher(ResumoDias, r.MelhoresDias.Select(d => new LinhaRanking(Maiuscula(pt.GetDayName(d.Dia)), $"{Dinheiro.Formatar(d.ValorCentavos)} · {d.Vendas} venda(s)")));
+        Preencher(ResumoHorarios, r.MelhoresHorarios.Select(h => new LinhaRanking($"{h.Hora:00}h às {h.Hora:00}h59", $"{Dinheiro.Formatar(h.ValorCentavos)} · {h.Vendas} venda(s)")));
+        Preencher(ResumoPorQuantidade, r.MaisVendidosPorQuantidade.Select(p => new LinhaRanking(p.Nome, $"{p.Pecas} peça(s) · {Dinheiro.Formatar(p.ValorCentavos)}")));
+        Preencher(ResumoPorValor, r.MaisVendidosPorValor.Select(p => new LinhaRanking(p.Nome, $"{Dinheiro.Formatar(p.ValorCentavos)} · {p.Pecas} peça(s)")));
+        Preencher(ResumoVendedores, (r.PorVendedor ?? Array.Empty<ResumoVendas.VendedorTotal>()).Select(v => new LinhaRanking(v.Vendedor, $"{Dinheiro.Formatar(v.ValorCentavos)} · {v.Vendas} venda(s)")));
+        AvisoVendedores = r.PorVendedor is null && r.Vendas.Atual > 0 ? "Ninguém foi identificado nas vendas deste período." : "";
+
+        BuscaVariacoes.Clear();
+        BuscaVendas.Clear();
+        TemBusca = busca.Achou;
+        if (string.IsNullOrWhiteSpace(PesquisaReferencia)) { BuscaTotais = ""; BuscaAviso = ""; }
+        else if (!busca.Achou) { BuscaTotais = ""; BuscaAviso = $"Nenhuma venda de \"{PesquisaReferencia.Trim()}\" neste período."; }
+        else
+        {
+            BuscaAviso = "";
+            BuscaTotais = $"{busca.Unidades} unidade(s) vendida(s) · {Dinheiro.Formatar(busca.ValorCentavos)} · {busca.Vendas.Select(v => v.VendaId).Distinct().Count()} venda(s)";
+            foreach (var x in busca.Variacoes)
+                BuscaVariacoes.Add(new LinhaRanking(x.Tamanho.Length == 0 ? "Sem tamanho" : $"Tamanho {x.Tamanho}", $"{x.Unidades} un. · {Dinheiro.Formatar(x.ValorCentavos)}"));
+            foreach (var x in busca.Vendas)
+                BuscaVendas.Add(new LinhaVendaBusca($"{x.DataHora:dd/MM/yyyy HH:mm}", $"Venda {x.VendaId}", $"{x.Quantidade} un.", Dinheiro.Formatar(x.ValorCentavos)));
+        }
+    }
+
+    private static string Maiuscula(string t) => t.Length == 0 ? t : char.ToUpper(t[0], PtBr) + t[1..];
+
+    /// <summary>Salva em CSV o resumo completo do período (e a pesquisa por referência, se houver).</summary>
+    [RelayCommand]
+    private Task ExportarResumoAsync() => ExecutarAsync(async () =>
+    {
+        if (_resumo is null) throw new RegraDeNegocioException("O resumo de vendas não está disponível.");
+        if (De is not DateTime de || Ate is not DateTime ate)
+            throw new RegraDeNegocioException("Escolha as duas datas do período.");
+        if (_ultimoResumo is null) await CarregarResumoAsync();
+        var r = _ultimoResumo;
+        if (r is null || (r.Vendas.Atual == 0 && r.Canceladas == 0))
+            throw new RegraDeNegocioException("Não há vendas neste período para exportar o resumo.");
+
+        var caminho = EscolherArquivoParaSalvar($"resumo-vendas-{de:yyyy-MM-dd}_a_{ate:yyyy-MM-dd}.csv");
+        if (caminho is null) return;
+        ExportadorCsv.Salvar(caminho, ExportadorCsv.ResumoDeVendas(r, _ultimaBusca));
+        MostrarSucesso($"Resumo salvo: {caminho}");
     });
 
     private static Indicador Montar(string titulo, string valor, decimal? variacao) => variacao is decimal v

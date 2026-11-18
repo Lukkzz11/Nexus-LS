@@ -61,6 +61,47 @@ public static class ExportadorCsv
         return csv.ToString();
     }
 
+    /// <summary>
+    /// Resumo completo de vendas: blocos "Seção;Item;Vendas;Peças;Valor;Variação (%)" um abaixo do outro; se houve pesquisa por
+    /// referência/produto, ela vai no fim (por variação e uma linha por venda). Valores com vírgula, sem R$.
+    /// </summary>
+    public static string ResumoDeVendas(ResumoVendas.Completo r, ResumoVendas.ResultadoBusca? busca = null)
+    {
+        var pt = CultureInfo.GetCultureInfo("pt-BR");
+        string N(int n) => n.ToString(CultureInfo.InvariantCulture);
+        string Pct(decimal? v) => v is decimal d ? Math.Round(d, 1, MidpointRounding.AwayFromZero).ToString("0.0", pt) : "";
+        string Dia(DayOfWeek d) => pt.DateTimeFormat.GetDayName(d);
+        var csv = new StringBuilder();
+        Linha(csv, "Seção", "Item", "Vendas", "Peças", "Valor", "Variação (%)");
+        Linha(csv, "Período", $"{r.Periodo.Inicio:dd/MM/yyyy} a {r.Periodo.Fim:dd/MM/yyyy}", "", "", "", "");
+        Linha(csv, "Período anterior", $"{r.Anterior.Inicio:dd/MM/yyyy} a {r.Anterior.Fim:dd/MM/yyyy}", "", "", "", "");
+        Linha(csv, "Resumo", "Total vendido", "", "", Valor(r.Total.Atual), Pct(r.Total.VariacaoPct));
+        Linha(csv, "Resumo", "Número de vendas", N((int)r.Vendas.Atual), "", "", Pct(r.Vendas.VariacaoPct));
+        Linha(csv, "Resumo", "Ticket médio", "", "", Valor(r.TicketMedio.Atual), Pct(r.TicketMedio.VariacaoPct));
+        Linha(csv, "Resumo", "Peças vendidas", "", N((int)r.Pecas.Atual), "", Pct(r.Pecas.VariacaoPct));
+        Linha(csv, "Resumo", "Descontos concedidos", "", "", Valor(r.DescontosCentavos), "");
+        Linha(csv, "Resumo", "Acréscimos", "", "", Valor(r.AcrescimosCentavos), "");
+        Linha(csv, "Resumo", "Total do período anterior", "", "", Valor(r.Total.Anterior), "");
+        Linha(csv, "Canceladas (fora do total)", "Vendas canceladas", N(r.Canceladas), "", Valor(r.CanceladasCentavos), "");
+        foreach (var f in r.PorForma) Linha(csv, "Forma de pagamento", SelecaoPagamento.Nome(f.Forma), N(f.Vendas), "", Valor(f.ValorCentavos), "");
+        foreach (var d in r.PorDiaSemana) Linha(csv, "Dia da semana", Dia(d.Dia), N(d.Vendas), "", Valor(d.ValorCentavos), "");
+        foreach (var h in r.MelhoresHorarios) Linha(csv, "Melhores horários", $"{h.Hora:00}h às {h.Hora:00}h59", N(h.Vendas), "", Valor(h.ValorCentavos), "");
+        foreach (var p in r.MaisVendidosPorQuantidade) Linha(csv, "Mais vendidos (quantidade)", p.Nome, "", N(p.Pecas), Valor(p.ValorCentavos), "");
+        foreach (var p in r.MaisVendidosPorValor) Linha(csv, "Mais vendidos (valor)", p.Nome, "", N(p.Pecas), Valor(p.ValorCentavos), "");
+        foreach (var v in r.PorVendedor ?? Array.Empty<ResumoVendas.VendedorTotal>()) Linha(csv, "Por vendedor", v.Vendedor, N(v.Vendas), "", Valor(v.ValorCentavos), "");
+
+        if (busca is { Achou: true })
+        {
+            Linha(csv, "Pesquisa", busca.Texto, "", N(busca.Unidades), Valor(busca.ValorCentavos), "");
+            foreach (var x in busca.Variacoes)
+                Linha(csv, "Pesquisa por variação", x.Tamanho.Length == 0 ? "Sem tamanho" : x.Tamanho, "", N(x.Unidades), Valor(x.ValorCentavos), "");
+            foreach (var x in busca.Vendas)
+                Linha(csv, "Pesquisa: vendas", $"{x.DataHora:dd/MM/yyyy HH:mm} · venda {x.VendaId} · {x.Produto}{(x.Tamanho.Length > 0 ? " (" + x.Tamanho + ")" : "")}",
+                    "", N(x.Quantidade), Valor(x.ValorCentavos), "");
+        }
+        return csv.ToString();
+    }
+
     /// <summary>Uma linha por item vendido, com o número e a data da venda repetidos (bom para filtrar e somar no Excel).</summary>
     public static string Itens(IEnumerable<Venda> vendas)
     {
