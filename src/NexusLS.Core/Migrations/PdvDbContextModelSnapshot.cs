@@ -351,6 +351,9 @@ namespace NexusLS.Core.Migrations
                     b.Property<DateTime>("DataCadastro")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("DataNascimento")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Documento")
                         .HasMaxLength(20)
                         .HasColumnType("TEXT");
@@ -1886,6 +1889,9 @@ namespace NexusLS.Core.Migrations
                         .HasMaxLength(60)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Cfop")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("CodigoBarras")
                         .HasMaxLength(50)
                         .HasColumnType("TEXT");
@@ -1911,6 +1917,9 @@ namespace NexusLS.Core.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<Guid>("Guid")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Ncm")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Nome")

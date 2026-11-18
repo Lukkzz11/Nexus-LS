@@ -12,7 +12,7 @@ namespace NexusLS.Core.Services;
 public record DadosCliente(string Nome, string? Documento = null, string? Telefone = null, string? Observacao = null, long LimiteCreditoCentavos = 0,
     string? RazaoSocial = null, string? Email = null, bool ExigirDocumento = false,
     string? Cidade = null, string? Estado = null, string? Endereco = null, string? Numero = null, string? Bairro = null,
-    string? Complemento = null, string? Cep = null, string? InscricaoEstadual = null);
+    string? Complemento = null, string? Cep = null, string? InscricaoEstadual = null, DateTime? DataNascimento = null);
 
 /// <summary>Um ajuste de crédito com tudo que o histórico mostra.</summary>
 public record AjusteDeCredito(long SaldoAnteriorCentavos, long SaldoNovoCentavos, string Motivo, string? Operador, DateTime Quando);
@@ -93,6 +93,13 @@ public class ClienteService
                 (c.Telefone != null && (EF.Functions.Like(c.Telefone, padrao) || (buscaNumero && EF.Functions.Like(c.Telefone, padraoDigitos)))));
         }
         return await consulta.OrderBy(c => c.Nome).ToListAsync();
+    }
+
+    /// <summary>Clientes ativos com data de nascimento (para o aviso de aniversariantes e o filtro do mês).</summary>
+    public async Task<List<Cliente>> ListarComAniversarioAsync()
+    {
+        await using var db = await _fabrica.CreateDbContextAsync();
+        return await db.Clientes.AsNoTracking().Where(c => c.Ativo && c.DataNascimento != null).OrderBy(c => c.Nome).ToListAsync();
     }
 
     /// <summary>Vendas do cliente com os totais (as canceladas aparecem na lista mas não somam).</summary>
@@ -337,6 +344,8 @@ public class ClienteService
             var doc = ValidadorDocumento.Validar(dados.Documento);
             if (!doc.Valido) throw new RegraDeNegocioException(doc.Erro!);
         }
+        if (dados.DataNascimento is DateTime nasc && (nasc.Date > DateTime.Today || nasc.Year < 1900))
+            throw new RegraDeNegocioException("A data de nascimento deve estar no passado.");
         if (!string.IsNullOrWhiteSpace(dados.Email) && !ImportadorClientes.EmailValido(dados.Email))
             throw new RegraDeNegocioException("E-mail inválido. Digite algo como nome@empresa.com.br.");
     }
@@ -358,6 +367,7 @@ public class ClienteService
         cliente.Complemento = Limpar(dados.Complemento);
         cliente.Cep = Limpar(dados.Cep);
         cliente.InscricaoEstadual = Limpar(dados.InscricaoEstadual);
+        cliente.DataNascimento = dados.DataNascimento?.Date;
     }
 
     private static string? Limpar(string? texto) => string.IsNullOrWhiteSpace(texto) ? null : texto.Trim();

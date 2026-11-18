@@ -47,6 +47,9 @@ public class Cliente : EntidadeSincronizavel
         }
     }
 
+    /// <summary>Data de nascimento (aniversário). Opcional; só local, não é enviada à nuvem.</summary>
+    public DateTime? DataNascimento { get; set; }
+
     /// <summary>Cliente desativado some da busca, mas continua nas vendas antigas.</summary>
     public bool Ativo { get; set; } = true;
 

@@ -18,7 +18,7 @@ public sealed class NovoProdutoWindow : Window
     private readonly int _margemPadrao;
 
     private readonly TextBox _nome = new(), _custo = new(), _varejo = new(), _atacado = new(), _margem = new(), _minimo = new();
-    private readonly TextBox _barras = new(), _referencia = new(), _base = new(), _cores = new();
+    private readonly TextBox _barras = new(), _referencia = new(), _base = new(), _cores = new(), _ncm = new(), _cfop = new();
     private readonly ComboBox _categoria = new() { IsEditable = true };
     private readonly CheckBox _semBaixa = new() { Content = "Vender sem baixa de estoque", Margin = new Thickness(0, 0, 18, 0) };
     private readonly CheckBox _sobra = new() { Content = "É sobra (fica fora do catálogo online)" };
@@ -49,7 +49,7 @@ public sealed class NovoProdutoWindow : Window
         _margem.Width = 70;
         _categoria.ItemsSource = ModelosDeReferencia.Todos.Select(m => m.Categoria).ToList();
         _ = CompletarCategoriasAsync();
-        foreach (var t in new[] { _nome, _custo, _varejo, _atacado, _margem, _minimo, _barras, _referencia, _base, _cores })
+        foreach (var t in new[] { _nome, _custo, _varejo, _atacado, _margem, _minimo, _barras, _referencia, _base, _cores, _ncm, _cfop })
             t.Padding = new Thickness(6);
         _categoria.Padding = new Thickness(6);
 
@@ -171,6 +171,8 @@ public sealed class NovoProdutoWindow : Window
         var p = new StackPanel();
         p.Children.Add(new TextBlock { Text = "Tudo opcional. O estoque guarda a quantidade por tamanho; as cores servem para identificar o produto.", Opacity = .8, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 0, 0, 10) });
         p.Children.Add(Rotulado("Cores (opcional, separadas por vírgula)", _cores));
+        p.Children.Add(Rotulado("NCM (8 números; vazio = padrão da página Fiscal)", _ncm));
+        p.Children.Add(Rotulado("CFOP (4 números; vazio = padrão da página Fiscal)", _cfop));
 
         var abas = new StackPanel { Orientation = Orientation.Horizontal };
         foreach (var (rotulo, chave) in new[] { ("Letras", "Letras"), ("Números", "Números"), ("Tamanho único", "Único") })
@@ -299,6 +301,8 @@ public sealed class NovoProdutoWindow : Window
             _nome.Text = b.Nome;
             _categoria.Text = b.Categoria ?? "";
             _cores.Text = b.Cores ?? "";
+            _ncm.Text = b.Ncm ?? "";
+            _cfop.Text = b.Cfop ?? "";
             _varejo.Text = Dinheiro.FormatarParaEdicao(b.PrecoVendaCentavos);
             _atacado.Text = b.PrecoAtacadoCentavos > 0 ? Dinheiro.FormatarParaEdicao(b.PrecoAtacadoCentavos) : "";
             _custo.Text = Dinheiro.FormatarParaEdicao(b.PrecoCustoCentavos);
@@ -332,7 +336,7 @@ public sealed class NovoProdutoWindow : Window
 
             var unico = _aba == "Único" ? Quantidade(_unico) : 0;
             var dados = new DadosProduto(_nome.Text, _barras.Text, venda, custo, minimo, _referencia.Text, atacado, _categoria.Text,
-                _semBaixa.IsChecked == true, _sobra.IsChecked == true, _cores.Text);
+                _semBaixa.IsChecked == true, _sobra.IsChecked == true, _cores.Text, _ncm.Text, _cfop.Text);
             produto = await _produtos.CadastrarAsync(dados, unico);
 
             var tamanhos = _aba == "Único" ? new Dictionary<string, int>()

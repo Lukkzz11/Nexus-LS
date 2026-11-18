@@ -38,6 +38,12 @@ public class Produto : IEntidadeSincronizavel
     /// <summary>Cores do produto, separadas por vírgula ("Preto, Branco"). Só informativas: o estoque é por tamanho.</summary>
     public string? Cores { get; set; }
 
+    /// <summary>NCM do produto (8 dígitos). Nulo = usa o padrão da página Fiscal. Só local, não é enviado à nuvem.</summary>
+    public string? Ncm { get; set; }
+
+    /// <summary>CFOP do produto (4 dígitos). Nulo = usa o padrão da página Fiscal. Só local, não é enviado à nuvem.</summary>
+    public string? Cfop { get; set; }
+
     /// <summary>Preço de varejo.</summary>
     public long PrecoVendaCentavos { get; set; }
 

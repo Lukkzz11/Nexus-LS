@@ -4,6 +4,7 @@ namespace NexusLS.Core.Services;
 /// Dados que o operador preenche no cadastro. É um "record": uma classe curta e imutável,
 /// boa para carregar valores de um lugar a outro. O estoque NÃO entra aqui na edição:
 /// ele só muda por ajuste, venda ou cancelamento (para sempre deixar rastro).
+/// NCM/CFOP: nulo = não mexe no que já está gravado (importação por CSV, produção); vazio = limpa (volta ao padrão da página Fiscal).
 /// Referência e preço de atacado são opcionais (por isso têm valor padrão).
 /// </summary>
 public record DadosProduto(
@@ -17,4 +18,6 @@ public record DadosProduto(
     string? Categoria = null,
     bool VenderSemBaixa = false,
     bool Sobra = false,
-    string? Cores = null);
+    string? Cores = null,
+    string? Ncm = null,
+    string? Cfop = null);
