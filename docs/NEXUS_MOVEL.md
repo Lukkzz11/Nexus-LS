@@ -80,6 +80,34 @@ num tamanho mostra o código que a etiqueta imprime, com botão **Copiar**.
 
 Há também um histórico curto das últimas consultas **no próprio celular** (não no banco).
 
+## Aba Vendas
+
+Ao lado de **Produtos**, a aba **Vendas** mostra, para **Hoje**, **7 dias** ou **Mês** (do dia 1
+até hoje), com comparação com o período anterior do mesmo tamanho:
+
+- total vendido, nº de vendas, peças e ticket médio (com a variação em %);
+- total por forma de pagamento;
+- os 5 produtos mais vendidos (peças e valor);
+- **pesquisa por referência ou produto**: unidades e valor vendidos no período, por tamanho,
+  e as últimas vendas (até 30).
+
+A regra é a do PDV: usa `ResumoVendasService`/`ResumoVendas` do Core (a mesma da tela de
+Desempenho de vendas), então o celular não discorda do computador. Vendas canceladas ficam fora
+dos totais (aparecem só como contagem). Valores já trazem o desconto/acréscimo rateado.
+
+Endpoints (somente `GET`, atrás do mesmo PIN de `/api`; sem PIN = 401):
+
+| Rota | Parâmetros | Resposta |
+|---|---|---|
+| `/api/vendas/resumo` | `periodo=hoje\|semana\|mes` | totais com comparativo, formas, mais vendidos |
+| `/api/vendas/busca` | `periodo=...&texto=<2 a 60 caracteres>` | unidades, valor, tamanhos, últimas vendas |
+
+Período desconhecido ou ausente, e texto curto demais, respondem **400** com `{"erro": ...}`.
+
+Privacidade: nenhuma rota de vendas devolve nome de cliente, vendedor/operador, custo ou lucro.
+No navegador, tudo que vem do banco é escrito com `textContent` (`wwwroot/vendas.js`), nunca
+como HTML.
+
 ## Câmera
 
 A câmera tem dois caminhos, porque navegador não entrega câmera ao vivo em página HTTP fora
@@ -118,7 +146,8 @@ preços e estoque, mas quem tem o PIN vê o que o celular vê. Para uso na loja 
 dotnet test tests\NexusLS.Movel.Tests\NexusLS.Movel.Tests.csproj -c Release
 ```
 
-A suíte cobre a regra de consulta (código de tamanho, referência, código de barras, nome,
+A suíte cobre a aba Vendas (401 sem PIN, resumo correto com comparação e canceladas fora,
+busca por referência/nome, período inválido = 400, sem dado pessoal na resposta) e a regra de consulta (código de tamanho, referência, código de barras, nome,
 produto desativado, preço de atacado) e o servidor HTTP de verdade (401 sem PIN, PIN errado,
 saúde com o nome da loja, produto com tamanho marcado, sugestões, tela e assets embutidos,
 foto ausente). Roda no CI junto com as outras suítes.
@@ -140,7 +169,8 @@ computador da loja. A versão do projeto fica no `NexusLS.Movel.csproj`; no rele
 
 ## Limitações conhecidas (fase 1)
 
-- Só consulta. Não dá baixa, não reserva, não vende.
+- Só consulta. Não dá baixa, não reserva, não vende. Vendas: só resumo e pesquisa, sem período
+  personalizado.
 - A tela abre no navegador; não é um app nativo. "Adicionar à tela de início" resolve o
   visual, mas o ícone só fica completo com HTTPS (o manifest é lido, o service worker não
   registra em HTTP).

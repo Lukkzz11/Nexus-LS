@@ -38,7 +38,12 @@
       <button id="sair" class="link" type="button">Sair</button>
     </header>
 
-    <main>
+    <nav class="abas" aria-label="Seções">
+      <button id="aba-btn-consulta" class="aba ativa" type="button" role="tab" aria-selected="true" aria-controls="aba-consulta">Produtos</button>
+      <button id="aba-btn-vendas" class="aba" type="button" role="tab" aria-selected="false" aria-controls="aba-vendas">Vendas</button>
+    </nav>
+
+    <main id="aba-consulta" role="tabpanel">
       <section class="busca" aria-label="Consultar produto">
         <label for="codigo">Código, referência ou nome</label>
         <div class="campo">
@@ -68,6 +73,26 @@
         <div id="historico" class="lista-historico"></div>
       </section>
     </main>
+
+    <main id="aba-vendas" class="vendas" role="tabpanel" hidden>
+      <div class="periodos" role="group" aria-label="Período">
+        <button class="periodo ativa" type="button" data-periodo="hoje">Hoje</button>
+        <button class="periodo" type="button" data-periodo="semana">7 dias</button>
+        <button class="periodo" type="button" data-periodo="mes">Mês</button>
+      </div>
+
+      <div id="vendas-resumo" aria-live="polite"></div>
+
+      <section class="busca" aria-label="Pesquisar vendas por referência ou produto">
+        <label for="vendas-texto">Quanto vendeu de uma referência ou produto?</label>
+        <div class="campo">
+          <input id="vendas-texto" type="search" enterkeyhint="search" autocomplete="off"
+                 spellcheck="false" maxlength="60" placeholder="Referência ou nome do produto">
+        </div>
+      </section>
+
+      <div id="vendas-busca" aria-live="polite"></div>
+    </main>
   </div>
 
   <!-- Leitura ao vivo da câmera (quando o navegador permite) -->
@@ -82,5 +107,6 @@
 
   <script src="/vendor/zxing.min.js" defer></script>
   <script src="/app.js" defer></script>
+  <script src="/vendas.js" defer></script>
 </body>
 </html>

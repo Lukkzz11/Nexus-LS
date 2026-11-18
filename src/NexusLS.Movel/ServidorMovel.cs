@@ -44,6 +44,7 @@ public static class ServidorMovel
         builder.Services.AddSingleton(fabrica);
         builder.Services.AddSingleton(new ProdutoService(fabrica));
         builder.Services.AddSingleton<ConsultaDeProduto>();
+        builder.Services.AddSingleton(new ResumoVendasService(fabrica));
         builder.Services.AddSingleton(new AutenticacaoMovel(pin));
 
         var app = builder.Build();
@@ -172,6 +173,8 @@ public static class ServidorMovel
 
         app.MapGet("/api/busca", async (string? texto, ConsultaDeProduto consulta, CancellationToken ct) =>
             Results.Ok(new { itens = await consulta.BuscarAsync(texto, ct) }));
+
+        VendasMovel.Mapear(app);
 
         app.MapGet("/api/foto/{id:int}", async (int id, ProdutoService produtos) =>
         {

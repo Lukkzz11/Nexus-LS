@@ -2,11 +2,12 @@
   Guarda a casca do Nexus Móvel no aparelho para abrir rápido.
   Os dados nunca são guardados: eles vêm sempre do computador da loja.
 */
-const VERSAO = "nexus-movel-v1";
+const VERSAO = "nexus-movel-v2";
 const CASCA = [
   "/",
   "/estilo.css",
   "/app.js",
+  "/vendas.js",
   "/manifest.webmanifest",
   "/vendor/zxing.min.js",
   "/icone-192.png",

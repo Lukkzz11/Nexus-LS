@@ -585,5 +585,8 @@
     }
   }
 
+  // Pequena ponte para as outras abas (vendas.js) usarem o mesmo PIN e a mesma saída.
+  window.NexusMovel = { api, dinheiro, marcarStatus };
+
   document.addEventListener("DOMContentLoaded", iniciar);
 })();
