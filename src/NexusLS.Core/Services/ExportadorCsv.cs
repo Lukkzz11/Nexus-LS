@@ -135,6 +135,36 @@ public static class ExportadorCsv
         return csv.ToString();
     }
 
+    /// <summary>
+    /// Funcionários: uma linha por pessoa (inclusive desativados, marcados em "Situação"). Nunca leva PIN, hash, código de
+    /// recuperação nem foto. O salário só sai se <paramref name="incluirSalario"/> (quem tem esse direito decide).
+    /// </summary>
+    public static string Funcionarios(IEnumerable<Funcionario> funcionarios, bool incluirSalario)
+    {
+        var csv = new StringBuilder();
+        var cab = new List<string> { "Nome", "Cargo", "Perfil", "Situação", "Telefone", "E-mail", "CPF", "RG", "Nascimento", "Admissão",
+            "CEP", "Endereço", "Número", "Complemento", "Bairro", "Cidade", "Estado" };
+        if (incluirSalario) cab.Add("Salário");
+        cab.AddRange(new[] { "Contato de emergência", "Telefone de emergência", "Observação" });
+        Linha(csv, cab.ToArray());
+
+        foreach (var f in funcionarios.OrderBy(f => f.Nome, StringComparer.CurrentCultureIgnoreCase).ThenBy(f => f.Id))
+        {
+            var l = new List<string>
+            {
+                f.Nome, f.Cargo ?? "", f.PerfilTexto, f.Ativo ? "Ativo" : "Desativado", f.Telefone ?? "", f.Email ?? "",
+                f.CpfFormatado, f.Rg ?? "", Dia(f.DataNascimento), Dia(f.DataAdmissao),
+                f.Cep ?? "", f.Endereco ?? "", f.Numero ?? "", f.Complemento ?? "", f.Bairro ?? "", f.Cidade ?? "", f.Estado ?? ""
+            };
+            if (incluirSalario) l.Add(f.SalarioCentavos is long s ? Valor(s) : "");
+            l.AddRange(new[] { f.ContatoEmergenciaNome ?? "", f.ContatoEmergenciaTelefone ?? "", f.Observacao ?? "" });
+            Linha(csv, l.ToArray());
+        }
+        return csv.ToString();
+    }
+
+    private static string Dia(DateTime? data) => data?.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture) ?? "";
+
     public static string MaisVendidos(IEnumerable<ProdutoMaisVendido> ranking, bool porTamanho)
     {
         var csv = new StringBuilder();

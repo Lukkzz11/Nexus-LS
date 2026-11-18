@@ -225,6 +225,30 @@ public partial class FuncionariosViewModel : ViewModelBase
         if (!LoginAtivo) Novo();
     });
 
+    // ================= exportar =================
+
+    /// <summary>A tela define a caixa "Salvar como" do Windows (nulo = cancelou).</summary>
+    public Func<string, string?> EscolherArquivoParaSalvar { get; set; } = _ => null;
+
+    /// <summary>O salário só vai para o arquivo se o login está desligado (tudo liberado) ou quem exporta é administrador.</summary>
+    public static bool PodeExportarSalario => !Sessao.LoginAtivo || Sessao.Atual?.Perfil == PerfilFuncionario.Administrador;
+
+    /// <summary>Grava os funcionários (inclusive desativados) num CSV do Excel. Sem PIN; salário só para administrador.</summary>
+    [RelayCommand]
+    private Task ExportarAsync() => ExecutarAsync(async () =>
+    {
+        if (!Sessao.Pode(Permissao.Funcionarios)) throw new RegraDeNegocioException("Você não tem permissão para exportar os funcionários.");
+        var lista = await _servico.ListarAsync(incluirInativos: true);
+        if (lista.Count == 0) throw new RegraDeNegocioException("Não há funcionários cadastrados para exportar.");
+
+        var caminho = EscolherArquivoParaSalvar($"funcionarios-{DateTime.Today:yyyy-MM-dd}.csv");
+        if (caminho is null) return;
+
+        var comSalario = PodeExportarSalario;
+        ExportadorCsv.Salvar(caminho, ExportadorCsv.Funcionarios(lista, comSalario));
+        MostrarSucesso($"Funcionários exportados: {lista.Count}{(comSalario ? "" : " (sem salários)")}. Arquivo salvo: {caminho}");
+    });
+
     private Permissao PermissoesMarcadas() =>
         PermissoesLista.Where(i => i.Marcada).Aggregate(Permissao.Nenhuma, (soma, i) => soma | i.Permissao);
 

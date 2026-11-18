@@ -21,6 +21,11 @@ public partial class FuncionariosView : UserControl
             if (e.NewValue is FuncionariosViewModel vm)
             {
                 vm.PropertyChanged += AoMudar;
+                vm.EscolherArquivoParaSalvar = nome =>
+                {
+                    var dialogo = new Microsoft.Win32.SaveFileDialog { FileName = nome, DefaultExt = ".csv", Filter = "Planilha CSV (Excel)|*.csv" };
+                    return dialogo.ShowDialog(Window.GetWindow(this)) == true ? dialogo.FileName : null;
+                };
                 vm.Avisar = (titulo, texto) => MessageBox.Show(Window.GetWindow(this), texto, titulo, MessageBoxButton.OK, MessageBoxImage.Information);
             }
         };

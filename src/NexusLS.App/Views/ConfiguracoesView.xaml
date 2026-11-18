@@ -264,6 +264,9 @@
                                 <CheckBox Margin="0,18,0,0" IsChecked="{Binding AvisarCrediario}">
                                     <TextBlock Text="Avisar quantos clientes estão com o crediário vencido" TextWrapping="Wrap" />
                                 </CheckBox>
+                                <CheckBox Margin="0,18,0,0" IsChecked="{Binding AvisarAniversariantes}">
+                                    <TextBlock Text="Avisar os aniversariantes da semana entre os funcionários (para quem gerencia funcionários)" TextWrapping="Wrap" />
+                                </CheckBox>
                                 <CheckBox Margin="0,18,0,0" IsChecked="{Binding AvisarBackupAtrasado}">
                                     <TextBlock Text="Avisar quando o backup estiver atrasado" TextWrapping="Wrap" />
                                 </CheckBox>
