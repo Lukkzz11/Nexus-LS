@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using NexusLS.Core.Fiscal;
 using NexusLS.Core.Services;
 
 namespace NexusLS.App.ViewModels;
@@ -20,6 +21,65 @@ public partial class ConfiguracoesViewModel
     [ObservableProperty] private string _mensagemFiscal = "";
     [ObservableProperty] private bool _mensagemFiscalEhErro;
     public ObservableCollection<string> ChecklistFiscal { get; } = new();
+
+    // ----- Conferência de uma nota de teste (só monta o XML para olhar; NÃO emite, NÃO assina, NÃO envia) -----
+    private ConferenciaNfce? _conferenciaNfce;
+    private ResultadoNfce? _ultimaConferencia;
+    public ObservableCollection<string> ResultadoNotaTeste { get; } = new();
+    [ObservableProperty] private bool _podeSalvarXmlConferencia;
+
+    /// <summary>Abre o diálogo de salvar: recebe o nome sugerido e devolve o caminho escolhido (nulo = cancelou). Troque nos testes.</summary>
+    public Func<string, string?> EscolherCaminhoXmlConferencia { get; set; } = _ => null;
+
+    public void UsarConferenciaNfce(ConferenciaNfce conferencia) => _conferenciaNfce = conferencia;
+    public bool TemConferenciaNfce => _conferenciaNfce is not null;
+
+    [RelayCommand]
+    private async Task ConferirNotaTesteAsync()
+    {
+        if (_conferenciaNfce is null || _seguranca is null) return;
+        ResultadoNotaTeste.Clear();
+        PodeSalvarXmlConferencia = false;
+        // Confere com o que está SALVO na página Fiscal e na Loja.
+        var r = await _conferenciaNfce.ConferirUltimaVendaAsync(_seguranca.Carregar());
+        _ultimaConferencia = r;
+        ResultadoNotaTeste.Add("CONFERÊNCIA — não é uma nota fiscal. Nada foi emitido, assinado nem enviado.");
+        if (r.Bloqueio is not null)
+        {
+            ResultadoNotaTeste.Add("✖  " + r.Bloqueio);
+            return;
+        }
+        ResultadoNotaTeste.Add($"Venda conferida: a última gravada (número de conferência {r.Numero}).");
+        if (r.Chave is not null) ResultadoNotaTeste.Add("Chave de acesso de teste: " + r.Chave);
+        if (r.Pendencias.Count == 0) ResultadoNotaTeste.Add("✔  Os cadastros estão completos para montar a nota.");
+        else
+        {
+            ResultadoNotaTeste.Add("O que falta nos cadastros:");
+            foreach (var p in r.Pendencias) ResultadoNotaTeste.Add("✖  " + p);
+        }
+        ResultadoNotaTeste.Add("O que ainda não existe no Nexus para emitir de verdade:");
+        foreach (var a in r.Avisos) ResultadoNotaTeste.Add("•  " + a);
+        PodeSalvarXmlConferencia = r.PodeGerarXml;
+    }
+
+    [RelayCommand]
+    private void SalvarXmlConferencia()
+    {
+        if (_ultimaConferencia?.Xml is null) return;
+        try
+        {
+            var caminho = EscolherCaminhoXmlConferencia(ConferenciaNfce.NomeArquivo(_ultimaConferencia));
+            if (string.IsNullOrWhiteSpace(caminho)) return;
+            System.IO.File.WriteAllText(caminho, _ultimaConferencia.Xml, new System.Text.UTF8Encoding(false));
+            MensagemFiscalEhErro = false;
+            MensagemFiscal = "XML de conferência salvo (SEM VALIDADE FISCAL).";
+        }
+        catch (Exception ex) when (ex is System.IO.IOException or UnauthorizedAccessException)
+        {
+            MensagemFiscalEhErro = true;
+            MensagemFiscal = "Não consegui salvar o arquivo: " + ex.Message;
+        }
+    }
 
     public void UsarFiscal()
     {

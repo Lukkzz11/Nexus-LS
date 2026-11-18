@@ -135,6 +135,12 @@ public partial class GestaoViewModel : ObservableObject
         config.UsarComunicacao();
         config.UsarEtiquetas(_servicos.ModelosEtiqueta);
         config.UsarFiscal();
+        config.UsarConferenciaNfce(new NexusLS.Core.Fiscal.ConferenciaNfce(_servicos.FabricaBanco));
+        config.EscolherCaminhoXmlConferencia = nome =>
+        {
+            var d = new Microsoft.Win32.SaveFileDialog { FileName = nome, DefaultExt = ".xml", Filter = "XML de conferência (sem validade fiscal)|*.xml", Title = "Salvar XML de conferência (SEM VALIDADE FISCAL)" };
+            return d.ShowDialog() == true ? d.FileName : null;
+        };
         config.UsarResumoCelular(_servicos.Inicio);
         config.UsarIntegracoes(_servicos.Contador, () => new (string, string)[]
         {
