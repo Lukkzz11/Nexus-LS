@@ -118,6 +118,16 @@ public static class RegrasFinanceiras
 public class FinanceiroService
 {
     private readonly IDbContextFactory<PdvDbContext> _fabrica;
+
+    /// <summary>Contas a pagar em aberto que já venceram ou vencem em até <paramref name="dias"/> dias. Só lê.</summary>
+    public async Task<List<Lancamento>> ListarContasAPagarProximasAsync(int dias, DateTime? hoje = null)
+    {
+        var limite = (hoje ?? DateTime.Today).Date.AddDays(Math.Max(0, dias));
+        await using var db = await _fabrica.CreateDbContextAsync();
+        return await db.Lancamentos.AsNoTracking()
+            .Where(l => l.Tipo == TipoLancamento.Despesa && l.PagoEm == null && !l.Cancelado && l.Vencimento <= limite)
+            .OrderBy(l => l.Vencimento).ToListAsync();
+    }
     private readonly Func<DateTime> _agora;
 
     public FinanceiroService(IDbContextFactory<PdvDbContext> fabrica, Func<DateTime>? agora = null)

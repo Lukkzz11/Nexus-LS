@@ -87,3 +87,60 @@ public sealed class EstoqueConfigTests : IDisposable
         Assert.Equal("Nenhum produto abaixo do mínimo.", vm.ResumoEstoqueBaixo);
     }
 }
+
+public sealed class NotificacoesConfigTests : IDisposable
+{
+    private readonly BancoDeTeste _banco = new();
+    private readonly string _arquivo = Path.Combine(Path.GetTempPath(), "nexus_notif_" + Guid.NewGuid().ToString("N") + ".json");
+
+    public void Dispose()
+    {
+        _banco.Dispose();
+        try { File.Delete(_arquivo); } catch (IOException) { }
+    }
+
+    private ConfiguracoesViewModel Criar()
+    {
+        ConfiguracoesViewModel? vm = null;
+        Capturador.Rodar(() =>
+        {
+            var config = new ConfiguracaoService(_banco.Fabrica);
+            vm = new ConfiguracoesViewModel(config, new CupomService(_banco.Fabrica, config, new ImpressoraDeMentira()));
+            vm.UsarSeguranca(new ConfiguracaoSegurancaStore(_arquivo));
+            vm.UsarNotificacoes();
+        });
+        return vm!;
+    }
+
+    [Fact]
+    public void Salvar_grava_os_dias_e_mantem_o_aviso_de_estoque()
+    {
+        var store = new ConfiguracaoSegurancaStore(_arquivo);
+        var c = store.Carregar(); c.AvisarEstoqueBaixoAoAbrir = false; store.Salvar(c);
+
+        var vm = Criar();
+        vm.DiasContasTexto = "7"; vm.AvisarBackupAtrasado = false; vm.DiasBackupTexto = "10";
+        vm.SalvarNotificacoesCommand.Execute(null);
+
+        Assert.False(vm.MensagemNotificacoesEhErro);
+        var lida = new ConfiguracaoSegurancaStore(_arquivo).Carregar();
+        Assert.Equal(7, lida.DiasAvisoContas);
+        Assert.False(lida.AvisarBackupAtrasado);
+        Assert.Equal(10, lida.DiasBackupAtrasado);
+        Assert.False(lida.AvisarEstoqueBaixoAoAbrir);
+    }
+
+    [Fact]
+    public void Valor_invalido_mostra_erro_e_nao_grava()
+    {
+        var vm = Criar();
+        vm.DiasBackupTexto = "0";
+        vm.SalvarNotificacoesCommand.Execute(null);
+        Assert.True(vm.MensagemNotificacoesEhErro);
+        Assert.Equal(3, new ConfiguracaoSegurancaStore(_arquivo).Carregar().DiasBackupAtrasado);
+
+        vm.DiasBackupTexto = "abc";
+        vm.SalvarNotificacoesCommand.Execute(null);
+        Assert.True(vm.MensagemNotificacoesEhErro);
+    }
+}

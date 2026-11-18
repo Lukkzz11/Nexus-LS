@@ -107,7 +107,7 @@ public partial class MainWindow : FluentWindow
         vm.AbrirConexaoBanco = () => new Views.ConexaoBancoWindow(App.Servicos.Firebase, App.Servicos.Operacional) { Owner = this }.ShowDialog() == true;
         vm.AtualizarBanco();
 
-        Loaded += async (_, _) => await AvisarEstoqueBaixoAsync(vm);
+        Loaded += async (_, _) => await AvisarAoAbrirAsync(vm);
 
         // Atualização: as perguntas ficam aqui (janela); a consulta ao abrir é silenciosa e nunca atrapalha o uso.
         vm.Atualizacao.Confirmar = texto =>
@@ -121,24 +121,56 @@ public partial class MainWindow : FluentWindow
         Loaded += async (_, _) => await vm.Sincronizacao.IniciarAsync();
     }
 
-    /// <summary>Ao abrir, avisa uma vez se há produto abaixo do estoque mínimo (se a loja deixou ligado). Nunca atrapalha a abertura.</summary>
-    private async Task AvisarEstoqueBaixoAsync(ViewModels.MainViewModel vm)
+    /// <summary>
+    /// Ao abrir, junta os avisos ligados (estoque baixo, contas a pagar, backup atrasado) numa janela só, uma vez.
+    /// Nunca atrapalha a abertura: se algo falhar, o Nexus abre normalmente.
+    /// </summary>
+    private async Task AvisarAoAbrirAsync(ViewModels.MainViewModel vm)
     {
         try
         {
-            if (!App.Servicos.Seguranca.Carregar().AvisarEstoqueBaixoAoAbrir || !Seguranca.Sessao.Pode(NexusLS.Core.Models.Permissao.Estoque)) return;
-            var baixos = await App.Servicos.Estoque.ListarAbaixoDoMinimoAsync();
-            if (baixos.Count == 0) return;
-            var nomes = string.Join("\n", baixos.Take(5).Select(p => $"• {p.Nome} (estoque {p.EstoqueAtual}, mínimo {p.EstoqueMinimo})"));
-            var mais = baixos.Count > 5 ? $"\n... e mais {baixos.Count - 5}." : "";
-            var r = System.Windows.MessageBox.Show(this,
-                $"{baixos.Count} produto(s) abaixo do estoque mínimo:\n\n{nomes}{mais}\n\nAbrir o estoque agora?",
-                "Estoque baixo", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Information);
-            if (r == System.Windows.MessageBoxResult.Yes) vm.IrParaEstoqueCommand.Execute(null);
+            var cfg = App.Servicos.Seguranca.Carregar();
+            var linhas = new List<string>();
+
+            var baixos = new List<NexusLS.Core.Models.Produto>();
+            if (cfg.AvisarEstoqueBaixoAoAbrir && Seguranca.Sessao.Pode(NexusLS.Core.Models.Permissao.Estoque))
+                baixos = await App.Servicos.Estoque.ListarAbaixoDoMinimoAsync();
+            if (baixos.Count > 0)
+            {
+                linhas.Add($"Estoque baixo: {baixos.Count} produto(s) abaixo do mínimo.");
+                linhas.AddRange(baixos.Take(5).Select(p => $"    • {p.Nome} (estoque {p.EstoqueAtual}, mínimo {p.EstoqueMinimo})"));
+                if (baixos.Count > 5) linhas.Add($"    ... e mais {baixos.Count - 5}.");
+            }
+
+            if (cfg.AvisarContasAoAbrir && Seguranca.Sessao.Pode(NexusLS.Core.Models.Permissao.Financeiro))
+            {
+                var contas = await App.Servicos.Financeiro.ListarContasAPagarProximasAsync(cfg.DiasAvisoContas);
+                var frase = NexusLS.Core.Services.AvisosAoAbrir.Contas(contas, cfg.DiasAvisoContas, DateTime.Today);
+                if (frase is not null) linhas.Add(frase);
+            }
+
+            if (cfg.AvisarBackupAtrasado)
+            {
+                var frase = NexusLS.Core.Services.AvisosAoAbrir.Backup(App.Servicos.Backup.Configuracao.UltimoBackup, DateTime.Now, cfg.DiasBackupAtrasado);
+                if (frase is not null) linhas.Add(frase);
+            }
+
+            if (linhas.Count == 0) return;
+            var texto = string.Join("\n", linhas);
+            if (baixos.Count > 0)
+            {
+                var r = System.Windows.MessageBox.Show(this, texto + "\n\nAbrir o estoque agora?", "Avisos do Nexus",
+                    System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Information);
+                if (r == System.Windows.MessageBoxResult.Yes) vm.IrParaEstoqueCommand.Execute(null);
+            }
+            else
+            {
+                System.Windows.MessageBox.Show(this, texto, "Avisos do Nexus", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+            }
         }
         catch (Exception)
         {
-            // O aviso é só um lembrete: se não der para consultar, o Nexus abre normalmente.
+            // Os avisos são só lembretes: se não der para consultar, o Nexus abre normalmente.
         }
     }
 }

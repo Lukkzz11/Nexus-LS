@@ -114,6 +114,7 @@ public partial class GestaoViewModel : ObservableObject
         config.UsarSeguranca(_servicos.Seguranca);
         config.UsarComissoes(_servicos.Comissoes, _servicos.Funcionarios);
         config.UsarEstoque(_servicos.Estoque);
+        config.UsarNotificacoes();
         config.UsarGoogle(_servicos.Google, url => System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true }));
         Abrir(config, ItemMenu.Configuracoes);
     }

@@ -246,6 +246,47 @@
                         </Border>
                     </StackPanel>
                 </ScrollViewer>
+                <ScrollViewer x:Name="PgNotificacoes" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="0,16,12,0">
+                    <StackPanel MaxWidth="860" HorizontalAlignment="Left" Margin="0,0,0,24">
+                        <Border Style="{StaticResource Painel}" Visibility="{Binding TemSeguranca, Converter={StaticResource BoolVis}}">
+                            <StackPanel>
+                                <TextBlock Text="Avisos ao abrir o Nexus" FontSize="18" FontWeight="SemiBold" />
+                                <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
+                                           Text="Os avisos aparecem juntos, numa janela só, quando o Nexus abre. O aviso de estoque baixo é ligado em Estoque e produtos. Backup que falhou e nova versão já avisam sozinhos." />
+                                <CheckBox Margin="0,14,0,0" IsChecked="{Binding AvisarContas}">
+                                    <TextBlock Text="Avisar das contas a pagar vencidas e a vencer (para quem tem acesso ao Financeiro)" TextWrapping="Wrap" />
+                                </CheckBox>
+                                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                    <TextBlock Text="Avisar as que vencem em até" VerticalAlignment="Center" />
+                                    <TextBox Text="{Binding DiasContasTexto, UpdateSourceTrigger=PropertyChanged}" Width="60" Margin="8,0" AutomationProperties.Name="Dias de aviso das contas" />
+                                    <TextBlock Text="dia(s)  (0 = só hoje)" VerticalAlignment="Center" />
+                                </StackPanel>
+                                <CheckBox Margin="0,18,0,0" IsChecked="{Binding AvisarBackupAtrasado}">
+                                    <TextBlock Text="Avisar quando o backup estiver atrasado" TextWrapping="Wrap" />
+                                </CheckBox>
+                                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                    <TextBlock Text="Considerar atrasado depois de" VerticalAlignment="Center" />
+                                    <TextBox Text="{Binding DiasBackupTexto, UpdateSourceTrigger=PropertyChanged}" Width="60" Margin="8,0" AutomationProperties.Name="Dias do backup atrasado" />
+                                    <TextBlock Text="dia(s) sem backup" VerticalAlignment="Center" />
+                                </StackPanel>
+                                <Button Content="Salvar" Style="{StaticResource BotaoPrimario}" Margin="0,16,0,0" HorizontalAlignment="Left"
+                                        Command="{Binding SalvarNotificacoesCommand}" />
+                                <TextBlock Text="{Binding MensagemNotificacoes}" TextWrapping="Wrap" Margin="0,10,0,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{StaticResource CorPositivo}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding MensagemNotificacoesEhErro}" Value="True">
+                                                    <Setter Property="Foreground" Value="{StaticResource CorNegativo}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
                 <ScrollViewer x:Name="PgSeguranca" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="0,16,12,0">
                     <StackPanel MaxWidth="760" HorizontalAlignment="Left" Margin="0,0,0,24">
                         <Border Style="{StaticResource Painel}" Margin="0,0,0,16" Visibility="{Binding TemSeguranca, Converter={StaticResource BoolVis}}">

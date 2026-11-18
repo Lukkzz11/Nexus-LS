@@ -74,8 +74,7 @@ public partial class ConfiguracoesView : UserControl
         {
             new Entrada("sistema", "Sistema e licença", SymbolRegular.Settings24, "PgSistema"),
             new Entrada("atalhos", "Atalhos do teclado", SymbolRegular.Keyboard24, "PgAtalhos"),
-            new Entrada("avisos", "Notificações", SymbolRegular.Alert24, null, "O que o Nexus avisa.",
-                new[] { "Estoque baixo, contas a vencer, backup que falhou, nova versão" }),
+            new Entrada("avisos", "Notificações", SymbolRegular.Alert24, "PgNotificacoes"),
             new Entrada("lojas", "Várias lojas", SymbolRegular.BuildingMultiple24, null, "Quando houver mais de uma unidade.",
                 new[] { "Escolher a loja ativa", "Relatórios consolidados" }),
         }),
@@ -84,7 +83,7 @@ public partial class ConfiguracoesView : UserControl
     private readonly Dictionary<string, System.Windows.Controls.Button> _botoesMenu = new();
 
     private IEnumerable<FrameworkElement> Paginas() =>
-        new FrameworkElement[] { PgLoja, PgAparencia, PgVendas, PgParametros, PgBackup, PgSistema, PgAtalhos, PgDados, PgSeguranca, PgCaixa, PgCrediario, PgComissoes, PgEstoque, PgBreve };
+        new FrameworkElement[] { PgLoja, PgAparencia, PgVendas, PgParametros, PgBackup, PgSistema, PgAtalhos, PgDados, PgSeguranca, PgCaixa, PgCrediario, PgComissoes, PgEstoque, PgNotificacoes, PgBreve };
 
     private void MontarMenu()
     {

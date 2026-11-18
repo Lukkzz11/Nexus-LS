@@ -19,6 +19,14 @@ public class ConfiguracaoSeguranca
     /// <summary>Ao abrir o Nexus, avisa se há produtos abaixo do estoque mínimo. Ligado por padrão.</summary>
     public bool AvisarEstoqueBaixoAoAbrir { get; set; } = true;
 
+    /// <summary>Ao abrir, avisa das contas a pagar vencidas e das que vencem nos próximos <see cref="DiasAvisoContas"/> dias.</summary>
+    public bool AvisarContasAoAbrir { get; set; } = true;
+    public int DiasAvisoContas { get; set; } = 3;
+
+    /// <summary>Ao abrir, avisa se o último backup é mais velho que <see cref="DiasBackupAtrasado"/> dias (ou se nunca foi feito).</summary>
+    public bool AvisarBackupAtrasado { get; set; } = true;
+    public int DiasBackupAtrasado { get; set; } = 3;
+
     /// <summary>Retirada de dinheiro (sangria ou despesa) acima disto precisa de gerente. 0 = sem limite.</summary>
     public long SangriaMaximaSemGerenteCentavos { get; set; }
 
@@ -48,6 +56,10 @@ public class ConfiguracaoSeguranca
 
     public void Validar()
     {
+        if (DiasAvisoContas < 0 || DiasAvisoContas > 60)
+            throw new RegraDeNegocioException("Os dias de aviso das contas devem ficar entre 0 e 60.");
+        if (DiasBackupAtrasado < 1 || DiasBackupAtrasado > 60)
+            throw new RegraDeNegocioException("Os dias do aviso de backup devem ficar entre 1 e 60.");
         if (ComissaoPadraoPercent < 0 || ComissaoPadraoPercent > 100)
             throw new RegraDeNegocioException("A comissão padrão deve ficar entre 0 e 100%.");
         if (ComissaoPorVendedor.Values.Any(p => p < 0 || p > 100))
