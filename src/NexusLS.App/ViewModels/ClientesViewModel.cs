@@ -198,6 +198,7 @@ public partial class ClientesViewModel : ViewModelBase
         HistoricoCredito.Clear();
         ClienteAtivo = true;
         ResumoDivida = "";
+        PodeCobrar = false;
         Titulos.Clear();
         PagamentoValorTexto = "";
         PagamentoObservacao = "";
@@ -244,6 +245,32 @@ public partial class ClientesViewModel : ViewModelBase
         Novo();
         await BuscarAsync();
         MostrarSucesso(estavaAtivo ? "Cliente desativado." : "Cliente reativado.");
+    });
+
+    // ----- Cobrança por WhatsApp -----
+    private long _devidoCentavos, _vencidoCentavos;
+    private DateTime? _vencimentoMaisAntigo;
+
+    /// <summary>Nome da loja para a mensagem de cobrança (a tela principal preenche).</summary>
+    public string NomeLoja { get; set; } = "";
+
+    [ObservableProperty] private bool _podeCobrar;
+
+    /// <summary>Abre o link no programa padrão (o WhatsApp). Troque nos testes.</summary>
+    public Action<string> AbrirLink { get; set; } = url =>
+        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true });
+
+    /// <summary>Abre o WhatsApp com a cobrança escrita. Só abre: quem envia é o operador.</summary>
+    [RelayCommand]
+    private Task CobrarWhatsAppAsync() => ExecutarAsync(() =>
+    {
+        var mensagem = MensagensCliente.Montar(NexusLS.App.Seguranca.Alcada.Config().MensagemCobranca, Nome,
+            string.IsNullOrWhiteSpace(NomeLoja) ? "nossa loja" : NomeLoja, _devidoCentavos, _vencidoCentavos, _vencimentoMaisAntigo);
+        var link = MensagensCliente.LinkWhatsApp(Telefone, mensagem)
+            ?? throw new RegraDeNegocioException("Este cliente não tem um telefone válido. Cadastre o número com DDD (ex.: 11 91234-5678).");
+        AbrirLink(link);
+        MostrarSucesso("WhatsApp aberto com a mensagem de cobrança. Confira o texto e envie.");
+        return Task.CompletedTask;
     });
 
     private async Task AbrirAsync(Cliente cliente)
@@ -309,6 +336,10 @@ public partial class ClientesViewModel : ViewModelBase
             }
 
         var vencido = conta.Titulos.Where(t => t.VencidoEm(agora)).Sum(t => t.SaldoCentavos);
+        _devidoCentavos = conta.SaldoDevedorCentavos;
+        _vencidoCentavos = vencido;
+        _vencimentoMaisAntigo = conta.Titulos.Where(t => t.VencidoEm(agora)).Select(t => (DateTime?)t.Vencimento).Min();
+        PodeCobrar = vencido > 0;
         ResumoDivida = conta.Titulos.Count == 0
             ? "Sem vendas a prazo."
             : $"Deve {Dinheiro.Formatar(conta.SaldoDevedorCentavos)} · Já pagou {Dinheiro.Formatar(conta.TotalPagoCentavos)}"

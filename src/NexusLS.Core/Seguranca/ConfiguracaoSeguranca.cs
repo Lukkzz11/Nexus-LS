@@ -31,6 +31,9 @@ public class ConfiguracaoSeguranca
 
     /// <summary>A tela de Etiquetas já abre com "preço de atacado" marcado.</summary>
     public bool EtiquetaPrecoAtacadoPadrao { get; set; }
+
+    /// <summary>Texto da cobrança por WhatsApp (com campos como {cliente}). Vazio = o texto padrão.</summary>
+    public string? MensagemCobranca { get; set; }
     public int DiasBackupAtrasado { get; set; } = 3;
 
     /// <summary>Retirada de dinheiro (sangria ou despesa) acima disto precisa de gerente. 0 = sem limite.</summary>
@@ -62,6 +65,8 @@ public class ConfiguracaoSeguranca
 
     public void Validar()
     {
+        if ((MensagemCobranca?.Length ?? 0) > Services.MensagensCliente.MaximoCaracteres)
+            throw new RegraDeNegocioException($"A mensagem de cobrança pode ter no máximo {Services.MensagensCliente.MaximoCaracteres} letras.");
         if (DiasAvisoContas < 0 || DiasAvisoContas > 60)
             throw new RegraDeNegocioException("Os dias de aviso das contas devem ficar entre 0 e 60.");
         if (DiasBackupAtrasado < 1 || DiasBackupAtrasado > 60)

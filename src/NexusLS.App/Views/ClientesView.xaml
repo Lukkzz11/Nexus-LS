@@ -355,6 +355,9 @@
                             <StackPanel>
                                 <TextBlock Text="Dívida a prazo" Style="{StaticResource TituloCartao}" />
                                 <TextBlock Text="{Binding ResumoDivida}" TextWrapping="Wrap" Margin="0,4,0,0" />
+                                <Button Content="Cobrar no WhatsApp" Style="{StaticResource BotaoSecundario}" Margin="0,8,0,0" HorizontalAlignment="Left"
+                                        Command="{Binding CobrarWhatsAppCommand}" Visibility="{Binding PodeCobrar, Converter={StaticResource BoolVis}}"
+                                        ToolTip="Abre o WhatsApp com a mensagem de cobrança pronta (o texto é definido em Configurações > Comunicação)" />
                                 <ListBox ItemsSource="{Binding Titulos}" SelectedItem="{Binding TituloSelecionado}" Margin="0,8,0,0"
                                          BorderThickness="0" Background="Transparent" AutomationProperties.Name="Títulos a prazo"
                                          ScrollViewer.HorizontalScrollBarVisibility="Disabled" HorizontalContentAlignment="Stretch">

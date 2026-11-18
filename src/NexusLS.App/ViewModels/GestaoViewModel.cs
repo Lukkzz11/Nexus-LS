@@ -81,7 +81,18 @@ public partial class GestaoViewModel : ObservableObject
 
     [RelayCommand] private void IrParaEditorCatalogo() => Abrir(new CatalogoWebViewModel(_servicos.CatalogoWeb), ItemMenu.EditorCatalogo);
     [RelayCommand] private void IrParaAgenda() => Abrir(new AgendaViewModel(_servicos.Agenda, null, _servicos.AgendaNoGoogle), ItemMenu.Agenda);
-    [RelayCommand] private void IrParaClientes() => Abrir(new ClientesViewModel(_servicos.Clientes, _servicos.TitulosPrazo), ItemMenu.Clientes);
+    [RelayCommand] private void IrParaClientes()
+    {
+        var clientes = new ClientesViewModel(_servicos.Clientes, _servicos.TitulosPrazo);
+        _ = CarregarNomeLojaAsync(clientes);
+        Abrir(clientes, ItemMenu.Clientes);
+    }
+
+    private async Task CarregarNomeLojaAsync(ClientesViewModel clientes)
+    {
+        try { clientes.NomeLoja = (await _servicos.Configuracao.ObterAsync()).NomeLoja; }
+        catch (Exception ex) when (ex is not OutOfMemoryException) { /* sem o nome, a mensagem usa "nossa loja" */ }
+    }
     [RelayCommand] private void IrParaFinanceiro() => Abrir(new FinanceiroViewModel(_servicos.Financeiro, null, _servicos.CategoriasFinanceiras), ItemMenu.Financeiro);
     [RelayCommand] private void IrParaContasESaldos() => Abrir(new ContasESaldosViewModel(_servicos.Posicao, _servicos.ContasFinanceiras, _servicos.Cartoes, _servicos.Cheques, chequesEmitidos: _servicos.ChequesEmitidos), ItemMenu.ContasESaldos);
     [RelayCommand] private void IrParaRelatorios() => Abrir(new RelatoriosViewModel(_servicos.Relatorios, null, _servicos.Demonstrativo), ItemMenu.Relatorios);
@@ -115,6 +126,7 @@ public partial class GestaoViewModel : ObservableObject
         config.UsarComissoes(_servicos.Comissoes, _servicos.Funcionarios);
         config.UsarEstoque(_servicos.Estoque);
         config.UsarNotificacoes();
+        config.UsarComunicacao();
         config.UsarEtiquetas(_servicos.ModelosEtiqueta);
         config.UsarIntegracoes(_servicos.Contador, () => new (string, string)[]
         {

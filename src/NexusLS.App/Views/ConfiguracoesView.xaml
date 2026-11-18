@@ -369,6 +369,41 @@
                         </Border>
                     </StackPanel>
                 </ScrollViewer>
+                <ScrollViewer x:Name="PgComunicacao" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="0,16,12,0">
+                    <StackPanel MaxWidth="860" HorizontalAlignment="Left" Margin="0,0,0,24">
+                        <Border Style="{StaticResource Painel}" Visibility="{Binding TemSeguranca, Converter={StaticResource BoolVis}}">
+                            <StackPanel>
+                                <TextBlock Text="Mensagem de cobrança (WhatsApp)" FontSize="18" FontWeight="SemiBold" />
+                                <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
+                                           Text="É o texto que aparece pronto quando você clica em Cobrar no WhatsApp, na ficha de um cliente com dívida vencida. O WhatsApp só abre com a mensagem escrita: quem envia é você." />
+                                <TextBox Text="{Binding MensagemCobrancaTexto, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap"
+                                         MinHeight="100" MaxLength="600" VerticalScrollBarVisibility="Auto" Margin="0,12,0,0"
+                                         AutomationProperties.Name="Mensagem de cobrança" />
+                                <TextBlock Text="{Binding CamposDisponiveis}" Foreground="{StaticResource CorTextoSuave}" FontSize="12" TextWrapping="Wrap" Margin="0,6,0,0" />
+                                <TextBlock Text="Como o cliente vai ler (exemplo)" Style="{StaticResource Rotulo}" Margin="0,14,0,4" />
+                                <Border Padding="12" CornerRadius="8" Background="{StaticResource CorFundo}">
+                                    <TextBlock Text="{Binding PreviaCobranca}" TextWrapping="Wrap" />
+                                </Border>
+                                <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+                                    <Button Content="Salvar" Style="{StaticResource BotaoPrimario}" Command="{Binding SalvarComunicacaoCommand}" />
+                                    <Button Content="Voltar ao texto padrão" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0" Command="{Binding RestaurarMensagemCobrancaCommand}" />
+                                </StackPanel>
+                                <TextBlock Text="{Binding MensagemComunicacao}" TextWrapping="Wrap" Margin="0,10,0,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{StaticResource CorPositivo}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding MensagemComunicacaoEhErro}" Value="True">
+                                                    <Setter Property="Foreground" Value="{StaticResource CorNegativo}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
                 <ScrollViewer x:Name="PgSeguranca" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="0,16,12,0">
                     <StackPanel MaxWidth="760" HorizontalAlignment="Left" Margin="0,0,0,24">
                         <Border Style="{StaticResource Painel}" Margin="0,0,0,16" Visibility="{Binding TemSeguranca, Converter={StaticResource BoolVis}}">

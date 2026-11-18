@@ -259,3 +259,85 @@ public sealed class IntegracoesConfigTests : IDisposable
         Assert.Equal("", vm.MensagemIntegracoes);
     }
 }
+
+[Collection("Sessao")]
+public sealed class ComunicacaoConfigTests : IDisposable
+{
+    private readonly BancoDeTeste _banco = new();
+    private readonly string _arquivo = Path.Combine(Path.GetTempPath(), "nexus_com_" + Guid.NewGuid().ToString("N") + ".json");
+
+    public void Dispose()
+    {
+        NexusLS.App.Seguranca.Alcada.Config = () => new();
+        _banco.Dispose();
+        try { File.Delete(_arquivo); } catch (IOException) { }
+    }
+
+    private ConfiguracoesViewModel CriarConfig()
+    {
+        ConfiguracoesViewModel? vm = null;
+        Capturador.Rodar(() =>
+        {
+            var config = new ConfiguracaoService(_banco.Fabrica);
+            vm = new ConfiguracoesViewModel(config, new CupomService(_banco.Fabrica, config, new ImpressoraDeMentira()));
+            vm.UsarSeguranca(new ConfiguracaoSegurancaStore(_arquivo));
+            vm.UsarComunicacao();
+        });
+        return vm!;
+    }
+
+    [Fact]
+    public void Comeca_com_o_texto_padrao_e_a_previa_sem_campos_soltos()
+    {
+        var vm = CriarConfig();
+        Assert.Equal(MensagensCliente.CobrancaPadrao, vm.MensagemCobrancaTexto);
+        Assert.Contains("Maria", vm.PreviaCobranca);
+        Assert.DoesNotContain("{", vm.PreviaCobranca);
+    }
+
+    [Fact]
+    public void Salvar_texto_proprio_grava_e_o_padrao_nao_fica_gravado()
+    {
+        var vm = CriarConfig();
+        vm.MensagemCobrancaTexto = "Oi {cliente}, pague {vencido}.";
+        vm.SalvarComunicacaoCommand.Execute(null);
+        Assert.Equal("Oi {cliente}, pague {vencido}.", new ConfiguracaoSegurancaStore(_arquivo).Carregar().MensagemCobranca);
+
+        vm.RestaurarMensagemCobrancaCommand.Execute(null);
+        vm.SalvarComunicacaoCommand.Execute(null);
+        Assert.Null(new ConfiguracaoSegurancaStore(_arquivo).Carregar().MensagemCobranca);
+    }
+
+    [Fact]
+    public void Texto_grande_demais_da_erro_e_nao_grava()
+    {
+        var vm = CriarConfig();
+        vm.MensagemCobrancaTexto = new string('a', 601);
+        vm.SalvarComunicacaoCommand.Execute(null);
+        Assert.True(vm.MensagemComunicacaoEhErro);
+        Assert.Null(new ConfiguracaoSegurancaStore(_arquivo).Carregar().MensagemCobranca);
+    }
+
+    [Fact]
+    public void Botao_de_cobranca_abre_o_link_com_a_mensagem_e_avisa_telefone_invalido()
+    {
+        Capturador.Rodar(() => { });   // inicia a interface antes: ela pode reiniciar a configuração estática
+        NexusLS.App.Seguranca.Alcada.Config = () => new ConfiguracaoSeguranca { MensagemCobranca = "Oi {cliente} da {loja}" };
+        ClientesViewModel? vm = null;
+        var aberto = "";
+        Capturador.Rodar(() =>
+        {
+            vm = new ClientesViewModel(new ClienteService(_banco.Fabrica)) { NomeLoja = "Loja Y", AbrirLink = u => aberto = u };
+            vm.Nome = "Ana Paula";
+            vm.Telefone = "(11) 98888-7777";
+        });
+        vm!.CobrarWhatsAppCommand.Execute(null);
+        Assert.Equal("https://wa.me/5511988887777?text=Oi%20Ana%20da%20Loja%20Y", aberto);
+
+        aberto = "";
+        vm.Telefone = "123";
+        vm.CobrarWhatsAppCommand.Execute(null);
+        Assert.Equal("", aberto);
+        Assert.Contains("telefone válido", vm.Mensagem);
+    }
+}
