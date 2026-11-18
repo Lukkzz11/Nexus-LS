@@ -9,6 +9,9 @@ public partial class ConfiguracoesViewModel
 {
     private InicioService? _inicioCelular;
 
+    /// <summary>Salva como "resumo-AAAA-MM-DD.html" (guarda o histórico) em vez de sobrescrever "resumo-do-dia.html".</summary>
+    [ObservableProperty] private bool _resumoCelularComData;
+
     public bool TemResumoCelular => _inicioCelular is not null;
     [ObservableProperty] private string _mensagemResumoCelular = "";
     [ObservableProperty] private bool _mensagemResumoCelularEhErro;
@@ -31,8 +34,9 @@ public partial class ConfiguracoesViewModel
         try
         {
             var resumo = await _inicioCelular.ObterAsync();
-            var html = ResumoCelular.Html(resumo, string.IsNullOrWhiteSpace(NomeLoja) ? "Nexus" : NomeLoja, DateTime.Now);
-            var arquivo = System.IO.Path.Combine(pasta, "resumo-do-dia.html");
+            var agora = DateTime.Now;
+            var html = ResumoCelular.Html(resumo, string.IsNullOrWhiteSpace(NomeLoja) ? "Nexus" : NomeLoja, agora);
+            var arquivo = System.IO.Path.Combine(pasta, ResumoCelular.NomeArquivo(resumo.Dia == default ? agora : resumo.Dia, ResumoCelularComData));
             await System.IO.File.WriteAllTextAsync(arquivo, html, new System.Text.UTF8Encoding(false));
             MensagemResumoCelularEhErro = false;
             MensagemResumoCelular = $"Pronto: {arquivo}. Mande esse arquivo para o celular (WhatsApp, e-mail ou Drive) e abra no navegador.";
