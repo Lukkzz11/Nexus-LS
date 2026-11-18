@@ -60,6 +60,14 @@ jobs:
           --no-build -c Release
           --logger "trx;LogFileName=app.trx"
 
+      # Testes do celular (consulta e servidor local que fala com o banco).
+      - name: Testar o Nexus Móvel
+        if: always() && steps.compilar.outcome == 'success'
+        run: >
+          dotnet test tests/NexusLS.Movel.Tests/NexusLS.Movel.Tests.csproj
+          --no-build -c Release
+          --logger "trx;LogFileName=movel.trx"
+
       # A auditoria precisa FALHAR o job quando houver vulnerabilidade conhecida.
       # O comando `dotnet list package --vulnerable` costuma sair com código 0 mesmo
       # encontrando problemas, por isso o texto também é conferido.

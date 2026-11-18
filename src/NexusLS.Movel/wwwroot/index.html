@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#2563eb">
+  <meta name="description" content="Consulta de produtos do Nexus LS pelo celular, na rede da loja.">
+  <title>Nexus Móvel</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icone-192.png" sizes="192x192">
+  <link rel="apple-touch-icon" href="/icone-192.png">
+  <link rel="stylesheet" href="/estilo.css">
+</head>
+<body>
+
+  <!-- Portão do PIN: só aparece quando o celular ainda não está liberado. -->
+  <section id="portao" class="portao" aria-labelledby="portao-titulo">
+    <div class="portao-caixa">
+      <div class="marca" aria-hidden="true">N</div>
+      <h1 id="portao-titulo">Nexus Móvel</h1>
+      <p class="suave">Digite o PIN que aparece no computador da loja.</p>
+      <label class="oculto" for="pin">PIN de acesso</label>
+      <input id="pin" class="pin" inputmode="numeric" pattern="[0-9]*" maxlength="6"
+             autocomplete="one-time-code" placeholder="••••••" aria-describedby="pin-erro">
+      <button id="entrar" class="botao primario largo" type="button">Entrar</button>
+      <p id="pin-erro" class="erro" role="alert"></p>
+      <p class="dica">O PIN fica na janela do <strong>NexusMovel</strong>, no computador do caixa.</p>
+    </div>
+  </section>
+
+  <!-- Aplicativo -->
+  <div id="app" class="app" hidden>
+    <header class="topo">
+      <div class="loja">
+        <span id="status" class="ponto" title="Conexão com o computador"></span>
+        <span id="nome-loja">Nexus</span>
+      </div>
+      <button id="sair" class="link" type="button">Sair</button>
+    </header>
+
+    <main>
+      <section class="busca" aria-label="Consultar produto">
+        <label for="codigo">Código, referência ou nome</label>
+        <div class="campo">
+          <input id="codigo" type="search" enterkeyhint="search" autocomplete="off"
+                 autocapitalize="characters" spellcheck="false"
+                 placeholder="Bipe, digite ou fale o código">
+          <button id="limpar" class="limpar" type="button" aria-label="Limpar" hidden>×</button>
+        </div>
+
+        <div class="acoes">
+          <button id="camera" class="botao secundario" type="button">
+            <span class="icone" aria-hidden="true">▣</span> Ler com a câmera
+          </button>
+          <input id="foto" type="file" accept="image/*" capture="environment" hidden>
+        </div>
+
+        <div id="sugestoes" class="sugestoes" role="listbox" aria-label="Sugestões"></div>
+      </section>
+
+      <section id="resultado" class="resultado" aria-live="polite"></section>
+
+      <section id="historico-area" class="historico" hidden>
+        <div class="titulo-linha">
+          <h2>Consultas de agora</h2>
+          <button id="limpar-historico" class="link" type="button">Limpar</button>
+        </div>
+        <div id="historico" class="lista-historico"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Leitura ao vivo da câmera (quando o navegador permite) -->
+  <div id="leitor" class="leitor" hidden>
+    <video id="video" playsinline muted></video>
+    <div class="mira" aria-hidden="true"></div>
+    <p class="instrucao">Aponte para o código de barras</p>
+    <button id="fechar-leitor" class="botao claro" type="button">Fechar</button>
+  </div>
+
+  <div id="aviso" class="aviso" role="status" hidden></div>
+
+  <script src="/vendor/zxing.min.js" defer></script>
+  <script src="/app.js" defer></script>
+</body>
+</html>

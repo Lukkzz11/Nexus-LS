@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  Compila TODO o Nexus (PDV, Atualizador, Etiquetas) + o instalador Nexus-Setup.exe e publica tudo num release.
+  Compila TODO o Nexus (PDV, Atualizador, Etiquetas, Nexus Móvel) + o instalador Nexus-Setup.exe e publica tudo num release.
   (O License Manager não entra: ele é só do dono.)
 
 .EXAMPLE
@@ -31,7 +31,8 @@ $projetos = @(
     @{ P = "src/NexusLS.App";        Exe = "NexusLS.exe" },
     @{ P = "src/NexusLS.Atualizador"; Exe = "atualizador.exe" },
     @{ P = "src/NexusLS.BarTender";  Exe = "NexusBarTender.exe" },
-    @{ P = "src/NexusLS.Setup";      Exe = "Nexus-Setup.exe" }
+    @{ P = "src/NexusLS.Setup";      Exe = "Nexus-Setup.exe" },
+    @{ P = "src/NexusLS.Movel";      Exe = "NexusMovel.exe" }
 )
 foreach ($p in $projetos) {
     Write-Host "==> $($p.Exe) $Versao" -ForegroundColor Cyan

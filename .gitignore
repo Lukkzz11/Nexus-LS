@@ -487,6 +487,7 @@ $RECYCLE.BIN/
 publicar/
 publicar_novo/
 publicar_release/
+publicar_movel/
 telas-teste/
 
 # Saida de build do License Manager (copiada de license-manager/dist)

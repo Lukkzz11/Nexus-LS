@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!--
+    Nexus Movel: o celular da loja consultando o mesmo banco do Nexus.
+    Um servidor local (Kestrel) no computador da loja serve a tela no Wi-Fi e le
+    os dados pelo Core. Nada sai para a internet.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>NexusMovel</AssemblyName>
+    <RootNamespace>NexusLS.Movel</RootNamespace>
+    <Version>1.2.8</Version>
+    <InvariantGlobalization>false</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NexusLS.Core\NexusLS.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- A tela vai embutida no executavel: nao depende de pasta ao lado nem de internet.
+         O LogicalName fixa o caminho do recurso (web/index.html, web/vendor/zxing.min.js). -->
+    <Content Remove="wwwroot\**" />
+    <EmbeddedResource Include="wwwroot\**\*">
+      <LogicalName>web/%(RecursiveDir)%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>
