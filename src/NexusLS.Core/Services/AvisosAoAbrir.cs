@@ -41,31 +41,49 @@ public static class AvisosAoAbrir
     /// Funcionários ativos que fazem aniversário de hoje até hoje + <paramref name="dias"/>, do mais próximo ao mais distante.
     /// Quem nasceu em 29/02 comemora em 28/02 nos anos não bissextos. Passa a virada do ano (31/12 olha para janeiro).
     /// </summary>
-    public static List<Aniversariante> AniversariantesProximos(IEnumerable<Funcionario> funcionarios, DateTime hoje, int dias = DiasAvisoAniversario)
+    public static List<Aniversariante> AniversariantesProximos(IEnumerable<Funcionario> funcionarios, DateTime hoje, int dias = DiasAvisoAniversario) =>
+        Proximos(funcionarios.Where(f => f.Ativo).Select(f => (f.Nome, f.DataNascimento)), hoje, dias);
+
+    /// <summary>Mesma regra para clientes ativos com data de nascimento.</summary>
+    public static List<Aniversariante> AniversariantesProximos(IEnumerable<Cliente> clientes, DateTime hoje, int dias = DiasAvisoAniversario) =>
+        Proximos(clientes.Where(c => c.Ativo).Select(c => (c.Nome, c.DataNascimento)), hoje, dias);
+
+    private static List<Aniversariante> Proximos(IEnumerable<(string Nome, DateTime? DataNascimento)> pessoas, DateTime hoje, int dias)
     {
         var resultado = new List<Aniversariante>();
-        foreach (var f in funcionarios)
+        foreach (var (nome, nascimento) in pessoas)
         {
-            if (!f.Ativo || f.DataNascimento is not DateTime nasc || nasc.Date > hoje.Date) continue;
+            if (nascimento is not DateTime nasc || nasc.Date > hoje.Date) continue;
             foreach (var ano in new[] { hoje.Year, hoje.Year + 1 })
             {
                 var dia = nasc.Month == 2 && nasc.Day == 29 && !DateTime.IsLeapYear(ano) ? 28 : nasc.Day;
                 var data = new DateTime(ano, nasc.Month, dia);
                 var ate = (data - hoje.Date).Days;
                 if (ate < 0) continue;
-                if (ate <= dias) resultado.Add(new Aniversariante(f.Nome, data, ate, ano - nasc.Year));
+                if (ate <= dias) resultado.Add(new Aniversariante(nome, data, ate, ano - nasc.Year));
                 break;
             }
         }
         return resultado.OrderBy(a => a.DiasAte).ThenBy(a => a.Nome, StringComparer.CurrentCultureIgnoreCase).ToList();
     }
 
+    /// <summary>Clientes que fazem aniversário no mês de <paramref name="mes"/> (29/02 conta em fevereiro), pelo dia do mês.</summary>
+    public static List<Cliente> ClientesDoMes(IEnumerable<Cliente> clientes, int mes) =>
+        clientes.Where(c => c.DataNascimento is DateTime n && n.Month == mes).OrderBy(c => c.DataNascimento!.Value.Day)
+            .ThenBy(c => c.Nome, StringComparer.CurrentCultureIgnoreCase).ToList();
+
     /// <summary>Linhas do aviso de aniversariantes da semana (a primeira é o título), ou lista vazia se não há ninguém.</summary>
-    public static List<string> Aniversariantes(IEnumerable<Funcionario> funcionarios, DateTime hoje, int dias = DiasAvisoAniversario)
+    public static List<string> Aniversariantes(IEnumerable<Funcionario> funcionarios, DateTime hoje, int dias = DiasAvisoAniversario) =>
+        Linhas(AniversariantesProximos(funcionarios, hoje, dias), "Aniversariantes");
+
+    /// <summary>Linhas do aviso de aniversariantes da semana entre os clientes (a primeira é o título), ou lista vazia.</summary>
+    public static List<string> AniversariantesClientes(IEnumerable<Cliente> clientes, DateTime hoje, int dias = DiasAvisoAniversario) =>
+        Linhas(AniversariantesProximos(clientes, hoje, dias), "Aniversariantes (clientes)");
+
+    private static List<string> Linhas(List<Aniversariante> lista, string rotulo)
     {
-        var lista = AniversariantesProximos(funcionarios, hoje, dias);
         if (lista.Count == 0) return new();
-        var linhas = new List<string> { lista.Any(a => a.DiasAte == 0) ? "Aniversariantes: tem gente fazendo anos hoje!" : "Aniversariantes da semana:" };
+        var linhas = new List<string> { lista.Any(a => a.DiasAte == 0) ? $"{rotulo}: tem gente fazendo anos hoje!" : $"{rotulo} da semana:" };
         foreach (var a in lista)
         {
             var quando = a.DiasAte == 0 ? "hoje" : a.DiasAte == 1 ? "amanhã" : $"{a.Data:dd/MM}";

@@ -12,6 +12,7 @@ public partial class ConfiguracoesViewModel
     [ObservableProperty] private bool _avisarBackupAtrasado = true;
     [ObservableProperty] private bool _avisarCrediario = true;
     [ObservableProperty] private bool _avisarAniversariantes = true;
+    [ObservableProperty] private bool _avisarAniversariantesClientes = true;
     [ObservableProperty] private string _diasBackupTexto = "3";
     [ObservableProperty] private string _mensagemNotificacoes = "";
     [ObservableProperty] private bool _mensagemNotificacoesEhErro;
@@ -25,6 +26,7 @@ public partial class ConfiguracoesViewModel
         AvisarBackupAtrasado = c.AvisarBackupAtrasado;
         AvisarCrediario = c.AvisarCrediarioAoAbrir;
         AvisarAniversariantes = c.AvisarAniversariantes;
+        AvisarAniversariantesClientes = c.AvisarAniversariantesClientes;
         DiasBackupTexto = c.DiasBackupAtrasado.ToString();
     }
 
@@ -41,6 +43,7 @@ public partial class ConfiguracoesViewModel
             c.AvisarBackupAtrasado = AvisarBackupAtrasado;
             c.AvisarCrediarioAoAbrir = AvisarCrediario;
             c.AvisarAniversariantes = AvisarAniversariantes;
+            c.AvisarAniversariantesClientes = AvisarAniversariantesClientes;
             c.DiasBackupAtrasado = diasBackup;
         },
         (m, erro) => { MensagemNotificacoesEhErro = erro; MensagemNotificacoes = m; },

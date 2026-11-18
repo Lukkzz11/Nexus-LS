@@ -257,6 +257,14 @@
                                         <TextBox Text="{Binding Cores, UpdateSourceTrigger=PropertyChanged}"
                                                  ToolTip="Ex.: Preto, Branco, Azul. Só informativo: o estoque é por tamanho."
                                                  AutomationProperties.Name="Cores" />
+                                        <TextBlock Text="NCM (8 números)" Style="{StaticResource Rotulo}" Margin="0,8,0,0" />
+                                        <TextBox Text="{Binding Ncm, UpdateSourceTrigger=PropertyChanged}" MaxLength="10"
+                                                 ToolTip="Vazio = usa o NCM padrão da página Fiscal. Ex.: 61091000"
+                                                 AutomationProperties.Name="NCM" />
+                                        <TextBlock Text="CFOP (4 números)" Style="{StaticResource Rotulo}" Margin="0,8,0,0" />
+                                        <TextBox Text="{Binding Cfop, UpdateSourceTrigger=PropertyChanged}" MaxLength="5"
+                                                 ToolTip="Vazio = usa o CFOP padrão da página Fiscal. Ex.: 5102"
+                                                 AutomationProperties.Name="CFOP" />
                                         <TextBlock Text="Código interno" Style="{StaticResource Rotulo}" Margin="0,8,0,0" />
                                         <TextBox Text="{Binding CodigoInterno, Mode=OneWay}" IsReadOnly="True"
                                                  ToolTip="Gerado pelo sistema (INT-000001...)" />

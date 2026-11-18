@@ -32,6 +32,8 @@ public class ProdutoService
             CodigoInterno = await ProximoCodigoInternoAsync(db),
             Categoria = Limpar(dados.Categoria),
             Cores = NormalizarCores(dados.Cores),
+            Ncm = ValidarNcm(dados.Ncm),
+            Cfop = ValidarCfop(dados.Cfop),
             VenderSemBaixa = dados.VenderSemBaixa,
             Sobra = dados.Sobra,
             CodigoBarras = codigo,
@@ -66,6 +68,8 @@ public class ProdutoService
     public async Task EditarAsync(int id, DadosProduto dados)
     {
         var (codigo, referencia) = Validar(dados);
+        var ncm = ValidarNcm(dados.Ncm);
+        var cfop = ValidarCfop(dados.Cfop);
 
         await using var db = await _fabrica.CreateDbContextAsync();
         var produto = await db.Produtos.FindAsync(id)
@@ -85,6 +89,8 @@ public class ProdutoService
         produto.PrecoAtacadoCentavos = dados.PrecoAtacadoCentavos;
         produto.PrecoCustoCentavos = dados.PrecoCustoCentavos;
         produto.EstoqueMinimo = dados.EstoqueMinimo;
+        if (dados.Ncm is not null) produto.Ncm = ncm;
+        if (dados.Cfop is not null) produto.Cfop = cfop;
         await db.SaveChangesAsync();
     }
 
@@ -479,6 +485,25 @@ public class ProdutoService
         var codigo = string.IsNullOrWhiteSpace(dados.CodigoBarras) ? null : dados.CodigoBarras.Trim();
         var referencia = string.IsNullOrWhiteSpace(dados.Referencia) ? null : dados.Referencia.Trim();
         return (codigo, referencia);
+    }
+
+
+    /// <summary>NCM: vazio vira nulo (usa o padrão da página Fiscal); senão tem de ter exatamente 8 números (aceita pontos).</summary>
+    public static string? ValidarNcm(string? texto)
+    {
+        var d = (texto ?? "").Replace(".", "").Trim();
+        if (d.Length == 0) return null;
+        if (d.Length != 8 || !d.All(char.IsAsciiDigit)) throw new RegraDeNegocioException("O NCM tem 8 números.");
+        return d;
+    }
+
+    /// <summary>CFOP: vazio vira nulo (usa o padrão da página Fiscal); senão tem de ter exatamente 4 números (aceita ponto).</summary>
+    public static string? ValidarCfop(string? texto)
+    {
+        var d = (texto ?? "").Replace(".", "").Trim();
+        if (d.Length == 0) return null;
+        if (d.Length != 4 || !d.All(char.IsAsciiDigit)) throw new RegraDeNegocioException("O CFOP tem 4 números.");
+        return d;
     }
 
     private static string? Limpar(string? texto) => string.IsNullOrWhiteSpace(texto) ? null : texto.Trim();

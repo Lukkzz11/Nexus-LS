@@ -245,6 +245,10 @@ public partial class EstoqueLojaViewModel : ViewModelBase
     /// <summary>Cores do produto, separadas por vírgula (informativas).</summary>
     [ObservableProperty] private string _cores = "";
 
+    /// <summary>NCM (8 números) e CFOP (4 números) do produto. Vazio = vale o padrão da página Fiscal.</summary>
+    [ObservableProperty] private string _ncm = "";
+    [ObservableProperty] private string _cfop = "";
+
     /// <summary>As grades prontas (letras, calça/bermuda, camisa de botão) e a escolhida para cadastrar de uma vez.</summary>
     public IReadOnlyList<GradeDeTamanho> GradesProntas => GradesDeTamanho.Todas;
     [ObservableProperty] private GradeDeTamanho? _gradeEscolhida;
@@ -482,6 +486,8 @@ public partial class EstoqueLojaViewModel : ViewModelBase
         CodigoBarras = modelo.NovaReferencia;
         Categoria = b.Categoria ?? "";
         Cores = b.Cores ?? "";
+        Ncm = b.Ncm ?? "";
+        Cfop = b.Cfop ?? "";
         PrecoVenda = Dinheiro.FormatarParaEdicao(b.PrecoVendaCentavos);
         PrecoAtacado = b.PrecoAtacadoCentavos > 0 ? Dinheiro.FormatarParaEdicao(b.PrecoAtacadoCentavos) : "";
         PrecoCusto = Dinheiro.FormatarParaEdicao(b.PrecoCustoCentavos);
@@ -511,6 +517,8 @@ public partial class EstoqueLojaViewModel : ViewModelBase
         PrecoCusto = "";
         Categoria = "";
         Cores = "";
+        Ncm = "";
+        Cfop = "";
         CodigoInterno = "";
         VenderSemBaixa = false;
         Sobra = false;
@@ -597,7 +605,7 @@ public partial class EstoqueLojaViewModel : ViewModelBase
         var minimo = LerInteiro(EstoqueMinimo, "Estoque mínimo");
         var inicial = EhNovo ? LerInteiro(EstoqueInicial, "Estoque inicial") : 0;
 
-        return (new DadosProduto(Nome, CodigoBarras, venda, custo, minimo, Referencia, atacado, Categoria, VenderSemBaixa, Sobra, Cores), inicial);
+        return (new DadosProduto(Nome, CodigoBarras, venda, custo, minimo, Referencia, atacado, Categoria, VenderSemBaixa, Sobra, Cores, Ncm ?? "", Cfop ?? ""), inicial);
     }
 
     private static int LerInteiro(string texto, string campo)
@@ -619,6 +627,8 @@ public partial class EstoqueLojaViewModel : ViewModelBase
         Referencia = produto.Referencia ?? "";
         Categoria = produto.Categoria ?? "";
         Cores = produto.Cores ?? "";
+        Ncm = produto.Ncm ?? "";
+        Cfop = produto.Cfop ?? "";
         CodigoInterno = produto.CodigoInterno ?? "";
         VenderSemBaixa = produto.VenderSemBaixa;
         Sobra = produto.Sobra;

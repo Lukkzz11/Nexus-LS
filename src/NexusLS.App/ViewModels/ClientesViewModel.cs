@@ -69,6 +69,9 @@ public partial class ClientesViewModel : ViewModelBase
     // ----- Lista -----
     [ObservableProperty] private string _busca = "";
     [ObservableProperty] private bool _mostrarInativos;
+
+    /// <summary>Filtro da lista: só quem faz aniversário no mês atual (clientes sem data não aparecem).</summary>
+    [ObservableProperty] private bool _soAniversariantesDoMes;
     [ObservableProperty] private Cliente? _selecionado;
 
     // ----- Cadastro -----
@@ -91,6 +94,7 @@ public partial class ClientesViewModel : ViewModelBase
     [ObservableProperty] private string _complemento = "";
     [ObservableProperty] private string _cep = "";
     [ObservableProperty] private string _inscricaoEstadual = "";
+    [ObservableProperty] private DateTime? _dataNascimento;
 
     // ----- Crédito do cliente (saldo a favor) -----
     [ObservableProperty] private string _creditoAtualTexto = "R$ 0,00";
@@ -147,6 +151,7 @@ public partial class ClientesViewModel : ViewModelBase
 
     partial void OnBuscaChanged(string value) => _ = BuscarAsync();
     partial void OnMostrarInativosChanged(bool value) => _ = BuscarAsync();
+    partial void OnSoAniversariantesDoMesChanged(bool value) => _ = BuscarAsync();
 
     /// <summary>O operador escolheu um cliente na lista: abre o cadastro e o histórico dele.</summary>
     partial void OnSelecionadoChanged(Cliente? value)
@@ -160,11 +165,12 @@ public partial class ClientesViewModel : ViewModelBase
     {
         var versao = ++_versaoBusca; // se o operador digita rápido, só a busca mais recente atualiza a lista
         var lista = await _clientes.BuscarAsync(Busca, MostrarInativos);
+        if (SoAniversariantesDoMes) lista = AvisosAoAbrir.ClientesDoMes(lista, _hoje().Month);
         if (versao != _versaoBusca) return;
 
         Clientes.Clear();
         foreach (var c in lista) Clientes.Add(c);
-        ResumoLista = lista.Count == 1 ? "1 cliente" : $"{lista.Count} clientes";
+        ResumoLista = (lista.Count == 1 ? "1 cliente" : $"{lista.Count} clientes") + (SoAniversariantesDoMes ? " fazendo aniversário neste mês" : "");
         if (IdEditando is int id) Reselecionar(id);
     });
 
@@ -192,6 +198,7 @@ public partial class ClientesViewModel : ViewModelBase
         var limitePadrao = NexusLS.App.Seguranca.Alcada.Config().LimiteCreditoPadraoCentavos;
         LimiteTexto = limitePadrao > 0 ? Dinheiro.FormatarParaEdicao(limitePadrao) : "";   // cliente novo já vem com o limite padrão da loja
         Cidade = Estado = Endereco = Numero = Bairro = Complemento = Cep = InscricaoEstadual = "";
+        DataNascimento = null;
         CreditoAtualTexto = Dinheiro.Formatar(0);
         NovoCreditoTexto = "";
         CreditoMotivo = "";
@@ -215,7 +222,7 @@ public partial class ClientesViewModel : ViewModelBase
         if (!string.IsNullOrWhiteSpace(LimiteTexto) && !Dinheiro.TentarConverter(LimiteTexto, out limite))
             throw new RegraDeNegocioException("Limite de crédito inválido. Digite um valor como 500,00 (vazio = sem limite).");
         var dados = new DadosCliente(Nome, Documento, Telefone, Observacao, limite, RazaoSocial, Email, _clientes.ExigirDocumentoNaTela,
-            Cidade, Estado, Endereco, Numero, Bairro, Complemento, Cep, InscricaoEstadual);
+            Cidade, Estado, Endereco, Numero, Bairro, Complemento, Cep, InscricaoEstadual, DataNascimento);
 
         if (IdEditando is int id)
         {
@@ -285,6 +292,7 @@ public partial class ClientesViewModel : ViewModelBase
         Cidade = cliente.Cidade ?? ""; Estado = cliente.Estado ?? ""; Endereco = cliente.Endereco ?? "";
         Numero = cliente.Numero ?? ""; Bairro = cliente.Bairro ?? ""; Complemento = cliente.Complemento ?? "";
         Cep = cliente.Cep ?? ""; InscricaoEstadual = cliente.InscricaoEstadual ?? "";
+        DataNascimento = cliente.DataNascimento;
         LimiteTexto = cliente.LimiteCreditoCentavos > 0 ? Dinheiro.FormatarParaEdicao(cliente.LimiteCreditoCentavos) : "";
         ClienteAtivo = cliente.Ativo;
         Mensagem = "";

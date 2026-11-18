@@ -162,6 +162,12 @@ public partial class MainWindow : FluentWindow
                 linhas.AddRange(NexusLS.Core.Services.AvisosAoAbrir.Aniversariantes(equipe, DateTime.Today));
             }
 
+            if (cfg.AvisarAniversariantesClientes && Seguranca.Sessao.Pode(NexusLS.Core.Models.Permissao.Clientes))
+            {
+                var clientes = await App.Servicos.Clientes.ListarComAniversarioAsync();
+                linhas.AddRange(NexusLS.Core.Services.AvisosAoAbrir.AniversariantesClientes(clientes, DateTime.Today));
+            }
+
             if (cfg.AvisarBackupAtrasado)
             {
                 var frase = NexusLS.Core.Services.AvisosAoAbrir.Backup(App.Servicos.Backup.Configuracao.UltimoBackup, DateTime.Now, cfg.DiasBackupAtrasado);
