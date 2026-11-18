@@ -48,6 +48,18 @@ public sealed class GoogleTelaTests : IDisposable
         try { Directory.Delete(_pasta, true); } catch (IOException) { }
     }
 
+    private sealed class DialogosFalsos : NexusLS.App.Backup.IDialogosBackup
+    {
+        public bool Resposta { get; set; }
+        public int Perguntas { get; private set; }
+        public string? EscolherPasta(string? pastaAtual) => null;
+        public string? EscolherArquivoBackup(string? pastaInicial) => null;
+        public bool Confirmar(string texto) { Perguntas++; return Resposta; }
+        public void Reiniciar() { }
+    }
+
+    private DialogosFalsos _dialogos = new();
+
     private (ConfiguracoesViewModel Vm, GoogleStore Store, Servidor Http) Criar()
     {
         var servidor = new Servidor();
@@ -64,7 +76,8 @@ public sealed class GoogleTelaTests : IDisposable
         var gestor = new GestorBackup(new BackupService(banco), bk);
 
         var config = new ConfiguracaoService(_banco.Fabrica);
-        var vm = new ConfiguracoesViewModel(config, new CupomService(_banco.Fabrica, config, new ImpressoraDeMentira()), gestor);
+        var vm = new ConfiguracoesViewModel(config, new CupomService(_banco.Fabrica, config, new ImpressoraDeMentira()), gestor, _dialogos);
+        google.RegistrarLog = _ => { };
         vm.UsarGoogle(google, _ => { });
         return (vm, store, servidor);
     }
@@ -92,6 +105,78 @@ public sealed class GoogleTelaTests : IDisposable
         Assert.True(vm.MensagemGoogleEhErro);
         Assert.Contains("Ainda não há backup", vm.MensagemGoogle);
         Assert.Equal("segredo", store.ClientSecret());
+    }
+
+    private static string Arquivo(string id, int diasAtras)
+    {
+        var t = DateTime.UtcNow.AddDays(-diasAtras);
+        return $"{{\"id\":\"{id}\",\"name\":\"{RegrasBackup.NomeArquivo(t.ToLocalTime(), MotivoBackup.Automatico)}\",\"createdTime\":\"{t:yyyy-MM-ddTHH:mm:ssZ}\",\"size\":\"2097152\"}}";
+    }
+
+    private void PrepararListaDoDrive(Servidor http)
+    {
+        http.Respostas.Enqueue((HttpStatusCode.OK, "{\"access_token\":\"a\",\"expires_in\":3599}"));
+        http.Respostas.Enqueue((HttpStatusCode.OK, "{\"files\":[{\"id\":\"pasta-1\"}]}"));
+        http.Respostas.Enqueue((HttpStatusCode.OK, "{\"files\":[" + string.Join(",", Arquivo("n1", 1), Arquivo("n2", 2), Arquivo("n3", 3), Arquivo("v1", 80), Arquivo("v2", 90)) + "]}"));
+    }
+
+    private static void Conectar(GoogleStore store) => store.Salvar(new ConfiguracaoGoogle
+    {
+        ClientId = "123456-abc.apps.googleusercontent.com", ClientSecretProtegido = store.Proteger("s"), RefreshTokenProtegido = store.Proteger("r")
+    });
+
+    [Fact]
+    public async Task Limpeza_do_drive_primeiro_mostra_a_lista_e_so_apaga_depois_de_confirmar()
+    {
+        var (vm, store, http) = Criar();
+        Conectar(store);
+        PrepararListaDoDrive(http);
+
+        await vm.LimparBackupsAntigosDriveCommand.ExecuteAsync(null);
+
+        Assert.False(vm.MensagemGoogleEhErro, vm.MensagemGoogle);
+        Assert.True(vm.TemPlanoLimpezaDrive);
+        Assert.Equal(2, vm.PreviaLimpezaDrive.Count);
+        Assert.Contains("4,0 MB", vm.ResumoLimpezaDrive);
+        Assert.DoesNotContain(http.Urls, u => u.Contains("/files/v"));         // nada apagado só de listar
+
+        // recusar na janela: nada acontece
+        _dialogos.Resposta = false;
+        await vm.ConfirmarLimpezaDriveCommand.ExecuteAsync(null);
+        Assert.Equal(1, _dialogos.Perguntas);
+        Assert.Equal(3, http.Urls.Count);
+
+        // confirmar: pasta, depois (conferir + apagar) para cada um
+        _dialogos.Resposta = true;
+        http.Respostas.Enqueue((HttpStatusCode.OK, "{\"files\":[{\"id\":\"pasta-1\"}]}"));      // o token de acesso ainda vale
+        for (var i = 0; i < 2; i++)
+        {
+            http.Respostas.Enqueue((HttpStatusCode.OK, "{\"parents\":[\"pasta-1\"]}"));
+            http.Respostas.Enqueue((HttpStatusCode.NoContent, ""));
+        }
+        await vm.ConfirmarLimpezaDriveCommand.ExecuteAsync(null);
+        Assert.False(vm.MensagemGoogleEhErro, vm.MensagemGoogle);
+        Assert.Contains("2 backup(s) apagado(s)", vm.MensagemGoogle);
+        Assert.False(vm.TemPlanoLimpezaDrive);
+        Assert.Equal(2, http.Urls.Count(u => u.Contains("/files/v")) / 2);
+    }
+
+    [Fact]
+    public async Task Limpeza_do_drive_sem_nada_antigo_ou_sem_conexao_avisa_sem_apagar()
+    {
+        var (vm, store, http) = Criar();
+        await vm.LimparBackupsAntigosDriveCommand.ExecuteAsync(null);           // não conectado
+        Assert.True(vm.MensagemGoogleEhErro);
+        Assert.Empty(http.Urls);
+
+        Conectar(store);
+        http.Respostas.Enqueue((HttpStatusCode.OK, "{\"access_token\":\"a\",\"expires_in\":3599}"));
+        http.Respostas.Enqueue((HttpStatusCode.OK, "{\"files\":[{\"id\":\"pasta-1\"}]}"));
+        http.Respostas.Enqueue((HttpStatusCode.OK, "{\"files\":[" + Arquivo("n1", 1) + "]}"));
+        await vm.LimparBackupsAntigosDriveCommand.ExecuteAsync(null);
+        Assert.False(vm.MensagemGoogleEhErro);
+        Assert.False(vm.TemPlanoLimpezaDrive);
+        Assert.Contains("Nada para limpar", vm.MensagemGoogle);
     }
 
     [Fact]

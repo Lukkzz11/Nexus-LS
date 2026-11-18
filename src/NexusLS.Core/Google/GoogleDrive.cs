@@ -5,10 +5,23 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using NexusLS.Core.Backup;
 using NexusLS.Core.Services;
 using NexusLS.Core.Sincronizacao.Firebase;
 
 namespace NexusLS.Core.Google;
+
+/// <summary>O que a limpeza do Drive pretende apagar (para mostrar antes) e o que fica.</summary>
+public record PlanoLimpezaDrive(IReadOnlyList<ArquivoDrive> Apagar, int Mantidos)
+{
+    public long BytesLiberados => Apagar.Sum(a => a.Bytes);
+}
+
+/// <summary>O que de fato aconteceu na limpeza. <see cref="Erro"/> preenchido = parou no meio.</summary>
+public record ResultadoLimpezaDrive(IReadOnlyList<ArquivoDrive> Apagados, IReadOnlyList<ArquivoDrive> JaApagados, string? Erro)
+{
+    public long BytesLiberados => Apagados.Sum(a => a.Bytes);
+}
 
 /// <summary>
 /// Credenciais do cliente OAuth do Google deste cliente (cada loja cria o seu no Google Cloud) e o "refresh token" da conexão.
@@ -241,11 +254,73 @@ public class DriveRest
         _auth = auth;
     }
 
-    public async Task<string> ObterOuCriarPastaAsync(string nome, CancellationToken ct = default)
+    /// <summary>O id da pasta, ou nulo se ela ainda não existe (não cria nada).</summary>
+    public async Task<string?> ObterPastaAsync(string nome, CancellationToken ct = default)
     {
         var q = $"name='{nome.Replace("\\", "\\\\").Replace("'", "\\'")}' and mimeType='application/vnd.google-apps.folder' and trashed=false";
         var achou = await ChamarAsync(() => new HttpRequestMessage(HttpMethod.Get, $"{Api}/files?q={Uri.EscapeDataString(q)}&fields=files(id)&spaces=drive"), ct);
-        var existente = JsonNode.Parse(achou)?["files"]?.AsArray().FirstOrDefault()?["id"]?.GetValue<string>();
+        return JsonNode.Parse(achou)?["files"]?.AsArray().FirstOrDefault()?["id"]?.GetValue<string>();
+    }
+
+    /// <summary>Lista os arquivos que estão direto dentro da pasta (todas as páginas). Só enxerga o que o Nexus criou (escopo drive.file).</summary>
+    public async Task<IReadOnlyList<ArquivoDrive>> ListarArquivosAsync(string pastaId, CancellationToken ct = default)
+    {
+        var lista = new List<ArquivoDrive>();
+        var q = $"'{pastaId.Replace("\\", "\\\\").Replace("'", "\\'")}' in parents and trashed=false and mimeType!='application/vnd.google-apps.folder'";
+        string? pagina = null;
+        for (var n = 0; n < 200; n++)   // trava de segurança contra paginação sem fim
+        {
+            var token = pagina;
+            var url = $"{Api}/files?q={Uri.EscapeDataString(q)}&fields={Uri.EscapeDataString("nextPageToken,files(id,name,createdTime,modifiedTime,size)")}" +
+                      $"&pageSize=100&spaces=drive" + (token is null ? "" : "&pageToken=" + Uri.EscapeDataString(token));
+            var texto = await ChamarAsync(() => new HttpRequestMessage(HttpMethod.Get, url), ct);
+            var json = JsonNode.Parse(texto);
+            foreach (var f in json?["files"]?.AsArray() ?? new JsonArray())
+            {
+                var id = f?["id"]?.GetValue<string>();
+                var nome = f?["name"]?.GetValue<string>();
+                if (string.IsNullOrEmpty(id) || nome is null) continue;
+                var criado = LerData(f?["createdTime"]) ?? LerData(f?["modifiedTime"]) ?? DateTime.MinValue;
+                var modificado = LerData(f?["modifiedTime"]) ?? criado;
+                long.TryParse(f?["size"]?.GetValue<string>(), out var bytes);
+                lista.Add(new ArquivoDrive(id, nome, criado, modificado, bytes));
+            }
+            pagina = json?["nextPageToken"]?.GetValue<string>();
+            if (string.IsNullOrEmpty(pagina)) break;
+        }
+        return lista;
+    }
+
+    private static DateTime? LerData(JsonNode? no)
+    {
+        var s = no?.GetValue<string>();
+        return DateTimeOffset.TryParse(s, System.Globalization.CultureInfo.InvariantCulture,
+            System.Globalization.DateTimeStyles.AssumeUniversal, out var d) ? d.UtcDateTime : null;
+    }
+
+    /// <summary>
+    /// Apaga o arquivo (files.delete) SÓ se ele estiver dentro da pasta informada. Devolve false se já não existia (404).
+    /// </summary>
+    public async Task<bool> ApagarArquivoAsync(string pastaId, string arquivoId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(pastaId) || string.IsNullOrWhiteSpace(arquivoId))
+            throw new RegraDeNegocioException("Arquivo ou pasta do Drive não informado.");
+        var sumiu = false;
+        var info = await ChamarAsync(() => new HttpRequestMessage(HttpMethod.Get, $"{Api}/files/{Uri.EscapeDataString(arquivoId)}?fields=parents,trashed"), ct, aoNaoEncontrado: () => sumiu = true);
+        if (sumiu) return false;
+        var no = JsonNode.Parse(info);
+        var pais = no?["parents"]?.AsArray().Select(p => p?.GetValue<string>()).ToList() ?? new();
+        if (!pais.Contains(pastaId))
+            throw new RegraDeNegocioException("Por segurança, o programa só apaga arquivos que estão na pasta de backups do Nexus. Este arquivo não foi apagado.");
+        if (no?["trashed"]?.GetValue<bool>() == true) return false;
+
+        await ChamarAsync(() => new HttpRequestMessage(HttpMethod.Delete, $"{Api}/files/{Uri.EscapeDataString(arquivoId)}"), ct, aoNaoEncontrado: () => sumiu = true);
+        return !sumiu;
+    }
+
+    public async Task<string> ObterOuCriarPastaAsync(string nome, CancellationToken ct = default)
+    {
+        var existente = await ObterPastaAsync(nome, ct);
         if (existente is not null) return existente;
 
         var criado = await ChamarAsync(() => new HttpRequestMessage(HttpMethod.Post, $"{Api}/files?fields=id")
@@ -288,7 +363,7 @@ public class DriveRest
     }
 
     private async Task<string> ChamarAsync(Func<HttpRequestMessage> criar, CancellationToken ct,
-        Action<HttpResponseMessage>? aoResponder = null)
+        Action<HttpResponseMessage>? aoResponder = null, Action? aoNaoEncontrado = null)
     {
         for (var tentativa = 1; ; tentativa++)
         {
@@ -301,6 +376,7 @@ public class DriveRest
                 using var resposta = await _http.SendAsync(pedido, ct);
                 var texto = await resposta.Content.ReadAsStringAsync(ct);
                 if (resposta.StatusCode == HttpStatusCode.Unauthorized && tentativa == 1) { _auth.Invalidar(); continue; }
+                if (resposta.StatusCode == HttpStatusCode.NotFound && aoNaoEncontrado is not null) { aoNaoEncontrado(); return ""; }
                 if (!resposta.IsSuccessStatusCode) throw Traduzir(resposta.StatusCode, texto);
                 aoResponder?.Invoke(resposta);
                 return texto;
@@ -321,6 +397,7 @@ public class DriveRest
                 new("A API do Google Drive não está ativada no projeto do Google Cloud. Ative \"Google Drive API\" e tente de novo."),
             HttpStatusCode.Forbidden when motivo is "storageQuotaExceeded" => new("O Google Drive está sem espaço."),
             HttpStatusCode.Forbidden => new("O Google Drive negou a permissão."),
+            HttpStatusCode.NotFound => new("O Google Drive não encontrou o arquivo ou a pasta."),
             HttpStatusCode.TooManyRequests => new("O Google Drive recusou por excesso de pedidos. Tente mais tarde."),
             _ when (int)status >= 500 => new("O Google Drive está com problema no momento. Tente mais tarde."),
             _ => new($"O Google Drive respondeu com um erro inesperado (código {(int)status}).")
@@ -369,6 +446,77 @@ public class GoogleDriveBackup
 
     public Task ConectarAsync(Action<string> abrirNavegador, CancellationToken ct = default) => _auth.ConectarAsync(abrirNavegador, ct: ct);
     public void Desconectar() => _auth.Desconectar();
+
+    /// <summary>Recebe uma linha de texto por arquivo apagado (a tela grava no log). Padrão: arquivo de log local.</summary>
+    public Action<string> RegistrarLog { get; set; } = LogPadrao;
+
+    private static void LogPadrao(string linha)
+    {
+        try
+        {
+            var pasta = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "NexusLS");
+            Directory.CreateDirectory(pasta);
+            File.AppendAllText(Path.Combine(pasta, "limpeza-drive.log"), $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} {linha}{Environment.NewLine}");
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { /* log nunca derruba a limpeza */ }
+    }
+
+    private string NomeDaPasta() =>
+        string.IsNullOrWhiteSpace(_store.Carregar().NomeDaPasta) ? PastaPadrao : _store.Carregar().NomeDaPasta!;
+
+    private void ExigirConexao()
+    {
+        if (!_store.Carregar().Conectado) throw new RegraDeNegocioException("O Google não está conectado. Conecte primeiro.");
+    }
+
+    /// <summary>Lista os backups da pasta do Nexus no Drive (vazio se a pasta ainda não existe).</summary>
+    public async Task<IReadOnlyList<ArquivoDrive>> ListarBackupsAsync(CancellationToken ct = default)
+    {
+        ExigirConexao();
+        var pasta = await _drive.ObterPastaAsync(NomeDaPasta(), ct);
+        return pasta is null ? Array.Empty<ArquivoDrive>() : await _drive.ListarArquivosAsync(pasta, ct);
+    }
+
+    /// <summary>Calcula o que seria apagado. NÃO apaga nada.</summary>
+    public async Task<PlanoLimpezaDrive> PlanejarLimpezaAsync(int dias = RegrasBackup.DiasPadraoNoDrive, int? manterRecentes = null,
+        DateTime? agoraUtc = null, CancellationToken ct = default)
+    {
+        var todos = await ListarBackupsAsync(ct);
+        var apagar = RegrasBackup.SelecionarDoDriveParaApagar(todos, agoraUtc ?? DateTime.UtcNow, dias, manterRecentes);
+        return new PlanoLimpezaDrive(apagar, todos.Count - apagar.Count);
+    }
+
+    /// <summary>Apaga os arquivos do plano (um a um, só dentro da pasta do Nexus). Para no primeiro erro e informa.</summary>
+    public async Task<ResultadoLimpezaDrive> ApagarAsync(IEnumerable<ArquivoDrive> arquivos, CancellationToken ct = default)
+    {
+        ExigirConexao();
+        var apagados = new List<ArquivoDrive>();
+        var jaApagados = new List<ArquivoDrive>();
+        var pasta = await _drive.ObterPastaAsync(NomeDaPasta(), ct)
+                    ?? throw new RegraDeNegocioException("A pasta de backups não foi encontrada no Google Drive.");
+        try
+        {
+            foreach (var a in arquivos)
+            {
+                if (await _drive.ApagarArquivoAsync(pasta, a.Id, ct))
+                {
+                    apagados.Add(a);
+                    RegistrarLog($"Apagado do Drive: {a.Nome} (criado em {a.CriadoUtc:yyyy-MM-dd HH:mm} UTC, {a.Bytes} bytes)");
+                }
+                else
+                {
+                    jaApagados.Add(a);
+                    RegistrarLog($"Já não existia no Drive: {a.Nome}");
+                }
+            }
+        }
+        catch (RegraDeNegocioException ex)
+        {
+            RegistrarLog("Limpeza interrompida: " + ex.Message);
+            return new ResultadoLimpezaDrive(apagados, jaApagados, ex.Message);
+        }
+        return new ResultadoLimpezaDrive(apagados, jaApagados, null);
+    }
 
     /// <summary>Envia o arquivo de backup e devolve o nome da pasta onde ficou.</summary>
     public async Task<string> EnviarBackupAsync(string caminho, CancellationToken ct = default)
