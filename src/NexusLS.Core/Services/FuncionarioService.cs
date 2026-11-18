@@ -297,20 +297,37 @@ public class FuncionarioService
         if (x is null) return;
         if (!string.IsNullOrWhiteSpace(x.Cpf) && !ValidadorDocumento.CpfValido(x.Cpf))
             throw new RegraDeNegocioException("CPF inválido: confira os números.");
-        if (!string.IsNullOrWhiteSpace(x.Email) && !(x.Email.Contains('@') && x.Email.Contains('.') && !x.Email.Contains(' ')))
+        if (!string.IsNullOrWhiteSpace(x.Email) && !EmailPlausivel(x.Email.Trim()))
             throw new RegraDeNegocioException("E-mail inválido.");
+        // Limites do banco: texto maior que a coluna seria cortado ou recusado só ao salvar.
+        foreach (var (texto, max, nome) in new[]
+        {
+            (x.Rg, 30, "RG"), (x.Email, 120, "E-mail"), (x.Cep, 12, "CEP"), (x.Endereco, 120, "Endereço"), (x.Numero, 20, "Número"),
+            (x.Complemento, 60, "Complemento"), (x.Bairro, 60, "Bairro"), (x.Cidade, 60, "Cidade"),
+            (x.ContatoEmergenciaNome, 80, "Nome do contato de emergência"), (x.ContatoEmergenciaTelefone, 30, "Telefone do contato de emergência")
+        })
+            if ((texto?.Trim().Length ?? 0) > max)
+                throw new RegraDeNegocioException($"{nome}: no máximo {max} caracteres.");
         if (!string.IsNullOrWhiteSpace(x.Estado) && !(x.Estado.Trim().Length == 2 && x.Estado.Trim().All(char.IsAsciiLetter)))
             throw new RegraDeNegocioException("O estado é a sigla com 2 letras (ex.: SP).");
         if (x.DataNascimento is { } n && (n.Date > DateTime.Today || n.Year < 1900))
             throw new RegraDeNegocioException("Data de nascimento inválida.");
         if (x.DataAdmissao is { } a && a.Year < 1950)
             throw new RegraDeNegocioException("Data de admissão inválida.");
-        if (x.SalarioCentavos is < 0)
-            throw new RegraDeNegocioException("O salário não pode ser negativo.");
+        if (x.SalarioCentavos is < 0 or > 100_000_000_00)
+            throw new RegraDeNegocioException("O salário deve estar entre zero e 100 milhões.");
         if (x.Foto is { Length: > FotoMaximaBytes })
             throw new RegraDeNegocioException("A foto é grande demais. Escolha outra imagem.");
-        if ((x.Observacao?.Length ?? 0) > 500)
+        if ((x.Observacao?.Trim().Length ?? 0) > 500)
             throw new RegraDeNegocioException("A observação pode ter no máximo 500 caracteres.");
+    }
+
+    private static bool EmailPlausivel(string e)
+    {
+        var arroba = e.IndexOf('@');
+        if (arroba < 1 || arroba != e.LastIndexOf('@') || e.Any(char.IsWhiteSpace)) return false;
+        var dominio = e[(arroba + 1)..];
+        return dominio.Contains('.') && !dominio.StartsWith('.') && !dominio.EndsWith('.') && !dominio.Contains("..");
     }
 
     private static async Task<Funcionario> ObterAsync(PdvDbContext db, int id) =>

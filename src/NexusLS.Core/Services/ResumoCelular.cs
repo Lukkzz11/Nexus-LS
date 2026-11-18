@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Text;
 
@@ -25,7 +26,7 @@ public static class ResumoCelular
           .Append(".l:first-of-type{border-top:0}.n{color:var(--n)}.p{color:var(--p)}h2{font-size:15px;margin:0 0 6px}")
           .Append("</style></head><body><main>");
         sb.Append("<h1>").Append(E(nomeLoja)).Append("</h1><div class=\"s\">Resumo de ")
-          .Append(r.Dia.ToString("dd/MM/yyyy")).Append(" · gerado às ").Append(geradoEm.ToString("HH:mm")).Append("</div>");
+          .Append(r.Dia.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture)).Append(" · gerado às ").Append(geradoEm.ToString("HH:mm", CultureInfo.InvariantCulture)).Append("</div>");
 
         sb.Append("<div class=\"k\"><h2>Vendas de hoje</h2><div class=\"v\">").Append(Dinheiro.Formatar(r.TotalHojeCentavos)).Append("</div>")
           .Append("<div class=\"s\">").Append(r.VendasHoje).Append(" venda(s) · ticket médio ").Append(Dinheiro.Formatar(r.TicketMedioHojeCentavos))
@@ -35,7 +36,7 @@ public static class ResumoCelular
 
         sb.Append("<div class=\"k\"><h2>Caixa</h2>")
           .Append(r.CaixaAberto
-              ? "<span class=\"p\">Aberto" + (r.CaixaAbertoDesde is { } desde ? " desde " + desde.ToString("HH:mm") : "") + "</span>"
+              ? "<span class=\"p\">Aberto" + (r.CaixaAbertoDesde is { } desde ? " desde " + desde.ToString("HH:mm", CultureInfo.InvariantCulture) : "") + "</span>"
               : "<span class=\"s\">Fechado</span>")
           .Append("</div>");
 
@@ -43,7 +44,7 @@ public static class ResumoCelular
         {
             sb.Append("<div class=\"k\"><h2>Últimos dias</h2>");
             foreach (var d in r.UltimosDias.Reverse())
-                sb.Append("<div class=\"l\"><span>").Append(d.Dia.ToString("dd/MM")).Append(" · ").Append(d.Vendas)
+                sb.Append("<div class=\"l\"><span>").Append(d.Dia.ToString("dd/MM", CultureInfo.InvariantCulture)).Append(" · ").Append(d.Vendas)
                   .Append(" venda(s)</span><b>").Append(Dinheiro.Formatar(d.TotalCentavos)).Append("</b></div>");
             sb.Append("</div>");
         }

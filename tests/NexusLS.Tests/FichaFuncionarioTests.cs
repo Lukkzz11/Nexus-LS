@@ -72,4 +72,21 @@ public sealed class FichaFuncionarioTests : IDisposable
         await Tenta(new FichaFuncionario(DataNascimento: DateTime.Today.AddDays(1)));
         await Tenta(new FichaFuncionario(SalarioCentavos: -1));
     }
+
+    [Fact]
+    public async Task Ficha_recusa_texto_maior_que_a_coluna_email_torto_e_salario_absurdo()
+    {
+        await _servico.CriarPrimeiroAdministradorAsync("Dona Maria", "1234");
+        async Task Tenta(FichaFuncionario f) => await Assert.ThrowsAsync<RegraDeNegocioException>(() =>
+            _servico.CadastrarAsync(new DadosFuncionario("Ana", PerfilFuncionario.Vendedor, Ficha: f), "4321"));
+        await Tenta(new FichaFuncionario(Endereco: new string('a', 121)));
+        await Tenta(new FichaFuncionario(Cep: new string('1', 13)));
+        await Tenta(new FichaFuncionario(Email: "a@b."));
+        await Tenta(new FichaFuncionario(Email: "@b.com"));
+        await Tenta(new FichaFuncionario(Email: "a@@b.com"));
+        await Tenta(new FichaFuncionario(SalarioCentavos: long.MaxValue));
+        var ok = await _servico.CadastrarAsync(new DadosFuncionario("Bia", PerfilFuncionario.Vendedor,
+            Ficha: new FichaFuncionario(Email: "bia@loja.com.br", Endereco: new string('a', 120))), "4321");
+        Assert.Equal("bia@loja.com.br", ok.Email);
+    }
 }
