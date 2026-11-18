@@ -324,7 +324,7 @@ public class DesenhoEtiquetaService
                     // imprime em Code 128 em vez de deixar a etiqueta sem código.
                     if (config.TipoCodigo == TipoCodigoBarras.Ean13)
                     {
-                        App.Log($"ZPL: código '{codigo}' não é EAN-13 válido; usando Code 128.");
+                        App.Log($"ZPL: código '{codigo}' não serve como EAN-13 (precisa de 12 ou 13 números com o dígito verificador certo); imprimindo em Code 128.");
                     }
 
                     sb.AppendLine($"^FO{margemX},{yBarras}^BY2,2,{alturaBarras}^BCN,{alturaBarras},Y,N,N{CampoZpl.Montar(codigo)}");

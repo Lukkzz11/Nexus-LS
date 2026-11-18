@@ -215,7 +215,7 @@ public partial class ConfiguracoesViewModel : ViewModelBase
     partial void OnDocumentoChanged(string value)
     {
         var f = ValidadorDocumento.FormatarDigitando(value);
-        if (f != value) Documento = f; else AtualizarPrevia();
+        if (f != value) Documento = f; else { AtualizarPrevia(); AtualizarChecklistFiscal(); }
     }
     partial void OnEnderecoChanged(string value) => AtualizarPrevia();
     partial void OnTelefoneChanged(string value)
@@ -225,8 +225,9 @@ public partial class ConfiguracoesViewModel : ViewModelBase
     }
     partial void OnRodapeCupomChanged(string value) => AtualizarPrevia();
     partial void OnRazaoSocialChanged(string value) => AtualizarPrevia();
-    partial void OnInscricaoEstadualChanged(string value) => AtualizarPrevia();
-    partial void OnCidadeUfChanged(string value) => AtualizarPrevia();
+    // O checklist fiscal usa CNPJ, inscrição e cidade da página Loja: acompanha quando mudam.
+    partial void OnInscricaoEstadualChanged(string value) { AtualizarPrevia(); AtualizarChecklistFiscal(); }
+    partial void OnCidadeUfChanged(string value) { AtualizarPrevia(); AtualizarChecklistFiscal(); }
     partial void OnChavePixChanged(string value) => AtualizarPrevia();
     partial void OnCupomMostrarRazaoSocialChanged(bool value) => AtualizarPrevia();
     partial void OnCupomMostrarDocumentoChanged(bool value) => AtualizarPrevia();

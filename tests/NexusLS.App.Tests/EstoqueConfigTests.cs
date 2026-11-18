@@ -381,6 +381,15 @@ public sealed class FiscalConfigTests : IDisposable
     }
 
     [Fact]
+    public void Checklist_acompanha_mudancas_na_pagina_Loja()
+    {
+        var vm = CriarConfig();
+        var antes = string.Join("|", vm.ChecklistFiscal);
+        Capturador.Rodar(() => { vm.Documento = "11.222.333/0001-81"; vm.InscricaoEstadual = "123456"; vm.CidadeUf = "São Paulo/SP"; });
+        Assert.NotEqual(antes, string.Join("|", vm.ChecklistFiscal));
+    }
+
+    [Fact]
     public void Comeca_em_homologacao_serie_1_e_com_pendencias()
     {
         var vm = CriarConfig();
