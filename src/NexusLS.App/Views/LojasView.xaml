@@ -15,7 +15,7 @@
             </DockPanel>
 
             <!-- Como adicionar uma loja -->
-            <Border Style="{StaticResource Painel}" Margin="0,0,0,12" Background="{StaticResource CorSelecaoSuave}"
+            <Border Style="{StaticResource Painel}" Margin="0,0,0,12" Background="{DynamicResource CorSelecaoSuave}"
                     Visibility="{Binding MostrandoComoAdicionar, Converter={StaticResource BoolVis}}">
                 <StackPanel>
                     <DockPanel>
@@ -31,8 +31,8 @@
                                         <ColumnDefinition Width="32" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <Border Width="24" Height="24" CornerRadius="12" Background="{StaticResource CorPrimaria}" VerticalAlignment="Top">
-                                        <TextBlock Text="{Binding Numero}" Foreground="{StaticResource CorSobrePrimaria}" FontWeight="SemiBold"
+                                    <Border Width="24" Height="24" CornerRadius="12" Background="{DynamicResource CorPrimaria}" VerticalAlignment="Top">
+                                        <TextBlock Text="{Binding Numero}" Foreground="{DynamicResource CorSobrePrimaria}" FontWeight="SemiBold"
                                                    HorizontalAlignment="Center" VerticalAlignment="Center" />
                                     </Border>
                                     <StackPanel Grid.Column="1">
@@ -44,7 +44,7 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
 
-                    <Border Background="{StaticResource CorPainel}" BorderBrush="{StaticResource CorBorda}" BorderThickness="1" CornerRadius="6" Padding="14,10" Margin="0,4,0,0">
+                    <Border Background="{DynamicResource CorPainel}" BorderBrush="{DynamicResource CorBorda}" BorderThickness="1" CornerRadius="6" Padding="14,10" Margin="0,4,0,0">
                         <StackPanel>
                             <TextBlock Text="Esta loja (este computador)" Style="{StaticResource Rotulo}" Margin="0,0,0,2" />
                             <TextBlock Text="{Binding LojaNome}" FontWeight="SemiBold" FontSize="16" AutomationProperties.Name="Nome desta loja" />
