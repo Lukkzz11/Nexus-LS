@@ -438,7 +438,7 @@
                             </Grid>
                         </Border>
 
-                        <!-- Grade Estruturada de Propriedades -->
+                        <!-- Grade Estruturada de Propriedades com Divisores Executivos -->
                         <Grid Grid.Row="1" Margin="20,14">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
@@ -455,46 +455,54 @@
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
 
+                            <!-- Divisores Verticais Sutis -->
+                            <Border Grid.RowSpan="3" Grid.Column="1" Width="1" Background="#E2E8F0" HorizontalAlignment="Center" Margin="0,2" />
+                            <Border Grid.RowSpan="3" Grid.Column="3" Width="1" Background="#E2E8F0" HorizontalAlignment="Center" Margin="0,2" />
+                            <Border Grid.RowSpan="3" Grid.Column="5" Width="1" Background="#E2E8F0" HorizontalAlignment="Center" Margin="0,2" />
+
+                            <!-- Divisor Horizontal entre as Linhas -->
+                            <Border Grid.Row="1" Grid.ColumnSpan="7" Height="1" Background="#F1F5F9" VerticalAlignment="Center" />
+
                             <!-- Linha 1 -->
                             <StackPanel Grid.Row="0" Grid.Column="0">
                                 <TextBlock Text="CLIENTE RESPONSÁVEL" FontSize="10" FontWeight="Bold" Foreground="#64748B" />
-                                <TextBlock x:Name="TxtHomeCliente" Text="Carregando..." FontSize="13" FontWeight="SemiBold" Foreground="#0F172A" Margin="0,3,0,0" />
+                                <TextBlock x:Name="TxtHomeCliente" Text="Carregando..." FontSize="13" FontWeight="SemiBold" Foreground="#0F172A" Margin="0,4,0,0" />
                             </StackPanel>
 
                             <StackPanel Grid.Row="0" Grid.Column="2">
                                 <TextBlock Text="EMPRESA / LOJA" FontSize="10" FontWeight="Bold" Foreground="#64748B" />
-                                <TextBlock x:Name="TxtHomeEmpresa" Text="Carregando..." FontSize="13" FontWeight="SemiBold" Foreground="#0067B8" Margin="0,3,0,0" />
+                                <TextBlock x:Name="TxtHomeEmpresa" Text="Carregando..." FontSize="13" FontWeight="SemiBold" Foreground="#0067B8" Margin="0,4,0,0" />
                             </StackPanel>
 
                             <StackPanel Grid.Row="0" Grid.Column="4">
                                 <TextBlock Text="PLANO CONTRATADO" FontSize="10" FontWeight="Bold" Foreground="#64748B" />
-                                <TextBlock x:Name="TxtHomePlano" Text="COMERCIAL" FontSize="13" FontWeight="SemiBold" Foreground="#0F172A" Margin="0,3,0,0" />
+                                <TextBlock x:Name="TxtHomePlano" Text="COMERCIAL" FontSize="13" FontWeight="SemiBold" Foreground="#0F172A" Margin="0,4,0,0" />
                             </StackPanel>
 
                             <StackPanel Grid.Row="0" Grid.Column="6">
                                 <TextBlock Text="SITUAÇÃO DA LICENÇA" FontSize="10" FontWeight="Bold" Foreground="#64748B" />
-                                <TextBlock x:Name="TxtHomeLicencaStatus" Text="Ativa e Autorizada" FontSize="13" FontWeight="Bold" Foreground="#16A34A" Margin="0,3,0,0" />
+                                <TextBlock x:Name="TxtHomeLicencaStatus" Text="Ativa e Autorizada" FontSize="13" FontWeight="Bold" Foreground="#16A34A" Margin="0,4,0,0" />
                             </StackPanel>
 
                             <!-- Linha 2 -->
                             <StackPanel Grid.Row="2" Grid.Column="0">
                                 <TextBlock Text="DATA DE VALIDADE" FontSize="10" FontWeight="Bold" Foreground="#64748B" />
-                                <TextBlock x:Name="TxtHomeValidade" Text="—" FontSize="13" FontWeight="SemiBold" Foreground="#0F172A" Margin="0,3,0,0" />
+                                <TextBlock x:Name="TxtHomeValidade" Text="—" FontSize="13" FontWeight="SemiBold" Foreground="#0F172A" Margin="0,4,0,0" />
                             </StackPanel>
 
                             <StackPanel Grid.Row="2" Grid.Column="2">
                                 <TextBlock Text="DIAS RESTANTES" FontSize="10" FontWeight="Bold" Foreground="#64748B" />
-                                <TextBlock x:Name="TxtHomeDiasRestantes" Text="—" FontSize="13" FontWeight="SemiBold" Foreground="#0F172A" Margin="0,3,0,0" />
+                                <TextBlock x:Name="TxtHomeDiasRestantes" Text="—" FontSize="13" FontWeight="SemiBold" Foreground="#0F172A" Margin="0,4,0,0" />
                             </StackPanel>
 
                             <StackPanel Grid.Row="2" Grid.Column="4">
                                 <TextBlock Text="VERSÃO INSTALADA" FontSize="10" FontWeight="Bold" Foreground="#64748B" />
-                                <TextBlock x:Name="TxtHomeVersaoInstalada" Text="v1.2.6" FontSize="13" FontWeight="SemiBold" Foreground="#0F172A" Margin="0,3,0,0" />
+                                <TextBlock x:Name="TxtHomeVersaoInstalada" Text="v1.2.6" FontSize="13" FontWeight="SemiBold" Foreground="#0F172A" Margin="0,4,0,0" />
                             </StackPanel>
 
                             <StackPanel Grid.Row="2" Grid.Column="6">
                                 <TextBlock Text="ÚLTIMA ATUALIZAÇÃO" FontSize="10" FontWeight="Bold" Foreground="#64748B" />
-                                <TextBlock x:Name="TxtHomeUltimaAtualizacao" Text="—" FontSize="13" FontWeight="SemiBold" Foreground="#64748B" Margin="0,3,0,0" />
+                                <TextBlock x:Name="TxtHomeUltimaAtualizacao" Text="—" FontSize="13" FontWeight="SemiBold" Foreground="#64748B" Margin="0,4,0,0" />
                             </StackPanel>
                         </Grid>
                     </Grid>
@@ -525,18 +533,6 @@
                                 </Border>
                             </Grid>
 
-                            <!-- Caminho do Executável -->
-                            <TextBlock Text="Caminho do Executável Principal (NexusLS.exe):" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,6" />
-                            <Grid Margin="0,0,0,16">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="10" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBox x:Name="TxtCaminhoExe" Padding="10,8" FontSize="12" Background="#F8FAFC" BorderBrush="#CBD5E1" />
-                                <Button Grid.Column="2" Content="Procurar..." Style="{StaticResource BotaoSecundario}" Padding="14,7" Click="BtnSelecionarExe_Click" />
-                            </Grid>
-
                             <!-- Box de Novidade Nexus LS -->
                             <Border x:Name="BrdNovidade" Visibility="Collapsed" Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="10" Padding="16" Margin="0,0,0,16">
                                 <StackPanel>
@@ -552,8 +548,8 @@
                                 </StackPanel>
                             </Border>
 
-                            <!-- Ações -->
-                            <WrapPanel Margin="0,0,0,12">
+                            <!-- Ações Principais -->
+                            <WrapPanel Margin="0,0,0,10">
                                 <Button x:Name="BtnVerificarAtualizacao" Style="{StaticResource BotaoPrimario}" Margin="0,0,10,10" Padding="18,10" Click="BtnVerificarAtualizacao_Click">
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                         <Path Data="{StaticResource IconeAtualizar}" Width="14" Height="14" Fill="#FFFFFF" Stretch="Uniform" Margin="0,0,8,0" VerticalAlignment="Center" />
@@ -573,6 +569,19 @@
                                     </StackPanel>
                                 </Button>
                             </WrapPanel>
+
+                            <!-- Opções Avançadas de Pasta e Executável (Recolhido por Padrão) -->
+                            <Expander Header="Opções Avançadas de Arquivo (NexusLS.exe)" FontSize="11" Foreground="#64748B" Margin="0,0,0,10" IsExpanded="False">
+                                <Grid Margin="0,8,0,2">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="10" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox x:Name="TxtCaminhoExe" Padding="10,8" FontSize="12" Background="#F8FAFC" BorderBrush="#CBD5E1" />
+                                    <Button Grid.Column="2" Content="Procurar..." Style="{StaticResource BotaoSecundario}" Padding="14,7" Click="BtnSelecionarExe_Click" />
+                                </Grid>
+                            </Expander>
 
                             <ProgressBar x:Name="PrgAtualizacao" Height="8" Visibility="Collapsed" Margin="0,0,0,6" Foreground="#0067B8" Background="#E2E8F0" BorderThickness="0" />
                             <TextBlock x:Name="TxtVersaoArquivo" Text="Executável pronto" FontSize="11" Foreground="#64748B" />
@@ -600,18 +609,6 @@
                                 </Border>
                             </Grid>
 
-                            <!-- Caminho do BarTender -->
-                            <TextBlock Text="Caminho do Executável do BarTender (NexusBarTender.exe):" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,6" />
-                            <Grid Margin="0,0,0,16">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="10" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBox x:Name="TxtCaminhoBarTenderExe" Padding="10,8" FontSize="12" Background="#F8FAFC" BorderBrush="#CBD5E1" />
-                                <Button Grid.Column="2" Content="Procurar..." Style="{StaticResource BotaoSecundario}" Padding="14,7" Click="BtnSelecionarBarTenderExe_Click" />
-                            </Grid>
-
                             <!-- Box de Novidade BarTender -->
                             <Border x:Name="BrdNovidadeBarTender" Visibility="Collapsed" Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="10" Padding="16" Margin="0,0,0,16">
                                 <StackPanel>
@@ -627,8 +624,8 @@
                                 </StackPanel>
                             </Border>
 
-                            <!-- Ações -->
-                            <WrapPanel Margin="0,0,0,12">
+                            <!-- Ações Principais -->
+                            <WrapPanel Margin="0,0,0,10">
                                 <Button x:Name="BtnVerificarAtualizacaoBarTender" Style="{StaticResource BotaoPrimario}" Margin="0,0,10,10" Padding="18,10" Click="BtnVerificarAtualizacaoBarTender_Click">
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                         <Path Data="{StaticResource IconeAtualizar}" Width="14" Height="14" Fill="#FFFFFF" Stretch="Uniform" Margin="0,0,8,0" VerticalAlignment="Center" />
@@ -648,6 +645,19 @@
                                     </StackPanel>
                                 </Button>
                             </WrapPanel>
+
+                            <!-- Opções Avançadas de Pasta e Executável (Recolhido por Padrão) -->
+                            <Expander Header="Opções Avançadas de Arquivo (NexusBarTender.exe)" FontSize="11" Foreground="#64748B" Margin="0,0,0,10" IsExpanded="False">
+                                <Grid Margin="0,8,0,2">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="10" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox x:Name="TxtCaminhoBarTenderExe" Padding="10,8" FontSize="12" Background="#F8FAFC" BorderBrush="#CBD5E1" />
+                                    <Button Grid.Column="2" Content="Procurar..." Style="{StaticResource BotaoSecundario}" Padding="14,7" Click="BtnSelecionarBarTenderExe_Click" />
+                                </Grid>
+                            </Expander>
 
                             <ProgressBar x:Name="PrgAtualizacaoBarTender" Height="8" Visibility="Collapsed" Margin="0,0,0,6" Foreground="#059669" Background="#E2E8F0" BorderThickness="0" />
                             <TextBlock x:Name="TxtVersaoBarTenderInstalada" Text="Executável pronto" FontSize="11" Foreground="#64748B" />
@@ -1067,6 +1077,28 @@
                             <TextBlock Text="Desenvolvimento e Suporte" FontSize="14" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,8" />
                             <TextBlock Text="Desenvolvido por Nexus LS Sistemas para o ecossistema Life Surf. Todos os direitos reservados. Software protegido por direitos autorais e tecnologia de licenciamento em nuvem com conformidade LGPD."
                                        FontSize="12" Foreground="#64748B" TextWrapping="Wrap" LineHeight="18" />
+
+                            <TextBlock Text="Canais Oficiais de Atendimento e Suporte" FontSize="14" FontWeight="Bold" Foreground="#0F172A" Margin="0,20,0,10" />
+
+                            <WrapPanel Margin="0,0,0,4">
+                                <Button x:Name="BtnSuporteWhatsApp" Style="{StaticResource BotaoSecundario}" Margin="0,0,10,10" Padding="16,9" Click="BtnSuporteWhatsApp_Click" ToolTip="Conversar com o suporte técnico no WhatsApp">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Border Background="#22C55E" CornerRadius="10" Width="20" Height="20" Margin="0,0,8,0">
+                                            <TextBlock Text="💬" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
+                                        <TextBlock Text="WhatsApp: +55 (81) 99880-5031" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+
+                                <Button x:Name="BtnSuporteEmail" Style="{StaticResource BotaoSecundario}" Margin="0,0,10,10" Padding="16,9" Click="BtnSuporteEmail_Click" ToolTip="Enviar e-mail para o suporte técnico">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Border Background="#0067B8" CornerRadius="10" Width="20" Height="20" Margin="0,0,8,0">
+                                            <TextBlock Text="✉" Foreground="White" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
+                                        <TextBlock Text="E-mail: lucasesilva438@gmail.com" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                            </WrapPanel>
                         </StackPanel>
                     </Border>
                 </StackPanel>

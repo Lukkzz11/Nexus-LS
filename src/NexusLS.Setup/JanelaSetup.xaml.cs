@@ -403,6 +403,18 @@ public partial class JanelaSetup : Window
         }
         else if (_passoAtual == 6)
         {
+            if (ChkIniciarHubAoFinalizar.IsChecked == true)
+            {
+                var caminhoAtualizador = Path.Combine(_op.Pasta, "atualizador.exe");
+                if (File.Exists(caminhoAtualizador))
+                {
+                    try
+                    {
+                        Process.Start(new ProcessStartInfo(caminhoAtualizador) { UseShellExecute = true });
+                    }
+                    catch { }
+                }
+            }
             Close();
         }
     }
@@ -465,19 +477,7 @@ public partial class JanelaSetup : Window
         }
     }
 
-    private void BtnConcluirAbrirHub_Click(object sender, RoutedEventArgs e)
-    {
-        var caminhoAtualizador = Path.Combine(_op.Pasta, "atualizador.exe");
-        if (File.Exists(caminhoAtualizador))
-        {
-            try
-            {
-                Process.Start(new ProcessStartInfo(caminhoAtualizador) { UseShellExecute = true });
-            }
-            catch { }
-        }
-        Close();
-    }
+
 
     private void BtnCopiarHwidRodape_Click(object sender, RoutedEventArgs e)
     {

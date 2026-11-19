@@ -416,7 +416,7 @@ public partial class MainWindow : Window
             var hwid = LicencaService.CodigoDaMaquina();
             TxtCodigoMaquina.Text = hwid;
             TxtNomeComputador.Text = $"Terminal: {Environment.MachineName}";
-            TxtSidebarHwid.Text = $"HWID: {hwid}";
+            TxtSidebarHwid.Text = hwid;
 
             TxtDiagSO.Text = RuntimeInformation.OSDescription;
             TxtDiagComputador.Text = $"{Environment.MachineName} ({RuntimeInformation.OSArchitecture})";
@@ -1689,6 +1689,30 @@ public partial class MainWindow : Window
             {
                 JanelaDialogo.Mostrar("Erro", "Erro ao criar atalho: " + ex.Message, TipoDialogo.Erro);
             }
+        }
+    }
+
+    private void BtnSuporteWhatsApp_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo("https://wa.me/5581998805031") { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            JanelaDialogo.Mostrar("WhatsApp de Suporte", "Abra seu navegador e acerte o contato via WhatsApp:\n+55 81 99880-5031\n\nErro: " + ex.Message, TipoDialogo.Aviso, this);
+        }
+    }
+
+    private void BtnSuporteEmail_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo("mailto:lucasesilva438@gmail.com?subject=Suporte%20Nexus%20Hub") { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            JanelaDialogo.Mostrar("E-mail de Suporte", "Envie uma mensagem para:\nlucasesilva438@gmail.com\n\nErro: " + ex.Message, TipoDialogo.Aviso, this);
         }
     }
 

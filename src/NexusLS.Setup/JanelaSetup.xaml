@@ -432,11 +432,13 @@
                             </Border>
 
                             <TextBlock Text="Instalação Concluída com Sucesso!" FontSize="20" FontWeight="Bold" Foreground="#0F172A" TextAlignment="Center" Margin="0,0,0,8" />
-                            <TextBlock x:Name="TxtConclusaoInfo" Text="O Nexus foi instalado com êxito neste computador. Você pode iniciar os programas diretamente através do Nexus Hub."
-                                       FontSize="13" Foreground="#475569" TextAlignment="Center" TextWrapping="Wrap" Margin="0,0,0,24" LineHeight="19" />
+                            <TextBlock x:Name="TxtConclusaoInfo" Text="O ecossistema Nexus foi instalado com êxito neste computador. Você pode iniciar os programas e gerenciar licenças diretamente através do Nexus Hub."
+                                       FontSize="13" Foreground="#475569" TextAlignment="Center" TextWrapping="Wrap" Margin="0,0,0,20" LineHeight="19" />
 
-                            <Button x:Name="BtnConcluirAbrirHub" Content="Concluir e Abrir o Nexus Hub" Style="{StaticResource BotaoPrimario}" Height="42"
-                                    HorizontalAlignment="Center" Padding="28,0" Click="BtnConcluirAbrirHub_Click" />
+                            <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="18,12" HorizontalAlignment="Center">
+                                <CheckBox x:Name="ChkIniciarHubAoFinalizar" IsChecked="True" FontSize="13" FontWeight="SemiBold" Foreground="#0F172A"
+                                          Content="Iniciar a Central Nexus Hub ao concluir" />
+                            </Border>
                         </StackPanel>
                     </Grid>
                 </Grid>
