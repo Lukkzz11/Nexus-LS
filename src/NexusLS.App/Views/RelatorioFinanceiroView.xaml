@@ -1,0 +1,104 @@
+<UserControl x:Class="NexusLS.App.Views.RelatorioFinanceiroView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:v="clr-namespace:NexusLS.App.Views">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Relatório financeiro" Style="{StaticResource TituloTela}" Margin="0,0,0,4" />
+        <TextBlock Grid.Row="1" Style="{StaticResource TextoApoio}" Margin="0,0,0,12"
+                   Text="O que entrou e o que saiu da empresa no período: vendas do caixa mais as entradas e saídas que você lançou." />
+
+        <StackPanel Grid.Row="2" Margin="0,0,0,12" Visibility="{Binding SemPermissao, Converter={StaticResource BoolInverso}}">
+            <v:BarraPeriodo />
+            <WrapPanel Margin="0,10,0,0">
+                <Button Content="Exportar para Excel (CSV)" Style="{StaticResource BotaoSecundario}" Padding="14,8" Command="{Binding ExportarCommand}"
+                        AutomationProperties.Name="Exportar o relatório financeiro em CSV" />
+                <TextBlock Text="{Binding TextoPeriodo}" Style="{StaticResource TextoApoio}" VerticalAlignment="Center" Margin="16,0,0,0" />
+            </WrapPanel>
+        </StackPanel>
+
+        <ItemsControl Grid.Row="3" ItemsSource="{Binding Resumo}" Margin="0,0,0,12" Focusable="False"
+                      Visibility="{Binding SemPermissao, Converter={StaticResource BoolInverso}}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate><v:GradeDeCartoes LarguraMinima="230" MaximoColunas="4" Espaco="12" IgualarAltura="True" /></ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+        </ItemsControl>
+
+        <Grid Grid.Row="4" Visibility="{Binding SemPermissao, Converter={StaticResource BoolInverso}}">
+            <TabControl AutomationProperties.Name="Detalhes do relatório financeiro">
+                <TabItem Header="Por forma de pagamento">
+                    <DataGrid ItemsSource="{Binding PorForma}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column"
+                              BorderThickness="0" Background="Transparent" AutomationProperties.Name="Valores por forma de pagamento">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Forma de pagamento" Binding="{Binding Forma, Mode=OneWay}" Width="2*" />
+                            <DataGridTextColumn Header="Vendas" Binding="{Binding Vendas, Mode=OneWay}" Width="1*" />
+                            <DataGridTextColumn Header="Entradas lançadas" Binding="{Binding Entradas, Mode=OneWay}" Width="1*" />
+                            <DataGridTextColumn Header="Saídas lançadas" Binding="{Binding Saidas, Mode=OneWay}" Width="1*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </TabItem>
+                <TabItem Header="Por dia">
+                    <DataGrid ItemsSource="{Binding PorDia}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column"
+                              BorderThickness="0" Background="Transparent" AutomationProperties.Name="Valores por dia">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Dia" Binding="{Binding Dia, Mode=OneWay}" Width="1*" />
+                            <DataGridTextColumn Header="Vendas" Binding="{Binding Vendas, Mode=OneWay}" Width="1*" />
+                            <DataGridTextColumn Header="Entradas lançadas" Binding="{Binding Entradas, Mode=OneWay}" Width="1*" />
+                            <DataGridTextColumn Header="Saídas lançadas" Binding="{Binding Saidas, Mode=OneWay}" Width="1*" />
+                            <DataGridTextColumn Header="Saldo do dia" Binding="{Binding SaldoDoDia, Mode=OneWay}" Width="1*" />
+                            <DataGridTextColumn Header="Saldo acumulado" Binding="{Binding Acumulado, Mode=OneWay}" Width="1*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </TabItem>
+                <TabItem Header="Por categoria">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="16" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Top" Text="Entradas lançadas" Style="{StaticResource TituloSecao}" Margin="0,8,0,8" />
+                            <DataGrid ItemsSource="{Binding EntradasPorCategoria}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column"
+                                      BorderThickness="0" Background="Transparent" AutomationProperties.Name="Entradas por categoria">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Categoria" Binding="{Binding Categoria, Mode=OneWay}" Width="2*" />
+                                    <DataGridTextColumn Header="Valor" Binding="{Binding Valor, Mode=OneWay}" Width="1*" />
+                                    <DataGridTextColumn Header="Lançamentos" Binding="{Binding Quantidade, Mode=OneWay}" Width="1*" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </DockPanel>
+                        <DockPanel Grid.Column="2">
+                            <TextBlock DockPanel.Dock="Top" Text="Saídas lançadas" Style="{StaticResource TituloSecao}" Margin="0,8,0,8" />
+                            <DataGrid ItemsSource="{Binding SaidasPorCategoria}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column"
+                                      BorderThickness="0" Background="Transparent" AutomationProperties.Name="Saídas por categoria">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Categoria" Binding="{Binding Categoria, Mode=OneWay}" Width="2*" />
+                                    <DataGridTextColumn Header="Valor" Binding="{Binding Valor, Mode=OneWay}" Width="1*" />
+                                    <DataGridTextColumn Header="Lançamentos" Binding="{Binding Quantidade, Mode=OneWay}" Width="1*" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </DockPanel>
+                    </Grid>
+                </TabItem>
+            </TabControl>
+        </Grid>
+
+        <Border Grid.Row="4" Style="{StaticResource FaixaAviso}" VerticalAlignment="Top" Visibility="{Binding SemPermissao, Converter={StaticResource BoolVis}}">
+            <TextBlock Text="Você não tem permissão para ver os valores financeiros. Peça a um gerente ou administrador." TextWrapping="Wrap" />
+        </Border>
+
+        <StackPanel Grid.Row="5">
+            <TextBlock Text="{Binding AvisoDevolucao}" Style="{StaticResource TextoApoio}" Margin="0,8,0,0" />
+            <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" AutomationProperties.Name="Mensagem do relatório financeiro" />
+        </StackPanel>
+    </Grid>
+</UserControl>

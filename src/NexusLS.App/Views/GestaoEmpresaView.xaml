@@ -1,0 +1,22 @@
+<UserControl x:Class="NexusLS.App.Views.GestaoEmpresaView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Gestão da empresa" Style="{StaticResource TituloTela}" Margin="0,0,0,10" />
+
+        <TabControl Grid.Row="1" SelectedIndex="{Binding AbaSelecionada, Mode=TwoWay}" AutomationProperties.Name="Seções da gestão da empresa">
+            <TabItem Header="Lojas" AutomationProperties.Name="Lojas">
+                <ContentControl Content="{Binding Lojas}" Margin="0,8,0,0" />
+            </TabItem>
+            <TabItem Header="Entradas e saídas" AutomationProperties.Name="Entradas e saídas"
+                     Visibility="{Binding TemEntradasESaidas, Converter={StaticResource BoolVis}}">
+                <ContentControl Content="{Binding EntradasESaidas}" Margin="0,12,0,0" />
+            </TabItem>
+        </TabControl>
+    </Grid>
+</UserControl>

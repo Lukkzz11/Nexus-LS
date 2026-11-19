@@ -135,29 +135,8 @@
                         </StackPanel>
                     </Button>
 
-                    <!-- Provisório: Compras, Fornecedores e Calculadora de preços saem do Estoque e vão para a Gestão numa etapa seguinte. -->
-                    <TextBlock Text="COMPRAS E PREÇOS" Style="{StaticResource SecaoMenu}" Visibility="{Binding VerSecaoCompras, Converter={StaticResource BoolVis}}" />
-                    <Button Tag="CalculadoraPrecos" Visibility="{Binding VerEstoque, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Calculadora de preços" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaCalculadoraPrecosCommand}">
-                        <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="Calculator24" Style="{StaticResource IconeDoMenu}" />
-                            <TextBlock Text="Calculadora de preços" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-                    <Button Tag="Compras" Visibility="{Binding VerCompras, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Compras" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaComprasCommand}">
-                        <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="BoxArrowLeft24" Style="{StaticResource IconeDoMenu}" />
-                            <TextBlock Text="Compras" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-                    <Button Tag="Fornecedores" Visibility="{Binding VerCompras, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Fornecedores" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaFornecedoresCommand}">
-                        <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="Building24" Style="{StaticResource IconeDoMenu}" />
-                            <TextBlock Text="Fornecedores" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-
                     <TextBlock Text="GESTÃO" Style="{StaticResource SecaoMenu}" Visibility="{Binding VerGestao, Converter={StaticResource BoolVis}}" />
-                    <Button Tag="Gestao" Visibility="{Binding VerGestao, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Gestão" ToolTip="Relatórios, financeiro, funcionários e configurações. Pede o PIN de um gerente ou administrador." Style="{StaticResource ItemDoMenu}" Command="{Binding AbrirGestaoCommand}">
+                    <Button Tag="Gestao" Visibility="{Binding VerGestao, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Gestão" ToolTip="Relatórios, financeiro, compras, funcionários, empresa e configurações. Pede o PIN de um gerente ou administrador." Style="{StaticResource ItemDoMenu}" Command="{Binding AbrirGestaoCommand}">
                         <StackPanel Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="LockClosed24" Style="{StaticResource IconeDoMenu}" />
                             <TextBlock Text="Gestão" VerticalAlignment="Center" />

@@ -7,7 +7,7 @@ using NexusLS.Core.Models;
 namespace NexusLS.App.ViewModels;
 
 /// <summary>
-/// A janela de Gestão: agenda, catálogo, clientes, financeiro, relatórios, funcionários, atividades e configurações.
+/// A janela de Gestão: cada item do menu abre a sua tela (agenda, clientes, financeiro, relatórios, compras, funcionários, empresa e configurações).
 /// Fica fora do menu do balcão e só abre com o PIN de um gerente ou administrador (ver GestaoWindow.Abrir).
 /// </summary>
 public partial class GestaoViewModel : ObservableObject
@@ -38,26 +38,38 @@ public partial class GestaoViewModel : ObservableObject
         ItemMenu.Agenda => true,
         ItemMenu.Clientes => Sessao.Pode(Permissao.Clientes),
         ItemMenu.Financeiro or ItemMenu.ContasESaldos => Sessao.Pode(Permissao.Financeiro),
-        ItemMenu.Relatorios => Sessao.Pode(Permissao.Relatorios),
+        ItemMenu.EntradasESaidas or ItemMenu.RelatorioFinanceiro => Sessao.Pode(Permissao.Financeiro),
+        ItemMenu.Relatorios or ItemMenu.RelatorioProdutos => Sessao.Pode(Permissao.Relatorios),
+        ItemMenu.Compras or ItemMenu.Fornecedores => Sessao.Pode(Permissao.Compras),
+        ItemMenu.CalculadoraPrecos => Sessao.Pode(Permissao.Estoque),
         ItemMenu.Funcionarios => Sessao.Pode(Permissao.Funcionarios),
-        ItemMenu.Configuracoes or ItemMenu.CatalogoOnline or ItemMenu.EditorCatalogo or ItemMenu.Atividades => Sessao.Pode(Permissao.Configuracoes),
+        // Gestão da empresa (lojas e preços) é só do administrador: quem tem Configurações.
+        ItemMenu.Configuracoes or ItemMenu.CatalogoOnline or ItemMenu.GestaoEmpresa or ItemMenu.Atividades => Sessao.Pode(Permissao.Configuracoes),
         _ => false
     };
 
     /// <summary>Itens que esta janela sabe abrir (o MainViewModel manda para cá os atalhos do Início).</summary>
     public static bool EhDaGestao(ItemMenu item) => item is ItemMenu.Agenda or ItemMenu.Clientes or ItemMenu.Financeiro or ItemMenu.ContasESaldos
-        or ItemMenu.Relatorios or ItemMenu.Funcionarios or ItemMenu.Configuracoes or ItemMenu.CatalogoOnline or ItemMenu.EditorCatalogo or ItemMenu.Atividades;
+        or ItemMenu.Relatorios or ItemMenu.Funcionarios or ItemMenu.Configuracoes or ItemMenu.CatalogoOnline or ItemMenu.Atividades
+        or ItemMenu.Compras or ItemMenu.Fornecedores or ItemMenu.CalculadoraPrecos
+        or ItemMenu.RelatorioFinanceiro or ItemMenu.RelatorioProdutos or ItemMenu.GestaoEmpresa or ItemMenu.EntradasESaidas;
 
     public bool VerClientes => Sessao.Pode(Permissao.Clientes);
     public bool VerFinanceiro => Sessao.Pode(Permissao.Financeiro);
     public bool VerRelatorios => Sessao.Pode(Permissao.Relatorios);
     public bool VerConfiguracoes => Sessao.Pode(Permissao.Configuracoes);
+    // Os títulos de grupo do menu só aparecem se sobrou algum item dentro.
+    public bool VerGrupoEstoque => VerRelatorios || VerCompras || VerEstoque;
+    public bool VerGrupoPessoas => VerFuncionarios || VerConfiguracoes;
+    public bool VerGrupoEmpresa => VerConfiguracoes || VerFinanceiro;
+    public bool VerCompras => Sessao.Pode(Permissao.Compras);
+    public bool VerEstoque => Sessao.Pode(Permissao.Estoque);
     public bool VerFuncionarios => Sessao.Pode(Permissao.Funcionarios);
     public string UsuarioTexto => Sessao.Atual is { } f ? $"{f.Nome} · {Permissoes.Nome(f.Perfil)}" : "Sem login (acesso total)";
 
     private void AtualizarPermissoes()
     {
-        foreach (var nome in new[] { nameof(VerClientes), nameof(VerFinanceiro), nameof(VerRelatorios), nameof(VerConfiguracoes), nameof(VerFuncionarios), nameof(UsuarioTexto) })
+        foreach (var nome in new[] { nameof(VerClientes), nameof(VerFinanceiro), nameof(VerRelatorios), nameof(VerConfiguracoes), nameof(VerCompras), nameof(VerEstoque), nameof(VerGrupoEstoque), nameof(VerGrupoPessoas), nameof(VerGrupoEmpresa), nameof(VerFuncionarios), nameof(UsuarioTexto) })
             OnPropertyChanged(nome);
     }
 
@@ -74,12 +86,32 @@ public partial class GestaoViewModel : ObservableObject
             case ItemMenu.Atividades: IrParaAtividades(); break;
             case ItemMenu.Configuracoes: IrParaConfiguracoes(); break;
             case ItemMenu.CatalogoOnline: IrParaCatalogoOnline(); break;
-            case ItemMenu.EditorCatalogo: IrParaEditorCatalogo(); break;
+            case ItemMenu.Compras: IrParaCompras(); break;
+            case ItemMenu.Fornecedores: IrParaFornecedores(); break;
+            case ItemMenu.CalculadoraPrecos: IrParaCalculadoraPrecos(); break;
+            case ItemMenu.RelatorioFinanceiro: IrParaRelatorioFinanceiro(); break;
+            case ItemMenu.RelatorioProdutos: IrParaRelatorioProdutos(); break;
+            case ItemMenu.GestaoEmpresa: IrParaGestaoEmpresa(); break;
+            case ItemMenu.EntradasESaidas: IrParaEntradasESaidas(); break;
             default: IrParaAgenda(); break;
         }
     }
 
-    [RelayCommand] private void IrParaEditorCatalogo() => Abrir(new CatalogoWebViewModel(_servicos.CatalogoWeb), ItemMenu.EditorCatalogo);
+    // O editor do catálogo vai virar outro programa: o código dele continua no projeto, mas não há mais entrada de menu.
+    [RelayCommand] private void IrParaCompras() => Abrir(new ComprasViewModel(_servicos.Compras, _servicos.Produtos, _servicos.Fornecedores), ItemMenu.Compras);
+    [RelayCommand] private void IrParaFornecedores() => Abrir(new FornecedoresViewModel(_servicos.Fornecedores), ItemMenu.Fornecedores);
+    [RelayCommand] private void IrParaCalculadoraPrecos() => Abrir(new CalculadoraPrecosViewModel(_servicos.Produtos,
+        new NexusLS.Core.Services.ParametrosCalculadoraStore(NexusLS.Core.Services.ParametrosCalculadoraStore.CaminhoPadrao())), ItemMenu.CalculadoraPrecos);
+    [RelayCommand] private void IrParaRelatorioFinanceiro() => Abrir(new RelatorioFinanceiroViewModel(_servicos.RelatorioFinanceiro), ItemMenu.RelatorioFinanceiro);
+    [RelayCommand] private void IrParaRelatorioProdutos() => Abrir(new RelatorioProdutosViewModel(_servicos.RelatorioProdutos), ItemMenu.RelatorioProdutos);
+    [RelayCommand] private void IrParaEntradasESaidas() => Abrir(CriarEntradasESaidas(), ItemMenu.EntradasESaidas);
+
+    [RelayCommand]
+    private void IrParaGestaoEmpresa() => Abrir(new GestaoEmpresaViewModel(
+        new LojasViewModel(_servicos.RelatorioFinanceiro, () => _servicos.Seguranca.Carregar()),
+        Sessao.Pode(Permissao.Financeiro) ? CriarEntradasESaidas() : null), ItemMenu.GestaoEmpresa);
+
+    private EntradasESaidasViewModel CriarEntradasESaidas() => new(_servicos.LancamentosEmpresa, _servicos.AnexosEmpresa);
     [RelayCommand] private void IrParaAgenda() => Abrir(new AgendaViewModel(_servicos.Agenda, null, _servicos.AgendaNoGoogle), ItemMenu.Agenda);
     [RelayCommand] private void IrParaClientes()
     {
