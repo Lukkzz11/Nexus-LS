@@ -242,8 +242,10 @@ public partial class VendasViewModel : ViewModelBase
         var caminho = EscolherArquivoParaSalvar(RelatorioDiaPdf.NomeDoArquivo(dia));
         if (caminho is null) return; // a pessoa desistiu na caixa "Salvar como"
 
-        var nomeLoja = _configuracao is null ? "Nexus LS" : (await _configuracao.ObterAsync()).NomeLoja;
-        await File.WriteAllBytesAsync(caminho, RelatorioDiaPdf.Gerar(Vendas.ToList(), dia, nomeLoja));
+        var loja = _configuracao is null ? new NexusLS.Core.Models.ConfiguracaoLoja() : await _configuracao.ObterAsync();
+        var pdfDia = NexusLS.Core.Pdf.DocumentosPdf.RelatorioDia(Vendas.ToList(), dia, loja);
+        await File.WriteAllBytesAsync(caminho, pdfDia);
+        NexusLS.Core.Pdf.DocumentosPdf.Registrar(Path.GetFileName(caminho), pdfDia);
         MostrarSucesso($"Relatório salvo: {caminho}");
     });
 
@@ -277,7 +279,9 @@ public partial class VendasViewModel : ViewModelBase
         if (Selecionada is not { } venda) return;
         var caminho = EscolherArquivoParaSalvar($"nota-{venda.Id}.pdf");
         if (caminho is null) return;
-        await File.WriteAllBytesAsync(caminho, await _cupons.GerarPdfAsync(venda.Id));
+        var pdfNota = await _cupons.GerarPdfAsync(venda.Id);
+        await File.WriteAllBytesAsync(caminho, pdfNota);
+        NexusLS.Core.Pdf.DocumentosPdf.Registrar(Path.GetFileName(caminho), pdfNota);
         MostrarSucesso($"Nota salva: {caminho}");
     });
 

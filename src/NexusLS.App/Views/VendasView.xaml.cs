@@ -83,7 +83,7 @@ public partial class VendasView : UserControl
         {
             FileName = nomeSugerido,
             DefaultExt = pdf ? ".pdf" : ".csv",
-            Filter = pdf ? "Documento PDF|*.pdf" : "Planilha CSV (Excel)|*.csv"
+            Filter = pdf ? "Documento PDF|*.pdf" : "Planilha CSV (Excel)|*.csv|Relatório em PDF (padrão Nexus)|*.pdf"
         };
         return dialogo.ShowDialog(Window.GetWindow(this)) == true ? dialogo.FileName : null;
     }

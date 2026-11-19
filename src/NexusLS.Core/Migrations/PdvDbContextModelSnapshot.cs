@@ -688,6 +688,9 @@ namespace NexusLS.Core.Migrations
                     b.Property<string>("RazaoSocial")
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("SalvarCupomPdfAoFinalizar")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Segmento")
                         .HasColumnType("TEXT");
 

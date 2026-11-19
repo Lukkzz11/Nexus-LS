@@ -7,7 +7,7 @@ using NexusLS.Core.Models;
 namespace NexusLS.App.ViewModels;
 
 /// <summary>Os itens do menu lateral. O nome do item é também o "Tag" do botão: assim o menu destaca o da tela aberta.</summary>
-public enum ItemMenu { Inicio, Pdv, VendaCliente, Caixa, Pedidos, MaisVendidos, Desempenho, EstoqueDaLoja, ResumoEstoque, Fabrica, CalculadoraPrecos, Compras, Fornecedores, Etiquetas, Clientes, Agenda, EditorCatalogo, Financeiro, ContasESaldos, Relatorios, CatalogoOnline, Funcionarios, Atividades, Configuracoes, Trocas, RelatorioFinanceiro, RelatorioProdutos, GestaoEmpresa, EntradasESaidas }
+public enum ItemMenu { Inicio, Pdv, VendaCliente, Caixa, Pedidos, MaisVendidos, Desempenho, EstoqueDaLoja, ResumoEstoque, Fabrica, CalculadoraPrecos, Compras, Fornecedores, Etiquetas, Clientes, Agenda, EditorCatalogo, Financeiro, ContasESaldos, Relatorios, CatalogoOnline, Funcionarios, Atividades, Configuracoes, Trocas, RelatorioFinanceiro, RelatorioProdutos, GestaoEmpresa, EntradasESaidas, Gaveta }
 
 /// <summary>
 /// ViewModel = a "lógica da tela". Ele guarda os dados que a tela mostra e os comandos dos botões,

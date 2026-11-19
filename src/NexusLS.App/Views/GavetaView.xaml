@@ -1,0 +1,71 @@
+<UserControl x:Class="NexusLS.App.Views.GavetaView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Gaveta de documentos" Style="{StaticResource TituloTela}" />
+        <TextBlock Grid.Row="1" TextWrapping="Wrap" Margin="0,4,0,12" Foreground="{DynamicResource CorTextoSuave}"
+                   Text="PDFs e documentos da loja guardados neste computador: cupons, relatórios, notas fiscais e comprovantes. Entram no backup completo (Configurações)." />
+
+        <Grid Grid.Row="2" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="170" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <ComboBox ItemsSource="{Binding Categorias}" DisplayMemberPath="Texto" SelectedItem="{Binding CategoriaFiltro}"
+                      AutomationProperties.Name="Filtrar por categoria" Padding="8,7" />
+            <TextBox Grid.Column="1" Margin="8,0,0,0" Text="{Binding Busca, UpdateSourceTrigger=PropertyChanged}"
+                     ToolTip="Buscar pelo nome do arquivo" AutomationProperties.Name="Buscar documento" />
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="8,0,0,0">
+                <ComboBox ItemsSource="{Binding CategoriasParaImportar}" DisplayMemberPath="Texto" SelectedItem="{Binding CategoriaImportar}"
+                          Width="140" Padding="8,7" ToolTip="Categoria do arquivo que você vai guardar" AutomationProperties.Name="Categoria ao guardar" />
+                <Button Content="Guardar arquivo..." Style="{StaticResource BotaoPrimario}" Margin="8,0,0,0" Command="{Binding ImportarCommand}" />
+            </StackPanel>
+        </Grid>
+
+        <DataGrid Grid.Row="3" ItemsSource="{Binding Arquivos}" SelectedItem="{Binding Selecionado}" AutoGenerateColumns="False"
+                  IsReadOnly="True" SelectionMode="Single" HeadersVisibility="Column" AutomationProperties.Name="Documentos da gaveta">
+            <DataGrid.InputBindings>
+                <MouseBinding MouseAction="LeftDoubleClick" Command="{Binding AbrirCommand}" />
+            </DataGrid.InputBindings>
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Documento" Binding="{Binding Nome}" Width="*" />
+                <DataGridTextColumn Header="Categoria" Binding="{Binding Categoria}" Width="130" />
+                <DataGridTextColumn Header="Data" Binding="{Binding Data}" Width="140" />
+                <DataGridTextColumn Header="Tamanho" Binding="{Binding Tamanho}" Width="90" />
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <StackPanel Grid.Row="4" Margin="0,10,0,0">
+            <StackPanel Orientation="Horizontal">
+                <Button Content="Abrir" Style="{StaticResource BotaoSecundario}" Command="{Binding AbrirCommand}" />
+                <Button Content="Mostrar na pasta" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0" Command="{Binding MostrarNaPastaCommand}" />
+                <Button Content="Enviar por WhatsApp" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0" Command="{Binding EnviarWhatsAppCommand}"
+                        Visibility="{Binding TemWhatsApp, Converter={StaticResource BoolVis}}" />
+                <Button Content="Excluir" Style="{StaticResource BotaoPerigo}" Margin="8,0,0,0" Command="{Binding ExcluirCommand}" />
+                <TextBlock Text="{Binding Resumo}" VerticalAlignment="Center" Margin="16,0,0,0" Foreground="{DynamicResource CorTextoSuave}" />
+            </StackPanel>
+            <TextBlock Text="{Binding Mensagem}" TextWrapping="Wrap" Margin="0,8,0,0">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Foreground" Value="{DynamicResource CorPositivo}" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding MensagemEhErro}" Value="True">
+                                <Setter Property="Foreground" Value="{DynamicResource CorNegativo}" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+            <TextBlock Text="{Binding PastaTexto, StringFormat=Pasta: {0}}" FontSize="11.5" Margin="0,6,0,0" Foreground="{DynamicResource CorTextoSuave}" />
+        </StackPanel>
+    </Grid>
+</UserControl>

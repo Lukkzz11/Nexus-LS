@@ -46,8 +46,10 @@ public partial class FechamentoViewModel : ViewModelBase
         var caminho = EscolherArquivoParaSalvar(RelatorioCaixaPdf.NomeDoArquivo(relatorio));
         if (caminho is null) return;
 
-        var loja = _configuracao is null ? "Nexus" : (await _configuracao.ObterAsync()).NomeLoja;
-        await System.IO.File.WriteAllBytesAsync(caminho, RelatorioCaixaPdf.Gerar(relatorio, loja));
+        var loja = _configuracao is null ? new NexusLS.Core.Models.ConfiguracaoLoja() : await _configuracao.ObterAsync();
+        var pdfCaixa = NexusLS.Core.Pdf.DocumentosPdf.RelatorioCaixa(relatorio, loja);
+        await System.IO.File.WriteAllBytesAsync(caminho, pdfCaixa);
+        NexusLS.Core.Pdf.DocumentosPdf.Registrar(System.IO.Path.GetFileName(caminho), pdfCaixa);
         MostrarSucesso($"Relatório salvo: {caminho}");
     });
 

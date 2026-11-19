@@ -227,9 +227,25 @@ public static class ExportadorCsv
         return csv.ToString();
     }
 
-    /// <summary>Grava em UTF-8 COM BOM: sem ele o Excel mostraria "ConcluÃ­da" no lugar de "Concluída".</summary>
-    public static void Salvar(string caminho, string conteudo) =>
+    /// <summary>
+    /// Grava a planilha. Se o arquivo escolhido termina em ".pdf", em vez do CSV sai o mesmo relatório no PDF padrão do
+    /// Nexus (cabeçalho da loja, tabela, assinatura); uma cópia vai também para a gaveta, se o programa a tiver ligado.
+    /// CSV: UTF-8 COM BOM, sem ele o Excel mostraria "ConcluÃ­da" no lugar de "Concluída".
+    /// </summary>
+    public static void Salvar(string caminho, string conteudo)
+    {
+        if (string.Equals(Path.GetExtension(caminho), ".pdf", StringComparison.OrdinalIgnoreCase))
+        {
+            var (titulo, periodo) = Pdf.CsvParaPdf.TituloDoArquivo(caminho);
+            var loja = Pdf.CsvParaPdf.ProvedorLoja?.Invoke() ?? new Models.ConfiguracaoLoja();
+            var bytes = Pdf.CsvParaPdf.Gerar(conteudo, titulo, periodo, loja);
+            File.WriteAllBytes(caminho, bytes);
+            try { Pdf.CsvParaPdf.AoGerar?.Invoke(Path.GetFileName(caminho), bytes); }
+            catch (Exception) { /* a cópia na gaveta é um extra: nunca derruba a exportação */ }
+            return;
+        }
         File.WriteAllText(caminho, conteudo, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
+    }
 
     private static void Linha(StringBuilder csv, params string[] campos)
     {

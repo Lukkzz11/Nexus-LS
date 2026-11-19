@@ -39,7 +39,7 @@ public partial class GestaoViewModel : ObservableObject
         ItemMenu.Clientes => Sessao.Pode(Permissao.Clientes),
         ItemMenu.Financeiro or ItemMenu.ContasESaldos => Sessao.Pode(Permissao.Financeiro),
         ItemMenu.EntradasESaidas or ItemMenu.RelatorioFinanceiro => Sessao.Pode(Permissao.Financeiro),
-        ItemMenu.Relatorios or ItemMenu.RelatorioProdutos => Sessao.Pode(Permissao.Relatorios),
+        ItemMenu.Relatorios or ItemMenu.RelatorioProdutos or ItemMenu.Gaveta => Sessao.Pode(Permissao.Relatorios),
         ItemMenu.Compras or ItemMenu.Fornecedores => Sessao.Pode(Permissao.Compras),
         ItemMenu.CalculadoraPrecos => Sessao.Pode(Permissao.Estoque),
         ItemMenu.Funcionarios => Sessao.Pode(Permissao.Funcionarios),
@@ -52,7 +52,7 @@ public partial class GestaoViewModel : ObservableObject
     public static bool EhDaGestao(ItemMenu item) => item is ItemMenu.Agenda or ItemMenu.Clientes or ItemMenu.Financeiro or ItemMenu.ContasESaldos
         or ItemMenu.Relatorios or ItemMenu.Funcionarios or ItemMenu.Configuracoes or ItemMenu.CatalogoOnline or ItemMenu.Atividades
         or ItemMenu.Compras or ItemMenu.Fornecedores or ItemMenu.CalculadoraPrecos
-        or ItemMenu.RelatorioFinanceiro or ItemMenu.RelatorioProdutos or ItemMenu.GestaoEmpresa or ItemMenu.EntradasESaidas;
+        or ItemMenu.RelatorioFinanceiro or ItemMenu.RelatorioProdutos or ItemMenu.GestaoEmpresa or ItemMenu.EntradasESaidas or ItemMenu.Gaveta;
 
     public bool VerClientes => Sessao.Pode(Permissao.Clientes);
     public bool VerFinanceiro => Sessao.Pode(Permissao.Financeiro);
@@ -93,6 +93,7 @@ public partial class GestaoViewModel : ObservableObject
             case ItemMenu.RelatorioProdutos: IrParaRelatorioProdutos(); break;
             case ItemMenu.GestaoEmpresa: IrParaGestaoEmpresa(); break;
             case ItemMenu.EntradasESaidas: IrParaEntradasESaidas(); break;
+            case ItemMenu.Gaveta: IrParaGaveta(); break;
             default: IrParaAgenda(); break;
         }
     }
@@ -105,6 +106,7 @@ public partial class GestaoViewModel : ObservableObject
     [RelayCommand] private void IrParaRelatorioFinanceiro() => Abrir(new RelatorioFinanceiroViewModel(_servicos.RelatorioFinanceiro), ItemMenu.RelatorioFinanceiro);
     [RelayCommand] private void IrParaRelatorioProdutos() => Abrir(new RelatorioProdutosViewModel(_servicos.RelatorioProdutos), ItemMenu.RelatorioProdutos);
     [RelayCommand] private void IrParaEntradasESaidas() => Abrir(CriarEntradasESaidas(), ItemMenu.EntradasESaidas);
+    [RelayCommand] private void IrParaGaveta() => Abrir(new GavetaViewModel(_servicos.Gaveta), ItemMenu.Gaveta);
 
     [RelayCommand]
     private void IrParaGestaoEmpresa()

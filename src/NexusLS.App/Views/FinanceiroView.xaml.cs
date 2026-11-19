@@ -15,7 +15,7 @@ public partial class FinanceiroView : UserControl
             // Caixas de janela ficam aqui na View, não no ViewModel.
             vm.EscolherArquivoParaSalvar = nome =>
             {
-                var dialogo = new Microsoft.Win32.SaveFileDialog { FileName = nome, DefaultExt = ".csv", Filter = "Planilha CSV (Excel)|*.csv" };
+                var dialogo = new Microsoft.Win32.SaveFileDialog { FileName = nome, DefaultExt = ".csv", Filter = "Planilha CSV (Excel)|*.csv|Relatório em PDF (padrão Nexus)|*.pdf" };
                 return dialogo.ShowDialog(Window.GetWindow(this)) == true ? dialogo.FileName : null;
             };
             vm.Confirmar = texto =>

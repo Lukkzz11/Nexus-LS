@@ -50,6 +50,9 @@ public sealed class ContainerDeServicos
     public ChequeService Cheques { get; }
     public ChequeEmitidoService ChequesEmitidos { get; }
     public AnexoService AnexosEmpresa { get; }
+
+    /// <summary>A gaveta de documentos da Gestão (PDFs de cupons, relatórios, notas e comprovantes).</summary>
+    public NexusLS.Core.Gaveta.GavetaService Gaveta { get; }
     public LancamentoEmpresaService LancamentosEmpresa { get; }
     public RelatorioFinanceiroService RelatorioFinanceiro { get; }
     public RelatorioProdutosService RelatorioProdutos { get; }
@@ -140,11 +143,15 @@ public sealed class ContainerDeServicos
         Cheques = new(fabrica);
         ChequesEmitidos = new(fabrica);
         AnexosEmpresa = new(fabrica, AnexoService.PastaPadrao(CaminhoBanco.Padrao()));
+        Gaveta = new(AnexoService.PastaPadrao(CaminhoBanco.Padrao()));
+        NexusLS.Core.Pdf.DocumentosPdf.ConversorLogo = NexusLS.App.Impressao.LogoParaPdf.Converter;
+        NexusLS.Core.Pdf.CsvParaPdf.ProvedorLoja = () => Task.Run(() => Configuracao.ObterAsync()).GetAwaiter().GetResult();
+        NexusLS.Core.Pdf.CsvParaPdf.AoGerar = (nome, bytes) => Gaveta.Salvar(nome.StartsWith("nota-", StringComparison.OrdinalIgnoreCase) || nome.StartsWith("comprovante", StringComparison.OrdinalIgnoreCase) ? NexusLS.Core.Gaveta.CategoriaGaveta.Cupons : NexusLS.Core.Gaveta.CategoriaGaveta.Relatorios, nome, bytes);
         LancamentosEmpresa = new(fabrica, AnexosEmpresa);
         RelatorioFinanceiro = new(fabrica);
         RelatorioProdutos = new(fabrica);
         Posicao = new(fabrica);
-        Cupons = new(fabrica, Configuracao, new ImpressoraWindows());
+        Cupons = new(fabrica, Configuracao, new ImpressoraWindows(), Gaveta);
         Seguranca = new(NexusLS.Core.Seguranca.ConfiguracaoSegurancaStore.CaminhoPadrao());
         Backup = new(
             new NexusLS.Core.Backup.BackupService(CaminhoBanco.Padrao()),

@@ -19,12 +19,14 @@ public class CupomService
     private readonly IDbContextFactory<PdvDbContext> _fabrica;
     private readonly ConfiguracaoService _configuracao;
     private readonly IImpressoraCupom _impressora;
+    private readonly Gaveta.GavetaService? _gaveta;
 
-    public CupomService(IDbContextFactory<PdvDbContext> fabrica, ConfiguracaoService configuracao, IImpressoraCupom impressora)
+    public CupomService(IDbContextFactory<PdvDbContext> fabrica, ConfiguracaoService configuracao, IImpressoraCupom impressora, Gaveta.GavetaService? gaveta = null)
     {
         _fabrica = fabrica;
         _configuracao = configuracao;
         _impressora = impressora;
+        _gaveta = gaveta;
     }
 
     public async Task<string> GerarTextoAsync(int vendaId)
@@ -39,18 +41,34 @@ public class CupomService
         var (texto, loja) = await GerarAsync(vendaId);
         await _impressora.ImprimirAsync(texto, loja);
     }
-
-    /// <summary>A nota da venda em PDF (o mesmo texto do cupom), para guardar ou mandar ao cliente.</summary>
-    public async Task<byte[]> GerarPdfAsync(int vendaId)
+    /// <summary>O comprovante da venda em PDF (padrão visual do Nexus, com campo de assinatura do cliente).</summary>
+    public async Task<byte[]> GerarPdfAsync(int vendaId, bool pedirAssinatura = true)
     {
-        var (texto, _) = await GerarAsync(vendaId);
-        return NotaPdf.Gerar(texto.ReplaceLineEndings("\n").Split('\n'));
+        var (venda, loja) = await CarregarVendaAsync(vendaId);
+        return Pdf.DocumentosPdf.ComprovanteVenda(venda, loja, null, pedirAssinatura);
     }
 
-    /// <summary>Chamado logo após finalizar a venda: só imprime se a impressão automática estiver ligada. Devolve se imprimiu.</summary>
+    /// <summary>Gera o PDF do comprovante e guarda na gaveta (Cupons). Devolve o caminho do arquivo.</summary>
+    public async Task<string> GuardarPdfNaGavetaAsync(int vendaId)
+    {
+        if (_gaveta is null) throw new RegraDeNegocioException("A gaveta de documentos não está disponível.");
+        var (venda, _) = await CarregarVendaAsync(vendaId);
+        var bytes = await GerarPdfAsync(vendaId);
+        return _gaveta.Salvar(Gaveta.CategoriaGaveta.Cupons, Pdf.DocumentosPdf.NomeComprovante(venda), bytes);
+    }
+
+    /// <summary>
+    /// Chamado logo após finalizar a venda: guarda o PDF na gaveta (se a opção estiver ligada) e imprime (se a impressão
+    /// automática estiver ligada). Falha ao guardar o PDF nunca impede a venda nem a impressão. Devolve se imprimiu.
+    /// </summary>
     public async Task<bool> ImprimirAoFinalizarAsync(int vendaId)
     {
         var loja = await _configuracao.ObterAsync();
+        if (loja.SalvarCupomPdfAoFinalizar && _gaveta is not null)
+        {
+            try { await GuardarPdfNaGavetaAsync(vendaId); }
+            catch (Exception ex) { Diagnostico.RegistroDeLog.Erro("Não foi possível guardar o PDF do cupom na gaveta.", ex); }
+        }
         if (!loja.ImprimirCupomAoFinalizar) return false;
 
         await ImprimirAsync(vendaId);
@@ -97,6 +115,13 @@ public class CupomService
 
     private async Task<(string texto, ConfiguracaoLoja loja)> GerarAsync(int vendaId)
     {
+        var (venda, loja) = await CarregarVendaAsync(vendaId);
+        return (MontadorCupom.Montar(venda, loja), loja);
+    }
+
+    /// <summary>A venda com itens e cliente (e a referência de cada item, se o cupom mostra), e os dados da loja.</summary>
+    private async Task<(Venda venda, ConfiguracaoLoja loja)> CarregarVendaAsync(int vendaId)
+    {
         var loja = await _configuracao.ObterAsync();
 
         await using var db = await _fabrica.CreateDbContextAsync();
@@ -113,6 +138,6 @@ public class CupomService
             foreach (var item in venda.Itens) item.Referencia = refs.GetValueOrDefault(item.ProdutoId);
         }
 
-        return (MontadorCupom.Montar(venda, loja), loja);
+        return (venda, loja);
     }
 }

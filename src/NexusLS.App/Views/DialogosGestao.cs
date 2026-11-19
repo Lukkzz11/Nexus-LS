@@ -10,7 +10,7 @@ internal static class DialogosGestao
 {
     public static Func<string, string?> SalvarCsv(DependencyObject tela) => nomeSugerido =>
     {
-        var d = new SaveFileDialog { FileName = nomeSugerido, DefaultExt = ".csv", Filter = "Planilha CSV (Excel)|*.csv", Title = "Salvar planilha" };
+        var d = new SaveFileDialog { FileName = nomeSugerido, DefaultExt = ".csv", Filter = "Planilha CSV (Excel)|*.csv|Relatório em PDF (padrão Nexus)|*.pdf", Title = "Salvar planilha" };
         return d.ShowDialog(Window.GetWindow(tela)) == true ? d.FileName : null;
     };
 

@@ -21,7 +21,7 @@ public partial class DesempenhoVendasView : UserControl
         {
             FileName = nomeSugerido,
             DefaultExt = ".csv",
-            Filter = "Planilha CSV (Excel)|*.csv"
+            Filter = "Planilha CSV (Excel)|*.csv|Relatório em PDF (padrão Nexus)|*.pdf"
         };
         return dialogo.ShowDialog(Window.GetWindow(this)) == true ? dialogo.FileName : null;
     }

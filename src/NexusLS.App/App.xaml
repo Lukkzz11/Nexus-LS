@@ -76,6 +76,9 @@
             <DataTemplate DataType="{x:Type vm:RelatoriosViewModel}">
                 <views:RelatoriosView />
             </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:GavetaViewModel}">
+                <views:GavetaView />
+            </DataTemplate>
             <DataTemplate DataType="{x:Type vm:FornecedoresViewModel}">
                 <views:FornecedoresView />
             </DataTemplate>

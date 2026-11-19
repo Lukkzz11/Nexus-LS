@@ -52,9 +52,10 @@ public class NotaPdfTests
             new SelecaoPagamento(10000).ParaPedido(carrinho, new DescontoResolvido(0, null, 0)) with { ChaveUnica = Guid.NewGuid() });
 
         var cupons = new CupomService(banco.Fabrica, new ConfiguracaoService(banco.Fabrica), new SemImpressora());
-        var texto = Encoding.Latin1.GetString(await cupons.GerarPdfAsync(venda.Id));
+        var bytesPdf = await cupons.GerarPdfAsync(venda.Id);
+        var texto = PdfTexto.Extrair(bytesPdf);
 
-        Assert.StartsWith("%PDF", texto);
+        Assert.StartsWith("%PDF", Encoding.Latin1.GetString(bytesPdf));
         Assert.Contains("Boné", texto);
         Assert.Contains("TOTAL", texto);
     }
