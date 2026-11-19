@@ -24,8 +24,9 @@ public partial class InicioViewModel : ViewModelBase
     private readonly Func<DateTime> _agora;
     private readonly AgendaService? _agenda;
 
-    public InicioViewModel(InicioService inicio, GestorBackup? backup, Action<ItemMenu> abrir, Func<DateTime>? agora = null, AgendaService? agenda = null)
+    public InicioViewModel(InicioService inicio, GestorBackup? backup, Action<ItemMenu> abrir, Func<DateTime>? agora = null, AgendaService? agenda = null, ConsultorViewModel? consultor = null)
     {
+        Consultor = consultor;
         _inicio = inicio;
         _agenda = agenda;
         _backup = backup;
@@ -60,6 +61,10 @@ public partial class InicioViewModel : ViewModelBase
 
     /// <summary>Só os atalhos que a pessoa que entrou pode usar.</summary>
     public IReadOnlyList<AtalhoInicio> Atalhos { get; }
+
+    /// <summary>Os cartões do Consultor Nexus (nulo = tela sem Consultor).</summary>
+    public ConsultorViewModel? Consultor { get; }
+    public bool TemConsultor => Consultor is not null;
 
     public bool TemAgenda => _agenda is not null;
     public bool AgendaVazia => AgendaHoje.Count == 0;

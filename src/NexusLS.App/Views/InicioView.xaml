@@ -131,6 +131,7 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -230,9 +231,114 @@
                 </Border>
             </Grid>
 
+            <!-- Consultor Nexus: sugestões por regras (sem internet, sem IA), calculadas em segundo plano. -->
+            <Grid x:Name="PainelConsultor" Grid.Row="3" Margin="0,2,-16,0"
+                  Visibility="{Binding TemConsultor, Converter={StaticResource BoolVis}}">
+                <Border Style="{StaticResource Cartao}" DataContext="{Binding Consultor}" AutomationProperties.Name="Consultor Nexus">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:SymbolIcon Symbol="Lightbulb24" FontSize="20" Foreground="{DynamicResource CorPrimaria}" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                    <TextBlock Text="Consultor Nexus" Style="{StaticResource TituloSecao}" VerticalAlignment="Center" />
+                                </StackPanel>
+                                <TextBlock Text="Sugestões calculadas só com os números da sua loja. Funcionam sem internet e não garantem resultado."
+                                           Style="{StaticResource TextoApoio}" Margin="0,2,0,0" TextWrapping="Wrap" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
+                                <TextBlock Text="{Binding AtualizadoEmTexto}" Style="{StaticResource TextoApoio}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                <Button Content="Mostrar as dispensadas" Style="{StaticResource LinkPainel}" Margin="0,0,4,0"
+                                        Command="{Binding MostrarDispensadosCommand}" AutomationProperties.Name="Mostrar as sugestões dispensadas"
+                                        Visibility="{Binding TemDispensados, Converter={StaticResource BoolVis}}" />
+                                <Button Style="{StaticResource BotaoFantasma}" Command="{Binding AtualizarCommand}" AutomationProperties.Name="Atualizar sugestões do Consultor">
+                                    <StackPanel Orientation="Horizontal">
+                                        <ui:SymbolIcon Symbol="ArrowClockwise24" FontSize="16" Margin="0,0,6,0" />
+                                        <TextBlock Text="{Binding TextoBotaoAtualizar}" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+
+                        <ProgressBar Grid.Row="1" IsIndeterminate="True" Height="3" Margin="0,10,0,0"
+                                     Visibility="{Binding Carregando, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Calculando as sugestões" />
+
+                        <ItemsControl x:Name="Cartoes" Grid.Row="2" ItemsSource="{Binding Cartoes}" Margin="0,4,-12,-12">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><UniformGrid Loaded="GradeConsultor_Loaded" /></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{DynamicResource CorCabecalho}" CornerRadius="{StaticResource RaioMedio}" Margin="0,8,12,12"
+                                            AutomationProperties.Name="{Binding NomeAcessivel}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="5" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                            <Border x:Name="Faixa" Background="{DynamicResource CorPrimaria}" CornerRadius="6,0,0,6" />
+                                            <Grid Grid.Column="1" Margin="14,12,8,12">
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" />
+                                                </Grid.RowDefinitions>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <TextBlock x:Name="Gravidade" Text="{Binding GravidadeTexto}" FontSize="{StaticResource TamMicro}" FontWeight="Bold"
+                                                                   Foreground="{DynamicResource CorPrimaria}" />
+                                                        <TextBlock Text="{Binding AreaTexto}" FontSize="{StaticResource TamMicro}" Margin="6,0,0,0"
+                                                                   Foreground="{DynamicResource CorTextoSuave}" />
+                                                    </StackPanel>
+                                                    <Button Grid.Column="1" Style="{StaticResource BotaoIcone}" ToolTip="Dispensar por 7 dias"
+                                                            AutomationProperties.Name="{Binding NomeDispensar}"
+                                                            Command="{Binding DataContext.DispensarCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                            CommandParameter="{Binding}">
+                                                        <ui:SymbolIcon Symbol="Dismiss24" FontSize="14" />
+                                                    </Button>
+                                                </Grid>
+                                                <TextBlock Grid.Row="1" Text="{Binding Titulo}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,2,0,0"
+                                                           Foreground="{DynamicResource CorTexto}" />
+                                                <TextBlock Grid.Row="2" Text="{Binding Texto}" FontSize="{StaticResource TamRotulo}" TextWrapping="Wrap" Margin="0,4,0,0"
+                                                           Foreground="{DynamicResource CorTextoSuave}" />
+                                                <Button Grid.Row="3" Content="{Binding AcaoSugerida}" Style="{StaticResource LinkPainel}" HorizontalAlignment="Left"
+                                                        Margin="0,8,0,0" Padding="0,4"
+                                                        Command="{Binding DataContext.AbrirCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                        CommandParameter="{Binding}" Visibility="{Binding TemAcao, Converter={StaticResource BoolVis}}"
+                                                        AutomationProperties.Name="{Binding AcaoSugerida}" />
+                                            </Grid>
+                                        </Grid>
+                                    </Border>
+                                    <DataTemplate.Triggers>
+                                        <DataTrigger Binding="{Binding EhUrgente}" Value="True">
+                                            <Setter TargetName="Faixa" Property="Background" Value="{DynamicResource CorNegativo}" />
+                                            <Setter TargetName="Gravidade" Property="Foreground" Value="{DynamicResource CorNegativo}" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding PedeAtencao}" Value="True">
+                                            <Setter TargetName="Faixa" Property="Background" Value="{DynamicResource CorAtencaoBorda}" />
+                                            <Setter TargetName="Gravidade" Property="Foreground" Value="{DynamicResource CorAtencaoTexto}" />
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <!-- Estado vazio -->
+                        <StackPanel Grid.Row="2" HorizontalAlignment="Center" Margin="0,16,0,8"
+                                    Visibility="{Binding Vazio, Converter={StaticResource BoolVis}}">
+                            <ui:SymbolIcon Symbol="CheckmarkCircle24" FontSize="28" Foreground="{DynamicResource CorPositivo}" HorizontalAlignment="Center" />
+                            <TextBlock Text="{Binding TextoVazio}" Style="{StaticResource TextoApoio}" TextAlignment="Center" TextWrapping="Wrap"
+                                       MaxWidth="560" Margin="0,8,0,0" AutomationProperties.Name="Nenhuma sugestão no momento" />
+                        </StackPanel>
+                        <TextBlock Grid.Row="2" Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" Margin="0,10,0,0" />
+                    </Grid>
+                </Border>
+            </Grid>
+
             <!-- Área principal: estica na altura. Coluna 1: semana em barras. Coluna 2: atenção e contas a pagar.
                  Coluna 3: mais vendidos e agenda. O painel de cima de cada coluna tem a altura do conteúdo; o de baixo fica com o resto. -->
-            <Grid x:Name="AreaPrincipal" Grid.Row="3" Margin="0,0,-16,0">
+            <Grid x:Name="AreaPrincipal" Grid.Row="4" Margin="0,0,-16,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="5*" />
                     <ColumnDefinition Width="4*" />
@@ -521,8 +627,8 @@
 
 
             <!-- Atalhos: grade que preenche a largura (colunas calculadas pela largura) -->
-            <TextBlock Grid.Row="4" Text="Ir para" Style="{StaticResource TituloSecao}" Margin="0,4,0,10" />
-            <ItemsControl x:Name="Atalhos" Grid.Row="5" ItemsSource="{Binding Atalhos}" Margin="0,0,-12,-12"
+            <TextBlock Grid.Row="5" Text="Ir para" Style="{StaticResource TituloSecao}" Margin="0,4,0,10" />
+            <ItemsControl x:Name="Atalhos" Grid.Row="6" ItemsSource="{Binding Atalhos}" Margin="0,0,-12,-12"
                           ItemTemplate="{StaticResource AtalhoLargo}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate><UniformGrid Loaded="GradeAtalhos_Loaded" /></ItemsPanelTemplate>

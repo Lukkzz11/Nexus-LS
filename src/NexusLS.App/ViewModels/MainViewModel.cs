@@ -78,7 +78,7 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    [RelayCommand] private void IrParaInicio() => Abrir(new InicioViewModel(_servicos.Inicio, _servicos.Backup, Ir, null, _servicos.Agenda), ItemMenu.Inicio);
+    [RelayCommand] private void IrParaInicio() => Abrir(new InicioViewModel(_servicos.Inicio, _servicos.Backup, Ir, null, _servicos.Agenda, new ConsultorViewModel(_servicos.Consultor, Ir)), ItemMenu.Inicio);
 
     // Vendas
     [RelayCommand] private void IrParaPdv() => Abrir(_pdv, ItemMenu.Pdv);
