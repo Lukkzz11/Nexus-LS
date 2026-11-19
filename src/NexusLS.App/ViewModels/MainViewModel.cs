@@ -91,7 +91,7 @@ public partial class MainViewModel : ObservableObject
         IrParaPdv(); // o mesmo PDV, agora no modo cliente
     }), ItemMenu.VendaCliente);
     [RelayCommand] private void IrParaCaixa() => Abrir(new VendasViewModel(_servicos.Vendas, _servicos.Cupons, _servicos.Caixa,
-        new FechamentoViewModel(_servicos.Caixa, _servicos.Configuracao, _servicos.RelatorioCaixa), _servicos.Clientes, _servicos.Configuracao), ItemMenu.Caixa);
+        new FechamentoViewModel(_servicos.Caixa, _servicos.Configuracao, _servicos.RelatorioCaixa), _servicos.Clientes, _servicos.Configuracao, _servicos.Pedidos), ItemMenu.Caixa);
     [RelayCommand] private void IrParaTrocas() => Abrir(new TrocasViewModel(_servicos.Trocas, _servicos.Cupons), ItemMenu.Trocas);
     [RelayCommand] private void IrParaPedidos() => Abrir(new PedidosViewModel(_servicos.Pedidos, _servicos.Produtos, _servicos.Clientes, _servicos.Cupons), ItemMenu.Pedidos);
     [RelayCommand] private void IrParaDesempenho() => Abrir(new DesempenhoVendasViewModel(_servicos.Desempenho, resumo: _servicos.ResumoVendas), ItemMenu.Desempenho);

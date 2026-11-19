@@ -4,6 +4,19 @@ using NexusLS.App.ViewModels;
 
 namespace NexusLS.App.Views;
 
+/// <summary>Texto do selo da lista: "Pedido PED-..." se a venda já foi enviada para Pedidos, senão vazio.</summary>
+public sealed class SeloPedidoConverter : System.Windows.Data.IMultiValueConverter
+{
+    public static readonly SeloPedidoConverter Instancia = new();
+
+    public object Convert(object[] values, Type targetType, object parameter, System.Globalization.CultureInfo culture) =>
+        values.Length == 2 && values[0] is int id && values[1] is IReadOnlyDictionary<int, string> selos && selos.TryGetValue(id, out var numero)
+            ? $"Enviada · {numero}" : "";
+
+    public object[] ConvertBack(object value, Type[] targetTypes, object parameter, System.Globalization.CultureInfo culture) =>
+        throw new NotSupportedException();
+}
+
 public partial class VendasView : UserControl
 {
     public VendasView()

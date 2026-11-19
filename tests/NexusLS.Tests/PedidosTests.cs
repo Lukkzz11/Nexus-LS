@@ -180,6 +180,83 @@ public sealed class PedidosTests : IDisposable
 
         Assert.Empty(await _pedidos.ListarAsync());
     }
+
+    // ---------- enviar venda do Caixa para Pedidos ----------
+
+    [Fact]
+    public async Task Enviar_venda_cria_pedido_novo_com_itens_cliente_e_vinculo_sem_mexer_na_venda()
+    {
+        var vendas = new VendaService(_banco.Fabrica);
+        var bone = await ProdutoAsync(estoque: 10);
+        var maria = await new ClienteService(_banco.Fabrica).CadastrarAsync(new DadosCliente("Maria Souza", Telefone: "8199999-0000"));
+        var venda = await vendas.FinalizarAsync(new PedidoVenda(new[] { new ItemCarrinho(bone, 2) }, 0, FormaPagamento.Pix, ClienteId: maria.Id));
+
+        var pedido = await _pedidos.EnviarVendaAsync(venda.Id, "Entregar à tarde");
+
+        var lido = await _pedidos.ObterAsync(pedido.Id);
+        Assert.Equal(StatusPedido.Novo, lido.Status);
+        Assert.Equal(venda.Id, lido.VendaId);
+        Assert.Equal("Maria Souza", lido.ClienteNome);
+        Assert.Equal(maria.Id, lido.ClienteId);
+        Assert.Equal(venda.TotalCentavos, lido.TotalCentavos);
+        Assert.Equal(2, Assert.Single(lido.Itens).Quantidade);
+        Assert.Contains("Entregar à tarde", lido.Observacao);
+        Assert.StartsWith("PED-", lido.Numero);
+
+        await using var db = _banco.Fabrica.CreateDbContext();
+        var depois = await db.Vendas.AsNoTracking().SingleAsync(v => v.Id == venda.Id);
+        Assert.False(depois.Cancelada);
+        Assert.Equal(venda.TotalCentavos, depois.TotalCentavos);
+        Assert.Equal(pedido.Numero, (await _pedidos.NumerosPorVendaAsync(new[] { venda.Id }))[venda.Id]);
+    }
+
+    [Fact]
+    public async Task Enviar_a_mesma_venda_duas_vezes_e_recusado_e_venda_a_prazo_ja_tem_pedido()
+    {
+        var vendas = new VendaService(_banco.Fabrica);
+        var bone = await ProdutoAsync(estoque: 10);
+        var venda = await vendas.FinalizarAsync(new PedidoVenda(new[] { new ItemCarrinho(bone, 1) }, 0, FormaPagamento.Pix));
+        await _pedidos.EnviarVendaAsync(venda.Id);
+
+        var erro = await Assert.ThrowsAsync<RegraDeNegocioException>(() => _pedidos.EnviarVendaAsync(venda.Id));
+        Assert.Contains("já está nos Pedidos", erro.Message);
+        Assert.Single(await _pedidos.ListarAsync());
+
+        var maria = await new ClienteService(_banco.Fabrica).CadastrarAsync(new DadosCliente("Maria"));
+        var aPrazo = await vendas.FinalizarAsync(new PedidoVenda(new[] { new ItemCarrinho(bone, 1) }, 0, FormaPagamento.APrazo, ClienteId: maria.Id));
+        await Assert.ThrowsAsync<RegraDeNegocioException>(() => _pedidos.EnviarVendaAsync(aPrazo.Id));
+    }
+
+    [Fact]
+    public async Task Venda_cancelada_nao_e_enviada_e_pedido_cancelado_libera_novo_envio()
+    {
+        var vendas = new VendaService(_banco.Fabrica);
+        var bone = await ProdutoAsync(estoque: 10);
+        var cancelada = await vendas.FinalizarAsync(new PedidoVenda(new[] { new ItemCarrinho(bone, 1) }, 0, FormaPagamento.Pix));
+        await vendas.CancelarAsync(cancelada.Id, "Desistiu", true);
+        await Assert.ThrowsAsync<RegraDeNegocioException>(() => _pedidos.EnviarVendaAsync(cancelada.Id));
+
+        var venda = await vendas.FinalizarAsync(new PedidoVenda(new[] { new ItemCarrinho(bone, 1) }, 0, FormaPagamento.Pix));
+        var p1 = await _pedidos.EnviarVendaAsync(venda.Id);
+        await _pedidos.CancelarAsync(p1.Id, "Enviado por engano");
+        Assert.Empty(await _pedidos.NumerosPorVendaAsync(new[] { venda.Id }));
+
+        var p2 = await _pedidos.EnviarVendaAsync(venda.Id);
+        Assert.NotEqual(p1.Id, p2.Id);
+    }
+
+    [Theory]
+    [InlineData(StatusPedido.Novo, StatusPedido.EmSeparacao, true)]
+    [InlineData(StatusPedido.EmSeparacao, StatusPedido.Novo, true)]
+    [InlineData(StatusPedido.Novo, StatusPedido.Separado, false)]
+    [InlineData(StatusPedido.Novo, StatusPedido.Entregue, false)]
+    [InlineData(StatusPedido.Entregue, StatusPedido.ProntoRetirada, true)]
+    [InlineData(StatusPedido.Novo, StatusPedido.Novo, false)]
+    [InlineData(StatusPedido.Separado, StatusPedido.Cancelado, true)]
+    [InlineData(StatusPedido.Entregue, StatusPedido.Cancelado, false)]
+    [InlineData(StatusPedido.Cancelado, StatusPedido.Novo, false)]
+    public void Regra_de_mover_cartao_segue_avancar_voltar_e_cancelar(StatusPedido de, StatusPedido para, bool pode) =>
+        Assert.Equal(pode, RegrasPedido.MotivoDeNaoPoderMover(de, para) is null);
 }
 
 public class ListaSeparacaoTests

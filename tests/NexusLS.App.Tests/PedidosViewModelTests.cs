@@ -181,4 +181,83 @@ public sealed class PedidosViewModelTests : IDisposable
         Assert.False(vm.FormAberto);
         Assert.Empty(await _pedidos.ListarAsync());
     }
+
+    // ---------- arrastar e soltar ----------
+
+    [Fact]
+    public async Task Soltar_o_cartao_na_etapa_vizinha_avanca_e_volta_e_registra_no_historico()
+    {
+        var p = await PedidoAsync();
+        var vm = await CriarAsync();
+
+        await vm.MoverPedidoAsync(p.Id, StatusPedido.EmSeparacao);
+        Assert.Equal(p.Id, Assert.Single(Coluna(vm, StatusPedido.EmSeparacao).Cartoes).Id);
+        Assert.Empty(Coluna(vm, StatusPedido.Novo).Cartoes);
+
+        await vm.MoverPedidoAsync(p.Id, StatusPedido.Novo);
+        Assert.Single(Coluna(vm, StatusPedido.Novo).Cartoes);
+        Assert.Equal(3, (await _pedidos.ObterAsync(p.Id)).Historico.Count);
+    }
+
+    [Fact]
+    public async Task Soltar_pulando_etapa_e_recusado_com_mensagem_e_nada_muda()
+    {
+        var p = await PedidoAsync();
+        var vm = await CriarAsync();
+
+        await vm.MoverPedidoAsync(p.Id, StatusPedido.Separado);
+
+        Assert.Contains("uma etapa por vez", vm.Mensagem);
+        Assert.Equal(StatusPedido.Novo, (await _pedidos.ObterAsync(p.Id)).Status);
+    }
+
+    [Fact]
+    public async Task Soltar_em_cancelados_pede_motivo_e_se_desistir_nao_cancela()
+    {
+        var p = await PedidoAsync();
+        var vm = await CriarAsync();
+
+        vm.PedirMotivo = _ => null;
+        await vm.MoverPedidoAsync(p.Id, StatusPedido.Cancelado);
+        Assert.Equal(StatusPedido.Novo, (await _pedidos.ObterAsync(p.Id)).Status);
+
+        vm.PedirMotivo = _ => "Cliente desistiu";
+        await vm.MoverPedidoAsync(p.Id, StatusPedido.Cancelado);
+        Assert.Equal(StatusPedido.Cancelado, (await _pedidos.ObterAsync(p.Id)).Status);
+        Assert.Single(vm.Cancelados.Cartoes);
+    }
+
+    [Fact]
+    public async Task Marcar_destinos_destaca_so_as_etapas_que_aceitam_o_cartao()
+    {
+        var vm = await CriarAsync();
+
+        vm.MarcarDestinos(StatusPedido.EmSeparacao, Coluna(vm, StatusPedido.Entregue));
+
+        Assert.True(Coluna(vm, StatusPedido.Novo).DestinoValido);
+        Assert.True(Coluna(vm, StatusPedido.Separado).DestinoValido);
+        Assert.False(Coluna(vm, StatusPedido.Entregue).DestinoValido);
+        Assert.True(Coluna(vm, StatusPedido.Entregue).DestinoInvalido);
+        Assert.False(Coluna(vm, StatusPedido.ProntoRetirada).DestinoInvalido);
+
+        vm.MarcarDestinos(null, null);
+        Assert.All(vm.Colunas, c => Assert.False(c.DestinoValido || c.DestinoInvalido));
+    }
+
+    [Fact]
+    public async Task Cartao_mostra_itens_resumidos_e_tempo_desde_o_pedido()
+    {
+        var p = await PedidoAsync("Maria", "Camiseta");
+        var vm = await CriarAsync();
+        var cartao = Coluna(vm, StatusPedido.Novo).Cartoes.Single();
+
+        CartaoPedido.Agora = () => p.CriadoEm.AddMinutes(25);
+        try { Assert.Equal("há 25 min", cartao.HaQuanto); }
+        finally { CartaoPedido.Agora = () => DateTime.Now; }
+
+        Assert.Equal("2 × Camiseta", cartao.ItensResumo);
+        Assert.Equal("agora", CartaoPedido.TempoDecorrido(TimeSpan.FromSeconds(20)));
+        Assert.Equal("há 3 h", CartaoPedido.TempoDecorrido(TimeSpan.FromHours(3.5)));
+        Assert.Equal("há 2 dia(s)", CartaoPedido.TempoDecorrido(TimeSpan.FromDays(2.2)));
+    }
 }
