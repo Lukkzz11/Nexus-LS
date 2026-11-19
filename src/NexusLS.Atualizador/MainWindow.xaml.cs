@@ -223,10 +223,8 @@ public partial class MainWindow : Window
             TxtVersaoDetalheNexus.Text = $"Instalada: v{resNexus.Atual} • Nova v{resNexus.Nova.Versao} na nuvem";
             TxtVersaoStatus.Text = $"v{resNexus.Atual} (v{resNexus.Nova.Versao} disponível)";
             BadgeMenuUpdate.Visibility = Visibility.Visible;
-            TxtNovidadeTitulo.Text = $"🎉 Nova Versão {resNexus.Nova.Versao} Disponível na Nuvem!";
-            TxtNovidadeNotas.Text = string.IsNullOrWhiteSpace(resNexus.Nova.Notas)
-                ? "Atualização oficial com melhorias críticas e estabilidade."
-                : resNexus.Nova.Notas;
+            TxtNovidadeTitulo.Text = $"🎉 Nova Versão {resNexus.Nova.Versao} do Nexus LS (ERP & PDV)!";
+            TxtNovidadeNotas.Text = ObterNotasNexusLS(resNexus.Nova.Notas, resNexus.Nova.Versao.ToString());
             BrdNovidade.Visibility = Visibility.Visible;
             TxtRotuloSincronizarGit.Text = "Atualizar Agora";
         }
@@ -248,10 +246,8 @@ public partial class MainWindow : Window
             TxtBadgeBarTender.Foreground = (SolidColorBrush)FindResource("CorAviso");
             TxtVersaoDetalheBarTender.Text = $"Instalada: v{resBt.Atual} • Nova v{resBt.Nova.Versao} na nuvem";
             BadgeMenuUpdate.Visibility = Visibility.Visible;
-            TxtNovidadeTituloBarTender.Text = $"🎉 Nova Versão {resBt.Nova.Versao} do BarTender na Nuvem!";
-            TxtNovidadeNotasBarTender.Text = string.IsNullOrWhiteSpace(resBt.Nova.Notas)
-                ? "Melhorias de impressão e modelos de etiquetas."
-                : resBt.Nova.Notas;
+            TxtNovidadeTituloBarTender.Text = $"🎉 Nova Versão {resBt.Nova.Versao} do Nexus BarTender (Etiquetas)!";
+            TxtNovidadeNotasBarTender.Text = ObterNotasBarTender(resBt.Nova.Notas, resBt.Nova.Versao.ToString());
             BrdNovidadeBarTender.Visibility = Visibility.Visible;
             TxtRotuloSincronizarGit.Text = "Atualizar Agora";
         }
@@ -261,6 +257,137 @@ public partial class MainWindow : Window
             BadgeMenuUpdate.Visibility = Visibility.Collapsed;
             TxtStatusGeral.Text = $"Todos os programas estão 100% atualizados na nuvem (v{resNexus.Atual}).";
         }
+    }
+
+    private static bool ContemTermosBarTender(string texto)
+    {
+        return texto.Contains("bartender", StringComparison.OrdinalIgnoreCase) ||
+               texto.Contains("etiqueta", StringComparison.OrdinalIgnoreCase) ||
+               texto.Contains("bobina", StringComparison.OrdinalIgnoreCase) ||
+               texto.Contains("gôndola", StringComparison.OrdinalIgnoreCase) ||
+               texto.Contains("gondola", StringComparison.OrdinalIgnoreCase) ||
+               texto.Contains("térmica", StringComparison.OrdinalIgnoreCase) ||
+               texto.Contains("termica", StringComparison.OrdinalIgnoreCase) ||
+               texto.Contains("impressão", StringComparison.OrdinalIgnoreCase) ||
+               texto.Contains("impressao", StringComparison.OrdinalIgnoreCase) ||
+               texto.Contains("código de barras", StringComparison.OrdinalIgnoreCase) ||
+               texto.Contains("codigo de barras", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool ContemTermosNexusERP(string texto)
+    {
+        return texto.Contains("gestao", StringComparison.OrdinalIgnoreCase) ||
+               texto.Contains("gestão", StringComparison.OrdinalIgnoreCase) ||
+               texto.Contains("empresa", StringComparison.OrdinalIgnoreCase) ||
+               texto.Contains("pdv", StringComparison.OrdinalIgnoreCase) ||
+               texto.Contains("venda", StringComparison.OrdinalIgnoreCase) ||
+               texto.Contains("caixa", StringComparison.OrdinalIgnoreCase) ||
+               texto.Contains("estoque", StringComparison.OrdinalIgnoreCase) ||
+               texto.Contains("financeiro", StringComparison.OrdinalIgnoreCase) ||
+               texto.Contains("loja", StringComparison.OrdinalIgnoreCase) ||
+               texto.Contains("fiscal", StringComparison.OrdinalIgnoreCase) ||
+               texto.Contains("nfc-e", StringComparison.OrdinalIgnoreCase) ||
+               texto.Contains("nf-e", StringComparison.OrdinalIgnoreCase) ||
+               texto.Contains("compra", StringComparison.OrdinalIgnoreCase) ||
+               texto.Contains("fornecedor", StringComparison.OrdinalIgnoreCase) ||
+               texto.Contains("relatorio", StringComparison.OrdinalIgnoreCase) ||
+               texto.Contains("relatório", StringComparison.OrdinalIgnoreCase) ||
+               texto.Contains("consultor nexus", StringComparison.OrdinalIgnoreCase);
+    }
+
+    public static string ObterNotasNexusLS(string? notas, string versao)
+    {
+        if (string.IsNullOrWhiteSpace(notas))
+            return "Atualização oficial do Nexus LS com otimizações no sistema ERP, retaguarda e frente de caixa.";
+
+        var texto = notas.Trim();
+
+        int idxBt = texto.IndexOf("BarTender:", StringComparison.OrdinalIgnoreCase);
+        if (idxBt < 0) idxBt = texto.IndexOf("[BarTender]", StringComparison.OrdinalIgnoreCase);
+        if (idxBt < 0) idxBt = texto.IndexOf("Nexus BarTender:", StringComparison.OrdinalIgnoreCase);
+
+        if (idxBt >= 0)
+        {
+            int idxNexus = texto.IndexOf("Nexus LS:", StringComparison.OrdinalIgnoreCase);
+            if (idxNexus < 0) idxNexus = texto.IndexOf("Nexus:", StringComparison.OrdinalIgnoreCase);
+            if (idxNexus < 0) idxNexus = texto.IndexOf("[Nexus LS]", StringComparison.OrdinalIgnoreCase);
+            if (idxNexus < 0) idxNexus = texto.IndexOf("[Nexus]", StringComparison.OrdinalIgnoreCase);
+
+            string parteNexus;
+            if (idxNexus >= 0 && idxNexus < idxBt)
+            {
+                int doisPontos = texto.IndexOf(':', idxNexus);
+                int fechaColch = texto.IndexOf(']', idxNexus);
+                int inicio = doisPontos >= 0 ? doisPontos + 1 : (fechaColch >= 0 ? fechaColch + 1 : idxNexus);
+                parteNexus = texto.Substring(inicio, idxBt - inicio).Trim();
+            }
+            else if (idxBt > 0)
+            {
+                parteNexus = texto.Substring(0, idxBt).Trim();
+            }
+            else
+            {
+                parteNexus = "";
+            }
+
+            parteNexus = parteNexus.TrimEnd('.', ';', ',', '-', ' ');
+            if (!string.IsNullOrWhiteSpace(parteNexus))
+                return parteNexus + ".";
+        }
+
+        if (ContemTermosBarTender(texto) && !ContemTermosNexusERP(texto))
+        {
+            return $"Atualização oficial do Nexus LS (v{versao}) com melhorias contínuas de compatibilidade e estabilidade geral.";
+        }
+
+        var linhas = texto.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+        var linhasFiltradas = linhas.Where(l => !ContemTermosBarTender(l)).ToList();
+        if (linhasFiltradas.Count > 0 && linhasFiltradas.Count < linhas.Length)
+        {
+            return string.Join(" ", linhasFiltradas).Trim();
+        }
+
+        return texto.Trim();
+    }
+
+    public static string ObterNotasBarTender(string? notas, string versao)
+    {
+        if (string.IsNullOrWhiteSpace(notas))
+            return "Otimização no motor de renderização de etiquetas térmicas e envio de comandos de impressão.";
+
+        var texto = notas.Trim();
+
+        int idxBt = texto.IndexOf("BarTender:", StringComparison.OrdinalIgnoreCase);
+        if (idxBt < 0) idxBt = texto.IndexOf("[BarTender]", StringComparison.OrdinalIgnoreCase);
+        if (idxBt < 0) idxBt = texto.IndexOf("Nexus BarTender:", StringComparison.OrdinalIgnoreCase);
+
+        if (idxBt >= 0)
+        {
+            int doisPontos = texto.IndexOf(':', idxBt);
+            int fechaColch = texto.IndexOf(']', idxBt);
+            int inicio = doisPontos >= 0 ? doisPontos + 1 : (fechaColch >= 0 ? fechaColch + 1 : idxBt);
+            string parteBt = texto.Substring(inicio).Trim();
+
+            int prox = parteBt.IndexOf("\n[", StringComparison.Ordinal);
+            if (prox < 0) prox = parteBt.IndexOf("Nexus:", StringComparison.OrdinalIgnoreCase);
+            if (prox < 0) prox = parteBt.IndexOf("Nexus LS:", StringComparison.OrdinalIgnoreCase);
+            if (prox > 0) parteBt = parteBt.Substring(0, prox).Trim();
+
+            parteBt = parteBt.TrimEnd('.', ';', ',', '-', ' ');
+            if (!string.IsNullOrWhiteSpace(parteBt))
+                return parteBt + ".";
+        }
+
+        var separadores = new[] { '\r', '\n', ';' };
+        var partes = texto.Split(separadores, StringSplitOptions.RemoveEmptyEntries);
+        var partesBt = partes.Where(p => ContemTermosBarTender(p)).Select(p => p.Trim().TrimEnd('.', ';', ',', '-', ' ')).Where(s => !string.IsNullOrWhiteSpace(s)).ToList();
+
+        if (partesBt.Count > 0)
+        {
+            return string.Join(". ", partesBt) + ".";
+        }
+
+        return $"Atualização oficial do BarTender (v{versao}): Otimização no envio e formatação de etiquetas térmicas, código de barras e sincronização com o banco de dados.";
     }
 
     private async void BtnSincronizarTudo_Click(object sender, RoutedEventArgs e)
@@ -1040,10 +1167,8 @@ public partial class MainWindow : Window
             {
                 _versaoDisponivel = res.Nova;
                 BrdNovidade.Visibility = Visibility.Visible;
-                TxtNovidadeTitulo.Text = $"🎉 Nova Versão {_versaoDisponivel.Versao} Disponível!";
-                TxtNovidadeNotas.Text = string.IsNullOrWhiteSpace(_versaoDisponivel.Notas)
-                    ? "Melhorias de estabilidade, segurança e desempenho."
-                    : _versaoDisponivel.Notas;
+                TxtNovidadeTitulo.Text = $"🎉 Nova Versão {_versaoDisponivel.Versao} do Nexus LS (ERP & PDV)!";
+                TxtNovidadeNotas.Text = ObterNotasNexusLS(_versaoDisponivel.Notas, _versaoDisponivel.Versao.ToString());
                 TxtStatusGeral.Text = $"Nova versão {_versaoDisponivel.Versao} encontrada na nuvem!";
                 BadgeMenuUpdate.Visibility = Visibility.Visible;
                 TxtBadgeNexusLS.Text = $"⚠️ Nova v{_versaoDisponivel.Versao}!";
@@ -1252,10 +1377,8 @@ public partial class MainWindow : Window
             {
                 _versaoDisponivelBarTender = res.Nova;
                 BrdNovidadeBarTender.Visibility = Visibility.Visible;
-                TxtNovidadeTituloBarTender.Text = $"🎉 Nova Versão {_versaoDisponivelBarTender.Versao} do BarTender Disponível!";
-                TxtNovidadeNotasBarTender.Text = string.IsNullOrWhiteSpace(_versaoDisponivelBarTender.Notas)
-                    ? "Melhorias nos modelos de etiquetas, código de barras e desempenho de impressão."
-                    : _versaoDisponivelBarTender.Notas;
+                TxtNovidadeTituloBarTender.Text = $"🎉 Nova Versão {_versaoDisponivelBarTender.Versao} do Nexus BarTender (Etiquetas)!";
+                TxtNovidadeNotasBarTender.Text = ObterNotasBarTender(_versaoDisponivelBarTender.Notas, _versaoDisponivelBarTender.Versao.ToString());
                 TxtStatusGeral.Text = $"Nova versão {_versaoDisponivelBarTender.Versao} do BarTender encontrada na nuvem!";
                 BadgeMenuUpdate.Visibility = Visibility.Visible;
                 TxtBadgeBarTender.Text = $"⚠️ Nova v{_versaoDisponivelBarTender.Versao}!";
@@ -1739,6 +1862,18 @@ public partial class MainWindow : Window
             foreach (var (rota, arquivo) in telas)
             {
                 NavegarPara(rota);
+
+                if (rota == "atualizacoes")
+                {
+                    BrdNovidade.Visibility = Visibility.Visible;
+                    TxtNovidadeTitulo.Text = "🎉 Nova Versão 1.2.61 do Nexus LS (ERP & PDV)!";
+                    TxtNovidadeNotas.Text = "Gestão da empresa com sincronização em nuvem por loja, comparativo e tabela de preços individual por filial. Totais legíveis no tema escuro.";
+
+                    BrdNovidadeBarTender.Visibility = Visibility.Visible;
+                    TxtNovidadeTituloBarTender.Text = "🎉 Nova Versão 1.2.61 do Nexus BarTender (Etiquetas)!";
+                    TxtNovidadeNotasBarTender.Text = "Otimização no envio e formatação de etiquetas térmicas, código de barras EAN-13 e sincronização de dados com a retaguarda.";
+                }
+
                 UpdateLayout();
                 Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.Render);
 
@@ -1762,7 +1897,7 @@ public partial class MainWindow : Window
             try
             {
                 // 1. Popup de Atualização Oficial Disponível (Confirmação com botão largo sem cortes)
-                var diagUpdate = new JanelaDialogo("Atualização Disponível", "Foram encontradas atualizações oficiais na nuvem:\n\n• Nexus LS: nova versão v1.2.61\n• Nexus BarTender: nova versão v1.2.61\n\nDeseja baixar e instalar a atualização agora?", TipoDialogo.Confirmacao, this);
+                var diagUpdate = new JanelaDialogo("Atualização Disponível", "Foram encontradas atualizações oficiais na nuvem:\n\n• Nexus LS (ERP & PDV): nova versão v1.2.61\n• Nexus BarTender (Etiquetas): nova versão v1.2.61\n\nDeseja baixar e instalar a atualização agora?", TipoDialogo.Confirmacao, this);
                 diagUpdate.BtnConfirmar.Content = "Atualizar Agora";
                 diagUpdate.BtnCancelar.Content = "Agora Não";
                 diagUpdate.Show();
