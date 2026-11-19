@@ -158,7 +158,11 @@ public partial class MainViewModel : ObservableObject
     public bool VerGestao => !(Sessao.LoginAtivo && !(Sessao.Atual?.PodeAlguma(Permissoes.Gestao) ?? false) && _servicos.Seguranca.Carregar().EsconderGestaoSemAcesso);
 
     public bool VerSecaoVendas => VerPdv || VerCaixa || VerRelatorios;
-    public bool VerSecaoEstoque => VerEstoque || VerCompras;
+    public bool VerSecaoEstoque => VerEstoque;
+    public bool VerSecaoCompras => VerEstoque || VerCompras;
+
+    /// <summary>Nome desta loja (um computador = uma loja), mostrado de leve no menu lateral.</summary>
+    public string LojaNomeTexto => _servicos.Seguranca.Carregar().LojaNome;
     public bool VerSecaoGestao => VerClientes || VerFinanceiro || VerRelatorios || VerFuncionarios || VerConfiguracoes;
 
     public bool TemUsuario => Sessao.LoginAtivo && Sessao.Atual is not null;
@@ -181,7 +185,7 @@ public partial class MainViewModel : ObservableObject
         foreach (var nome in new[]
         {
             nameof(VerPdv), nameof(VerCaixa), nameof(VerEstoque), nameof(VerCompras), nameof(VerClientes), nameof(VerFinanceiro),
-            nameof(VerRelatorios), nameof(VerConfiguracoes), nameof(VerFuncionarios), nameof(VerSecaoVendas), nameof(VerSecaoEstoque),
+            nameof(VerRelatorios), nameof(VerConfiguracoes), nameof(VerFuncionarios), nameof(VerSecaoVendas), nameof(VerSecaoEstoque), nameof(VerSecaoCompras), nameof(LojaNomeTexto),
             nameof(VerSecaoGestao), nameof(VerGestao), nameof(TemUsuario), nameof(UsuarioTexto)
         }) OnPropertyChanged(nome);
     }

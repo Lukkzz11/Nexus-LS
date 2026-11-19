@@ -549,6 +549,19 @@
 
                     <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,16,0">
                         <StackPanel Margin="0,0,0,24">
+                            <Border Style="{StaticResource Painel}" Margin="0,0,0,16" Visibility="{Binding TemSeguranca, Converter={StaticResource BoolVis}}">
+                                <StackPanel>
+                                    <TextBlock Text="Esta loja" FontSize="18" FontWeight="SemiBold" />
+                                    <TextBlock Style="{StaticResource Rotulo}" TextWrapping="Wrap"
+                                               Text="Cada computador é uma loja. Este nome (Loja 1, Loja 2...) separa os dados desta loja das outras quando forem para a nuvem." />
+                                    <TextBlock Text="Nome desta loja" Style="{StaticResource Rotulo}" />
+                                    <TextBox Text="{Binding LojaNomeTexto, UpdateSourceTrigger=PropertyChanged}" MaxLength="60" AutomationProperties.Name="Nome desta loja" />
+                                    <TextBlock Text="{Binding LojaIdTexto, StringFormat='Identificação: {0}'}" Opacity="0.6" FontSize="12" Margin="0,6,0,0" AutomationProperties.Name="Identificação da loja" />
+                                    <Button Content="Salvar nome da loja" Style="{StaticResource BotaoPrimario}" HorizontalAlignment="Left" Margin="0,10,0,0" Command="{Binding SalvarLojaIdCommand}" />
+                                    <TextBlock Text="{Binding MensagemLojaId}" Style="{StaticResource TextoMensagem}" />
+                                </StackPanel>
+                            </Border>
+
                             <Border Style="{StaticResource Painel}" Margin="0,0,0,16">
                                 <StackPanel>
                                     <TextBlock Text="Identificação cadastral da empresa" FontSize="18" FontWeight="SemiBold" />

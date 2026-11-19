@@ -42,6 +42,8 @@ public sealed class CapturaJanelaPrincipal : IDisposable
         public bool VerCaixa => true;
         public bool VerRelatorios => true;
         public bool VerSecaoEstoque => true;
+        public bool VerSecaoCompras => true;
+        public string LojaNomeTexto => "Loja 1";
         public bool VerEstoque => true;
         public bool VerCompras => true;
         public bool VerSecaoGestao => true;
@@ -80,7 +82,7 @@ public sealed class CapturaJanelaPrincipal : IDisposable
         Capturador.Rodar(() => vm!.Selecionado = vm.Produtos.First(p => p.Id == camiseta.Id));
         await Task.Delay(150);
 
-        var texto = Regex.Replace(File.ReadAllText(CaminhoDoXaml()), @"\sx:Class=""[^""]*""", "");
+        var texto = Regex.Replace(File.ReadAllText(CaminhoDoXaml()), @"\s(x:Class|Icon|Source)=""(?!/)[^""]*""", "");
         Capturador.Rodar(() =>
         {
             var janela = (Window)XamlReader.Parse(texto);

@@ -13,6 +13,17 @@ public class ConfiguracaoSeguranca
     /// <summary>Depois de quantos minutos sem mexer o programa pede o PIN de novo. 0 = nunca bloqueia.</summary>
     public int MinutosInatividade { get; set; }
 
+    public const int LojaNomeMaximo = 60;
+    public const string LojaNomePadrao = "Loja 1";
+
+    /// <summary>Identificação estável deste computador (uma loja por computador). Gerada uma vez e nunca muda sozinha.</summary>
+    public string LojaId { get; set; } = "";
+
+    /// <summary>Nome desta loja ("Loja 1", "Loja 2"...), usado para separar os dados de cada loja.</summary>
+    public string LojaNome { get; set; } = LojaNomePadrao;
+
+    public static string NovoLojaId() => Guid.NewGuid().ToString("N");
+
     /// <summary>Se ligado, quem não tem acesso à Gestão nem vê o botão (desligado: o botão aparece e pede o PIN de um gerente).</summary>
     public bool EsconderGestaoSemAcesso { get; set; }
 
@@ -92,6 +103,12 @@ public class ConfiguracaoSeguranca
 
     public void Validar()
     {
+        if (string.IsNullOrWhiteSpace(LojaNome))
+            throw new RegraDeNegocioException("Informe o nome desta loja.");
+        if (LojaNome.Trim().Length > LojaNomeMaximo)
+            throw new RegraDeNegocioException($"O nome da loja pode ter no máximo {LojaNomeMaximo} letras.");
+        if (!string.IsNullOrEmpty(LojaId) && (LojaId.Length < 8 || LojaId.Length > 64 || !LojaId.All(c => char.IsAsciiLetterOrDigit(c) || c == '-' || c == '_')))
+            throw new RegraDeNegocioException("A identificação da loja é inválida.");
         if (!string.IsNullOrWhiteSpace(FiscalRegime) && !Services.PreparoFiscal.Regimes.ContainsKey(FiscalRegime))
             throw new RegraDeNegocioException("Regime tributário desconhecido.");
         if (FiscalAmbiente != Services.PreparoFiscal.Homologacao && FiscalAmbiente != Services.PreparoFiscal.Producao)
@@ -158,19 +175,36 @@ public class ConfiguracaoSegurancaStore
     {
         try
         {
-            if (!File.Exists(_caminho)) return new();
-            var c = JsonSerializer.Deserialize<ConfiguracaoSeguranca>(File.ReadAllText(_caminho)) ?? new();
+            var c = File.Exists(_caminho)
+                ? JsonSerializer.Deserialize<ConfiguracaoSeguranca>(File.ReadAllText(_caminho)) ?? new()
+                : new();
             c.ComissaoPorVendedor = new Dictionary<string, decimal>(c.ComissaoPorVendedor ?? new(), StringComparer.OrdinalIgnoreCase);
-            return c;
+            return GarantirLoja(c);
         }
         catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException)
         {
-            return new();
+            return GarantirLoja(new(), gravar: false);   // arquivo ilegível: não sobrescreve
         }
+    }
+
+    /// <summary>Completa o nome e a identificação da loja e grava (uma vez) o que faltava, para a identificação não mudar mais.</summary>
+    private ConfiguracaoSeguranca GarantirLoja(ConfiguracaoSeguranca c, bool gravar = true)
+    {
+        var mudou = false;
+        if (string.IsNullOrWhiteSpace(c.LojaNome)) { c.LojaNome = ConfiguracaoSeguranca.LojaNomePadrao; mudou = true; }
+        if (string.IsNullOrWhiteSpace(c.LojaId)) { c.LojaId = ConfiguracaoSeguranca.NovoLojaId(); mudou = true; }
+        if (mudou && gravar)
+        {
+            try { Salvar(c); }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or RegraDeNegocioException) { /* sem permissão agora: tenta de novo na próxima leitura */ }
+        }
+        return c;
     }
 
     public void Salvar(ConfiguracaoSeguranca configuracao)
     {
+        if (string.IsNullOrWhiteSpace(configuracao.LojaId)) configuracao.LojaId = ConfiguracaoSeguranca.NovoLojaId();
+        configuracao.LojaNome = configuracao.LojaNome?.Trim() ?? "";
         configuracao.Validar();
         Directory.CreateDirectory(Path.GetDirectoryName(_caminho)!);
         var tmp = _caminho + ".tmp";

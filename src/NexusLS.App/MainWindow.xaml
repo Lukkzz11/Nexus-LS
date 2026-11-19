@@ -60,7 +60,9 @@
             <Border Style="{StaticResource PainelLateral}">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel Margin="0,12,0,16">
-                    <Image Source="pack://application:,,,/Assets/logo.png" Width="96" Height="120" HorizontalAlignment="Center" Margin="0,4,0,12" RenderOptions.BitmapScalingMode="HighQuality" AutomationProperties.Name="Logo do Nexus" /><Button Tag="Inicio" AutomationProperties.Name="Início" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaInicioCommand}" Margin="0,0,0,8">
+                    <Image Source="pack://application:,,,/Assets/logo.png" Width="96" Height="120" HorizontalAlignment="Center" Margin="0,4,0,4" RenderOptions.BitmapScalingMode="HighQuality" AutomationProperties.Name="Logo do Nexus" />
+                    <TextBlock Text="{Binding LojaNomeTexto}" HorizontalAlignment="Center" FontSize="12" Opacity="0.7" Margin="0,0,0,10" TextTrimming="CharacterEllipsis" MaxWidth="200"
+                               AutomationProperties.Name="Nome desta loja" ToolTip="Nome desta loja (mude em Configurações, página Loja)" /><Button Tag="Inicio" AutomationProperties.Name="Início" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaInicioCommand}" Margin="0,0,0,8">
                         <StackPanel Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="Home24" Style="{StaticResource IconeDoMenu}" />
                             <TextBlock Text="Início" VerticalAlignment="Center" />
@@ -112,10 +114,10 @@
                     </Button>
 
                     <TextBlock Text="ESTOQUE" Style="{StaticResource SecaoMenu}" Visibility="{Binding VerSecaoEstoque, Converter={StaticResource BoolVis}}" />
-                    <Button Tag="ResumoEstoque" Visibility="{Binding VerEstoque, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Resumo do estoque" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaResumoEstoqueCommand}">
+                    <Button Tag="ResumoEstoque" Visibility="{Binding VerEstoque, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Resumo" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaResumoEstoqueCommand}">
                         <StackPanel Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="DataBarVertical24" Style="{StaticResource IconeDoMenu}" />
-                            <TextBlock Text="Resumo do estoque" VerticalAlignment="Center" />
+                            <TextBlock Text="Resumo" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
                     <Button Tag="EstoqueDaLoja" Visibility="{Binding VerEstoque, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Estoque da loja" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaEstoqueCommand}">
@@ -124,19 +126,21 @@
                             <TextBlock Text="Estoque da loja" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
-                    <Button Tag="Fabrica" Visibility="{Binding VerEstoque, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Estoque de fábrica" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaFabricaCommand}">
+                    <Button Tag="Fabrica" Visibility="{Binding VerEstoque, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Estoque fábrica" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaFabricaCommand}">
                         <StackPanel Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="Building24" Style="{StaticResource IconeDoMenu}" />
-                            <TextBlock Text="Fábrica" VerticalAlignment="Center" />
+                            <TextBlock Text="Estoque fábrica" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
+
+                    <!-- Provisório: Compras, Fornecedores e Calculadora de preços saem do Estoque e vão para a Gestão numa etapa seguinte. -->
+                    <TextBlock Text="COMPRAS E PREÇOS" Style="{StaticResource SecaoMenu}" Visibility="{Binding VerSecaoCompras, Converter={StaticResource BoolVis}}" />
                     <Button Tag="CalculadoraPrecos" Visibility="{Binding VerEstoque, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Calculadora de preços" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaCalculadoraPrecosCommand}">
                         <StackPanel Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="Calculator24" Style="{StaticResource IconeDoMenu}" />
                             <TextBlock Text="Calculadora de preços" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
-
                     <Button Tag="Compras" Visibility="{Binding VerCompras, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Compras" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaComprasCommand}">
                         <StackPanel Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="BoxArrowLeft24" Style="{StaticResource IconeDoMenu}" />

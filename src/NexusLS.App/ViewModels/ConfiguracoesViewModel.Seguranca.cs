@@ -19,6 +19,12 @@ public partial class ConfiguracoesViewModel
     [ObservableProperty] private string _mensagemSeguranca = "";
     [ObservableProperty] private bool _mensagemSegurancaEhErro;
 
+    // Identificação desta loja (um computador = uma loja)
+    [ObservableProperty] private string _lojaNomeTexto = ConfiguracaoSeguranca.LojaNomePadrao;
+    [ObservableProperty] private string _lojaIdTexto = "";
+    [ObservableProperty] private string _mensagemLojaId = "";
+    [ObservableProperty] private bool _mensagemLojaIdEhErro;
+
     // Caixa
     [ObservableProperty] private string _sangriaMaximaTexto = "";
     [ObservableProperty] private bool _pinGerenteParaCancelar;
@@ -46,6 +52,8 @@ public partial class ConfiguracoesViewModel
         var c = store.Carregar();
         MinutosInatividadeTexto = c.MinutosInatividade.ToString();
         EsconderGestaoSemAcesso = c.EsconderGestaoSemAcesso;
+        LojaNomeTexto = c.LojaNome;
+        LojaIdTexto = c.LojaId;
         SangriaMaximaTexto = c.SangriaMaximaSemGerenteCentavos > 0 ? Dinheiro.Formatar(c.SangriaMaximaSemGerenteCentavos).Replace("R$", "").Trim() : "";
         PinGerenteParaCancelar = c.PinGerenteParaCancelar;
         DescontoMaximoTexto = c.DescontoMaximoSemGerentePercent.ToString();
@@ -88,6 +96,12 @@ public partial class ConfiguracoesViewModel
         () => int.Parse(MinutosInatividadeTexto.Trim()) == 0
             ? "Salvo. O bloqueio por inatividade está desligado."
             : $"Salvo. O programa pede o PIN depois de {MinutosInatividadeTexto.Trim()} minuto(s) parado.");
+
+    [RelayCommand]
+    private void SalvarLojaId() => SalvarRegras(
+        c => c.LojaNome = (LojaNomeTexto ?? "").Trim(),
+        (m, erro) => { MensagemLojaIdEhErro = erro; MensagemLojaId = m; },
+        () => $"Salvo. Este computador agora é \"{LojaNomeTexto.Trim()}\".");
 
     [RelayCommand]
     private void SalvarCaixaRegras() => SalvarRegras(
