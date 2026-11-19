@@ -109,6 +109,48 @@ namespace NexusLS.Core.Migrations
                     b.ToTable("AjustesTitulosPrazo");
                 });
 
+            modelBuilder.Entity("NexusLS.Core.Models.AnexoLancamento", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("CaminhoRelativo")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CriadoEm")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("LancamentoEmpresaId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("NomeOriginal")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Sha256")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("TamanhoBytes")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("TipoMime")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LancamentoEmpresaId");
+
+                    b.ToTable("AnexosLancamento");
+                });
+
             modelBuilder.Entity("NexusLS.Core.Models.Atividade", b =>
                 {
                     b.Property<int>("Id")
@@ -1413,6 +1455,61 @@ namespace NexusLS.Core.Migrations
                     b.ToTable("Lancamentos");
                 });
 
+            modelBuilder.Entity("NexusLS.Core.Models.LancamentoEmpresa", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("AlteradoEm")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Categoria")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CriadoEm")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("Data")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Descricao")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("Forma")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("Guid")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Observacao")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Operador")
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Tipo")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("ValorCentavos")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Data");
+
+                    b.HasIndex("Guid")
+                        .IsUnique();
+
+                    b.ToTable("LancamentosEmpresa");
+                });
+
             modelBuilder.Entity("NexusLS.Core.Models.LiquidacaoCartao", b =>
                 {
                     b.Property<int>("Id")
@@ -2382,6 +2479,15 @@ namespace NexusLS.Core.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("NexusLS.Core.Models.AnexoLancamento", b =>
+                {
+                    b.HasOne("NexusLS.Core.Models.LancamentoEmpresa", null)
+                        .WithMany("Anexos")
+                        .HasForeignKey("LancamentoEmpresaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("NexusLS.Core.Models.ChequeEmitido", b =>
                 {
                     b.HasOne("NexusLS.Core.Models.ContaFinanceira", null)
@@ -2578,6 +2684,11 @@ namespace NexusLS.Core.Migrations
             modelBuilder.Entity("NexusLS.Core.Models.Devolucao", b =>
                 {
                     b.Navigation("Itens");
+                });
+
+            modelBuilder.Entity("NexusLS.Core.Models.LancamentoEmpresa", b =>
+                {
+                    b.Navigation("Anexos");
                 });
 
             modelBuilder.Entity("NexusLS.Core.Models.OrdemProducao", b =>

@@ -30,6 +30,8 @@ public class PdvDbContext : DbContext
     public DbSet<ImportacaoErpItem> ImportacaoErp => Set<ImportacaoErpItem>();
     public DbSet<ImportacaoErpCursor> ImportacaoErpCursores => Set<ImportacaoErpCursor>();
     public DbSet<Lancamento> Lancamentos => Set<Lancamento>();
+    public DbSet<LancamentoEmpresa> LancamentosEmpresa => Set<LancamentoEmpresa>();
+    public DbSet<AnexoLancamento> AnexosLancamento => Set<AnexoLancamento>();
     public DbSet<CategoriaFinanceira> CategoriasFinanceiras => Set<CategoriaFinanceira>();
     public DbSet<AjusteTituloPrazo> AjustesTitulosPrazo => Set<AjusteTituloPrazo>();
     public DbSet<Fornecedor> Fornecedores => Set<Fornecedor>();
@@ -410,6 +412,26 @@ public class PdvDbContext : DbContext
             e.Property(i => i.Tamanho).IsRequired().HasMaxLength(30);
             e.Ignore(i => i.TotalCentavos);
             e.HasOne<Produto>().WithMany().HasForeignKey(i => i.ProdutoId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<LancamentoEmpresa>(e =>
+        {
+            e.Property(l => l.Categoria).IsRequired().HasMaxLength(60);
+            e.Property(l => l.Descricao).IsRequired().HasMaxLength(200);
+            e.Property(l => l.Observacao).HasMaxLength(500);
+            e.Property(l => l.Operador).HasMaxLength(80);
+            e.HasIndex(l => l.Data);
+            e.HasIndex(l => l.Guid).IsUnique();
+            e.HasMany(l => l.Anexos).WithOne().HasForeignKey(a => a.LancamentoEmpresaId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<AnexoLancamento>(e =>
+        {
+            e.Property(a => a.NomeOriginal).IsRequired().HasMaxLength(200);
+            e.Property(a => a.CaminhoRelativo).IsRequired().HasMaxLength(300);
+            e.Property(a => a.TipoMime).IsRequired().HasMaxLength(100);
+            e.Property(a => a.Sha256).IsRequired().HasMaxLength(64);
+            e.HasIndex(a => a.LancamentoEmpresaId);
         });
 
         modelBuilder.Entity<Lancamento>(e =>
