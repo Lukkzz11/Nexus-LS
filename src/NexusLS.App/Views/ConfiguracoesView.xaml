@@ -840,6 +840,16 @@
                         <TextBlock Text="Para restaurar um arquivo de outra pasta, deixe nenhum item selecionado e clique em Restaurar."
                                    Foreground="{DynamicResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,6,0,0" />
 
+                        <TextBlock Text="Backup completo (para formatar o computador)" Style="{StaticResource Rotulo}" Margin="0,20,0,0" />
+                        <TextBlock Text="Gera um único arquivo com vendas, clientes, produtos, anexos, documentos, configurações, certificado e chaves, protegido por senha. Depois de reinstalar o Nexus, use Restaurar para trazer tudo de volta."
+                                   Foreground="{DynamicResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" />
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                            <Button Content="Criar backup completo..." Style="{StaticResource BotaoPrimario}"
+                                    Command="{Binding CriarBackupCompletoCommand}" />
+                            <Button Content="Restaurar de um arquivo..." Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0"
+                                    Command="{Binding RestaurarBackupCompletoCommand}" />
+                        </StackPanel>
+
                         <TextBlock Text="{Binding MensagemBackup}" TextWrapping="Wrap" Margin="0,10,0,0">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock">

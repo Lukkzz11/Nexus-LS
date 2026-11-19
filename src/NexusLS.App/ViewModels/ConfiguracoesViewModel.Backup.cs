@@ -164,4 +164,43 @@ public partial class ConfiguracoesViewModel
         MostrarBackup("Backup restaurado." + (seguranca is null ? "" : $" Cópia dos dados anteriores: {seguranca.Nome}"), false);
         _dialogos.Reiniciar();
     });
+
+    // ------------------------------------------------ backup completo (um arquivo para formatar o PC)
+
+    [RelayCommand]
+    private Task CriarBackupCompletoAsync() => ExecutarBackupAsync(async () =>
+    {
+        if (_dialogos is null) return;
+        var destino = _dialogos.EscolherDestinoPacote(PacoteCompleto.NomeSugerido(DateTime.Now));
+        if (string.IsNullOrWhiteSpace(destino)) return;
+        var senha = _dialogos.PedirSenha("Senha do backup completo",
+            "O arquivo guarda tudo (vendas, clientes, certificado e chaves) e fica protegido por esta senha. " +
+            "Anote em lugar seguro: sem ela não há como abrir o backup.", confirmar: true);
+        if (senha is null) return;
+
+        MostrarBackup("Criando o backup completo...", false);
+        var pacote = new PacoteCompleto(CaminhoBanco.Padrao(), NexusLS.Core.Atualizacao.VersaoPrograma.Atual().ToString() ?? "");
+        await pacote.CriarAsync(destino, senha);
+        MostrarBackup($"Backup completo salvo em: {destino}", false);
+    });
+
+    [RelayCommand]
+    private Task RestaurarBackupCompletoAsync() => ExecutarBackupAsync(async () =>
+    {
+        if (_dialogos is null) return;
+        var arquivo = _dialogos.EscolherArquivoPacote();
+        if (string.IsNullOrWhiteSpace(arquivo)) return;
+        var senha = _dialogos.PedirSenha("Senha do backup completo", "Digite a senha que você definiu ao criar este backup.", confirmar: false);
+        if (senha is null) return;
+
+        var resumo = PacoteCompleto.LerResumo(arquivo, senha);
+        var pergunta = $"Este backup é de {resumo.CriadoEm:dd/MM/yyyy HH:mm} ({resumo.Arquivos} arquivos além do banco).\n\n" +
+                       "Restaurar vai trocar TODOS os dados atuais (vendas, produtos, clientes, anexos, documentos e configurações) pelos dele. " +
+                       "O que existe agora fica guardado numa pasta \"antes-da-restauracao\".\n\nO programa será reiniciado. Continuar?";
+        if (!_dialogos.Confirmar(pergunta)) return;
+
+        var pasta = await new PacoteCompleto(CaminhoBanco.Padrao()).RestaurarAsync(arquivo, senha);
+        MostrarBackup("Backup restaurado." + (pasta is null ? "" : $" Dados anteriores guardados em: {pasta}"), false);
+        _dialogos.Reiniciar();
+    });
 }

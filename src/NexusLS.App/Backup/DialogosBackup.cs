@@ -14,6 +14,11 @@ public interface IDialogosBackup
     string? EscolherArquivoBackup(string? pastaInicial);
     bool Confirmar(string texto);
     void Reiniciar();
+
+    // Backup completo (.nexusbackup). Implementação padrão vazia: os diálogos falsos dos testes não precisam saber disso.
+    string? EscolherDestinoPacote(string nomeSugerido) => null;
+    string? EscolherArquivoPacote() => null;
+    string? PedirSenha(string titulo, string explicacao, bool confirmar) => null;
 }
 
 public class DialogosBackupWpf : IDialogosBackup
@@ -38,6 +43,32 @@ public class DialogosBackupWpf : IDialogosBackup
             janela.InitialDirectory = pastaInicial;
         return janela.ShowDialog() == true ? janela.FileName : null;
     }
+
+    public string? EscolherDestinoPacote(string nomeSugerido)
+    {
+        var janela = new SaveFileDialog
+        {
+            Title = "Salvar o backup completo",
+            FileName = nomeSugerido,
+            Filter = "Backup completo do Nexus (*.nexusbackup)|*.nexusbackup",
+            DefaultExt = ".nexusbackup"
+        };
+        return janela.ShowDialog() == true ? janela.FileName : null;
+    }
+
+    public string? EscolherArquivoPacote()
+    {
+        var janela = new OpenFileDialog
+        {
+            Title = "Abrir o backup completo",
+            Filter = "Backup completo do Nexus (*.nexusbackup)|*.nexusbackup",
+            CheckFileExists = true
+        };
+        return janela.ShowDialog() == true ? janela.FileName : null;
+    }
+
+    public string? PedirSenha(string titulo, string explicacao, bool confirmar) =>
+        JanelaSenha.Pedir(titulo, explicacao, confirmar);
 
     public bool Confirmar(string texto) =>
         MessageBox.Show(texto, "Nexus", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes;
