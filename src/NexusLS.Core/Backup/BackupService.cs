@@ -1,3 +1,4 @@
+using System.IO.Compression;
 using Microsoft.Data.Sqlite;
 using NexusLS.Core.Services;
 
@@ -11,8 +12,20 @@ namespace NexusLS.Core.Backup;
 public class BackupService
 {
     private readonly string _caminhoBanco;
+    private readonly string _pastaAnexos;
 
-    public BackupService(string caminhoBanco) => _caminhoBanco = caminhoBanco;
+    /// <summary>Sufixo do arquivo com os anexos de um backup: "nexus_..._manual.db" ganha "nexus_..._manual.db.anexos.zip".</summary>
+    public const string SufixoAnexos = ".anexos.zip";
+
+    /// <param name="pastaAnexos">Pasta dos anexos dos lançamentos. Nulo = a pasta "anexos" ao lado do banco.</param>
+    public BackupService(string caminhoBanco, string? pastaAnexos = null)
+    {
+        _caminhoBanco = caminhoBanco;
+        _pastaAnexos = pastaAnexos ?? AnexoService.PastaPadrao(caminhoBanco);
+    }
+
+    /// <summary>O arquivo (zip) dos anexos que acompanha um backup do banco.</summary>
+    public static string CaminhoAnexosDoBackup(string arquivoBackup) => arquivoBackup + SufixoAnexos;
 
     /// <summary>
     /// Faz um backup na pasta. Passo a passo: copia para um arquivo .tmp, confere a integridade da CÓPIA
@@ -31,17 +44,21 @@ public class BackupService
 
         var destino = ProximoNomeLivre(pasta, momento, motivo);
         var tmp = destino + ".tmp";
+        var zipTmp = CaminhoAnexosDoBackup(destino) + ".tmp";
         try
         {
             Directory.CreateDirectory(pasta);
             CopiarComApiDoSqlite(_caminhoBanco, tmp);
             var (ok, detalhe) = Conferir(tmp);
             if (!ok) throw new RegraDeNegocioException("A cópia não passou na conferência: " + detalhe);
+            CompactarAnexos(zipTmp);
             File.Move(tmp, destino);
+            if (File.Exists(zipTmp)) File.Move(zipTmp, CaminhoAnexosDoBackup(destino), overwrite: true);
         }
         catch (Exception ex)
         {
             ApagarSeExistir(tmp);
+            ApagarSeExistir(zipTmp);
             if (ex is RegraDeNegocioException) throw;
             throw new RegraDeNegocioException("Não foi possível fazer o backup: " + ex.Message);
         }
@@ -66,7 +83,11 @@ public class BackupService
     public int AplicarRetencao(string pasta, int manter)
     {
         var apagar = RegrasBackup.SelecionarParaApagar(Listar(pasta), manter);
-        foreach (var b in apagar) ApagarSeExistir(b.Caminho);
+        foreach (var b in apagar)
+        {
+            ApagarSeExistir(b.Caminho);
+            ApagarSeExistir(CaminhoAnexosDoBackup(b.Caminho));
+        }
         return apagar.Count;
     }
 
@@ -123,10 +144,14 @@ public class BackupService
 
         var novo = _caminhoBanco + ".restaurando";
         var antigo = _caminhoBanco + ".antes";
+        var zipAnexos = CaminhoAnexosDoBackup(arquivoBackup);
+        var temAnexos = File.Exists(zipAnexos);
+        var anexosNovos = _pastaAnexos.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + ".restaurando";
         try
         {
             SqliteConnection.ClearAllPools(); // solta o arquivo, caso o programa ainda tenha conexões abertas
             File.Copy(arquivoBackup, novo, overwrite: true);
+            if (temAnexos) ExtrairAnexos(zipAnexos, anexosNovos); // antes de trocar o banco: se falhar, nada mudou
 
             var havia = File.Exists(_caminhoBanco);
             // Se o banco estiver em uso, este Move falha e NADA foi alterado.
@@ -148,9 +173,76 @@ public class BackupService
         catch (Exception ex)
         {
             ApagarSeExistir(novo);
+            ApagarPastaSeExistir(anexosNovos);
             throw new RegraDeNegocioException("Não foi possível restaurar (seu banco atual foi mantido): " + ex.Message);
         }
+
+        // O banco já foi trocado. Backups antigos (sem zip de anexos) deixam a pasta de anexos como está.
+        if (temAnexos)
+        {
+            var antes = anexosNovos[..^".restaurando".Length] + ".antes";
+            try
+            {
+                ApagarPastaSeExistir(antes);
+                var havia = Directory.Exists(_pastaAnexos);
+                if (havia) Directory.Move(_pastaAnexos, antes);
+                try { Directory.Move(anexosNovos, _pastaAnexos); }
+                catch
+                {
+                    if (havia && !Directory.Exists(_pastaAnexos)) Directory.Move(antes, _pastaAnexos);
+                    throw;
+                }
+                ApagarPastaSeExistir(antes);
+            }
+            catch (Exception ex)
+            {
+                ApagarPastaSeExistir(anexosNovos);
+                throw new RegraDeNegocioException("O banco foi restaurado, mas não foi possível restaurar a pasta de anexos (ela foi mantida como estava): " + ex.Message);
+            }
+        }
         return seguranca;
+    }
+
+    /// <summary>Zip com a pasta de anexos (caminhos relativos, com "/"). Não cria nada se a pasta não existe ou está vazia.</summary>
+    private void CompactarAnexos(string zip)
+    {
+        if (!Directory.Exists(_pastaAnexos)) return;
+        var raiz = Path.GetFullPath(_pastaAnexos).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+        var arquivos = Directory.EnumerateFiles(raiz, "*", SearchOption.AllDirectories)
+            .Where(f => !f.EndsWith(".tmp", StringComparison.OrdinalIgnoreCase)).ToList();
+        if (arquivos.Count == 0) return;
+        ApagarSeExistir(zip);
+        using var fs = new FileStream(zip, FileMode.Create, FileAccess.Write, FileShare.None);
+        using var arq = new ZipArchive(fs, ZipArchiveMode.Create);
+        foreach (var f in arquivos)
+        {
+            var nome = Path.GetRelativePath(raiz, f).Replace(Path.DirectorySeparatorChar, '/');
+            arq.CreateEntryFromFile(f, nome, CompressionLevel.Fastest);
+        }
+    }
+
+    /// <summary>Extrai o zip na pasta indicada (recriada). Recusa entrada que escape da pasta ("zip slip").</summary>
+    private static void ExtrairAnexos(string zip, string destino)
+    {
+        ApagarPastaSeExistir(destino);
+        Directory.CreateDirectory(destino);
+        var raiz = Path.GetFullPath(destino).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+        using var arq = ZipFile.OpenRead(zip);
+        foreach (var e in arq.Entries)
+        {
+            if (e.FullName.EndsWith('/') || e.Name.Length == 0) continue;
+            var alvo = Path.GetFullPath(Path.Combine(raiz, e.FullName));
+            if (!alvo.StartsWith(raiz, StringComparison.OrdinalIgnoreCase))
+                throw new RegraDeNegocioException("O arquivo de anexos do backup tem um caminho inválido.");
+            Directory.CreateDirectory(Path.GetDirectoryName(alvo)!);
+            e.ExtractToFile(alvo, overwrite: true);
+        }
+    }
+
+    private static void ApagarPastaSeExistir(string pasta)
+    {
+        try { if (Directory.Exists(pasta)) Directory.Delete(pasta, recursive: true); }
+        catch (IOException) { /* pasta presa: não derruba a operação */ }
     }
 
     private static void CopiarComApiDoSqlite(string origem, string destino)
