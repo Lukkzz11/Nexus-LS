@@ -129,7 +129,7 @@ public class ProdutoService
 
     /// <summary>
     /// Código lido que é "código da referência + número do tamanho" (55551 = ref 5555, tamanho 1). Nulo se o código é exatamente
-    /// o de um produto (ou uma referência) ou se não casa com nenhum tamanho. Quando mais de um casa, vale o código-base mais longo.
+    /// o de um produto (ou uma referência) ou se não casa com nenhum tamanho. Quando mais de um casa, vale o código-base mais longo (ex.: ref. 14351 tamanho 2 ganha de ref. 1435 tamanho 12 para "143512"); o número do tamanho não começa com zero. Código idêntico ao de um produto/referência ativo sempre vence (ref. 10192 ganha de ref. 1019 tamanho 2). EAN-13 nunca leva sufixo.
     /// </summary>
     public async Task<(Produto Produto, ProdutoTamanho Tamanho)?> ObterPorCodigoDeTamanhoAsync(string codigoLido)
     {
@@ -163,6 +163,7 @@ public class ProdutoService
         {
             var produto = tentativa.Produto;
             var resto = codigo[tentativa.Base.Length..];
+            if (resto[0] == '0') continue; // o número do tamanho nunca começa com zero (101902 não é a ref. 1019 tamanho 2)
             if (!int.TryParse(resto, NumberStyles.None, CultureInfo.InvariantCulture, out var ordem) || ordem < 1) continue;
             var tamanho = await db.TamanhosProduto.AsNoTracking().FirstOrDefaultAsync(t => t.ProdutoId == produto.Id && t.Ordem == ordem);
             if (tamanho is null) continue;

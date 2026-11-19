@@ -68,8 +68,32 @@ public static class MontadorCupom
 
         // Itens: nome (e tamanho) numa linha, "qtd x unitário ........ total" na seguinte
         if (modelo != ModeloCupom.Compacto) linhas.Add("ITENS DA VENDA");
-        foreach (var item in venda.Itens)
+        foreach (var unidade in AgruparPorProduto(venda.Itens))
         {
+            // Produto com 2 ou mais tamanhos: uma entrada só, com cada tamanho e a quantidade (P x1, M x1).
+            if (unidade.Count > 1)
+            {
+                var totalGrupo = Reais(unidade.Sum(i => i.TotalCentavos));
+                var qtdGrupo = unidade.Sum(i => i.Quantidade);
+                var grade = ResumoTamanhos.Texto(unidade.Select(i => (i.Tamanho, i.Quantidade)), " x");
+                var nomeGrupo = unidade[0].NomeProduto;
+                if (modelo == ModeloCupom.Compacto)
+                {
+                    var textoGrupo = $"{qtdGrupo}x {nomeGrupo} ({grade})";
+                    if (textoGrupo.Length + totalGrupo.Length + 1 <= largura) linhas.Add(DuasPontas(textoGrupo, totalGrupo, largura));
+                    else { linhas.AddRange(Quebrar(textoGrupo, largura)); linhas.Add(DuasPontas("", totalGrupo, largura)); }
+                    continue;
+                }
+                linhas.AddRange(Quebrar(nomeGrupo, largura));
+                var referenciaGrupo = unidade.Select(i => i.Referencia).FirstOrDefault(r => !string.IsNullOrWhiteSpace(r));
+                if ((loja.CupomMostrarReferencia || modelo == ModeloCupom.Comprovante) && referenciaGrupo is not null)
+                    linhas.AddRange(Quebrar($"Ref: {referenciaGrupo}", largura));
+                linhas.AddRange(Quebrar($"Tam: {grade}", largura));
+                linhas.Add(DuasPontas($"{qtdGrupo} pç", totalGrupo, largura));
+                continue;
+            }
+
+            var item = unidade[0];
             var nome = item.Tamanho == Tamanhos.SemTamanho ? item.NomeProduto : $"{item.NomeProduto} ({item.Tamanho})";
             var total = Reais(item.TotalCentavos);
             if (modelo == ModeloCupom.Compacto)
@@ -309,6 +333,27 @@ public static class MontadorCupom
 
     /// <summary>Divide um texto digitado em várias linhas (Enter) nos seus parágrafos.</summary>
     private static string[] Paragrafos(string texto) => texto.ReplaceLineEndings(Environment.NewLine).Split(Environment.NewLine);
+
+    /// <summary>
+    /// Junta os itens do mesmo produto que têm tamanho (uma linha por tamanho no banco) para o cupom mostrar
+    /// "P x1, M x1" numa entrada só. A ordem é a da primeira aparição; itens sem tamanho seguem um por um.
+    /// </summary>
+    internal static List<List<ItemVenda>> AgruparPorProduto(IEnumerable<ItemVenda> itens)
+    {
+        var resultado = new List<List<ItemVenda>>();
+        var porProduto = new Dictionary<(int, string), List<ItemVenda>>();
+        foreach (var item in itens)
+        {
+            if (item.Tamanho == Tamanhos.SemTamanho) { resultado.Add(new List<ItemVenda> { item }); continue; }
+            if (!porProduto.TryGetValue((item.ProdutoId, item.NomeProduto), out var grupo))
+            {
+                porProduto[(item.ProdutoId, item.NomeProduto)] = grupo = new List<ItemVenda>();
+                resultado.Add(grupo);
+            }
+            grupo.Add(item);
+        }
+        return resultado;
+    }
 
     private static string Reais(long centavos) => Dinheiro.Formatar(centavos).Replace(' ', ' ');
 

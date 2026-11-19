@@ -12,6 +12,9 @@ public class LinhaCarrinho
     public string Nome { get; init; } = string.Empty;
     public string Tamanho { get; init; } = Tamanhos.SemTamanho;
 
+    /// <summary>Referência (código curto) do produto, só para mostrar na tela.</summary>
+    public string? Referencia { get; init; }
+
     public long PrecoVarejoCentavos { get; init; }
 
     /// <summary>Zero = produto sem preço de atacado (vale o de varejo).</summary>
@@ -90,6 +93,7 @@ public class Carrinho
         {
             ProdutoId = produto.Id,
             Nome = produto.Nome,
+            Referencia = string.IsNullOrWhiteSpace(produto.Referencia) ? null : produto.Referencia.Trim(),
             Tamanho = tamanho.Tamanho,
             PrecoVarejoCentavos = produto.PrecoVendaCentavos,
             PrecoAtacadoCentavos = produto.PrecoAtacadoCentavos,
@@ -165,6 +169,24 @@ public class Carrinho
         foreach (var linha in _linhas) linha.Tabela = tabela;
     }
 
+    /// <summary>
+    /// Apresentação agrupada: uma entrada por produto, com a grade dos tamanhos e a quantidade de cada um
+    /// (1435 — P×1, M×1). Só agrupa para mostrar; as linhas (e a venda gravada) continuam uma por tamanho.
+    /// </summary>
+    public IReadOnlyList<GrupoCarrinho> Grupos()
+    {
+        var grupos = new List<GrupoCarrinho>();
+        foreach (var porProduto in _linhas.GroupBy(l => l.ProdutoId))
+        {
+            var primeira = porProduto.First();
+            var tamanhos = porProduto.GroupBy(l => l.Tamanho)
+                .Select(g => new TamanhoDoGrupo(g.Key, g.Sum(l => l.Quantidade), g.Sum(l => l.TotalCentavos)))
+                .ToList();
+            grupos.Add(new GrupoCarrinho(primeira.ProdutoId, primeira.Nome, primeira.Referencia, tamanhos));
+        }
+        return grupos;
+    }
+
     /// <summary>Converte o carrinho nas linhas que o VendaService espera.</summary>
     public List<ItemCarrinho> ParaPedido() => _linhas
         .Select(l => new ItemCarrinho(
@@ -195,4 +217,25 @@ public class Carrinho
         var onde = tamanho == Tamanhos.SemTamanho ? "" : $" no tamanho {tamanho}";
         return $"Estoque insuficiente: \"{nome}\" tem {estoque} unidade(s){onde} (no carrinho: {jaNoCarrinho}).";
     }
+}
+
+/// <summary>Um tamanho dentro de um produto do carrinho/da venda: quantas unidades e quanto somam.</summary>
+public sealed record TamanhoDoGrupo(string Tamanho, int Quantidade, long TotalCentavos);
+
+/// <summary>Um produto com todos os tamanhos escolhidos (apresentação agrupada do carrinho).</summary>
+public sealed record GrupoCarrinho(int ProdutoId, string Nome, string? Referencia, IReadOnlyList<TamanhoDoGrupo> Tamanhos)
+{
+    public int Quantidade => Tamanhos.Sum(t => t.Quantidade);
+    public long TotalCentavos => Tamanhos.Sum(t => t.TotalCentavos);
+    public string Grade => ResumoTamanhos.Texto(Tamanhos.Select(t => (t.Tamanho, t.Quantidade)));
+}
+
+/// <summary>Texto da grade de um produto: "P×1, M×2". Sem tamanho não gera texto.</summary>
+public static class ResumoTamanhos
+{
+    public static string Texto(IEnumerable<(string Tamanho, int Quantidade)> tamanhos, string vezes = "×") =>
+        string.Join(", ", tamanhos
+            .Where(t => t.Tamanho != Tamanhos.SemTamanho)
+            .GroupBy(t => t.Tamanho)
+            .Select(g => $"{g.Key}{vezes}{g.Sum(t => t.Quantidade)}"));
 }

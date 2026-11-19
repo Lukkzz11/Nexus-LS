@@ -252,6 +252,11 @@
                             </ListBox.ItemContainerStyle>
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
+                                    <StackPanel>
+                                    <!-- Grade do produto: nome, referência e cada tamanho com a quantidade (uma vez por produto). -->
+                                    <TextBlock Text="{Binding CabecalhoGrupo, Mode=OneWay}" FontWeight="SemiBold" FontSize="20"
+                                               TextTrimming="CharacterEllipsis" Margin="0,2,0,4"
+                                               Visibility="{Binding MostrarCabecalho, Converter={StaticResource BoolVis}}" />
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*" />
@@ -261,9 +266,7 @@
                                             <ColumnDefinition Width="44" />
                                         </Grid.ColumnDefinitions>
                                         <TextBlock VerticalAlignment="Center" TextTrimming="CharacterEllipsis">
-                                            <Run Text="{Binding Nome, Mode=OneWay}" />
-                                            <Run Text="{Binding TamanhoTexto, Mode=OneWay}" FontSize="15"
-                                                 Foreground="{StaticResource CorTextoSuave}" />
+                                            <Run Text="{Binding RotuloLinha, Mode=OneWay}" />
                                         </TextBlock>
 
                                         <!-- Preço de uma unidade: editável. Enter confirma; vazio volta ao preço da tabela. -->
@@ -311,6 +314,7 @@
                                                 Command="{Binding DataContext.RemoverCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
                                                 CommandParameter="{Binding}" />
                                     </Grid>
+                                    </StackPanel>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>

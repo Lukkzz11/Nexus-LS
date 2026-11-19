@@ -276,7 +276,7 @@ public partial class EtiquetasViewModel : ViewModelBase
         else
         {
             Fila.Add(new LinhaEtiquetaViewModel(produto.Id, produto.Nome, tamanho, produto.PrecoVendaCentavos,
-                produto.PrecoAtacadoCentavos, _codigosPorTamanho.GetValueOrDefault(tamanho) ?? produto.CodigoBarras, quantidade, AtualizarResumo));
+                produto.PrecoAtacadoCentavos, _codigosPorTamanho.GetValueOrDefault(tamanho) ?? CodigoBarrasTamanho.BaseDoCodigo(produto), quantidade, AtualizarResumo));
         }
         Mensagem = "";
         QuantidadeTexto = "1";

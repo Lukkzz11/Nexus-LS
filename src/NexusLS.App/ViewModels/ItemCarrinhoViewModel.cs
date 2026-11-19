@@ -30,6 +30,28 @@ public class ItemCarrinhoViewModel : ObservableObject
 
     public string Nome => Linha.Nome;
     public string TamanhoTexto => Linha.Tamanho == Tamanhos.SemTamanho ? "" : $"  ·  tam. {Linha.Tamanho}";
+    /// <summary>Produto com tamanho: a linha mostra só "tam. P" e o nome fica no cabeçalho do grupo.</summary>
+    public bool ModoGrade => Linha.Tamanho != Tamanhos.SemTamanho;
+    public string RotuloLinha => ModoGrade ? $"      tam. {Linha.Tamanho}" : Linha.Nome;
+
+    private bool _primeiroDoGrupo;
+    private string _resumoGrupo = "";
+    private long _totalGrupo;
+
+    /// <summary>Cabeçalho "Camiseta · ref. 1435 — P×1, M×1" aparece só na primeira linha de cada produto.</summary>
+    public bool MostrarCabecalho => ModoGrade && _primeiroDoGrupo;
+    public string CabecalhoGrupo => string.IsNullOrEmpty(Linha.Referencia)
+        ? $"{Linha.Nome}  —  {_resumoGrupo}"
+        : $"{Linha.Nome}  ·  ref. {Linha.Referencia}  —  {_resumoGrupo}";
+    public long TotalGrupoCentavos => _totalGrupo;
+
+    public void DefinirGrupo(bool primeiro, string resumo, long total)
+    {
+        _primeiroDoGrupo = primeiro;
+        _resumoGrupo = resumo;
+        _totalGrupo = total;
+    }
+
     public bool PrecoEditado => Linha.PrecoEditado;
     public long TotalCentavos => Linha.TotalCentavos;
 
