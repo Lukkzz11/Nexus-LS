@@ -30,6 +30,7 @@ public sealed class ContainerDeServicos
     public TituloPrazoService TitulosPrazo { get; }
     public ConfiguracaoService Configuracao { get; }
     public InicioService Inicio { get; }
+    public NexusLS.Core.Consultor.ConsultorNexus Consultor { get; }
     public RelatorioService Relatorios { get; }
     public RelatorioCaixaPeriodoService RelatorioCaixa { get; }
     public DemonstrativoService Demonstrativo { get; }
@@ -114,6 +115,7 @@ public sealed class ContainerDeServicos
         TitulosPrazo = new(fabrica);
         Configuracao = new(fabrica);
         Inicio = new(fabrica);
+        Consultor = new(fabrica, new NexusLS.Core.Consultor.DispensasConsultorStore(NexusLS.Core.Consultor.DispensasConsultorStore.CaminhoPadrao()));
         Relatorios = new(fabrica);
         RelatorioCaixa = new(fabrica);
         Demonstrativo = new(fabrica);

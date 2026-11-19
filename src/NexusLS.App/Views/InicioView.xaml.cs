@@ -18,13 +18,19 @@ public partial class InicioView : UserControl
     private const double LarguraAtalhoLargo = 200;
     private const double LarguraAtalhoCompacto = 112;
 
+    /// <summary>Largura mínima de um cartão do Consultor.</summary>
+    private const double LarguraCartaoConsultor = 300;
+
     private UniformGrid? _gradeAtalhos;
+    private UniformGrid? _gradeConsultor;
 
     public InicioView()
     {
         InitializeComponent();
         Rolagem.SizeChanged += (_, _) => Arranjar();
+        PainelConsultor.SizeChanged += (_, _) => Arranjar();
         Atalhos.ItemContainerGenerator.ItemsChanged += (_, _) => AjustarAtalhos();
+        Cartoes.ItemContainerGenerator.ItemsChanged += (_, _) => AjustarConsultor();
     }
 
     private void GradeAtalhos_Loaded(object sender, RoutedEventArgs e)
@@ -33,11 +39,32 @@ public partial class InicioView : UserControl
         AjustarAtalhos();
     }
 
+    private void GradeConsultor_Loaded(object sender, RoutedEventArgs e)
+    {
+        _gradeConsultor = (UniformGrid)sender;
+        AjustarConsultor();
+    }
+
     private void Arranjar()
     {
         if (Rolagem.ActualHeight <= 0) return;
-        Conteudo.Height = Math.Max(Rolagem.ActualHeight, AlturaMinima);
+        // Os cartões do Consultor ocupam altura própria; a área principal continua com a altura de antes.
+        var extra = PainelConsultor.Visibility == Visibility.Visible ? PainelConsultor.ActualHeight : 0;
+        Conteudo.Height = Math.Max(Rolagem.ActualHeight, AlturaMinima + extra);
+        AjustarConsultor();
         AjustarAtalhos();
+    }
+
+    /// <summary>Tantas colunas de cartões quantas couberem (no máximo uma por cartão).</summary>
+    private void AjustarConsultor()
+    {
+        var largura = PainelConsultor.ActualWidth;
+        if (_gradeConsultor is null || largura <= 0) return;
+        var total = Math.Max(1, Cartoes.Items.Count);
+        var cabem = Math.Max(1, (int)(largura / LarguraCartaoConsultor));
+        var linhas = (int)Math.Ceiling(total / (double)Math.Min(cabem, total));
+        var colunas = (int)Math.Ceiling(total / (double)linhas);
+        if (_gradeConsultor.Columns != colunas) _gradeConsultor.Columns = colunas;
     }
 
     /// <summary>Uma linha só sempre que couber; se não couber, linhas com o mesmo número de atalhos.</summary>
