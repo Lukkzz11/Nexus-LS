@@ -31,6 +31,63 @@ public partial class LinhaTrocaViewModel : ObservableObject
     public string ValorTexto => ValorCentavos > 0 ? Dinheiro.Formatar(ValorCentavos) : "";
 }
 
+/// <summary>Uma venda na lista da tela Trocas, com os textos prontos.</summary>
+public class LinhaVendaViewModel
+{
+    public LinhaVendaViewModel(ResumoVendaLista v) => Venda = v;
+
+    public ResumoVendaLista Venda { get; }
+    public int VendaId => Venda.VendaId;
+    public string DataTexto => Venda.DataHora.ToString("dd/MM/yy HH:mm");
+    public string TotalTexto => Dinheiro.Formatar(Venda.TotalCentavos);
+    public string FormaTexto => SelecaoPagamento.Nome(Venda.Forma);
+    public string ClienteTexto => Venda.Cliente ?? "";
+    public string SituacaoTexto => Venda.Cancelada ? "Cancelada" : Venda.TemTroca ? "Com troca" : "";
+}
+
+/// <summary>A venda aberta na janela de detalhe, com os textos prontos.</summary>
+public class DetalheVendaViewModel
+{
+    public DetalheVendaViewModel(DetalheVenda d) => Detalhe = d;
+
+    public DetalheVenda Detalhe { get; }
+    public string Titulo => $"Venda #{Detalhe.VendaId}";
+    public string DataTexto => Detalhe.DataHora.ToString("dd/MM/yyyy HH:mm");
+    public string PagamentoTexto
+    {
+        get
+        {
+            var t = SelecaoPagamento.Nome(Detalhe.Forma);
+            if (Detalhe.Forma == FormaPagamento.CartaoCredito && Detalhe.Parcelas > 1) t += $" em {Detalhe.Parcelas}x";
+            if (Detalhe.ValeTrocaCentavos > 0 && Detalhe.Forma != FormaPagamento.ValeTroca) t += $" + vale-troca de {Dinheiro.Formatar(Detalhe.ValeTrocaCentavos)}";
+            return t;
+        }
+    }
+    public string ClienteTexto => Detalhe.Cliente ?? "Consumidor final";
+    public string OperadorTexto => string.IsNullOrWhiteSpace(Detalhe.Operador) ? "—" : Detalhe.Operador!;
+    public string SubtotalTexto => Dinheiro.Formatar(Detalhe.SubtotalCentavos);
+    public string DescontoTexto => Dinheiro.Formatar(Detalhe.DescontoCentavos);
+    public string AcrescimoTexto => Dinheiro.Formatar(Detalhe.AcrescimoCentavos);
+    public string TotalTexto => Dinheiro.Formatar(Detalhe.TotalCentavos);
+    public bool TemDesconto => Detalhe.DescontoCentavos > 0;
+    public bool TemAcrescimo => Detalhe.AcrescimoCentavos > 0;
+    public bool PodeTrocar => Detalhe.PodeTrocar;
+    public bool NaoPodeTrocar => !Detalhe.PodeTrocar;
+    public string AvisoTexto => Detalhe.Cancelada
+        ? $"Venda cancelada{(string.IsNullOrWhiteSpace(Detalhe.MotivoCancelamento) ? "" : ": " + Detalhe.MotivoCancelamento)}. Não há o que trocar."
+        : Detalhe.MotivoNaoPodeTrocar ?? "";
+    public bool TemTrocas => Detalhe.Trocas.Count > 0;
+    public IReadOnlyList<LinhaItemDetalhe> Itens => Detalhe.Itens.Select(i => new LinhaItemDetalhe(i.NomeProduto,
+        i.Tamanho == Tamanhos.SemTamanho ? "—" : i.Tamanho, i.Referencia ?? "", i.Quantidade, Dinheiro.Formatar(i.PrecoUnitarioCentavos),
+        Dinheiro.Formatar(i.TotalCentavos), i.Devolvidos > 0 ? i.Devolvidos.ToString() : "")).ToList();
+    public IReadOnlyList<ResumoDevolucao> Trocas => Detalhe.Trocas;
+}
+
+public record LinhaItemDetalhe(string Produto, string Tamanho, string Referencia, int Quantidade, string PrecoTexto, string TotalTexto, string DevolvidosTexto);
+
+/// <summary>Uma escolha do filtro de forma de pagamento (<c>Forma</c> nula = todas).</summary>
+public record OpcaoFormaFiltro(FormaPagamento? Forma, string Texto);
+
 /// <summary>
 /// Tela Trocas: acha a venda pelo número, marca as peças que voltam, gera e imprime o vale-troca. Mostra as trocas
 /// recentes (com cancelamento, para quem pode cancelar vendas) e os vales com o saldo de cada um.
@@ -44,10 +101,112 @@ public partial class TrocasViewModel : ViewModelBase
     {
         _trocas = trocas;
         _cupons = cupons;
-        Carregamento = AtualizarListasAsync();
+        _filtroForma = FormasFiltro[0];
+        Carregamento = CarregamentoInicialAsync();
     }
 
     public Task Carregamento { get; }
+
+    private async Task CarregamentoInicialAsync()
+    {
+        await AtualizarListasAsync();
+        await ExecutarAsync(() => CarregarPaginaAsync(reiniciar: true));
+    }
+
+    /// <summary>A tela mostra a venda por inteiro e devolve verdadeiro se o operador quer trocar. Sem tela, abre direto a troca.</summary>
+    public Func<DetalheVenda, bool>? MostrarDetalhe { get; set; }
+
+    // ---------- lista de vendas (com filtros) ----------
+
+    private const int TamanhoPagina = 50;
+    private FiltroVendasTroca _filtroAplicado = new();
+    private int _buscaAtual;
+
+    public ObservableCollection<LinhaVendaViewModel> Vendas { get; } = new();
+
+    public IReadOnlyList<OpcaoFormaFiltro> FormasFiltro { get; } =
+        new[] { new OpcaoFormaFiltro(null, "Todas as formas") }
+            .Concat(SelecaoPagamento.Formas.Append(FormaPagamento.ValeTroca).Select(f => new OpcaoFormaFiltro(f, SelecaoPagamento.Nome(f))))
+            .ToList();
+
+    [ObservableProperty] private DateTime? _filtroDe;
+    [ObservableProperty] private DateTime? _filtroAte;
+    [ObservableProperty] private string _filtroCupom = "";
+    [ObservableProperty] private string _filtroCliente = "";
+    [ObservableProperty] private string _filtroProduto = "";
+    [ObservableProperty] private OpcaoFormaFiltro? _filtroForma;
+    [ObservableProperty] private LinhaVendaViewModel? _vendaSelecionada;
+    [ObservableProperty] private string _resumoVendas = "";
+    [ObservableProperty] private bool _temMaisVendas;
+    [ObservableProperty] private bool _carregandoVendas;
+
+    [RelayCommand]
+    private Task PesquisarVendasAsync() => ExecutarAsync(async () =>
+    {
+        int? cupom = null;
+        var texto = FiltroCupom.Trim().TrimStart('#');
+        if (texto.Length > 0)
+        {
+            if (!int.TryParse(texto, out var n) || n <= 0) { MostrarErro("O número do cupom tem só dígitos. Ex.: 125"); return; }
+            cupom = n;
+        }
+        if (FiltroDe is DateTime de && FiltroAte is DateTime ate && de.Date > ate.Date)
+        {
+            MostrarErro("A data inicial é depois da final.");
+            return;
+        }
+        _filtroAplicado = new FiltroVendasTroca(FiltroDe, FiltroAte, cupom, FiltroCliente, FiltroForma?.Forma, FiltroProduto);
+        Mensagem = "";
+        await CarregarPaginaAsync(reiniciar: true);
+    });
+
+    [RelayCommand]
+    private Task MaisVendasAsync() => ExecutarAsync(() => CarregarPaginaAsync(reiniciar: false));
+
+    [RelayCommand]
+    private Task LimparFiltrosAsync()
+    {
+        FiltroDe = null; FiltroAte = null; FiltroCupom = ""; FiltroCliente = ""; FiltroProduto = ""; FiltroForma = FormasFiltro[0];
+        return PesquisarVendasAsync();
+    }
+
+    private async Task CarregarPaginaAsync(bool reiniciar)
+    {
+        var minha = ++_buscaAtual;
+        CarregandoVendas = true;
+        try
+        {
+            int? antes = reiniciar || Vendas.Count == 0 ? null : Vendas[^1].VendaId;
+            var pagina = await _trocas.ListarVendasAsync(_filtroAplicado, antes, TamanhoPagina);
+            if (minha != _buscaAtual) return; // chegou uma busca mais nova: esta resposta já não vale
+            if (reiniciar) Vendas.Clear();
+            foreach (var v in pagina.Vendas) Vendas.Add(new LinhaVendaViewModel(v));
+            TemMaisVendas = pagina.TemMais;
+            ResumoVendas = Vendas.Count == 0 ? "Nenhuma venda encontrada com esses filtros."
+                : $"{Vendas.Count} venda(s) mostrada(s)" + (pagina.TemMais ? " · há mais antigas" : "");
+        }
+        finally { if (minha == _buscaAtual) CarregandoVendas = false; }
+    }
+
+    /// <summary>Abre a venda escolhida na lista (duplo clique ou botão "Abrir"); dali o operador inicia a troca.</summary>
+    [RelayCommand]
+    private Task AbrirVendaAsync() => ExecutarAsync(async () =>
+    {
+        if (VendaSelecionada is not { } linha) { MostrarErro("Escolha uma venda na lista."); return; }
+        var detalhe = await _trocas.DetalharVendaAsync(linha.VendaId);
+        var trocar = MostrarDetalhe?.Invoke(detalhe) ?? detalhe.PodeTrocar;
+        if (!trocar) return;
+        await IniciarTrocaAsync(linha.VendaId);
+    });
+
+    /// <summary>Carrega a venda na área "Nova troca" (o fluxo de troca de sempre).</summary>
+    private async Task IniciarTrocaAsync(int vendaId)
+    {
+        NumeroVendaTexto = vendaId.ToString();
+        await CarregarVendaAsync(vendaId);
+        Mensagem = "";
+        if (Linhas.All(l => !l.PodeVoltar)) MostrarErro("Todas as peças desta venda já voltaram em trocas anteriores.");
+    }
 
     /// <summary>A tela pede o motivo (cancelar troca). Nulo = voltou.</summary>
     public Func<string, string?>? PedirMotivo { get; set; }
@@ -63,9 +222,11 @@ public partial class TrocasViewModel : ViewModelBase
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(TemVenda))]
+    [NotifyPropertyChangedFor(nameof(SemVenda))]
     private VendaParaTroca? _venda;
 
     public bool TemVenda => Venda is not null;
+    public bool SemVenda => Venda is null;
     public bool TemUltimoVale => UltimoValeCodigo is not null;
     partial void OnUltimoValeCodigoChanged(string? value) => OnPropertyChanged(nameof(TemUltimoVale));
 

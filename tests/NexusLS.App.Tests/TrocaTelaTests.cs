@@ -56,8 +56,12 @@ public sealed class TrocaTelaTests : IDisposable
         var vm = new TrocasViewModel(_trocas, _cupons);
         await vm.Carregamento;
 
-        vm.NumeroVendaTexto = "#" + venda.Id;
-        await vm.BuscarVendaCommand.ExecuteAsync(null);
+        Assert.Equal(venda.Id, Assert.Single(vm.Vendas).VendaId); // a lista já nasce com as vendas feitas
+        vm.VendaSelecionada = vm.Vendas[0];
+        DetalheVenda? visto = null;
+        vm.MostrarDetalhe = d => { visto = d; return true; }; // o operador abre a venda e clica em "Fazer a troca"
+        await vm.AbrirVendaCommand.ExecuteAsync(null);
+        Assert.Equal(venda.Id, visto!.VendaId);
         var linha = Assert.Single(vm.Linhas);
         linha.QuantidadeTexto = "1";
         Assert.Contains("R$ 20,00", vm.TotalTrocaTexto.Replace(' ', ' '));
@@ -90,12 +94,48 @@ public sealed class TrocaTelaTests : IDisposable
         await _trocas.DevolverAsync(venda.Id, new[] { new ItemADevolver(venda.Itens.Single().Id, 1) }, "Cor errada");
         var vm = new TrocasViewModel(_trocas, _cupons);
         await vm.Carregamento;
-        vm.NumeroVendaTexto = venda.Id.ToString();
-        await vm.BuscarVendaCommand.ExecuteAsync(null);
+        vm.VendaSelecionada = vm.Vendas[0];
+        vm.MostrarDetalhe = _ => true;
+        await vm.AbrirVendaCommand.ExecuteAsync(null);
         vm.Linhas.Single().QuantidadeTexto = "1";
         vm.Motivo = "Tamanho errado";
         Capturador.Desenhar(() => new NexusLS.App.Views.TrocasView { DataContext = vm }, Path.Combine(saida, "trocas.png"), 1400, 820);
         Assert.True(File.Exists(Path.Combine(saida, "trocas.png")));
+
+        var detalhe = await _trocas.DetalharVendaAsync(venda.Id);
+        Capturador.DesenharJanela(() => new NexusLS.App.Views.VendaDetalheWindow(detalhe), Path.Combine(saida, "venda-detalhe.png"), 860, 640);
+    }
+
+    [Fact]
+    public async Task Filtros_da_lista_e_venda_cancelada_nao_inicia_troca()
+    {
+        var venda = await VendaDeDoisBonesAsync();
+        var outra = await _vendas.FinalizarAsync(new PedidoVenda(new[] { new ItemCarrinho(_boneId, 1) }, 0, FormaPagamento.Dinheiro, ValorRecebidoCentavos: 5000));
+        await _vendas.CancelarAsync(outra.Id, "Desistiu");
+        var vm = new TrocasViewModel(_trocas, _cupons);
+        await vm.Carregamento;
+        Assert.Equal(new[] { outra.Id, venda.Id }, vm.Vendas.Select(v => v.VendaId));
+        Assert.Equal("Cancelada", vm.Vendas[0].SituacaoTexto);
+
+        vm.FiltroForma = vm.FormasFiltro.Single(f => f.Forma == FormaPagamento.Pix);
+        await vm.PesquisarVendasCommand.ExecuteAsync(null);
+        Assert.Equal(venda.Id, Assert.Single(vm.Vendas).VendaId);
+
+        await vm.LimparFiltrosCommand.ExecuteAsync(null);
+        vm.FiltroCupom = "#" + outra.Id;
+        await vm.PesquisarVendasCommand.ExecuteAsync(null);
+        Assert.Equal(outra.Id, Assert.Single(vm.Vendas).VendaId);
+
+        vm.VendaSelecionada = vm.Vendas[0];
+        DetalheVenda? visto = null;
+        vm.MostrarDetalhe = d => { visto = d; return d.PodeTrocar; }; // o botão "Fazer a troca" fica desligado
+        await vm.AbrirVendaCommand.ExecuteAsync(null);
+        Assert.False(visto!.PodeTrocar);
+        Assert.False(vm.TemVenda);
+
+        vm.FiltroCupom = "abc";
+        await vm.PesquisarVendasCommand.ExecuteAsync(null);
+        Assert.True(vm.MensagemEhErro);
     }
 
     [Fact]

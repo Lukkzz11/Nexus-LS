@@ -1,0 +1,77 @@
+<Window x:Class="NexusLS.App.Views.VendaDetalheWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Detalhe da venda" Width="860" Height="700" MinWidth="720" MinHeight="520"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
+        Background="{StaticResource CorFundo}" Foreground="{StaticResource CorTexto}">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel>
+            <TextBlock Text="{Binding Titulo}" Style="{StaticResource TituloTela}" />
+            <UniformGrid Columns="2" Margin="0,6,0,0">
+                <TextBlock Margin="0,2"><Run Text="Data: " FontWeight="SemiBold" /><Run Text="{Binding DataTexto, Mode=OneWay}" /></TextBlock>
+                <TextBlock Margin="0,2"><Run Text="Operador: " FontWeight="SemiBold" /><Run Text="{Binding OperadorTexto, Mode=OneWay}" /></TextBlock>
+                <TextBlock Margin="0,2"><Run Text="Cliente: " FontWeight="SemiBold" /><Run Text="{Binding ClienteTexto, Mode=OneWay}" /></TextBlock>
+                <TextBlock Margin="0,2" TextWrapping="Wrap"><Run Text="Pagamento: " FontWeight="SemiBold" /><Run Text="{Binding PagamentoTexto, Mode=OneWay}" /></TextBlock>
+            </UniformGrid>
+        </StackPanel>
+
+        <Border Grid.Row="1" Style="{StaticResource FaixaAviso}" Margin="0,10,0,0"
+                Visibility="{Binding NaoPodeTrocar, Converter={StaticResource BoolVis}}">
+            <TextBlock Text="{Binding AvisoTexto}" TextWrapping="Wrap" FontWeight="SemiBold" AutomationProperties.Name="Aviso da venda" />
+        </Border>
+
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Margin="0,12,0,0">
+            <StackPanel>
+                <TextBlock Text="Peças" FontSize="16" FontWeight="SemiBold" />
+                <DataGrid ItemsSource="{Binding Itens}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column"
+                          SelectionMode="Single" CanUserAddRows="False" AutomationProperties.Name="Peças da venda" Margin="0,6,0,0">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Produto" Binding="{Binding Produto, Mode=OneWay}" Width="3*" />
+                        <DataGridTextColumn Header="Ref." Binding="{Binding Referencia, Mode=OneWay}" Width="1.2*" />
+                        <DataGridTextColumn Header="Tam." Binding="{Binding Tamanho, Mode=OneWay}" Width="0.8*" />
+                        <DataGridTextColumn Header="Qtd." Binding="{Binding Quantidade, Mode=OneWay}" Width="0.7*" />
+                        <DataGridTextColumn Header="Valor un." Binding="{Binding PrecoTexto, Mode=OneWay}" Width="1.1*" />
+                        <DataGridTextColumn Header="Total" Binding="{Binding TotalTexto, Mode=OneWay}" Width="1.1*" />
+                        <DataGridTextColumn Header="Já voltaram" Binding="{Binding DevolvidosTexto, Mode=OneWay}" Width="1*" />
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <StackPanel HorizontalAlignment="Right" Margin="0,10,0,0" MinWidth="260">
+                    <TextBlock Margin="0,2"><Run Text="Subtotal: " /><Run Text="{Binding SubtotalTexto, Mode=OneWay}" /></TextBlock>
+                    <TextBlock Margin="0,2" Visibility="{Binding TemDesconto, Converter={StaticResource BoolVis}}"><Run Text="Desconto: " /><Run Text="{Binding DescontoTexto, Mode=OneWay}" /></TextBlock>
+                    <TextBlock Margin="0,2" Visibility="{Binding TemAcrescimo, Converter={StaticResource BoolVis}}"><Run Text="Acréscimo do cartão: " /><Run Text="{Binding AcrescimoTexto, Mode=OneWay}" /></TextBlock>
+                    <TextBlock Margin="0,4" FontSize="20" FontWeight="Bold" Foreground="{StaticResource CorPrimaria}"><Run Text="Total: " /><Run Text="{Binding TotalTexto, Mode=OneWay}" /></TextBlock>
+                </StackPanel>
+
+                <StackPanel Visibility="{Binding TemTrocas, Converter={StaticResource BoolVis}}" Margin="0,10,0,0">
+                    <TextBlock Text="Trocas já feitas desta venda" FontSize="16" FontWeight="SemiBold" />
+                    <DataGrid ItemsSource="{Binding Trocas}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column"
+                              SelectionMode="Single" AutomationProperties.Name="Trocas já feitas desta venda" Margin="0,6,0,0">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Troca" Binding="{Binding Id, StringFormat=#{0}, Mode=OneWay}" Width="0.7*" />
+                            <DataGridTextColumn Header="Data" Binding="{Binding DataHora, StringFormat=dd/MM/yy HH:mm, Mode=OneWay}" Width="1.2*" />
+                            <DataGridTextColumn Header="Peças" Binding="{Binding Pecas, Mode=OneWay}" Width="0.7*" />
+                            <DataGridTextColumn Header="Valor" Binding="{Binding ValorCentavos, Converter={StaticResource Centavos}, Mode=OneWay}" Width="1*" />
+                            <DataGridTextColumn Header="Vale" Binding="{Binding CodigoVale, Mode=OneWay}" Width="1.4*" />
+                            <DataGridTextColumn Header="Motivo" Binding="{Binding Motivo, Mode=OneWay}" Width="2*" />
+                            <DataGridCheckBoxColumn Header="Cancelada" Binding="{Binding Cancelada, Mode=OneWay}" Width="0.9*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,14,0,0">
+            <Button Content="Fazer a troca desta venda" Style="{StaticResource BotaoPrimario}" IsEnabled="{Binding PodeTrocar}"
+                    Click="Trocar_Click" AutomationProperties.Name="Fazer a troca desta venda" />
+            <Button Content="Fechar" Style="{StaticResource BotaoSecundario}" IsCancel="True" Margin="8,0,0,0" AutomationProperties.Name="Fechar detalhe da venda" />
+        </StackPanel>
+    </Grid>
+</Window>

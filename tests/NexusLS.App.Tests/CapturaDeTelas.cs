@@ -412,4 +412,28 @@ internal static class Capturador
             janela.Close();
         });
     }
+
+    /// <summary>Desenha uma janela inteira (fora da tela) num PNG, como o usuário a vê.</summary>
+    internal static void DesenharJanela(Func<Window> criar, string caminho, int largura, int altura)
+    {
+        Interface.Invoke(() =>
+        {
+            var janela = criar();
+            janela.Width = largura;
+            janela.Height = altura;
+            janela.WindowStartupLocation = WindowStartupLocation.Manual;
+            janela.Left = -20000;
+            janela.Top = 0;
+            janela.ShowActivated = false;
+            janela.Show();
+            janela.UpdateLayout();
+            Interface.Invoke(DispatcherPriority.ApplicationIdle, () => { });
+            var imagem = new RenderTargetBitmap(largura, altura, 96, 96, PixelFormats.Pbgra32);
+            imagem.Render((Visual)janela.Content);
+            var png = new PngBitmapEncoder();
+            png.Frames.Add(BitmapFrame.Create(imagem));
+            using (var arquivo = File.Create(caminho)) png.Save(arquivo);
+            janela.Close();
+        });
+    }
 }
