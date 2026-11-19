@@ -12,8 +12,12 @@ public record CartaoPedido(Pedido Pedido)
 {
     private static readonly CultureInfo PtBr = new("pt-BR");
 
+    /// <summary>Relógio usado para "há quanto tempo" (os testes trocam por um relógio fixo).</summary>
+    public static Func<DateTime> Agora { get; set; } = () => DateTime.Now;
+
     public int Id => Pedido.Id;
     public string Numero => Pedido.Numero;
+    public StatusPedido Status => Pedido.Status;
     public string Cliente => Pedido.ClienteNome;
     public string Total => Dinheiro.Formatar(Pedido.TotalCentavos);
     public string Resumo
@@ -25,6 +29,32 @@ public record CartaoPedido(Pedido Pedido)
         }
     }
     public string Quando => Pedido.CriadoEm.ToString("dd/MM HH:mm", PtBr);
+
+    /// <summary>Os itens em poucas linhas: "2 × Camiseta (M)", e "+ N item(ns)" se passar de três.</summary>
+    public string ItensResumo
+    {
+        get
+        {
+            var linhas = Pedido.Itens.Take(3).Select(i =>
+                $"{i.Quantidade} × {i.Nome}{(i.Tamanho == Tamanhos.SemTamanho ? "" : " (" + i.Tamanho + ")")}").ToList();
+            if (Pedido.Itens.Count > 3) linhas.Add($"+ {Pedido.Itens.Count - 3} item(ns)");
+            return string.Join(Environment.NewLine, linhas);
+        }
+    }
+
+    /// <summary>Quanto tempo faz que o pedido foi feito: "agora", "há 25 min", "há 3 h", "há 2 dias".</summary>
+    public string HaQuanto => TempoDecorrido(Agora() - Pedido.CriadoEm);
+
+    public static string TempoDecorrido(TimeSpan t)
+    {
+        if (t < TimeSpan.FromMinutes(1)) return "agora";
+        if (t < TimeSpan.FromHours(1)) return $"há {(int)t.TotalMinutes} min";
+        if (t < TimeSpan.FromDays(1)) return $"há {(int)t.TotalHours} h";
+        return $"há {(int)t.TotalDays} dia(s)";
+    }
+
+    /// <summary>Texto lido pelo leitor de tela ao chegar no cartão.</summary>
+    public string DescricaoAcessivel => $"{Numero}, {Cliente}, {Total}, {RegrasPedido.Nome(Status)}, {HaQuanto}";
 }
 
 public partial class ColunaPedido : ObservableObject
@@ -35,6 +65,12 @@ public partial class ColunaPedido : ObservableObject
     public string Titulo { get; }
     public ObservableCollection<CartaoPedido> Cartoes { get; } = new();
     public string TituloComContagem => $"{Titulo} ({Cartoes.Count})";
+
+    /// <summary>Durante o arraste: esta etapa aceita o cartão que está sendo carregado.</summary>
+    [ObservableProperty] private bool _destinoValido;
+
+    /// <summary>Durante o arraste: o mouse está sobre esta etapa, mas ela não aceita o cartão.</summary>
+    [ObservableProperty] private bool _destinoInvalido;
 
     /// <summary>Avisa a tela que o número de cartões (no título da coluna) mudou.</summary>
     public void AtualizarTitulo() => OnPropertyChanged(nameof(TituloComContagem));
@@ -217,6 +253,47 @@ public partial class PedidosViewModel : ViewModelBase
         await CarregarAsync();
         MostrarSucesso($"Pedido {depois.Numero}: {RegrasPedido.Nome(depois.Status)}.");
     });
+
+    /// <summary>
+    /// Arrastar e soltar: move o pedido para a etapa vizinha (a mesma regra dos botões Avançar e Voltar; não pula etapa).
+    /// Soltar em "Cancelados" pede o motivo, como o botão Cancelar. Recusas aparecem como mensagem.
+    /// </summary>
+    public Task MoverPedidoAsync(int pedidoId, StatusPedido destino) => ExecutarAsync(async () =>
+    {
+        var cartao = Colunas.SelectMany(c => c.Cartoes).Concat(Cancelados.Cartoes).FirstOrDefault(c => c.Id == pedidoId)
+            ?? throw new RegraDeNegocioException("Pedido não encontrado no quadro.");
+        if (RegrasPedido.MotivoDeNaoPoderMover(cartao.Status, destino) is { } motivoRecusa)
+        {
+            if (cartao.Status != destino) throw new RegraDeNegocioException(motivoRecusa);
+            return; // soltou na mesma etapa: nada a fazer
+        }
+
+        Pedido depois;
+        if (destino == StatusPedido.Cancelado)
+        {
+            var motivo = PedirMotivo($"Por que cancelar o pedido {cartao.Numero}?");
+            if (motivo is null) return;
+            depois = await _pedidos.CancelarAsync(pedidoId, motivo);
+            MostrarCancelados = true;
+        }
+        else if (RegrasPedido.Proximo(cartao.Status) == destino) depois = await _pedidos.AvancarAsync(pedidoId);
+        else depois = await _pedidos.VoltarAsync(pedidoId);
+
+        _idParaSelecionar = pedidoId;
+        await CarregarAsync();
+        MostrarSucesso($"Pedido {depois.Numero}: {RegrasPedido.Nome(depois.Status)}.");
+    });
+
+    /// <summary>A coluna aceita o pedido que está sendo arrastado? Atualiza o destaque (verde/vermelho) de todas as colunas.</summary>
+    public void MarcarDestinos(StatusPedido? origem, ColunaPedido? sobre)
+    {
+        foreach (var c in Colunas.Append(Cancelados))
+        {
+            var pode = origem is { } o && RegrasPedido.MotivoDeNaoPoderMover(o, c.Status) is null;
+            c.DestinoValido = pode;
+            c.DestinoInvalido = origem is not null && !pode && ReferenceEquals(sobre, c) && origem != c.Status;
+        }
+    }
 
     [RelayCommand]
     private Task CancelarPedidoAsync() => ExecutarAsync(async () =>

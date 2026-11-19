@@ -197,6 +197,22 @@
                                                     Binding="{Binding TotalCentavos, Mode=OneWay, Converter={StaticResource Centavos}}" />
                                 <DataGridTextColumn Header="Situação" Width="110"
                                                     Binding="{Binding Cancelada, Mode=OneWay, Converter={StaticResource BoolTexto}, ConverterParameter='Cancelada|Concluída'}" />
+                                <!-- selo: a venda já foi enviada para Pedidos (continua contando no caixa) -->
+                                <DataGridTemplateColumn Header="Pedido" Width="150">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource CorPrimaria}"
+                                                       VerticalAlignment="Center" TextTrimming="CharacterEllipsis">
+                                                <TextBlock.Text>
+                                                    <MultiBinding Converter="{x:Static v:SeloPedidoConverter.Instancia}">
+                                                        <Binding Path="Id" />
+                                                        <Binding Path="DataContext.Selos" RelativeSource="{RelativeSource AncestorType=UserControl}" />
+                                                    </MultiBinding>
+                                                </TextBlock.Text>
+                                            </TextBlock>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
                             </DataGrid.Columns>
                         </DataGrid>
                         </Border>
@@ -286,12 +302,23 @@
                                 </TextBlock.Style>
                             </TextBlock>
 
+                            <Border Margin="0,12,0,0" Padding="10,6" CornerRadius="6" Background="{StaticResource CorSelecaoSuave}"
+                                    Visibility="{Binding TemSeloPedido, Converter={StaticResource BoolVis}}">
+                                <TextBlock Text="{Binding TextoPedido}" FontWeight="SemiBold" Foreground="{StaticResource CorPrimaria}"
+                                           TextWrapping="Wrap" AutomationProperties.Name="Aviso de pedido" />
+                            </Border>
+
                             <!-- WrapPanel: num painel estreito o botão de cancelar desce em vez de ficar cortado -->
                             <WrapPanel Margin="0,16,0,0">
                                 <Button Content="Reimprimir cupom" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,8"
                                         Command="{Binding ReimprimirCupomCommand}" />
                                 <Button Content="Nota em PDF" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,8"
                                         Command="{Binding NotaEmPdfCommand}" />
+                                <Button Content="Enviar para Pedidos" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,8"
+                                        AutomationProperties.Name="Enviar a venda para Pedidos"
+                                        ToolTip="A venda continua no caixa e no faturamento; entra em Pedidos na etapa Novo"
+                                        Visibility="{Binding PodeEnviarParaPedidos, Converter={StaticResource BoolVis}}"
+                                        Command="{Binding EnviarParaPedidosCommand}" />
                                 <Button Content="Cancelar venda" Style="{StaticResource BotaoPerigo}" Margin="0,0,0,8"
                                         Command="{Binding CancelarVendaCommand}" />
                             </WrapPanel>

@@ -24,6 +24,7 @@ public partial class VendasViewModel : ViewModelBase
     private readonly CaixaService? _caixa;
     private readonly ClienteService? _clientes;
     private readonly ConfiguracaoService? _configuracao;
+    private readonly PedidoService? _pedidos;
     private int _versao;
 
     /// <summary>Quem pode ser escolhido como cliente da venda (o primeiro é "Consumidor final", sem cliente).</summary>
@@ -34,8 +35,37 @@ public partial class VendasViewModel : ViewModelBase
     /// <summary>A troca de cliente só existe para venda não cancelada e quando o cadastro de clientes está ligado.</summary>
     public bool PodeAlterarCliente => _clientes is not null && Selecionada is { Cancelada: false };
 
+    /// <summary>Vendas do dia já enviadas para Pedidos: número da venda → número do pedido (para o selo na lista).</summary>
+    [ObservableProperty] private IReadOnlyDictionary<int, string> _selos = new Dictionary<int, string>();
+
+    /// <summary>Aviso do detalhe: "Enviada para Pedidos nº PED-...", ou vazio se a venda não foi enviada.</summary>
+    public string TextoPedido => Selecionada is { } v && Selos.TryGetValue(v.Id, out var n) ? $"Enviada para Pedidos nº {n}" : "";
+    public bool TemSeloPedido => TextoPedido.Length > 0;
+    public bool PodeEnviarParaPedidos => _pedidos is not null && Selecionada is { Cancelada: false } && !TemSeloPedido;
+
+    partial void OnSelosChanged(IReadOnlyDictionary<int, string> value) => AtualizarPedido();
+
+    private void AtualizarPedido()
+    {
+        OnPropertyChanged(nameof(TextoPedido));
+        OnPropertyChanged(nameof(TemSeloPedido));
+        OnPropertyChanged(nameof(PodeEnviarParaPedidos));
+        EnviarParaPedidosCommand.NotifyCanExecuteChanged();
+    }
+
+    /// <summary>Manda a venda selecionada para o quadro de Pedidos (etapa Novo). Continua valendo no caixa e no faturamento.</summary>
+    [RelayCommand(CanExecute = nameof(PodeEnviarParaPedidos))]
+    private Task EnviarParaPedidosAsync() => ExecutarAsync(async () =>
+    {
+        if (_pedidos is null || Selecionada is not { Cancelada: false } venda) return;
+        var pedido = await _pedidos.EnviarVendaAsync(venda.Id);
+        await CarregarAsync();
+        MostrarSucesso($"Venda #{venda.Id} enviada para Pedidos nº {pedido.Numero}.");
+    });
+
     partial void OnSelecionadaChanged(Venda? value)
     {
+        AtualizarPedido();
         OnPropertyChanged(nameof(PodeAlterarCliente));
         ClienteEscolhido = value is null ? null
             : ClientesParaTroca.FirstOrDefault(o => o.Id == value.ClienteId) ?? ClientesParaTroca.FirstOrDefault();
@@ -68,8 +98,9 @@ public partial class VendasViewModel : ViewModelBase
     /// para que os testes e as capturas continuem montando só a lista de vendas.
     /// </summary>
     public VendasViewModel(VendaService vendas, CupomService cupons, CaixaService? caixa = null, FechamentoViewModel? fechamento = null,
-        ClienteService? clientes = null, ConfiguracaoService? configuracao = null)
+        ClienteService? clientes = null, ConfiguracaoService? configuracao = null, PedidoService? pedidos = null)
     {
+        _pedidos = pedidos;
         _vendas = vendas;
         _cupons = cupons;
         _caixa = caixa;
@@ -166,6 +197,8 @@ public partial class VendasViewModel : ViewModelBase
 
         Vendas.Clear();
         foreach (var v in lista) Vendas.Add(v);
+        Selos = _pedidos is null ? new Dictionary<int, string>() : await _pedidos.NumerosPorVendaAsync(lista.Select(v => v.Id));
+        if (versao != _versao) return;
 
         var validas = lista.Count(v => !v.Cancelada);
         var canceladas = lista.Count - validas;

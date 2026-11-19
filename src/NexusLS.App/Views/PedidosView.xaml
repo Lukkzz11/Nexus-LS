@@ -45,21 +45,56 @@
             </Style.Triggers>
         </Style>
 
+        <!-- Cor de cada etapa (faixa do cartao e barra da coluna) -->
+        <SolidColorBrush x:Key="CorEtapaNovo" Color="#2563EB" />
+        <SolidColorBrush x:Key="CorEtapaSeparacao" Color="#D97706" />
+        <SolidColorBrush x:Key="CorEtapaSeparado" Color="#7C3AED" />
+        <SolidColorBrush x:Key="CorEtapaPronto" Color="#0D9488" />
+        <SolidColorBrush x:Key="CorEtapaEntregue" Color="#15803D" />
+
+        <Style x:Key="FaixaEtapa" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource CorPerigo}" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Status}" Value="Novo"><Setter Property="Background" Value="{StaticResource CorEtapaNovo}" /></DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="EmSeparacao"><Setter Property="Background" Value="{StaticResource CorEtapaSeparacao}" /></DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Separado"><Setter Property="Background" Value="{StaticResource CorEtapaSeparado}" /></DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="ProntoRetirada"><Setter Property="Background" Value="{StaticResource CorEtapaPronto}" /></DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Entregue"><Setter Property="Background" Value="{StaticResource CorEtapaEntregue}" /></DataTrigger>
+            </Style.Triggers>
+        </Style>
+
         <DataTemplate x:Key="ModeloCartao">
-            <Button Style="{StaticResource BotaoCartao}" Tag="{Binding Id}" AutomationProperties.Name="{Binding Numero}"
+            <Button Style="{StaticResource BotaoCartao}" Tag="{Binding Id}" AutomationProperties.Name="{Binding DescricaoAcessivel}"
+                    ToolTip="Arraste para outra etapa, ou use Alt + seta direita / esquerda"
                     Command="{Binding DataContext.SelecionarCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                    CommandParameter="{Binding}">
-                <StackPanel>
-                    <Grid>
-                        <TextBlock Text="{Binding Numero}" FontWeight="SemiBold" FontSize="13" />
-                        <TextBlock Text="{Binding Quando}" HorizontalAlignment="Right" FontSize="12" Foreground="{StaticResource CorTextoSuave}" />
-                    </Grid>
-                    <TextBlock Text="{Binding Cliente}" Margin="0,3,0,0" TextTrimming="CharacterEllipsis" />
-                    <Grid Margin="0,3,0,0">
-                        <TextBlock Text="{Binding Resumo}" FontSize="12" Foreground="{StaticResource CorTextoSuave}" />
-                        <TextBlock Text="{Binding Total}" HorizontalAlignment="Right" FontWeight="SemiBold" FontSize="13" />
-                    </Grid>
-                </StackPanel>
+                    CommandParameter="{Binding}"
+                    PreviewMouseLeftButtonDown="AoApertarCartao" PreviewMouseMove="AoMoverCartao" PreviewKeyDown="AoTeclarNoCartao">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="5" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border Style="{StaticResource FaixaEtapa}" CornerRadius="3" />
+                    <StackPanel Grid.Column="1" Margin="10,0,0,0">
+                        <Grid>
+                            <TextBlock Text="{Binding Numero}" FontWeight="Bold" FontSize="13" />
+                            <TextBlock Text="{Binding HaQuanto}" HorizontalAlignment="Right" FontSize="12" Foreground="{StaticResource CorTextoSuave}"
+                                       ToolTip="{Binding Quando}" />
+                        </Grid>
+                        <TextBlock Text="{Binding Cliente}" Margin="0,3,0,0" FontSize="14" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{Binding ItensResumo}" Margin="0,4,0,0" FontSize="12" Foreground="{StaticResource CorTexto}"
+                                   TextTrimming="CharacterEllipsis" />
+                        <Grid Margin="0,6,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="{Binding Resumo}" FontSize="12" Foreground="{StaticResource CorTextoSuave}" VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis" Margin="0,0,8,0" />
+                            <TextBlock Grid.Column="1" Text="{Binding Total}" FontWeight="Bold" FontSize="15" />
+                        </Grid>
+                    </StackPanel>
+                </Grid>
             </Button>
         </DataTemplate>
 
@@ -68,6 +103,18 @@
             <Setter Property="CornerRadius" Value="10" />
             <Setter Property="Padding" Value="10" />
             <Setter Property="Margin" Value="0,0,10,0" />
+            <Setter Property="AllowDrop" Value="True" />
+            <Setter Property="BorderThickness" Value="2" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Style.Triggers>
+                <!-- durante o arraste: etapas que aceitam o cartao ganham borda verde; a recusada, vermelha -->
+                <DataTrigger Binding="{Binding DestinoValido}" Value="True">
+                    <Setter Property="BorderBrush" Value="{StaticResource CorPositivo}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding DestinoInvalido}" Value="True">
+                    <Setter Property="BorderBrush" Value="{StaticResource CorPerigo}" />
+                </DataTrigger>
+            </Style.Triggers>
         </Style>
 
         <Style x:Key="ColunaNumero" TargetType="TextBlock">
@@ -133,13 +180,17 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border Style="{StaticResource ColunaQuadro}" MinWidth="212">
+                                <Border Style="{StaticResource ColunaQuadro}" MinWidth="212"
+                                        DragEnter="AoArrastarSobre" DragOver="AoArrastarSobre" DragLeave="AoSairDoArraste" Drop="AoSoltarNaColuna">
                                     <Grid>
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto" />
                                             <RowDefinition Height="*" />
                                         </Grid.RowDefinitions>
-                                        <TextBlock Text="{Binding TituloComContagem}" FontWeight="SemiBold" Margin="2,0,0,8" />
+                                        <StackPanel Margin="0,0,0,8">
+                                            <Border Style="{StaticResource FaixaEtapa}" Height="4" CornerRadius="2" Margin="0,0,0,6" />
+                                            <TextBlock Text="{Binding TituloComContagem}" FontWeight="SemiBold" Margin="2,0,0,0" />
+                                        </StackPanel>
                                         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                                             <ItemsControl ItemsSource="{Binding Cartoes}" ItemTemplate="{StaticResource ModeloCartao}" />
                                         </ScrollViewer>
@@ -149,8 +200,10 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
 
-                    <Border Grid.Column="1" Style="{StaticResource ColunaQuadro}" MinWidth="212" Visibility="{Binding MostrarCancelados, Converter={StaticResource BoolVis}}">
-                        <Grid DataContext="{Binding Cancelados}">
+                    <Grid Grid.Column="1" Visibility="{Binding MostrarCancelados, Converter={StaticResource BoolVis}}">
+                    <Border Style="{StaticResource ColunaQuadro}" MinWidth="212" DataContext="{Binding Cancelados}"
+                            DragEnter="AoArrastarSobre" DragOver="AoArrastarSobre" DragLeave="AoSairDoArraste" Drop="AoSoltarNaColuna">
+                        <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="*" />
@@ -161,6 +214,7 @@
                             </ScrollViewer>
                         </Grid>
                     </Border>
+                    </Grid>
                 </Grid>
             </ScrollViewer>
         </Grid>

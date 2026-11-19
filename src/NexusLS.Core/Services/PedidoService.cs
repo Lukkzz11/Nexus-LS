@@ -51,6 +51,20 @@ public static class RegrasPedido
     public static StatusPedido? Anterior(StatusPedido atual) =>
         atual is StatusPedido.Novo or StatusPedido.Cancelado ? null : Fluxo[Array.IndexOf(Fluxo.ToArray(), atual) - 1];
 
+    /// <summary>
+    /// Arrastar o cartão para outra etapa: só vale para a etapa vizinha (a mesma regra dos botões Avançar e Voltar).
+    /// Devolve nulo se pode, ou o motivo da recusa. Cancelar também é permitido (pede motivo, como o botão).
+    /// </summary>
+    public static string? MotivoDeNaoPoderMover(StatusPedido atual, StatusPedido destino)
+    {
+        if (atual == destino) return "O pedido já está nessa etapa.";
+        if (atual == StatusPedido.Cancelado) return "Pedido cancelado não volta.";
+        if (destino == StatusPedido.Cancelado)
+            return PodeCancelar(atual) ? null : "Pedido entregue não pode ser cancelado.";
+        if (Proximo(atual) == destino || Anterior(atual) == destino) return null;
+        return "Só dá para mover o pedido uma etapa por vez.";
+    }
+
     public static bool PodeCancelar(StatusPedido atual) => atual is not (StatusPedido.Entregue or StatusPedido.Cancelado);
 
     public static string NumeroDoPedido(DateTime criadoEm, int id) =>
@@ -197,6 +211,47 @@ public class PedidoService
             $"Pedido {RegrasPedido.NumeroDoPedido(p.CriadoEm, p.Id)}", Operador(operador), agora);
         await db.SaveChangesAsync();
         return p;
+    }
+
+    /// <summary>
+    /// Envia uma venda do Caixa para o quadro de Pedidos (etapa "Novo"), com os itens, o cliente e a observação.
+    /// A venda continua valendo no caixa e no faturamento: só ganha o vínculo (Pedido.VendaId). Enviar duas vezes é recusado.
+    /// </summary>
+    public async Task<Pedido> EnviarVendaAsync(int vendaId, string? observacao = null, string? operador = null)
+    {
+        await using var db = await _fabrica.CreateDbContextAsync();
+        var venda = await db.Vendas.Include(v => v.Itens).Include(v => v.Cliente).FirstOrDefaultAsync(v => v.Id == vendaId)
+            ?? throw new RegraDeNegocioException("Venda não encontrada.");
+        if (venda.Cancelada) throw new RegraDeNegocioException("Venda cancelada não pode ser enviada para Pedidos.");
+
+        var existente = await db.Pedidos.AsNoTracking()
+            .Where(p => p.VendaId == vendaId && p.Status != StatusPedido.Cancelado)
+            .Select(p => new { p.Id, p.Numero }).FirstOrDefaultAsync();
+        if (existente is not null)
+            throw new RegraDeNegocioException($"A venda #{vendaId} já está nos Pedidos ({existente.Numero}).");
+
+        var agora = _agora();
+        var op = Operador(operador);
+        var pedido = DaVenda(venda, venda.Cliente?.Nome, venda.Cliente?.Telefone, agora, op);
+        pedido.Observacao = Limpar(observacao) is { } o ? $"Enviada do Caixa: venda #{vendaId}. {o}" : $"Enviada do Caixa: venda #{vendaId}";
+        pedido.Historico[0].Observacao = $"Enviado do Caixa (venda #{vendaId})";
+        db.Pedidos.Add(pedido);
+        await db.SaveChangesAsync();
+        FinalizarNumero(pedido);
+        await db.SaveChangesAsync();
+        return pedido;
+    }
+
+    /// <summary>Para cada venda da lista que já foi enviada, o número do pedido (ignora pedidos cancelados).</summary>
+    public async Task<IReadOnlyDictionary<int, string>> NumerosPorVendaAsync(IEnumerable<int> vendaIds)
+    {
+        var ids = vendaIds.Distinct().ToList();
+        if (ids.Count == 0) return new Dictionary<int, string>();
+        await using var db = await _fabrica.CreateDbContextAsync();
+        var lista = await db.Pedidos.AsNoTracking()
+            .Where(p => p.VendaId != null && ids.Contains(p.VendaId.Value) && p.Status != StatusPedido.Cancelado)
+            .OrderBy(p => p.Id).Select(p => new { VendaId = p.VendaId!.Value, p.Numero }).ToListAsync();
+        return lista.GroupBy(x => x.VendaId).ToDictionary(g => g.Key, g => g.First().Numero);
     }
 
     private async Task<Pedido> MudarAsync(int id, Func<Pedido, StatusPedido> novoStatus, string? operador, string verbo)
