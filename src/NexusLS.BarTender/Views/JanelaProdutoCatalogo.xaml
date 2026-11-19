@@ -171,7 +171,7 @@
                         <StackPanel Grid.Row="0" Margin="0,0,0,12">
                             <TextBlock Text="Tamanhos e quantidades" FontSize="16" FontWeight="Bold"
                                        Foreground="{StaticResource CorTexto}" />
-                            <TextBlock Text="Informe quantas etiquetas deseja de cada tamanho. Pode deixar em zero o que não vai imprimir."
+                            <TextBlock Text="Informe quantas etiquetas deseja de cada tamanho. Todos os tamanhos aparecem, mesmo sem saldo: a etiqueta é de produção. Deixe em zero o que não vai imprimir."
                                        Style="{StaticResource TextoApoio}" Margin="0,3,0,0" />
                         </StackPanel>
 

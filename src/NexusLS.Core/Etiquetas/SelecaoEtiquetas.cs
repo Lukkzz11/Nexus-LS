@@ -52,9 +52,9 @@ public sealed class SelecaoEtiquetas
         : string.Join(" · ", ComQuantidade.Select(l => $"{l.TamanhoExibicao}: {l.Quantidade}"));
 
     /// <summary>
-    /// Monta a seleção a partir do produto. Tamanhos sem quantidade continuam na lista (com zero)
-    /// para o operador poder preencher depois. "Sem tamanho" só aparece quando o produto não tem
-    /// grade real ou quando tem estoque nele.
+    /// Monta a seleção a partir do produto. Todos os tamanhos cadastrados entram na lista (com zero),
+    /// mesmo sem estoque: esta tela é de produção, e a etiqueta pode ser impressa antes de o saldo existir.
+    /// "Sem tamanho" também aparece sempre que estiver cadastrado.
     /// </summary>
     public static SelecaoEtiquetas DoProduto(Produto produto, IReadOnlyDictionary<string, int>? quantidades = null)
     {
@@ -79,17 +79,9 @@ public sealed class SelecaoEtiquetas
             linhas.Add(new LinhaSelecaoTamanho(t.Tamanho.Trim(), quantidade, t.Estoque));
         }
 
-        if (reais.Count == 0)
-        {
-            var semTamanho = tamanhos.FirstOrDefault(t => EhSemTamanho(t.Tamanho));
+        var semTamanho = tamanhos.FirstOrDefault(t => EhSemTamanho(t.Tamanho));
+        if (semTamanho is not null || reais.Count == 0)
             linhas.Add(new LinhaSelecaoTamanho("", QuantidadeDe(quantidades, ""), semTamanho?.Estoque ?? produto.EstoqueAtual));
-        }
-        else
-        {
-            var semTamanho = tamanhos.FirstOrDefault(t => EhSemTamanho(t.Tamanho));
-            if (semTamanho is { Estoque: > 0 })
-                linhas.Add(new LinhaSelecaoTamanho("", QuantidadeDe(quantidades, ""), semTamanho.Estoque));
-        }
 
         if (linhas.Count == 0)
             linhas.Add(new LinhaSelecaoTamanho("", QuantidadeDe(quantidades, ""), produto.EstoqueAtual));

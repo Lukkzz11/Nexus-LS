@@ -102,7 +102,7 @@ public class FluxoPreparacaoImpressaoTests : IDisposable
     {
         var selecao = SelecaoBermuda();
 
-        Assert.Equal(5, selecao.Linhas.Count);
+        Assert.Equal(6, selecao.Linhas.Count);
         Assert.Equal(68, selecao.Total);
         Assert.True(selecao.TemQuantidade);
         Assert.False(selecao.TemErro);

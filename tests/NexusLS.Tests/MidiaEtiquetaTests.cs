@@ -34,7 +34,7 @@ public class MidiaEtiquetaTests
             ["50"] = 0
         });
 
-        Assert.Equal(5, selecao.Linhas.Count);
+        Assert.Equal(6, selecao.Linhas.Count);
         Assert.Equal(68, selecao.Total);
         Assert.Equal(2, selecao.ComQuantidade.Count);
         Assert.Equal(30, selecao.ComQuantidade[0].Quantidade);
@@ -45,6 +45,19 @@ public class MidiaEtiquetaTests
 
         // A referência do produto não é alterada pela seleção.
         Assert.Equal("1402", selecao.Produto.Referencia);
+    }
+
+    [Fact]
+    public void Todos_os_tamanhos_aparecem_mesmo_sem_estoque()
+    {
+        var produto = BermudaCargo();
+        foreach (var t in produto.Tamanhos!) t.Estoque = 0;
+
+        var selecao = SelecaoEtiquetas.DoProduto(produto);
+
+        // Produção: o saldo não decide quais tamanhos podem ser impressos.
+        Assert.Equal(new[] { "42", "44", "46", "48", "50", "" }, selecao.Linhas.Select(l => l.Tamanho));
+        Assert.All(selecao.Linhas, l => Assert.Equal(0, l.Quantidade));
     }
 
     [Fact]
@@ -78,7 +91,7 @@ public class MidiaEtiquetaTests
     {
         var selecao = SelecaoEtiquetas.DoProduto(BermudaCargo());
 
-        Assert.Equal(5, selecao.Linhas.Count);
+        Assert.Equal(6, selecao.Linhas.Count);
         Assert.Equal(0, selecao.Total);
         Assert.True(selecao.Vazia);
         Assert.Empty(selecao.ComQuantidade);
