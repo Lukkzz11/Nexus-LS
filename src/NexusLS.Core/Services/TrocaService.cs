@@ -39,6 +39,26 @@ public record SaldoVale(int ValeId, string Codigo, long ValorCentavos, long Usad
 public record ResumoDevolucao(int Id, DateTime DataHora, int VendaId, string? Cliente, long ValorCentavos, int Pecas, string Motivo,
     string? Operador, string? CodigoVale, bool Cancelada, string? MotivoCancelamento);
 
+/// <summary>Filtros da lista de vendas da tela Trocas. Tudo opcional; o texto de <see cref="Produto"/> casa com nome, categoria, referência ou código de barras.</summary>
+public record FiltroVendasTroca(DateTime? De = null, DateTime? Ate = null, int? NumeroCupom = null, string? Cliente = null,
+    FormaPagamento? Forma = null, string? Produto = null);
+
+/// <summary>Uma linha da lista de vendas (para escolher qual vai trocar).</summary>
+public record ResumoVendaLista(int VendaId, DateTime DataHora, long TotalCentavos, FormaPagamento Forma, string? Cliente, string? Operador,
+    bool Cancelada, int Pecas, bool TemTroca);
+
+/// <summary>Uma página da lista: as vendas (da mais nova para a mais antiga) e se ainda há mais antigas.</summary>
+public record PaginaVendas(IReadOnlyList<ResumoVendaLista> Vendas, bool TemMais);
+
+public record ItemDetalheVenda(string NomeProduto, string Tamanho, string? Referencia, int Quantidade, long PrecoUnitarioCentavos,
+    long TotalCentavos, int Devolvidos);
+
+/// <summary>A venda por inteiro (itens, pagamento, operador, trocas já feitas) e se ainda dá para trocar.</summary>
+public record DetalheVenda(int VendaId, DateTime DataHora, long SubtotalCentavos, long DescontoCentavos, long AcrescimoCentavos,
+    long TotalCentavos, FormaPagamento Forma, int Parcelas, long ValeTrocaCentavos, long? ValorRecebidoCentavos, long TrocoCentavos,
+    string? Cliente, string? Operador, bool Cancelada, string? MotivoCancelamento, IReadOnlyList<ItemDetalheVenda> Itens,
+    IReadOnlyList<ResumoDevolucao> Trocas, bool PodeTrocar, string? MotivoNaoPodeTrocar);
+
 /// <summary>
 /// Troca de mercadoria: a peça devolvida volta ao estoque (do tamanho de onde saiu) e o valor pago por ela vira um
 /// vale-troca, que o PDV aceita como pagamento (inteiro ou em parte). Tudo numa transação, com a trilha de atividades.
@@ -76,6 +96,84 @@ public class TrocaService
                 devolvidos.GetValueOrDefault(i.Id), partes[i.Id], valoresJa.GetValueOrDefault(i.Id)))
             .ToList();
         return new VendaParaTroca(venda.Id, venda.DataHora, venda.TotalCentavos, venda.FormaPagamento, venda.Cliente?.Nome, itens);
+    }
+
+    /// <summary>
+    /// Lista as vendas, da mais nova para a mais antiga, em páginas (a próxima começa antes de <paramref name="antesDoId"/>),
+    /// para a tela não carregar o banco inteiro. Só lê o necessário (sem os itens), então aguenta muitas vendas.
+    /// </summary>
+    public async Task<PaginaVendas> ListarVendasAsync(FiltroVendasTroca? filtro = null, int? antesDoId = null, int tamanho = 50)
+    {
+        filtro ??= new FiltroVendasTroca();
+        tamanho = Math.Clamp(tamanho, 1, 500);
+        await using var db = await _fabrica.CreateDbContextAsync();
+        IQueryable<Venda> q = db.Vendas.AsNoTracking();
+        if (antesDoId is int antes) q = q.Where(v => v.Id < antes);
+        if (filtro.NumeroCupom is int n) q = q.Where(v => v.Id == n);
+        if (filtro.De is DateTime de) { var ini = de.Date; q = q.Where(v => v.DataHora >= ini); }
+        if (filtro.Ate is DateTime ate) { var fim = ate.Date.AddDays(1); q = q.Where(v => v.DataHora < fim); }
+        if (filtro.Forma is FormaPagamento f) q = q.Where(v => v.FormaPagamento == f);
+        var cliente = (filtro.Cliente ?? "").Trim();
+        if (cliente.Length > 0)
+        {
+            var padrao = $"%{cliente}%";
+            q = q.Where(v => v.Cliente != null && EF.Functions.Like(v.Cliente.Nome, padrao));
+        }
+        var produto = (filtro.Produto ?? "").Trim();
+        if (produto.Length > 0)
+        {
+            var padrao = $"%{produto}%";
+            q = q.Where(v => v.Itens.Any(i => EF.Functions.Like(i.NomeProduto, padrao)
+                || db.Produtos.Any(p => p.Id == i.ProdutoId && (EF.Functions.Like(p.Categoria, padrao)
+                    || EF.Functions.Like(p.Referencia, padrao) || p.CodigoBarras == produto))));
+        }
+
+        var linhas = await q.OrderByDescending(v => v.Id).Take(tamanho + 1)
+            .Select(v => new ResumoVendaLista(v.Id, v.DataHora, v.TotalCentavos, v.FormaPagamento, v.Cliente != null ? v.Cliente.Nome : null,
+                v.Operador, v.Cancelada, v.Itens.Sum(i => i.Quantidade),
+                db.Devolucoes.Any(d => d.VendaId == v.Id && !d.Cancelada)))
+            .ToListAsync();
+        return new PaginaVendas(linhas.Take(tamanho).ToList(), linhas.Count > tamanho);
+    }
+
+    /// <summary>A venda completa para conferir antes de trocar. Erro só se a venda não existe.</summary>
+    public async Task<DetalheVenda> DetalharVendaAsync(int vendaId)
+    {
+        await using var db = await _fabrica.CreateDbContextAsync();
+        var venda = await db.Vendas.AsNoTracking().Include(v => v.Itens).Include(v => v.Cliente).FirstOrDefaultAsync(v => v.Id == vendaId)
+            ?? throw new RegraDeNegocioException($"Venda #{vendaId} não encontrada.");
+        var devolvidos = await DevolvidosPorItemAsync(db, venda.Id);
+        var ids = venda.Itens.Select(i => i.ProdutoId).Distinct().ToList();
+        var refs = await db.Produtos.AsNoTracking().Where(p => ids.Contains(p.Id)).ToDictionaryAsync(p => p.Id, p => p.Referencia);
+        var itens = venda.Itens.OrderBy(i => i.Id)
+            .Select(i => new ItemDetalheVenda(i.NomeProduto, i.Tamanho, refs.GetValueOrDefault(i.ProdutoId), i.Quantidade,
+                i.PrecoUnitarioCentavos, i.TotalCentavos, devolvidos.GetValueOrDefault(i.Id)))
+            .ToList();
+
+        string? motivo = null;
+        try { await ExigirQuePodeTrocarAsync(db, venda); }
+        catch (RegraDeNegocioException ex) { motivo = ex.Message; }
+        if (motivo is null && itens.All(i => i.Devolvidos >= i.Quantidade))
+            motivo = "Todas as peças desta venda já voltaram em trocas anteriores.";
+
+        var trocas = await ListarDevolucoesDaVendaAsync(db, venda.Id);
+        return new DetalheVenda(venda.Id, venda.DataHora, venda.SubtotalCentavos, venda.DescontoCentavos, venda.AcrescimoCentavos,
+            venda.TotalCentavos, venda.FormaPagamento, venda.Parcelas, venda.ValeTrocaCentavos, venda.ValorRecebidoCentavos,
+            venda.TrocoCentavos, venda.Cliente?.Nome, venda.Operador, venda.Cancelada, venda.MotivoCancelamento, itens, trocas,
+            motivo is null, motivo);
+    }
+
+    private static async Task<IReadOnlyList<ResumoDevolucao>> ListarDevolucoesDaVendaAsync(PdvDbContext db, int vendaId)
+    {
+        var lista = await db.Devolucoes.AsNoTracking().Include(d => d.Itens).Where(d => d.VendaId == vendaId).ToListAsync();
+        var codigos = await db.ValesTroca.AsNoTracking().Where(v => v.DevolucaoId != null && db.Devolucoes.Any(d => d.Id == v.DevolucaoId && d.VendaId == vendaId))
+            .ToDictionaryAsync(v => v.DevolucaoId!.Value, v => v.Codigo);
+        var nomes = await NomesDosClientesAsync(db, lista.Select(d => d.ClienteId));
+        return lista.OrderByDescending(d => d.DataHora).ThenByDescending(d => d.Id)
+            .Select(d => new ResumoDevolucao(d.Id, d.DataHora, d.VendaId, d.ClienteId is int c ? nomes.GetValueOrDefault(c) : null,
+                d.ValorCentavos, d.Itens.Sum(i => i.Quantidade), d.Motivo, d.Operador, codigos.GetValueOrDefault(d.Id), d.Cancelada,
+                d.MotivoCancelamento))
+            .ToList();
     }
 
     /// <summary>

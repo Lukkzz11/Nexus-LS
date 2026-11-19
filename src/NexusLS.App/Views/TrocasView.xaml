@@ -1,4 +1,4 @@
-<UserControl x:Class="NexusLS.App.Views.TrocasView"
+﻿<UserControl x:Class="NexusLS.App.Views.TrocasView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
@@ -8,7 +8,7 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" MinWidth="420" />
+            <ColumnDefinition Width="*" MinWidth="520" />
             <ColumnDefinition Width="16" />
             <ColumnDefinition Width="*" MinWidth="380" />
         </Grid.ColumnDefinitions>
@@ -19,26 +19,105 @@
                        Style="{StaticResource Rotulo}" TextWrapping="Wrap" />
         </StackPanel>
 
-        <!-- NOVA TROCA -->
-        <Border Grid.Row="1" Style="{StaticResource Painel}" VerticalAlignment="Top">
+        <!-- VENDAS + NOVA TROCA -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,0,6,0">
+        <StackPanel>
+        <Border Style="{StaticResource Painel}" Margin="0,0,0,12">
             <StackPanel>
-                <TextBlock Text="Nova troca" FontSize="18" FontWeight="SemiBold" />
+                <TextBlock Text="Vendas" FontSize="18" FontWeight="SemiBold" />
+                <TextBlock Text="Filtre, escolha a venda e abra (duplo clique) para conferir e iniciar a troca." Style="{StaticResource Rotulo}" TextWrapping="Wrap" />
 
-                <TextBlock Text="Número da venda (no cupom)" Style="{StaticResource Rotulo}" />
-                <Grid>
+                <Grid Margin="0,8,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="8" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="8" />
+                        <ColumnDefinition Width="0.8*" />
                     </Grid.ColumnDefinitions>
-                    <TextBox x:Name="CaixaNumero" Text="{Binding NumeroVendaTexto, UpdateSourceTrigger=PropertyChanged}"
-                             AutomationProperties.Name="Número da venda">
-                        <TextBox.InputBindings>
-                            <KeyBinding Key="Enter" Command="{Binding BuscarVendaCommand}" />
-                        </TextBox.InputBindings>
-                    </TextBox>
-                    <Button Grid.Column="1" Content="Buscar venda" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0"
-                            Command="{Binding BuscarVendaCommand}" />
+                    <StackPanel>
+                        <TextBlock Text="De" Style="{StaticResource Rotulo}" />
+                        <DatePicker SelectedDateFormat="Short" SelectedDate="{Binding FiltroDe}" VerticalContentAlignment="Center"
+                                    AutomationProperties.Name="Data inicial das vendas" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="Até" Style="{StaticResource Rotulo}" />
+                        <DatePicker SelectedDateFormat="Short" SelectedDate="{Binding FiltroAte}" VerticalContentAlignment="Center"
+                                    AutomationProperties.Name="Data final das vendas" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="4">
+                        <TextBlock Text="Nº do cupom" Style="{StaticResource Rotulo}" />
+                        <TextBox x:Name="CaixaNumero" Text="{Binding FiltroCupom, UpdateSourceTrigger=PropertyChanged}"
+                                 AutomationProperties.Name="Número do cupom">
+                            <TextBox.InputBindings>
+                                <KeyBinding Key="Enter" Command="{Binding PesquisarVendasCommand}" />
+                            </TextBox.InputBindings>
+                        </TextBox>
+                    </StackPanel>
                 </Grid>
+                <Grid Margin="0,8,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="8" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="8" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="Cliente" Style="{StaticResource Rotulo}" />
+                        <TextBox Text="{Binding FiltroCliente, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Filtrar por cliente">
+                            <TextBox.InputBindings>
+                                <KeyBinding Key="Enter" Command="{Binding PesquisarVendasCommand}" />
+                            </TextBox.InputBindings>
+                        </TextBox>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="Forma de pagamento" Style="{StaticResource Rotulo}" />
+                        <ComboBox ItemsSource="{Binding FormasFiltro}" DisplayMemberPath="Texto" SelectedItem="{Binding FiltroForma}"
+                                  AutomationProperties.Name="Filtrar por forma de pagamento" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="4">
+                        <TextBlock Text="Produto, categoria ou referência" Style="{StaticResource Rotulo}" />
+                        <TextBox Text="{Binding FiltroProduto, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Filtrar por produto, categoria ou referência">
+                            <TextBox.InputBindings>
+                                <KeyBinding Key="Enter" Command="{Binding PesquisarVendasCommand}" />
+                            </TextBox.InputBindings>
+                        </TextBox>
+                    </StackPanel>
+                </Grid>
+                <StackPanel Orientation="Horizontal" Margin="0,10,0,8">
+                    <Button Content="Pesquisar" Style="{StaticResource BotaoPrimario}" Command="{Binding PesquisarVendasCommand}" />
+                    <Button Content="Limpar filtros" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0" Command="{Binding LimparFiltrosCommand}" />
+                    <Button Content="Abrir venda" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0" Command="{Binding AbrirVendaCommand}" />
+                    <TextBlock Text="{Binding ResumoVendas}" Style="{StaticResource Rotulo}" VerticalAlignment="Center" Margin="12,0,0,0" />
+                </StackPanel>
+
+                <DataGrid x:Name="GradeVendas" ItemsSource="{Binding Vendas}" SelectedItem="{Binding VendaSelecionada, Mode=TwoWay}"
+                          AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" HeadersVisibility="Column" MaxHeight="300"
+                          AutomationProperties.Name="Vendas feitas" MouseDoubleClick="GradeVendas_DoubleClick">
+                    <DataGrid.InputBindings>
+                        <KeyBinding Key="Enter" Command="{Binding AbrirVendaCommand}" />
+                    </DataGrid.InputBindings>
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Cupom" Binding="{Binding VendaId, StringFormat=#{0}, Mode=OneWay}" Width="0.8*" />
+                        <DataGridTextColumn Header="Data" Binding="{Binding DataTexto, Mode=OneWay}" Width="1.3*" />
+                        <DataGridTextColumn Header="Total" Binding="{Binding TotalTexto, Mode=OneWay}" Width="1*" />
+                        <DataGridTextColumn Header="Pagamento" Binding="{Binding FormaTexto, Mode=OneWay}" Width="1.2*" />
+                        <DataGridTextColumn Header="Cliente" Binding="{Binding ClienteTexto, Mode=OneWay}" Width="1.5*" />
+                        <DataGridTextColumn Header="Situação" Binding="{Binding SituacaoTexto, Mode=OneWay}" Width="1*" />
+                    </DataGrid.Columns>
+                </DataGrid>
+                <Button Content="Carregar mais vendas antigas" Style="{StaticResource BotaoSecundario}" HorizontalAlignment="Left" Margin="0,8,0,0"
+                        Command="{Binding MaisVendasCommand}" Visibility="{Binding TemMaisVendas, Converter={StaticResource BoolVis}}" />
+            </StackPanel>
+        </Border>
+
+        <!-- NOVA TROCA -->
+        <Border Style="{StaticResource Painel}" VerticalAlignment="Top">
+            <StackPanel>
+                <TextBlock Text="Nova troca" FontSize="18" FontWeight="SemiBold" />
+                <TextBlock Style="{StaticResource Rotulo}" TextWrapping="Wrap" Visibility="{Binding SemVenda, Converter={StaticResource BoolVis}}"
+                           Text="Abra uma venda na lista acima e clique em &quot;Fazer a troca desta venda&quot;." />
 
                 <StackPanel Visibility="{Binding TemVenda, Converter={StaticResource BoolVis}}">
                     <TextBlock Text="{Binding VendaResumo}" FontWeight="SemiBold" Margin="0,12,0,6" TextWrapping="Wrap" />
@@ -74,6 +153,8 @@
                 <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" />
             </StackPanel>
         </Border>
+        </StackPanel>
+        </ScrollViewer>
 
         <!-- LISTAS -->
         <Grid Grid.Row="1" Grid.Column="2">
