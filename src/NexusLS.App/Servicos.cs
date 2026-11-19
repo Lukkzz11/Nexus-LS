@@ -48,6 +48,10 @@ public sealed class ContainerDeServicos
     public LiquidacaoCartaoService Cartoes { get; }
     public ChequeService Cheques { get; }
     public ChequeEmitidoService ChequesEmitidos { get; }
+    public AnexoService AnexosEmpresa { get; }
+    public LancamentoEmpresaService LancamentosEmpresa { get; }
+    public RelatorioFinanceiroService RelatorioFinanceiro { get; }
+    public RelatorioProdutosService RelatorioProdutos { get; }
     public PosicaoFinanceiraService Posicao { get; }
     public CupomService Cupons { get; }
     public NexusLS.Core.Backup.GestorBackup Backup { get; }
@@ -130,6 +134,10 @@ public sealed class ContainerDeServicos
         Cartoes = new(fabrica);
         Cheques = new(fabrica);
         ChequesEmitidos = new(fabrica);
+        AnexosEmpresa = new(fabrica, AnexoService.PastaPadrao(CaminhoBanco.Padrao()));
+        LancamentosEmpresa = new(fabrica, AnexosEmpresa);
+        RelatorioFinanceiro = new(fabrica);
+        RelatorioProdutos = new(fabrica);
         Posicao = new(fabrica);
         Cupons = new(fabrica, Configuracao, new ImpressoraWindows());
         Seguranca = new(NexusLS.Core.Seguranca.ConfiguracaoSegurancaStore.CaminhoPadrao());

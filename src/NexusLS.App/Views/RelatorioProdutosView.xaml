@@ -1,0 +1,127 @@
+<UserControl x:Class="NexusLS.App.Views.RelatorioProdutosView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:v="clr-namespace:NexusLS.App.Views">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Relatório de produtos" Style="{StaticResource TituloTela}" Margin="0,0,0,4" />
+        <TextBlock Grid.Row="1" Style="{StaticResource TextoApoio}" Margin="0,0,0,12"
+                   Text="O que mais vende, por categoria e por tamanho, e o que está parado no estoque." />
+
+        <StackPanel Grid.Row="2" Margin="0,0,0,12" Visibility="{Binding SemPermissao, Converter={StaticResource BoolInverso}}">
+            <v:BarraPeriodo />
+            <WrapPanel Margin="0,10,0,0">
+                <TextBlock Text="Parados há pelo menos" VerticalAlignment="Center" Margin="0,0,8,0" />
+                <TextBox Text="{Binding DiasParadoTexto, UpdateSourceTrigger=LostFocus}" Width="60" HorizontalContentAlignment="Center"
+                         AutomationProperties.Name="Dias sem venda para considerar um produto parado" />
+                <TextBlock Text="dias sem venda" VerticalAlignment="Center" Margin="8,0,0,0" />
+                <TextBlock Text="{Binding TextoPeriodo}" Style="{StaticResource TextoApoio}" VerticalAlignment="Center" Margin="20,0,0,0" />
+            </WrapPanel>
+        </StackPanel>
+
+        <ItemsControl Grid.Row="3" ItemsSource="{Binding Resumo}" Margin="0,0,0,12" Focusable="False"
+                      Visibility="{Binding SemPermissao, Converter={StaticResource BoolInverso}}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate><v:GradeDeCartoes LarguraMinima="230" MaximoColunas="4" Espaco="12" IgualarAltura="True" /></ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+        </ItemsControl>
+
+        <Grid Grid.Row="4" Visibility="{Binding SemPermissao, Converter={StaticResource BoolInverso}}">
+            <TabControl AutomationProperties.Name="Detalhes do relatório de produtos">
+                <TabItem Header="Mais vendidos (curva ABC)">
+                    <DockPanel>
+                        <WrapPanel DockPanel.Dock="Top" Margin="0,8,0,8">
+                            <Button Content="Exportar para Excel (CSV)" Style="{StaticResource BotaoSecundario}" Padding="14,8" Command="{Binding ExportarMaisVendidosCommand}"
+                                    AutomationProperties.Name="Exportar os mais vendidos em CSV" />
+                            <TextBlock Text="{Binding AvisoAbc}" Style="{StaticResource TextoApoio}" VerticalAlignment="Center" Margin="16,0,0,0" />
+                        </WrapPanel>
+                        <DataGrid ItemsSource="{Binding MaisVendidos}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column"
+                                  BorderThickness="0" Background="Transparent" AutomationProperties.Name="Produtos mais vendidos">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Nº" Binding="{Binding Posicao, Mode=OneWay}" Width="50" />
+                                <DataGridTextColumn Header="Produto" Binding="{Binding Nome, Mode=OneWay}" Width="3*" />
+                                <DataGridTextColumn Header="Referência" Binding="{Binding Referencia, Mode=OneWay}" Width="1.2*" />
+                                <DataGridTextColumn Header="Categoria" Binding="{Binding Categoria, Mode=OneWay}" Width="1.4*" />
+                                <DataGridTextColumn Header="Peças" Binding="{Binding Pecas, Mode=OneWay}" Width="70" />
+                                <DataGridTextColumn Header="Faturamento" Binding="{Binding Faturamento, Mode=OneWay}" Width="1.3*" />
+                                <DataGridTextColumn Header="% do total" Binding="{Binding Percentual, Mode=OneWay}" Width="90" />
+                                <DataGridTextColumn Header="Margem" Binding="{Binding Margem, Mode=OneWay}" Width="90" />
+                                <DataGridTextColumn Header="Classe" Binding="{Binding Classe, Mode=OneWay}" Width="70" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </TabItem>
+                <TabItem Header="Por categoria">
+                    <DockPanel>
+                        <WrapPanel DockPanel.Dock="Top" Margin="0,8,0,8">
+                            <Button Content="Exportar para Excel (CSV)" Style="{StaticResource BotaoSecundario}" Padding="14,8" Command="{Binding ExportarCategoriasCommand}"
+                                    AutomationProperties.Name="Exportar as categorias em CSV" />
+                        </WrapPanel>
+                        <DataGrid ItemsSource="{Binding PorCategoria}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column"
+                                  BorderThickness="0" Background="Transparent" AutomationProperties.Name="Vendas por categoria">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Categoria" Binding="{Binding Categoria, Mode=OneWay}" Width="3*" />
+                                <DataGridTextColumn Header="Peças" Binding="{Binding Pecas, Mode=OneWay}" Width="1*" />
+                                <DataGridTextColumn Header="Faturamento" Binding="{Binding Faturamento, Mode=OneWay}" Width="1.5*" />
+                                <DataGridTextColumn Header="% do total" Binding="{Binding Percentual, Mode=OneWay}" Width="1*" />
+                                <DataGridTextColumn Header="Margem" Binding="{Binding Margem, Mode=OneWay}" Width="1*" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </TabItem>
+                <TabItem Header="Por tamanho">
+                    <DockPanel>
+                        <WrapPanel DockPanel.Dock="Top" Margin="0,8,0,8">
+                            <Button Content="Exportar para Excel (CSV)" Style="{StaticResource BotaoSecundario}" Padding="14,8" Command="{Binding ExportarTamanhosCommand}"
+                                    AutomationProperties.Name="Exportar os tamanhos em CSV" />
+                            <TextBlock Text="O CSV traz o tamanho de cada produto, um por um." Style="{StaticResource TextoApoio}" VerticalAlignment="Center" Margin="16,0,0,0" />
+                        </WrapPanel>
+                        <DataGrid ItemsSource="{Binding PorTamanho}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column"
+                                  BorderThickness="0" Background="Transparent" AutomationProperties.Name="Vendas por tamanho">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Tamanho" Binding="{Binding Tamanho, Mode=OneWay}" Width="2*" />
+                                <DataGridTextColumn Header="Peças" Binding="{Binding Pecas, Mode=OneWay}" Width="1*" />
+                                <DataGridTextColumn Header="Faturamento" Binding="{Binding Faturamento, Mode=OneWay}" Width="1.5*" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </TabItem>
+                <TabItem Header="Parados">
+                    <DockPanel>
+                        <WrapPanel DockPanel.Dock="Top" Margin="0,8,0,8">
+                            <Button Content="Exportar para Excel (CSV)" Style="{StaticResource BotaoSecundario}" Padding="14,8" Command="{Binding ExportarParadosCommand}"
+                                    AutomationProperties.Name="Exportar os produtos parados em CSV" />
+                            <TextBlock Text="{Binding ResumoParados}" Style="{StaticResource TextoApoio}" VerticalAlignment="Center" Margin="16,0,0,0" />
+                        </WrapPanel>
+                        <DataGrid ItemsSource="{Binding Parados}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column"
+                                  BorderThickness="0" Background="Transparent" AutomationProperties.Name="Produtos parados">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Produto" Binding="{Binding Nome, Mode=OneWay}" Width="3*" />
+                                <DataGridTextColumn Header="Referência" Binding="{Binding Referencia, Mode=OneWay}" Width="1.2*" />
+                                <DataGridTextColumn Header="Categoria" Binding="{Binding Categoria, Mode=OneWay}" Width="1.4*" />
+                                <DataGridTextColumn Header="Estoque" Binding="{Binding Estoque, Mode=OneWay}" Width="80" />
+                                <DataGridTextColumn Header="Última venda" Binding="{Binding UltimaVenda, Mode=OneWay}" Width="1.2*" />
+                                <DataGridTextColumn Header="Dias sem venda" Binding="{Binding DiasSemVenda, Mode=OneWay}" Width="120" />
+                                <DataGridTextColumn Header="Custo parado" Binding="{Binding CustoParado, Mode=OneWay}" Width="1.2*" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </TabItem>
+            </TabControl>
+        </Grid>
+
+        <Border Grid.Row="4" Style="{StaticResource FaixaAviso}" VerticalAlignment="Top" Visibility="{Binding SemPermissao, Converter={StaticResource BoolVis}}">
+            <TextBlock Text="Você não tem permissão para ver este relatório (ele mostra custo e lucro). Peça a um gerente ou administrador." TextWrapping="Wrap" />
+        </Border>
+
+        <TextBlock Grid.Row="5" Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" AutomationProperties.Name="Mensagem do relatório de produtos" />
+    </Grid>
+</UserControl>

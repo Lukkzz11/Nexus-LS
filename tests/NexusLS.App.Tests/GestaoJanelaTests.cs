@@ -36,7 +36,7 @@ public sealed class GestaoJanelaTests : IDisposable
     [Fact]
     public void Sem_login_ativo_tudo_da_gestao_esta_liberado()
     {
-        foreach (var item in new[] { ItemMenu.Agenda, ItemMenu.Clientes, ItemMenu.Financeiro, ItemMenu.ContasESaldos, ItemMenu.Relatorios, ItemMenu.Funcionarios, ItemMenu.Configuracoes, ItemMenu.Atividades, ItemMenu.EditorCatalogo })
+        foreach (var item in new[] { ItemMenu.Agenda, ItemMenu.Clientes, ItemMenu.Financeiro, ItemMenu.ContasESaldos, ItemMenu.Relatorios, ItemMenu.Funcionarios, ItemMenu.Configuracoes, ItemMenu.Atividades, ItemMenu.Compras, ItemMenu.Fornecedores, ItemMenu.CalculadoraPrecos, ItemMenu.RelatorioFinanceiro, ItemMenu.RelatorioProdutos, ItemMenu.GestaoEmpresa, ItemMenu.EntradasESaidas })
             Assert.True(GestaoViewModel.Permitido(item), item.ToString());
     }
 
@@ -64,9 +64,9 @@ public sealed class GestaoJanelaTests : IDisposable
     [Fact]
     public void Os_itens_da_gestao_sao_reconhecidos_e_os_do_balcao_nao()
     {
-        foreach (var item in new[] { ItemMenu.Agenda, ItemMenu.Clientes, ItemMenu.Financeiro, ItemMenu.ContasESaldos, ItemMenu.Relatorios, ItemMenu.Funcionarios, ItemMenu.Configuracoes, ItemMenu.CatalogoOnline, ItemMenu.EditorCatalogo, ItemMenu.Atividades })
+        foreach (var item in new[] { ItemMenu.Agenda, ItemMenu.Clientes, ItemMenu.Financeiro, ItemMenu.ContasESaldos, ItemMenu.Relatorios, ItemMenu.Funcionarios, ItemMenu.Configuracoes, ItemMenu.CatalogoOnline, ItemMenu.Atividades, ItemMenu.Compras, ItemMenu.Fornecedores, ItemMenu.CalculadoraPrecos, ItemMenu.RelatorioFinanceiro, ItemMenu.RelatorioProdutos, ItemMenu.GestaoEmpresa, ItemMenu.EntradasESaidas })
             Assert.True(GestaoViewModel.EhDaGestao(item), item.ToString());
-        foreach (var item in new[] { ItemMenu.Inicio, ItemMenu.Pdv, ItemMenu.Caixa, ItemMenu.EstoqueDaLoja, ItemMenu.Compras, ItemMenu.Etiquetas })
+        foreach (var item in new[] { ItemMenu.Inicio, ItemMenu.Pdv, ItemMenu.Caixa, ItemMenu.EstoqueDaLoja, ItemMenu.Etiquetas })
             Assert.False(GestaoViewModel.EhDaGestao(item), item.ToString());
     }
 
@@ -80,11 +80,16 @@ public sealed class GestaoJanelaTests : IDisposable
         public bool VerRelatorios => true;
         public bool VerConfiguracoes => true;
         public bool VerFuncionarios => true;
+        public bool VerCompras => true;
+        public bool VerEstoque => true;
+        public bool VerGrupoEstoque => true;
+        public bool VerGrupoPessoas => true;
+        public bool VerGrupoEmpresa => true;
         public string UsuarioTexto => "Maria (Gerente)";
     }
 
     [Fact]
-    public void A_janela_abre_com_os_nove_itens_do_menu_e_fecha_pelo_botao()
+    public void A_janela_abre_com_todos_os_itens_do_menu_agrupados_e_fecha_pelo_botao()
     {
         var tags = new List<string>(); bool fechou = false; string? botaoFechar = null;
         Capturador.Rodar(() =>
@@ -99,7 +104,14 @@ public sealed class GestaoJanelaTests : IDisposable
                 else if ((b.Content as string) == "Fechar a gestão") { botaoFechar = "ok"; b.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); }
             }
         });
-        Assert.Equal(new[] { "Agenda", "EditorCatalogo", "Clientes", "Financeiro", "ContasESaldos", "Relatorios", "Funcionarios", "Atividades", "Configuracoes" }, tags);
+        Assert.Equal(new[]
+        {
+            "Agenda", "Clientes", "Relatorios",
+            "Financeiro", "ContasESaldos", "RelatorioFinanceiro",
+            "RelatorioProdutos", "Compras", "Fornecedores", "CalculadoraPrecos",
+            "Funcionarios", "Atividades",
+            "GestaoEmpresa", "EntradasESaidas", "Configuracoes"
+        }, tags);
         Assert.Equal("ok", botaoFechar);
         Assert.True(fechou);
     }

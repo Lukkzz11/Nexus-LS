@@ -1,0 +1,21 @@
+<UserControl x:Class="NexusLS.App.Views.BarraPeriodo"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Período das telas da Gestão: as datas e os atalhos. O ViewModel (herdado) é um PeriodoViewModelBase. -->
+    <WrapPanel>
+        <TextBlock Text="De:" VerticalAlignment="Center" Margin="0,0,8,0" />
+        <DatePicker SelectedDateFormat="Short" SelectedDate="{Binding De}" Width="140" VerticalContentAlignment="Center"
+                    AutomationProperties.Name="Data inicial do período" />
+        <TextBlock Text="até:" VerticalAlignment="Center" Margin="12,0,8,0" />
+        <DatePicker SelectedDateFormat="Short" SelectedDate="{Binding Ate}" Width="140" VerticalContentAlignment="Center"
+                    AutomationProperties.Name="Data final do período" />
+        <Button Content="Hoje" Style="{StaticResource BotaoSecundario}" Margin="12,0,0,0" Padding="12,6" Command="{Binding HojeCommand}"
+                AutomationProperties.Name="Período: hoje" />
+        <Button Content="7 dias" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0" Padding="12,6" Command="{Binding UltimosSeteDiasCommand}"
+                AutomationProperties.Name="Período: últimos 7 dias" />
+        <Button Content="Este mês" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0" Padding="12,6" Command="{Binding MesAtualCommand}"
+                AutomationProperties.Name="Período: este mês" />
+        <Button Content="Mês anterior" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0" Padding="12,6" Command="{Binding MesAnteriorCommand}"
+                AutomationProperties.Name="Período: mês anterior" />
+    </WrapPanel>
+</UserControl>

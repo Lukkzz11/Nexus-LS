@@ -1,0 +1,94 @@
+<UserControl x:Class="NexusLS.App.Views.LojasView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:v="clr-namespace:NexusLS.App.Views">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="0,8,8,8">
+            <DockPanel Margin="0,0,0,10">
+                <Button DockPanel.Dock="Right" Content="Adicionar loja" Style="{StaticResource BotaoPrimario}" Padding="16,8" Command="{Binding AdicionarLojaCommand}"
+                        ToolTip="Mostra o passo a passo para colocar outra loja no Nexus" AutomationProperties.Name="Adicionar loja" />
+                <StackPanel>
+                    <TextBlock Text="Lojas" Style="{StaticResource TituloSecao}" />
+                    <TextBlock Style="{StaticResource TextoApoio}" Margin="0,2,0,0"
+                               Text="Cada loja é um computador com o Nexus, com seus próprios dados. Aqui você vê esta loja e o desempenho dela." />
+                </StackPanel>
+            </DockPanel>
+
+            <!-- Como adicionar uma loja -->
+            <Border Style="{StaticResource Painel}" Margin="0,0,0,12" Background="{StaticResource CorSelecaoSuave}"
+                    Visibility="{Binding MostrandoComoAdicionar, Converter={StaticResource BoolVis}}">
+                <StackPanel>
+                    <DockPanel>
+                        <Button DockPanel.Dock="Right" Content="Fechar" Style="{StaticResource BotaoSecundario}" Padding="12,5" Command="{Binding FecharComoAdicionarCommand}"
+                                AutomationProperties.Name="Fechar o passo a passo" />
+                        <TextBlock Text="Como adicionar uma loja" Style="{StaticResource TituloSecao}" VerticalAlignment="Center" />
+                    </DockPanel>
+                    <ItemsControl ItemsSource="{Binding Passos}" Margin="0,10,0,0" Focusable="False">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="32" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border Width="24" Height="24" CornerRadius="12" Background="{StaticResource CorPrimaria}" VerticalAlignment="Top">
+                                        <TextBlock Text="{Binding Numero}" Foreground="{StaticResource CorSobrePrimaria}" FontWeight="SemiBold"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="{Binding Titulo}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                        <TextBlock Text="{Binding Texto}" Style="{StaticResource TextoApoio}" Margin="0,2,0,0" />
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <Border Background="{StaticResource CorPainel}" BorderBrush="{StaticResource CorBorda}" BorderThickness="1" CornerRadius="6" Padding="14,10" Margin="0,4,0,0">
+                        <StackPanel>
+                            <TextBlock Text="Esta loja (este computador)" Style="{StaticResource Rotulo}" Margin="0,0,0,2" />
+                            <TextBlock Text="{Binding LojaNome}" FontWeight="SemiBold" FontSize="16" AutomationProperties.Name="Nome desta loja" />
+                            <TextBlock Text="Código da loja" Style="{StaticResource Rotulo}" Margin="0,8,0,2" />
+                            <DockPanel>
+                                <Button DockPanel.Dock="Right" Content="Copiar código" Style="{StaticResource BotaoSecundario}" Padding="12,5" Margin="10,0,0,0"
+                                        Command="{Binding CopiarCodigoCommand}" AutomationProperties.Name="Copiar o código desta loja" />
+                                <TextBox Text="{Binding LojaId, Mode=OneWay}" IsReadOnly="True" AutomationProperties.Name="Código desta loja" />
+                            </DockPanel>
+                            <TextBlock Style="{StaticResource TextoApoio}" Margin="0,6,0,0"
+                                       Text="O código é criado sozinho e não muda. Para trocar o nome, abra as Configurações do Nexus." />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <v:BarraPeriodo Margin="0,0,0,6" />
+            <TextBlock Text="{Binding TextoPeriodo}" Style="{StaticResource TextoApoio}" Margin="0,0,0,10" />
+
+            <Border Style="{StaticResource FaixaAviso}" Margin="0,0,0,10" Visibility="{Binding SemPermissao, Converter={StaticResource BoolVis}}">
+                <TextBlock Text="Você não tem permissão para ver os valores financeiros. Os números da loja ficam escondidos." TextWrapping="Wrap" />
+            </Border>
+
+            <ItemsControl ItemsSource="{Binding Desempenho}" Margin="0,0,0,12" Focusable="False">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate><v:GradeDeCartoes LarguraMinima="230" MaximoColunas="4" Espaco="12" IgualarAltura="True" /></ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+            </ItemsControl>
+
+            <Border Style="{StaticResource Painel}" Padding="0">
+                <DataGrid ItemsSource="{Binding Lojas}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column" SelectionMode="Single"
+                          BorderThickness="0" Background="Transparent" AutomationProperties.Name="Lista de lojas" MinHeight="80">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Loja" Binding="{Binding Nome, Mode=OneWay}" Width="1.6*" />
+                        <DataGridTextColumn Header="Faturamento" Binding="{Binding Faturamento, Mode=OneWay}" Width="1.2*" />
+                        <DataGridTextColumn Header="Vendas" Binding="{Binding Vendas, Mode=OneWay}" Width="0.8*" />
+                        <DataGridTextColumn Header="Ticket médio" Binding="{Binding TicketMedio, Mode=OneWay}" Width="1.1*" />
+                        <DataGridTextColumn Header="Onde está" Binding="{Binding Situacao, Mode=OneWay}" Width="1.3*" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+            <TextBlock Style="{StaticResource TextoApoio}" Margin="0,8,0,0"
+                       Text="As outras lojas vão aparecer nesta lista quando o envio para a nuvem estiver liberado. Nesta versão nada é enviado." />
+            <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" AutomationProperties.Name="Mensagem das lojas" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -7,7 +7,7 @@ using NexusLS.Core.Models;
 namespace NexusLS.App.ViewModels;
 
 /// <summary>Os itens do menu lateral. O nome do item é também o "Tag" do botão: assim o menu destaca o da tela aberta.</summary>
-public enum ItemMenu { Inicio, Pdv, VendaCliente, Caixa, Pedidos, MaisVendidos, Desempenho, EstoqueDaLoja, ResumoEstoque, Fabrica, CalculadoraPrecos, Compras, Fornecedores, Etiquetas, Clientes, Agenda, EditorCatalogo, Financeiro, ContasESaldos, Relatorios, CatalogoOnline, Funcionarios, Atividades, Configuracoes, Trocas }
+public enum ItemMenu { Inicio, Pdv, VendaCliente, Caixa, Pedidos, MaisVendidos, Desempenho, EstoqueDaLoja, ResumoEstoque, Fabrica, CalculadoraPrecos, Compras, Fornecedores, Etiquetas, Clientes, Agenda, EditorCatalogo, Financeiro, ContasESaldos, Relatorios, CatalogoOnline, Funcionarios, Atividades, Configuracoes, Trocas, RelatorioFinanceiro, RelatorioProdutos, GestaoEmpresa, EntradasESaidas }
 
 /// <summary>
 /// ViewModel = a "lógica da tela". Ele guarda os dados que a tela mostra e os comandos dos botões,
@@ -73,9 +73,6 @@ public partial class MainViewModel : ObservableObject
             case ItemMenu.EstoqueDaLoja: IrParaEstoque(); break;
             case ItemMenu.ResumoEstoque: IrParaResumoEstoque(); break;
             case ItemMenu.Fabrica: IrParaFabrica(); break;
-            case ItemMenu.CalculadoraPrecos: IrParaCalculadoraPrecos(); break;
-            case ItemMenu.Compras: IrParaCompras(); break;
-            case ItemMenu.Fornecedores: IrParaFornecedores(); break;
             case ItemMenu.Etiquetas: IrParaEtiquetas(); break;
         }
     }
@@ -102,9 +99,6 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand] private void IrParaEstoque() => Abrir(new EstoqueLojaViewModel(_servicos.Produtos, _servicos.Estoque, _servicos.Fotos, _servicos.Configuracao,
         ajustesCatalogo: new NexusLS.Core.Vitrine.AjustesProdutoStore(NexusLS.Core.Vitrine.AjustesProdutoStore.CaminhoPadrao())), ItemMenu.EstoqueDaLoja);
     [RelayCommand] private void IrParaFabrica() => Abrir(new FabricaViewModel(_servicos.Producao), ItemMenu.Fabrica);
-    [RelayCommand] private void IrParaCalculadoraPrecos() => Abrir(new CalculadoraPrecosViewModel(_servicos.Produtos, new NexusLS.Core.Services.ParametrosCalculadoraStore(NexusLS.Core.Services.ParametrosCalculadoraStore.CaminhoPadrao())), ItemMenu.CalculadoraPrecos);
-    [RelayCommand] private void IrParaCompras() => Abrir(new ComprasViewModel(_servicos.Compras, _servicos.Produtos, _servicos.Fornecedores), ItemMenu.Compras);
-    [RelayCommand] private void IrParaFornecedores() => Abrir(new FornecedoresViewModel(_servicos.Fornecedores), ItemMenu.Fornecedores);
     [RelayCommand] private void IrParaEtiquetas()
     {
         var etiquetas = new EtiquetasViewModel(_servicos.Produtos, _servicos.ModelosEtiqueta);
@@ -138,8 +132,7 @@ public partial class MainViewModel : ObservableObject
         ItemMenu.Caixa or ItemMenu.Trocas => Sessao.Pode(Permissao.Caixa),
         ItemMenu.Pedidos => Sessao.Pode(Permissao.Vender),
         ItemMenu.MaisVendidos or ItemMenu.Desempenho or ItemMenu.Relatorios => Sessao.Pode(Permissao.Relatorios),
-        ItemMenu.EstoqueDaLoja or ItemMenu.ResumoEstoque or ItemMenu.Etiquetas or ItemMenu.CalculadoraPrecos or ItemMenu.Fabrica => Sessao.Pode(Permissao.Estoque),
-        ItemMenu.Compras or ItemMenu.Fornecedores => Sessao.Pode(Permissao.Compras),
+        ItemMenu.EstoqueDaLoja or ItemMenu.ResumoEstoque or ItemMenu.Etiquetas or ItemMenu.Fabrica => Sessao.Pode(Permissao.Estoque),
         _ => false
     };
 
@@ -159,7 +152,6 @@ public partial class MainViewModel : ObservableObject
 
     public bool VerSecaoVendas => VerPdv || VerCaixa || VerRelatorios;
     public bool VerSecaoEstoque => VerEstoque;
-    public bool VerSecaoCompras => VerEstoque || VerCompras;
 
     /// <summary>Nome desta loja (um computador = uma loja), mostrado de leve no menu lateral.</summary>
     public string LojaNomeTexto => _servicos.Seguranca.Carregar().LojaNome;
@@ -185,7 +177,7 @@ public partial class MainViewModel : ObservableObject
         foreach (var nome in new[]
         {
             nameof(VerPdv), nameof(VerCaixa), nameof(VerEstoque), nameof(VerCompras), nameof(VerClientes), nameof(VerFinanceiro),
-            nameof(VerRelatorios), nameof(VerConfiguracoes), nameof(VerFuncionarios), nameof(VerSecaoVendas), nameof(VerSecaoEstoque), nameof(VerSecaoCompras), nameof(LojaNomeTexto),
+            nameof(VerRelatorios), nameof(VerConfiguracoes), nameof(VerFuncionarios), nameof(VerSecaoVendas), nameof(VerSecaoEstoque), nameof(LojaNomeTexto),
             nameof(VerSecaoGestao), nameof(VerGestao), nameof(TemUsuario), nameof(UsuarioTexto)
         }) OnPropertyChanged(nome);
     }

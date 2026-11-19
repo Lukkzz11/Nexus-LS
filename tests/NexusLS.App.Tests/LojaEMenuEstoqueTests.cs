@@ -69,7 +69,7 @@ public sealed class LojaEMenuEstoqueTests : IDisposable
         while (dir is not null && !File.Exists(Path.Combine(dir.FullName, "NexusLS.slnx"))) dir = dir.Parent;
         var xaml = File.ReadAllText(Path.Combine(dir!.FullName, "src", "NexusLS.App", "MainWindow.xaml"));
         var ini = xaml.IndexOf("Text=\"ESTOQUE\"", StringComparison.Ordinal);
-        var fim = xaml.IndexOf("Text=\"COMPRAS E PREÇOS\"", StringComparison.Ordinal);
+        var fim = xaml.IndexOf("Text=\"GESTÃO\"", StringComparison.Ordinal);
         Assert.True(ini > 0 && fim > ini);
         var secao = xaml[ini..fim];
         var tags = Regex.Matches(secao, "<Button Tag=\"(\\w+)\"").Select(m => m.Groups[1].Value).ToArray();
@@ -77,7 +77,12 @@ public sealed class LojaEMenuEstoqueTests : IDisposable
         Assert.Contains("AutomationProperties.Name=\"Resumo\"", secao);
         Assert.Contains("AutomationProperties.Name=\"Estoque da loja\"", secao);
         Assert.Contains("AutomationProperties.Name=\"Estoque fábrica\"", secao);
+        // Compras, Fornecedores e Calculadora de preços saíram do balcão e vivem no menu da Gestão
+        var gestao = File.ReadAllText(Path.Combine(dir!.FullName, "src", "NexusLS.App", "Views", "GestaoWindow.xaml"));
         foreach (var tag in new[] { "CalculadoraPrecos", "Compras", "Fornecedores" })
-            Assert.Contains($"<Button Tag=\"{tag}\"", xaml[fim..]);
+        {
+            Assert.DoesNotContain($"<Button Tag=\"{tag}\"", xaml);
+            Assert.Contains($"<Button Tag=\"{tag}\"", gestao);
+        }
     }
 }
