@@ -37,7 +37,7 @@
                             <Border Style="{StaticResource Painel}">
                                 <StackPanel>
                                     <TextBlock Text="{Binding Titulo}" Opacity="0.75" />
-                                    <TextBlock Text="{Binding Valor}" FontSize="22" FontWeight="SemiBold" Margin="0,4,0,4" />
+                                    <TextBlock Text="{Binding Valor}" Foreground="{DynamicResource CorTexto}" FontSize="22" FontWeight="SemiBold" Margin="0,4,0,4" />
                                     <TextBlock Text="{Binding Variacao}" FontSize="12">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
