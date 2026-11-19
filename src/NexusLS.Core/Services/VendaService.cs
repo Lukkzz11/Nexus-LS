@@ -16,6 +16,13 @@ public class VendaService
         _agora = agora ?? (() => DateTime.Now);
     }
 
+    private static long PrecoDeTabela(Produto produto, IReadOnlyDictionary<Guid, PrecoLoja> precosLoja, TabelaPreco tabela)
+    {
+        if (!precosLoja.TryGetValue(produto.Guid, out var loja)) return produto.PrecoPara(tabela);
+        var atacado = loja.PrecoAtacadoCentavos > 0 ? loja.PrecoAtacadoCentavos : produto.PrecoAtacadoCentavos;
+        return tabela == TabelaPreco.Atacado && atacado > 0 ? atacado : loja.PrecoVarejoCentavos;
+    }
+
     /// <summary>
     /// Grava a venda e dá baixa no estoque (por produto e tamanho) NA MESMA TRANSAÇÃO. Uma transação é um
     /// "tudo ou nada": se qualquer passo falhar, o banco volta ao estado anterior e nada fica pela metade.
@@ -52,6 +59,10 @@ public class VendaService
         var ids = grupos.Select(g => g.Chave.ProdutoId).Distinct().ToList();
         var produtos = await db.Produtos.Where(p => ids.Contains(p.Id)).ToDictionaryAsync(p => p.Id);
         var linhas = await db.TamanhosProduto.Where(t => ids.Contains(t.ProdutoId)).ToListAsync();
+        // Preço da loja (recebido da nuvem), quando existe: vale no lugar do preço do cadastro, que não é alterado.
+        var guidsDosProdutos = produtos.Values.Select(p => p.Guid).ToList();
+        var precosLoja = guidsDosProdutos.Count == 0 ? new Dictionary<Guid, PrecoLoja>()
+            : await db.PrecosLoja.AsNoTracking().Where(x => guidsDosProdutos.Contains(x.ProdutoGuid)).ToDictionaryAsync(x => x.ProdutoGuid);
 
         // 2) Produto e tamanho precisam existir; o produto precisa estar ativo.
         foreach (var (chave, _) in grupos)
@@ -106,7 +117,7 @@ public class VendaService
             }
             else
             {
-                unitario = chave.PrecoUnitarioCentavos ?? produto.PrecoPara(pedido.TabelaPreco);
+                unitario = chave.PrecoUnitarioCentavos ?? PrecoDeTabela(produto, precosLoja, pedido.TabelaPreco);
                 total = unitario * quantidade;
             }
 

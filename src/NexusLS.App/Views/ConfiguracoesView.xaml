@@ -559,6 +559,23 @@
                                     <TextBlock Text="{Binding LojaIdTexto, StringFormat='Identificação: {0}'}" Opacity="0.6" FontSize="12" Margin="0,6,0,0" AutomationProperties.Name="Identificação da loja" />
                                     <Button Content="Salvar nome da loja" Style="{StaticResource BotaoPrimario}" HorizontalAlignment="Left" Margin="0,10,0,0" Command="{Binding SalvarLojaIdCommand}" />
                                     <TextBlock Text="{Binding MensagemLojaId}" Style="{StaticResource TextoMensagem}" />
+                                    <StackPanel Visibility="{Binding TemNuvem, Converter={StaticResource BoolVis}}" Margin="0,14,0,0">
+                                        <TextBlock Style="{StaticResource Rotulo}" TextWrapping="Wrap"
+                                                   Text="Preço desta loja: o administrador define o preço de cada produto para esta loja. Ao receber, o PDV daqui passa a usar esse preço; o cadastro do produto (e o que vai para o ERP) não muda." />
+                                        <Button Content="Receber preços da nuvem" Style="{StaticResource BotaoSecundario}" HorizontalAlignment="Left" Margin="0,8,0,0" Padding="14,8"
+                                                Command="{Binding ReceberPrecosNuvemCommand}" AutomationProperties.Name="Receber preços da nuvem" />
+                                        <TextBlock Text="{Binding MensagemPrecosNuvem}" TextWrapping="Wrap" Margin="0,8,0,0" AutomationProperties.Name="Mensagem dos preços da nuvem">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="{DynamicResource CorSucesso}" />
+                                                    <Style.Triggers>
+                                                        <Trigger Property="Text" Value=""><Setter Property="Visibility" Value="Collapsed" /></Trigger>
+                                                        <DataTrigger Binding="{Binding MensagemPrecosNuvemEhErro}" Value="True"><Setter Property="Foreground" Value="{DynamicResource CorPerigo}" /></DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </StackPanel>
                                 </StackPanel>
                             </Border>
 

@@ -30,6 +30,7 @@
   <ItemGroup>
     <!-- Reaproveita o banco SQLite em memória dos testes do Core. -->
     <Compile Include="..\NexusLS.Tests\Infra\BancoDeTeste.cs" Link="Infra\BancoDeTeste.cs" />
+    <Compile Include="..\NexusLS.Tests\Infra\FirestoreNuvemFalso.cs" Link="Infra\FirestoreNuvemFalso.cs" />
   </ItemGroup>
 
 </Project>

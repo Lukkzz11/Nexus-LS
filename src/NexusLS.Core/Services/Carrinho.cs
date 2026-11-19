@@ -44,6 +44,9 @@ public class LinhaCarrinho
     public long TotalCentavos => TotalEditadoCentavos ?? PrecoUnitarioCentavos * Quantidade;
 }
 
+/// <summary>Preço da loja (varejo e atacado, em centavos; atacado zero = sem preço de atacado da loja).</summary>
+public sealed record PrecoDaLoja(long VarejoCentavos, long AtacadoCentavos);
+
 /// <summary>
 /// O carrinho da venda em andamento. É uma classe do Core (sem janela), então todas as regras dele —
 /// estoque por tamanho, preço editado, tabela de preço — são testadas sem abrir tela.
@@ -51,6 +54,23 @@ public class LinhaCarrinho
 public class Carrinho
 {
     private readonly List<LinhaCarrinho> _linhas = new();
+
+    /// <summary>
+    /// Quem diz o preço da LOJA deste computador (recebido da nuvem) para um produto, ou nulo se não há. O programa liga isto
+    /// ao iniciar; sem ligação (ou sem preço da loja) vale o preço do cadastro. O cadastro do produto nunca é alterado.
+    /// </summary>
+    public static Func<Guid, PrecoDaLoja?>? PrecoDaLojaPadrao { get; set; }
+
+    public Func<Guid, PrecoDaLoja?>? PrecoDaLoja { get; set; } = PrecoDaLojaPadrao;
+
+    /// <summary>Preço de uma unidade do produto na tabela atual, já com o preço da loja quando existe (para mostrar na tela).</summary>
+    public long PrecoDeTabela(Produto produto)
+    {
+        var daLoja = PrecoDaLoja?.Invoke(produto.Guid);
+        if (daLoja is null) return produto.PrecoPara(Tabela);
+        var atacado = daLoja.AtacadoCentavos > 0 ? daLoja.AtacadoCentavos : produto.PrecoAtacadoCentavos;
+        return Tabela == TabelaPreco.Atacado && atacado > 0 ? atacado : daLoja.VarejoCentavos;
+    }
 
     public IReadOnlyList<LinhaCarrinho> Linhas => _linhas;
     public TabelaPreco Tabela { get; private set; } = TabelaPreco.Varejo;
@@ -89,14 +109,15 @@ public class Carrinho
 
         VerificarEstoque(produto.Nome, tamanho, quantidade, jaNoCarrinho: QuantidadeDe(produto.Id, tamanho.Tamanho));
 
+        var daLoja = PrecoDaLoja?.Invoke(produto.Guid);
         var linha = new LinhaCarrinho
         {
             ProdutoId = produto.Id,
             Nome = produto.Nome,
             Referencia = string.IsNullOrWhiteSpace(produto.Referencia) ? null : produto.Referencia.Trim(),
             Tamanho = tamanho.Tamanho,
-            PrecoVarejoCentavos = produto.PrecoVendaCentavos,
-            PrecoAtacadoCentavos = produto.PrecoAtacadoCentavos,
+            PrecoVarejoCentavos = daLoja?.VarejoCentavos ?? produto.PrecoVendaCentavos,
+            PrecoAtacadoCentavos = daLoja is { AtacadoCentavos: > 0 } ? daLoja.AtacadoCentavos : produto.PrecoAtacadoCentavos,
             EstoqueDisponivel = tamanho.Estoque,
             Quantidade = quantidade,
             Tabela = Tabela

@@ -16,7 +16,7 @@ public sealed record PassoAdicionarLoja(string Numero, string Titulo, string Tex
 
 /// <summary>
 /// Aba "Lojas" da Gestão da empresa. Cada loja é OUTRO computador, com banco próprio. Aqui aparece a loja deste computador
-/// (nome, código e desempenho do período) e o passo a passo para adicionar outra. Nada é enviado à nuvem nesta etapa.
+/// (nome, código e desempenho do período) e o passo a passo para adicionar outra. Só envia à nuvem quando o usuário clica em Compartilhar (ver LojasViewModel.Nuvem.cs).
 /// Sem a permissão Financeiro os valores não aparecem.
 /// </summary>
 public partial class LojasViewModel : PeriodoViewModelBase
@@ -53,7 +53,7 @@ public partial class LojasViewModel : PeriodoViewModelBase
         new PassoAdicionarLoja("1", "Cada loja é um computador", "Uma loja nova é outro computador com o Nexus instalado. Cada computador tem o seu próprio banco de dados; nada é misturado sozinho."),
         new PassoAdicionarLoja("2", "Instale o Nexus no outro computador", "Instale e abra o Nexus lá, como foi feito aqui. Não copie o arquivo do banco deste computador para o outro: dois computadores com o mesmo código se confundem."),
         new PassoAdicionarLoja("3", "Dê um nome à loja nova", "No outro computador, abra as Configurações do Nexus e escreva o nome da loja em \"Nome desta loja\" (por exemplo, Loja 2). O código da loja é criado sozinho, uma vez só."),
-        new PassoAdicionarLoja("4", "Compartilhar com a nuvem (em breve)", "Quando o envio estiver liberado, cada loja manda um resumo dos seus dias pelo botão \"Compartilhar com a nuvem\". Só o administrador vê todas as lojas aqui. Nesta versão nada é enviado."),
+        new PassoAdicionarLoja("4", "Compartilhar com a nuvem", "Em cada computador, clique em \"Compartilhar com a nuvem\": a loja manda um resumo dos seus dias, o estoque e os lançamentos. Nada é enviado sozinho, só quando você clicar. Só o administrador vê todas as lojas aqui."),
     };
 
     protected override void PeriodoMudou() => Carregamento = AtualizarAsync();

@@ -76,7 +76,7 @@ public partial class PdvViewModel
 
         _produtoAtual = produto;
         _grade = new GradeTamanhos(opcoes);
-        ProdutoModalTexto = $"{produto.Nome}  ·  {Dinheiro.Formatar(produto.PrecoPara(_carrinho.Tabela))}";
+        ProdutoModalTexto = $"{produto.Nome}  ·  {Dinheiro.Formatar(_carrinho.PrecoDeTabela(produto))}";
 
         OpcoesTamanho.Clear();
         foreach (var o in _grade.Opcoes)

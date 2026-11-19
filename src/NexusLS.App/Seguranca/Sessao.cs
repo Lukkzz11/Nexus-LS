@@ -43,4 +43,7 @@ public static class Sessao
 
     /// <summary>Sem login ativo tudo é permitido; com login, só o que o perfil do funcionário permite.</summary>
     public static bool Pode(Permissao permissao) => LoginAtivo ? Atual?.Pode(permissao) ?? false : true;
+
+    /// <summary>Administrador: sem login ativo é o dono usando o programa; com login, só o perfil Administrador (gerente não conta).</summary>
+    public static bool EhAdministrador => !LoginAtivo || Atual?.Perfil == PerfilFuncionario.Administrador;
 }

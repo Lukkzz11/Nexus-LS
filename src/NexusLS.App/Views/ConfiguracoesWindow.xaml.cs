@@ -80,6 +80,7 @@ public partial class ConfiguracoesWindow : Window
         config.AoMudarTema = GerenciadorDeTema.Definir;
         config.AbrirPasta = pasta => System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", "\"" + pasta + "\"") { UseShellExecute = true });
         config.UsarSeguranca(servicos.Seguranca);
+        config.UsarNuvem(servicos.NuvemLoja);
         config.UsarComissoes(servicos.Comissoes, servicos.Funcionarios);
         config.UsarEstoque(servicos.Estoque);
         config.UsarNotificacoes();

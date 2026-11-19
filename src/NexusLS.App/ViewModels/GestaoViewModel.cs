@@ -107,9 +107,12 @@ public partial class GestaoViewModel : ObservableObject
     [RelayCommand] private void IrParaEntradasESaidas() => Abrir(CriarEntradasESaidas(), ItemMenu.EntradasESaidas);
 
     [RelayCommand]
-    private void IrParaGestaoEmpresa() => Abrir(new GestaoEmpresaViewModel(
-        new LojasViewModel(_servicos.RelatorioFinanceiro, () => _servicos.Seguranca.Carregar()),
-        Sessao.Pode(Permissao.Financeiro) ? CriarEntradasESaidas() : null), ItemMenu.GestaoEmpresa);
+    private void IrParaGestaoEmpresa()
+    {
+        var lojas = new LojasViewModel(_servicos.RelatorioFinanceiro, () => _servicos.Seguranca.Carregar());
+        lojas.UsarNuvem(_servicos.NuvemLoja, _servicos.Produtos);
+        Abrir(new GestaoEmpresaViewModel(lojas, Sessao.Pode(Permissao.Financeiro) ? CriarEntradasESaidas() : null), ItemMenu.GestaoEmpresa);
+    }
 
     private EntradasESaidasViewModel CriarEntradasESaidas() => new(_servicos.LancamentosEmpresa, _servicos.AnexosEmpresa);
     [RelayCommand] private void IrParaAgenda() => Abrir(new AgendaViewModel(_servicos.Agenda, null, _servicos.AgendaNoGoogle), ItemMenu.Agenda);

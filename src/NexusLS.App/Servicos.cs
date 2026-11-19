@@ -85,6 +85,9 @@ public sealed class ContainerDeServicos
     public NexusLS.Core.Importacao.Erp.ContaErp ContaErp { get; }
     public Func<NexusLS.Core.Importacao.Erp.ImportadorErp> CriarImportadorErp { get; }
     public NexusLS.Core.Importacao.Erp.EnvioErpAutomatico EnvioErpAuto { get; }
+    public PrecoLojaService PrecosLoja { get; }
+    public NexusLS.Core.Sincronizacao.Nuvem.CacheNuvemLoja CacheNuvem { get; }
+    public NexusLS.Core.Sincronizacao.Nuvem.ServicoNuvemLoja NuvemLoja { get; }
 
     public ContainerDeServicos(DbContextOptions<PdvDbContext> opcoesBanco)
     {
@@ -166,6 +169,16 @@ public sealed class ContainerDeServicos
             NexusLS.Core.Vitrine.ServicoCatalogoWeb.PastaImagensPadrao(),
             new NexusLS.Core.Sincronizacao.Firebase.EnviadorFotoConfiguravel(Firebase, _httpFirebase),
             (NexusLS.Core.Vitrine.IPublicadorVitrineCompleta)PublicadorVitrine);
+        // Nuvem das lojas (envio manual): preços por loja ficam numa tabela local; o PDV usa o preço da loja quando existe.
+        PrecosLoja = new(fabrica);
+        CacheNuvem = new(NexusLS.Core.Sincronizacao.Nuvem.CacheNuvemLoja.CaminhoAoLadoDoBanco(CaminhoBanco.Padrao()));
+        var fabricaNuvem = new NexusLS.Core.Sincronizacao.Nuvem.FabricaClienteNuvemLoja(Firebase, CacheNuvem, _httpFirebase);
+        NuvemLoja = new(fabrica, fabricaNuvem.Criar, CacheNuvem,
+            () => { var c = Seguranca.Carregar(); return (c.LojaId, c.LojaNome); }, PrecosLoja,
+            () => NexusLS.App.Seguranca.Sessao.EhAdministrador, () => NexusLS.App.Seguranca.Sessao.Pode(NexusLS.Core.Models.Permissao.Financeiro),
+            NexusLS.Core.Atualizacao.VersaoPrograma.Atual().ToString());
+        Carrinho.PrecoDaLojaPadrao = PrecosLoja.PrecoDe;
+        _ = PrecosLoja.RecarregarAsync();
         NexusLS.App.Seguranca.Alcada.Config = () => Seguranca.Carregar();
         NexusLS.App.Seguranca.Alcada.Solicitar = NexusLS.App.Seguranca.Alcada.PedirNaTela;
         NexusLS.App.ViewModels.PdvViewModel.DescontoPorPecaPadrao = () => Preferencias.Carregar().DescontoPorPecaCentavos;

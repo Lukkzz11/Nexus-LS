@@ -1970,6 +1970,35 @@ namespace NexusLS.Core.Migrations
                     b.ToTable("PerdasProducao");
                 });
 
+            modelBuilder.Entity("NexusLS.Core.Models.PrecoLoja", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("DefinidoEmUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("PrecoAtacadoCentavos")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("PrecoVarejoCentavos")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("ProdutoGuid")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("RecebidoEmUtc")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProdutoGuid")
+                        .IsUnique();
+
+                    b.ToTable("PrecosLoja");
+                });
+
             modelBuilder.Entity("NexusLS.Core.Models.Produto", b =>
                 {
                     b.Property<int>("Id")

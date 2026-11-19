@@ -56,6 +56,7 @@ public class PdvDbContext : DbContext
     public DbSet<ItemDevolucao> ItensDevolucao => Set<ItemDevolucao>();
     public DbSet<ValeTroca> ValesTroca => Set<ValeTroca>();
     public DbSet<EtiquetaProduto> EtiquetasProduto => Set<EtiquetaProduto>();
+    public DbSet<PrecoLoja> PrecosLoja => Set<PrecoLoja>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -114,6 +115,11 @@ public class PdvDbContext : DbContext
             e.Property(a => a.Descricao).IsRequired().HasMaxLength(500);
             e.Property(a => a.Referencia).HasMaxLength(120);
             e.HasIndex(a => a.DataHora);
+        });
+
+        modelBuilder.Entity<PrecoLoja>(e =>
+        {
+            e.HasIndex(p => p.ProdutoGuid).IsUnique();
         });
 
         modelBuilder.Entity<Produto>(e =>
@@ -518,7 +524,7 @@ public class PdvDbContext : DbContext
     private void ContarAlteracao()
     {
         if (ChangeTracker.Entries().Any(e => e.State is EntityState.Added or EntityState.Modified or EntityState.Deleted
-                                             && e.Entity is not ImportacaoErpItem and not ImportacaoErpCursor))
+                                             && e.Entity is not ImportacaoErpItem and not ImportacaoErpCursor and not PrecoLoja))
             Interlocked.Increment(ref _alteracoes);
     }
 
