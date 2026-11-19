@@ -326,9 +326,23 @@ public partial class PdvViewModel : ViewModelBase, IEditorCarrinho
             if (!_carrinho.Linhas.Contains(Itens[i].Linha)) Itens.RemoveAt(i);
 
         foreach (var linha in _carrinho.Linhas)
-            if (Itens.All(i => i.Linha != linha)) Itens.Add(new ItemCarrinhoViewModel(linha, this));
+        {
+            if (Itens.Any(i => i.Linha == linha)) continue;
+            // Tamanhos do mesmo produto ficam juntos: a linha nova entra logo depois da última do produto.
+            var ultimo = -1;
+            for (var i = 0; i < Itens.Count; i++) if (Itens[i].Linha.ProdutoId == linha.ProdutoId) ultimo = i;
+            var novo = new ItemCarrinhoViewModel(linha, this);
+            if (ultimo < 0) Itens.Add(novo); else Itens.Insert(ultimo + 1, novo);
+        }
 
-        foreach (var item in Itens) item.Atualizar();
+        var grupos = _carrinho.Grupos().ToDictionary(g => g.ProdutoId);
+        var vistos = new HashSet<int>();
+        foreach (var item in Itens)
+        {
+            var g = grupos[item.Linha.ProdutoId];
+            item.DefinirGrupo(vistos.Add(g.ProdutoId), g.Grade, g.TotalCentavos);
+            item.Atualizar();
+        }
 
         OnPropertyChanged(nameof(CarrinhoVazio));
         OnPropertyChanged(nameof(DicaFinalizar));
