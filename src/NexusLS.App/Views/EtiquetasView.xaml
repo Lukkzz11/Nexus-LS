@@ -41,7 +41,7 @@
                     </TextBox>
 
                     <ListBox ItemsSource="{Binding Resultados}" SelectedItem="{Binding ResultadoSelecionado}"
-                             MaxHeight="150" Margin="0,6,0,0" BorderBrush="{StaticResource CorBorda}">
+                             MaxHeight="150" Margin="0,6,0,0" BorderBrush="{DynamicResource CorBorda}">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <Grid>
@@ -50,7 +50,7 @@
                                         <ColumnDefinition Width="110" />
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Text="{Binding Nome}" />
-                                    <TextBlock Grid.Column="1" HorizontalAlignment="Right" Foreground="{StaticResource CorTextoSuave}"
+                                    <TextBlock Grid.Column="1" HorizontalAlignment="Right" Foreground="{DynamicResource CorTextoSuave}"
                                                Text="{Binding PrecoVendaCentavos, Converter={StaticResource Centavos}}" />
                                 </Grid>
                             </DataTemplate>
@@ -89,7 +89,7 @@
                     <DataGrid ItemsSource="{Binding Fila}"
                               AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
                               SelectionMode="Single" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
-                              HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0" Background="{StaticResource CorPainel}" RowHeight="40">
+                              HorizontalGridLinesBrush="{DynamicResource CorLinhaGrade}" BorderThickness="0" Background="{DynamicResource CorPainel}" RowHeight="40">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Produto" Binding="{Binding Nome, Mode=OneWay}" Width="*" IsReadOnly="True" ElementStyle="{StaticResource CelaCentralizada}" />
                             <DataGridTextColumn Header="Tamanho" Binding="{Binding Tamanho, Mode=OneWay}" Width="120" IsReadOnly="True" ElementStyle="{StaticResource CelaCentralizada}" />
@@ -124,7 +124,7 @@
 
                     <TextBlock Text="2. A fila está vazia. Escolha um produto acima e tecle Adicionar."
                                HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16"
-                               Foreground="{StaticResource CorTextoSuave}" IsHitTestVisible="False"
+                               Foreground="{DynamicResource CorTextoSuave}" IsHitTestVisible="False"
                                Visibility="{Binding FilaVazia, Converter={StaticResource BoolVis}}" />
                 </Grid>
             </Border>
@@ -142,7 +142,7 @@
                     <ComboBox ItemsSource="{Binding Formatos}" DisplayMemberPath="Nome"
                               SelectedItem="{Binding FormatoSelecionado}" Padding="8,7" />
 
-                    <TextBlock Text="{Binding AvisoLegibilidade}" TextWrapping="Wrap" Foreground="{StaticResource CorPerigo}"
+                    <TextBlock Text="{Binding AvisoLegibilidade}" TextWrapping="Wrap" Foreground="{DynamicResource CorPerigo}"
                                FontWeight="SemiBold" Margin="0,8,0,0" AutomationProperties.Name="Aviso de legibilidade" />
 
                     <Expander Header="Meus modelos de bobina" Margin="0,10,0,0">
@@ -192,7 +192,7 @@
             </Border>
 
             <TextBlock Text="Prévia (página 1)" FontWeight="SemiBold" Margin="2,16,0,6" />
-            <Border Background="{StaticResource CorLinhaGrade}" CornerRadius="6" Padding="12" HorizontalAlignment="Left">
+            <Border Background="{DynamicResource CorLinhaGrade}" CornerRadius="6" Padding="12" HorizontalAlignment="Left">
                 <Image x:Name="PreviaImagem" Stretch="Uniform" MaxWidth="420" MaxHeight="520"
                        RenderOptions.BitmapScalingMode="HighQuality" />
             </Border>

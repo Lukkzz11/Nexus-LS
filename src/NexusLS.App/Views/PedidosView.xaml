@@ -5,9 +5,10 @@
     <UserControl.Resources>
         <!-- Um cartão do quadro: número, cliente, total e resumo. O escolhido ganha borda azul. -->
         <Style x:Key="BotaoCartao" TargetType="Button">
-            <Setter Property="Background" Value="{StaticResource CorPainel}" />
-            <Setter Property="BorderBrush" Value="{StaticResource CorBorda}" />
+            <Setter Property="Background" Value="{DynamicResource CorPainel}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource CorBorda}" />
             <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="{DynamicResource CorTexto}" />
             <Setter Property="Padding" Value="10,8" />
             <Setter Property="Margin" Value="0,0,0,8" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
@@ -21,10 +22,10 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="borda" Property="BorderBrush" Value="{StaticResource CorBordaForte}" />
+                                <Setter TargetName="borda" Property="BorderBrush" Value="{DynamicResource CorBordaForte}" />
                             </Trigger>
                             <Trigger Property="IsKeyboardFocused" Value="True">
-                                <Setter TargetName="borda" Property="BorderBrush" Value="{StaticResource CorPrimaria}" />
+                                <Setter TargetName="borda" Property="BorderBrush" Value="{DynamicResource CorPrimaria}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -38,28 +39,23 @@
                             <Binding Path="Tag" RelativeSource="{RelativeSource Self}" />
                         </MultiBinding>
                     </DataTrigger.Binding>
-                    <Setter Property="BorderBrush" Value="{StaticResource CorPrimaria}" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource CorPrimaria}" />
                     <Setter Property="BorderThickness" Value="2" />
-                    <Setter Property="Background" Value="{StaticResource CorSelecaoSuave}" />
+                    <Setter Property="Background" Value="{DynamicResource CorSelecaoSuave}" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>
 
-        <!-- Cor de cada etapa (faixa do cartao e barra da coluna) -->
-        <SolidColorBrush x:Key="CorEtapaNovo" Color="#2563EB" />
-        <SolidColorBrush x:Key="CorEtapaSeparacao" Color="#D97706" />
-        <SolidColorBrush x:Key="CorEtapaSeparado" Color="#7C3AED" />
-        <SolidColorBrush x:Key="CorEtapaPronto" Color="#0D9488" />
-        <SolidColorBrush x:Key="CorEtapaEntregue" Color="#15803D" />
+        <!-- A cor de cada etapa fica no Tokens.xaml: muda com o tema. -->
 
         <Style x:Key="FaixaEtapa" TargetType="Border">
-            <Setter Property="Background" Value="{StaticResource CorPerigo}" />
+            <Setter Property="Background" Value="{DynamicResource CorPerigo}" />
             <Style.Triggers>
-                <DataTrigger Binding="{Binding Status}" Value="Novo"><Setter Property="Background" Value="{StaticResource CorEtapaNovo}" /></DataTrigger>
-                <DataTrigger Binding="{Binding Status}" Value="EmSeparacao"><Setter Property="Background" Value="{StaticResource CorEtapaSeparacao}" /></DataTrigger>
-                <DataTrigger Binding="{Binding Status}" Value="Separado"><Setter Property="Background" Value="{StaticResource CorEtapaSeparado}" /></DataTrigger>
-                <DataTrigger Binding="{Binding Status}" Value="ProntoRetirada"><Setter Property="Background" Value="{StaticResource CorEtapaPronto}" /></DataTrigger>
-                <DataTrigger Binding="{Binding Status}" Value="Entregue"><Setter Property="Background" Value="{StaticResource CorEtapaEntregue}" /></DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Novo"><Setter Property="Background" Value="{DynamicResource CorEtapaNovo}" /></DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="EmSeparacao"><Setter Property="Background" Value="{DynamicResource CorEtapaSeparacao}" /></DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Separado"><Setter Property="Background" Value="{DynamicResource CorEtapaSeparado}" /></DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="ProntoRetirada"><Setter Property="Background" Value="{DynamicResource CorEtapaPronto}" /></DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Entregue"><Setter Property="Background" Value="{DynamicResource CorEtapaEntregue}" /></DataTrigger>
             </Style.Triggers>
         </Style>
 
@@ -78,18 +74,18 @@
                     <StackPanel Grid.Column="1" Margin="10,0,0,0">
                         <Grid>
                             <TextBlock Text="{Binding Numero}" FontWeight="Bold" FontSize="13" />
-                            <TextBlock Text="{Binding HaQuanto}" HorizontalAlignment="Right" FontSize="12" Foreground="{StaticResource CorTextoSuave}"
+                            <TextBlock Text="{Binding HaQuanto}" HorizontalAlignment="Right" FontSize="12" Foreground="{DynamicResource CorTextoSuave}"
                                        ToolTip="{Binding Quando}" />
                         </Grid>
                         <TextBlock Text="{Binding Cliente}" Margin="0,3,0,0" FontSize="14" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-                        <TextBlock Text="{Binding ItensResumo}" Margin="0,4,0,0" FontSize="12" Foreground="{StaticResource CorTexto}"
+                        <TextBlock Text="{Binding ItensResumo}" Margin="0,4,0,0" FontSize="12" Foreground="{DynamicResource CorTexto}"
                                    TextTrimming="CharacterEllipsis" />
                         <Grid Margin="0,6,0,0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="{Binding Resumo}" FontSize="12" Foreground="{StaticResource CorTextoSuave}" VerticalAlignment="Center"
+                            <TextBlock Text="{Binding Resumo}" FontSize="12" Foreground="{DynamicResource CorTextoSuave}" VerticalAlignment="Center"
                                        TextTrimming="CharacterEllipsis" Margin="0,0,8,0" />
                             <TextBlock Grid.Column="1" Text="{Binding Total}" FontWeight="Bold" FontSize="15" />
                         </Grid>
@@ -99,7 +95,7 @@
         </DataTemplate>
 
         <Style x:Key="ColunaQuadro" TargetType="Border">
-            <Setter Property="Background" Value="{StaticResource CorColunaFundo}" />
+            <Setter Property="Background" Value="{DynamicResource CorColunaFundo}" />
             <Setter Property="CornerRadius" Value="10" />
             <Setter Property="Padding" Value="10" />
             <Setter Property="Margin" Value="0,0,10,0" />
@@ -109,10 +105,10 @@
             <Style.Triggers>
                 <!-- durante o arraste: etapas que aceitam o cartao ganham borda verde; a recusada, vermelha -->
                 <DataTrigger Binding="{Binding DestinoValido}" Value="True">
-                    <Setter Property="BorderBrush" Value="{StaticResource CorPositivo}" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource CorPositivo}" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding DestinoInvalido}" Value="True">
-                    <Setter Property="BorderBrush" Value="{StaticResource CorPerigo}" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource CorPerigo}" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>
@@ -208,7 +204,7 @@
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
-                            <TextBlock Text="{Binding TituloComContagem}" FontWeight="SemiBold" Margin="2,0,0,8" Foreground="{StaticResource CorPerigo}" />
+                            <TextBlock Text="{Binding TituloComContagem}" FontWeight="SemiBold" Margin="2,0,0,8" Foreground="{DynamicResource CorPerigo}" />
                             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                                 <ItemsControl ItemsSource="{Binding Cartoes}" ItemTemplate="{StaticResource ModeloCartao}" />
                             </ScrollViewer>
@@ -223,12 +219,12 @@
         <Border Grid.Column="2" Style="{StaticResource Painel}" VerticalAlignment="Top"
                 Visibility="{Binding FormAberto, Converter={StaticResource BoolInverso}}">
             <Grid>
-                <TextBlock Text="Escolha um pedido no quadro para ver os detalhes." Foreground="{StaticResource CorTextoSuave}" TextWrapping="Wrap"
+                <TextBlock Text="Escolha um pedido no quadro para ver os detalhes." Foreground="{DynamicResource CorTextoSuave}" TextWrapping="Wrap"
                            Visibility="{Binding TemSelecao, Converter={StaticResource BoolInverso}}" />
                 <StackPanel Visibility="{Binding TemSelecao, Converter={StaticResource BoolVis}}">
                     <TextBlock Text="{Binding DetalheTitulo}" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap" AutomationProperties.Name="Pedido escolhido" />
                     <TextBlock Text="{Binding DetalheCliente}" Margin="0,4,0,0" />
-                    <TextBlock Text="{Binding DetalheObservacao}" Foreground="{StaticResource CorTextoSuave}" TextWrapping="Wrap" Margin="0,2,0,0" />
+                    <TextBlock Text="{Binding DetalheObservacao}" Foreground="{DynamicResource CorTextoSuave}" TextWrapping="Wrap" Margin="0,2,0,0" />
 
                     <TextBlock Text="Itens" Style="{StaticResource Rotulo}" Margin="0,14,0,4" />
                     <ItemsControl ItemsSource="{Binding DetalheItens}">
@@ -241,7 +237,7 @@
                     <TextBlock Text="Histórico" Style="{StaticResource Rotulo}" Margin="0,14,0,4" />
                     <ItemsControl ItemsSource="{Binding DetalheHistorico}">
                         <ItemsControl.ItemTemplate>
-                            <DataTemplate><TextBlock Text="{Binding}" FontSize="13" Foreground="{StaticResource CorTextoSuave}" Margin="0,1" /></DataTemplate>
+                            <DataTemplate><TextBlock Text="{Binding}" FontSize="13" Foreground="{DynamicResource CorTextoSuave}" Margin="0,1" /></DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
 
@@ -309,7 +305,7 @@
                     <ItemsControl ItemsSource="{Binding ItensForm}" Margin="0,10,0,0">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border BorderBrush="{StaticResource CorBorda}" BorderThickness="0,0,0,1" Padding="0,8">
+                                <Border BorderBrush="{DynamicResource CorBorda}" BorderThickness="0,0,0,1" Padding="0,8">
                                     <StackPanel>
                                         <Grid>
                                             <Grid.ColumnDefinitions>

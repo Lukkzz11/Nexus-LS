@@ -11,11 +11,15 @@ public class Preferencias
     /// <summary>Desconto sugerido por peça na Venda Cliente, em centavos.</summary>
     public long DescontoPorPecaCentavos { get; set; } = 200;
 
+    /// <summary>Tema das cores: "Automatico" (segue o Windows), "Claro" ou "Escuro". Veja <see cref="RegrasDeTema"/>.</summary>
+    public string Tema { get; set; } = nameof(ModoTema.Automatico);
+
     public static readonly int[] ZoomsPermitidos = { 90, 100, 110, 125, 150 };
 
     public void Normalizar()
     {
         if (ZoomPercentual is < 80 or > 160) ZoomPercentual = 100;
+        Tema = RegrasDeTema.Ler(Tema).ToString();
         if (DescontoPorPecaCentavos is < 0 or > 100_000) throw new RegraDeNegocioException("O desconto por peça deve ficar entre R$ 0,00 e R$ 1.000,00.");
     }
 }
@@ -36,6 +40,7 @@ public class PreferenciasStore
             var p = JsonSerializer.Deserialize<Preferencias>(File.ReadAllText(_caminho)) ?? new();
             if (p.ZoomPercentual is < 80 or > 160) p.ZoomPercentual = 100;
             if (p.DescontoPorPecaCentavos is < 0 or > 100_000) p.DescontoPorPecaCentavos = 200;
+            p.Tema = RegrasDeTema.Ler(p.Tema).ToString();
             return p;
         }
         catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException) { return new(); }

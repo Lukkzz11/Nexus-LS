@@ -6,7 +6,7 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="0,0,12,24">
             <TextBlock Text="Catálogo online" Style="{StaticResource TituloTela}" Margin="0,0,0,4" />
-            <TextBlock TextWrapping="Wrap" Foreground="{StaticResource CorTextoSuave}" Margin="0,0,0,14"
+            <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource CorTextoSuave}" Margin="0,0,0,14"
                        Text="O programa continua funcionando sem internet; os dados ficam neste computador. Quando você clicar em &quot;Atualizar Firestore&quot;, o catálogo (nome, categoria, referência, código de barras, preço de varejo e estoque por tamanho) é publicado no Firebase do seu projeto. Nada é enviado sozinho, e nada é apagado na nuvem." />
 
             <!-- Os cartões se repartem em duas colunas em tela larga (cada um entra na coluna mais curta) -->
@@ -32,7 +32,7 @@
 
                     <!-- Confirmação antes de enviar -->
                     <Border Margin="0,14,0,0" Padding="14" CornerRadius="6" BorderThickness="1"
-                            BorderBrush="{StaticResource CorBorda}" Background="{StaticResource CorAvisoFundo}"
+                            BorderBrush="{DynamicResource CorBorda}" Background="{DynamicResource CorAvisoFundo}"
                             Visibility="{Binding AguardandoConfirmacao, Converter={StaticResource BoolVis}}">
                         <StackPanel>
                             <TextBlock Text="{Binding TextoConfirmacao}" TextWrapping="Wrap" FontWeight="SemiBold"
@@ -50,10 +50,10 @@
                                AutomationProperties.Name="Resultado da sincronização">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
-                                <Setter Property="Foreground" Value="{StaticResource CorPositivo}" />
+                                <Setter Property="Foreground" Value="{DynamicResource CorPositivo}" />
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding ResultadoEhErro}" Value="True">
-                                        <Setter Property="Foreground" Value="{StaticResource CorNegativo}" />
+                                        <Setter Property="Foreground" Value="{DynamicResource CorNegativo}" />
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
@@ -63,7 +63,7 @@
                     <ItemsControl ItemsSource="{Binding Problemas}" Margin="0,8,0,0">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <TextBlock Text="{Binding}" TextWrapping="Wrap" Foreground="{StaticResource CorAviso}" Margin="0,2" />
+                                <TextBlock Text="{Binding}" TextWrapping="Wrap" Foreground="{DynamicResource CorAviso}" Margin="0,2" />
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
@@ -74,7 +74,7 @@
             <Border Style="{StaticResource Painel}">
                 <StackPanel IsEnabled="{Binding PodeEditar}">
                     <TextBlock Text="Firebase deste cliente" FontSize="18" FontWeight="SemiBold" />
-                    <TextBlock Text="{Binding SituacaoConfiguracao}" TextWrapping="Wrap" Foreground="{StaticResource CorTextoSuave}" Margin="0,4,0,0" />
+                    <TextBlock Text="{Binding SituacaoConfiguracao}" TextWrapping="Wrap" Foreground="{DynamicResource CorTextoSuave}" Margin="0,4,0,0" />
 
                     <TextBlock Text="Id do projeto (ex.: minha-loja-1a2b3)" Style="{StaticResource Rotulo}" />
                     <TextBox Text="{Binding ProjectId, UpdateSourceTrigger=PropertyChanged}" />
@@ -96,7 +96,7 @@
                         <Button Content="Testar conexão" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0" Command="{Binding TestarConexaoCommand}" />
                     </StackPanel>
                     <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" />
-                    <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,8,0,0"
+                    <TextBlock Foreground="{DynamicResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,8,0,0"
                                Text="A senha é guardada com a proteção do Windows (só este usuário, neste computador, consegue ler). O programa nunca usa chave de administrador do Firebase." />
                 </StackPanel>
             </Border>
@@ -105,7 +105,7 @@
             <Border Style="{StaticResource Painel}" Visibility="{Binding TemOperacional, Converter={StaticResource BoolVis}}">
                 <StackPanel IsEnabled="{Binding PodeEditar}">
                     <TextBlock Text="Nuvem operacional (vendas)" FontSize="18" FontWeight="SemiBold" />
-                    <TextBlock Text="{Binding SituacaoOperacional}" TextWrapping="Wrap" Foreground="{StaticResource CorTextoSuave}" Margin="0,4,0,0" />
+                    <TextBlock Text="{Binding SituacaoOperacional}" TextWrapping="Wrap" Foreground="{DynamicResource CorTextoSuave}" Margin="0,4,0,0" />
 
                     <TextBlock Text="Id do projeto operacional (outro projeto, privado)" Style="{StaticResource Rotulo}" />
                     <TextBox Text="{Binding OperProjectId, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Projeto operacional" />
@@ -124,7 +124,7 @@
                 <StackPanel DataContext="{Binding Erp}">
                     <StackPanel IsEnabled="{Binding PodeEditar}">
                         <TextBlock Text="Importar do ERP" FontSize="18" FontWeight="SemiBold" />
-                        <TextBlock Text="{Binding Situacao}" TextWrapping="Wrap" Foreground="{StaticResource CorTextoSuave}" Margin="0,4,0,0" />
+                        <TextBlock Text="{Binding Situacao}" TextWrapping="Wrap" Foreground="{DynamicResource CorTextoSuave}" Margin="0,4,0,0" />
 
                         <TextBlock Text="Id do projeto Firebase do ERP" Style="{StaticResource Rotulo}" />
                         <TextBox Text="{Binding ErpProjectId, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Projeto do ERP" />
@@ -153,7 +153,7 @@
                     </StackPanel>
                     <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" />
                     <TextBlock Text="{Binding Resultado}" TextWrapping="Wrap" Margin="0,8,0,0" />
-                    <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,8,0,0"
+                    <TextBlock Foreground="{DynamicResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,8,0,0"
                                Text="O Nexus só lê o ERP. A primeira vez lê tudo; depois, só o que foi criado ou alterado (poucas leituras no Firebase). Vendas importadas não mexem no estoque: o saldo vem do produto." />
                 </StackPanel>
             </Border>
@@ -163,7 +163,7 @@
                 <StackPanel>
                     <TextBlock Text="Histórico de atualizações" FontSize="18" FontWeight="SemiBold" />
                     <ListBox ItemsSource="{Binding Historico}" DisplayMemberPath="Texto" MaxHeight="260" Margin="0,8,0,0" />
-                    <TextBlock Text="Ainda não houve nenhuma atualização." Foreground="{StaticResource CorTextoSuave}" Margin="0,8,0,0">
+                    <TextBlock Text="Ainda não houve nenhuma atualização." Foreground="{DynamicResource CorTextoSuave}" Margin="0,8,0,0">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
                                 <Setter Property="Visibility" Value="Collapsed" />

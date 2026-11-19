@@ -128,8 +128,10 @@ public partial class ConfiguracoesView : UserControl
         foreach (var (k, b) in _botoesMenu)
         {
             var ativo = k == chave;
-            b.Background = ativo ? (System.Windows.Media.Brush)FindResource("CorMenuAtivo") : System.Windows.Media.Brushes.Transparent;
-            b.Foreground = ativo ? (System.Windows.Media.Brush)FindResource("CorPrimaria") : (System.Windows.Media.Brush)FindResource("CorTexto");
+            // Referência dinâmica: o botão acompanha a troca de tema mesmo com a página aberta.
+            if (ativo) b.SetResourceReference(System.Windows.Controls.Control.BackgroundProperty, "CorMenuAtivo");
+            else b.Background = System.Windows.Media.Brushes.Transparent;
+            b.SetResourceReference(System.Windows.Controls.Control.ForegroundProperty, ativo ? "CorMenuAtivoTexto" : "CorTexto");
             b.FontWeight = ativo ? FontWeights.SemiBold : FontWeights.Normal;
         }
     }

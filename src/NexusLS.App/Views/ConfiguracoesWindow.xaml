@@ -1,0 +1,13 @@
+<Window x:Class="NexusLS.App.Views.ConfiguracoesWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:v="clr-namespace:NexusLS.App.Views"
+        Title="Nexus — Configurações" Height="780" Width="1180" MinHeight="560" MinWidth="900"
+        WindowStartupLocation="CenterOwner" ResizeMode="CanResize"
+        Background="{DynamicResource CorFundo}" Foreground="{DynamicResource CorTexto}"
+        FontFamily="{StaticResource FonteTexto}" FontSize="{StaticResource TamCorpo}">
+    <!-- A tela de Configurações de sempre (mesmas páginas e permissões), agora numa janela própria. O zoom é aplicado no código. -->
+    <Grid x:Name="Raiz" Margin="20,16,20,16">
+        <v:ConfiguracoesView />
+    </Grid>
+</Window>

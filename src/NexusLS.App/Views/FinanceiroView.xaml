@@ -7,7 +7,7 @@
             <Setter Property="HorizontalAlignment" Value="Right" />
         </Style>
         <Style x:Key="RotuloResumo" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />
+            <Setter Property="Foreground" Value="{DynamicResource CorTextoSuave}" />
             <Setter Property="FontSize" Value="12" />
         </Style>
         <Style x:Key="ValorResumo" TargetType="TextBlock">
@@ -80,10 +80,10 @@
                             <TextBlock Text="{Binding ResultadoTexto}" AutomationProperties.Name="Resultado do período">
                                 <TextBlock.Style>
                                     <Style TargetType="TextBlock" BasedOn="{StaticResource ValorResumo}">
-                                        <Setter Property="Foreground" Value="{StaticResource CorSucesso}" />
+                                        <Setter Property="Foreground" Value="{DynamicResource CorSucesso}" />
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding ResultadoNegativo}" Value="True">
-                                                <Setter Property="Foreground" Value="{StaticResource CorPerigo}" />
+                                                <Setter Property="Foreground" Value="{DynamicResource CorPerigo}" />
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
@@ -92,19 +92,19 @@
                         </StackPanel>
                     </WrapPanel>
                     <WrapPanel Margin="0,10,0,0">
-                        <TextBlock Foreground="{StaticResource CorTextoSuave}" Margin="0,0,24,0">
+                        <TextBlock Foreground="{DynamicResource CorTextoSuave}" Margin="0,0,24,0">
                             <Run Text="A pagar: " /><Run Text="{Binding APagarTexto, Mode=OneWay}" FontWeight="SemiBold" />
                         </TextBlock>
-                        <TextBlock Foreground="{StaticResource CorTextoSuave}" Margin="0,0,24,0">
+                        <TextBlock Foreground="{DynamicResource CorTextoSuave}" Margin="0,0,24,0">
                             <Run Text="A receber: " /><Run Text="{Binding AReceberTexto, Mode=OneWay}" FontWeight="SemiBold" />
                         </TextBlock>
                         <TextBlock Text="{Binding AtrasadosTexto}" AutomationProperties.Name="Contas atrasadas">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock">
-                                    <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />
+                                    <Setter Property="Foreground" Value="{DynamicResource CorTextoSuave}" />
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding TemAtrasados}" Value="True">
-                                            <Setter Property="Foreground" Value="{StaticResource CorPerigo}" />
+                                            <Setter Property="Foreground" Value="{DynamicResource CorPerigo}" />
                                             <Setter Property="FontWeight" Value="SemiBold" />
                                         </DataTrigger>
                                     </Style.Triggers>
@@ -113,8 +113,8 @@
                         </TextBlock>
                     </WrapPanel>
                     <WrapPanel Margin="0,8,0,0" Visibility="{Binding TemForaDoResultado, Converter={StaticResource BoolVis}}">
-                        <TextBlock Text="{Binding EntradasForaTexto}" FontSize="13" Foreground="{StaticResource CorTextoSuave}" Margin="0,0,24,0" />
-                        <TextBlock Text="{Binding SaidasForaTexto}" FontSize="13" Foreground="{StaticResource CorTextoSuave}" />
+                        <TextBlock Text="{Binding EntradasForaTexto}" FontSize="13" Foreground="{DynamicResource CorTextoSuave}" Margin="0,0,24,0" />
+                        <TextBlock Text="{Binding SaidasForaTexto}" FontSize="13" Foreground="{DynamicResource CorTextoSuave}" />
                     </WrapPanel>
                     <ItemsControl ItemsSource="{Binding DespesasPorCategoria}" Margin="0,8,0,0">
                         <ItemsControl.ItemsPanel>
@@ -122,7 +122,7 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <TextBlock Text="{Binding}" FontSize="13" Foreground="{StaticResource CorTextoSuave}" Margin="0,0,20,0" />
+                                <TextBlock Text="{Binding}" FontSize="13" Foreground="{DynamicResource CorTextoSuave}" Margin="0,0,20,0" />
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
@@ -152,10 +152,10 @@
                         <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding Atrasado}" Value="True">
-                                    <Setter Property="Foreground" Value="{StaticResource CorPerigo}" />
+                                    <Setter Property="Foreground" Value="{DynamicResource CorPerigo}" />
                                 </DataTrigger>
                                 <DataTrigger Binding="{Binding Situacao}" Value="Cancelado">
-                                    <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />
+                                    <Setter Property="Foreground" Value="{DynamicResource CorTextoSuave}" />
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
@@ -210,7 +210,7 @@
                     </StackPanel>
 
                     <TextBlock Text="O lançamento original fica cancelado no histórico (com o motivo que você informar ao salvar) e este vira o lançamento certo no lugar dele."
-                               TextWrapping="Wrap" FontSize="13" Foreground="{StaticResource CorTextoSuave}" Margin="0,8,0,0"
+                               TextWrapping="Wrap" FontSize="13" Foreground="{DynamicResource CorTextoSuave}" Margin="0,8,0,0"
                                Visibility="{Binding Corrigindo, Converter={StaticResource BoolVis}}" />
                     <TextBlock Text="Descrição" Style="{StaticResource Rotulo}" />
                     <TextBox Text="{Binding FormDescricao, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Descrição" />
@@ -284,7 +284,7 @@
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
                                             <TextBlock VerticalAlignment="Center" TextTrimming="CharacterEllipsis">
-                                                <Run Text="{Binding Nome, Mode=OneWay}" /><Run Text=" · " Foreground="{StaticResource CorTextoSuave}" /><Run Text="{Binding TipoTexto, Mode=OneWay}" Foreground="{StaticResource CorTextoSuave}" /><Run Text=" · " Foreground="{StaticResource CorTextoSuave}" /><Run Text="{Binding SituacaoTexto, Mode=OneWay}" Foreground="{StaticResource CorTextoSuave}" />
+                                                <Run Text="{Binding Nome, Mode=OneWay}" /><Run Text=" · " Foreground="{DynamicResource CorTextoSuave}" /><Run Text="{Binding TipoTexto, Mode=OneWay}" Foreground="{DynamicResource CorTextoSuave}" /><Run Text=" · " Foreground="{DynamicResource CorTextoSuave}" /><Run Text="{Binding SituacaoTexto, Mode=OneWay}" Foreground="{DynamicResource CorTextoSuave}" />
                                             </TextBlock>
                                             <Button Grid.Column="1" Content="{Binding TextoAlternar}" Style="{StaticResource BotaoFantasma}" Padding="8,2"
                                                     Command="{Binding DataContext.AlternarCategoriaCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"

@@ -69,7 +69,7 @@
                         <DataTemplate>
                             <TextBlock>
                                 <Run Text="{Binding Nome, Mode=OneWay}" FontWeight="SemiBold" />
-                                <Run Text="{Binding CodigoBarras, Mode=OneWay}" Foreground="{StaticResource CorTextoSuave}" />
+                                <Run Text="{Binding CodigoBarras, Mode=OneWay}" Foreground="{DynamicResource CorTextoSuave}" />
                             </TextBlock>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
@@ -107,7 +107,7 @@
                         </DataGrid.Columns>
                     </DataGrid>
                     <TextBlock Text="Nenhum produto na compra ainda. Busque acima e tecle Enter." HorizontalAlignment="Center" VerticalAlignment="Center"
-                               Foreground="{StaticResource CorTextoSuave}"
+                               Foreground="{DynamicResource CorTextoSuave}"
                                Visibility="{Binding TemItens, Converter={StaticResource BoolInverso}}" />
                 </Grid>
             </Border>
@@ -121,7 +121,7 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel>
-                            <TextBlock Text="{Binding ResumoItens}" Foreground="{StaticResource CorTextoSuave}" />
+                            <TextBlock Text="{Binding ResumoItens}" Foreground="{DynamicResource CorTextoSuave}" />
                             <TextBlock Text="{Binding TotalTexto}" FontSize="24" FontWeight="Bold" AutomationProperties.Name="Total da compra" />
                         </StackPanel>
                         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">

@@ -13,7 +13,7 @@ public sealed class LoginFirebaseWindow : Window
     private readonly Func<string, string, Task<SessaoUsuario>> _entrarNaConta;
     private readonly TextBox _email = new() { MinHeight = 36, Margin = new Thickness(0, 4, 0, 12) };
     private readonly PasswordBox _senha = new() { MinHeight = 36, Margin = new Thickness(0, 4, 0, 0) };
-    private readonly TextBlock _erro = new() { Foreground = System.Windows.Media.Brushes.Firebrick, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 8, 0, 0), MinHeight = 20 };
+    private readonly TextBlock _erro = new() { Foreground = (System.Windows.Media.Brush?)Application.Current?.TryFindResource("CorNegativo") ?? System.Windows.Media.Brushes.Firebrick, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 8, 0, 0), MinHeight = 20 };
     private readonly Button _entrar = new() { Content = "Entrar", IsDefault = true, Padding = new Thickness(20, 8, 20, 8), MinWidth = 110 };
 
     public SessaoUsuario? Entrou { get; private set; }

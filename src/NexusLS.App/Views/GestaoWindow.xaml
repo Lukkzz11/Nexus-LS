@@ -4,7 +4,7 @@
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         Title="Nexus — Gestão" Height="760" Width="1280" MinHeight="600" MinWidth="1000"
         WindowStartupLocation="CenterOwner" WindowState="Maximized"
-        Background="{StaticResource CorFundo}"
+        Background="{DynamicResource CorFundo}" Foreground="{DynamicResource CorTexto}"
         FontFamily="{StaticResource FonteTexto}" FontSize="{StaticResource TamCorpo}">
 
     <Window.Resources>
@@ -17,10 +17,10 @@
                             <Binding Path="Tag" RelativeSource="{RelativeSource Self}" />
                         </MultiBinding>
                     </DataTrigger.Binding>
-                    <Setter Property="Background" Value="{StaticResource CorMenuAtivo}" />
-                    <Setter Property="BorderBrush" Value="{StaticResource CorSelecao}" />
+                    <Setter Property="Background" Value="{DynamicResource CorMenuAtivo}" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource CorSelecao}" />
                     <Setter Property="FontWeight" Value="SemiBold" />
-                    <Setter Property="Foreground" Value="{StaticResource CorPrimaria}" />
+                    <Setter Property="Foreground" Value="{DynamicResource CorMenuAtivoTexto}" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>

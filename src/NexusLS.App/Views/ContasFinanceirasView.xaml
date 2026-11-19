@@ -32,7 +32,7 @@
             <Border Grid.Row="1" Style="{StaticResource Painel}" Padding="0" Margin="0,0,0,18">
                 <DataGrid ItemsSource="{Binding Contas}" SelectedItem="{Binding Selecionada, Mode=TwoWay}" AutoGenerateColumns="False"
                           IsReadOnly="True" SelectionMode="Single" CanUserAddRows="False" HeadersVisibility="Column"
-                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0" Background="Transparent"
+                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{DynamicResource CorLinhaGrade}" BorderThickness="0" Background="Transparent"
                           RowHeight="36" AutomationProperties.Name="Lista de contas">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Conta" Binding="{Binding Nome, Mode=OneWay}" Width="2*" MinWidth="150" />
@@ -47,7 +47,7 @@
             <Border Grid.Row="3" Style="{StaticResource Painel}" Padding="0">
                 <DataGrid ItemsSource="{Binding Transferencias}" SelectedItem="{Binding TransferenciaSelecionada, Mode=TwoWay}"
                           AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" CanUserAddRows="False" HeadersVisibility="Column"
-                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0" Background="Transparent"
+                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{DynamicResource CorLinhaGrade}" BorderThickness="0" Background="Transparent"
                           RowHeight="36" AutomationProperties.Name="Lista de transferências">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Data" Binding="{Binding Data, Mode=OneWay}" Width="100" />
@@ -97,7 +97,7 @@
                     <StackPanel>
                         <TextBlock Text="Transferir entre contas" FontSize="18" FontWeight="SemiBold" />
                         <TextBlock Text="Não é receita nem despesa: o dinheiro só muda de lugar. Para levar dinheiro da gaveta ao banco, use esta transferência (a sangria do caixa é uma retirada sem destino)."
-                                   TextWrapping="Wrap" FontSize="13" Foreground="{StaticResource CorTextoSuave}" Margin="0,4,0,0" />
+                                   TextWrapping="Wrap" FontSize="13" Foreground="{DynamicResource CorTextoSuave}" Margin="0,4,0,0" />
                         <TextBlock Text="Sai de" Style="{StaticResource Rotulo}" />
                         <ComboBox ItemsSource="{Binding ContasAtivas}" SelectedItem="{Binding TransfOrigem}" DisplayMemberPath="Nome" Padding="8,7"
                                   AutomationProperties.Name="Conta de origem" />

@@ -20,10 +20,10 @@
                 <ProgressBar Minimum="0" Maximum="100" Value="{Binding Percentual, Mode=OneWay}" Height="10" Margin="0,3,0,0">
                     <ProgressBar.Style>
                         <Style TargetType="ProgressBar">
-                            <Setter Property="Foreground" Value="{StaticResource CorPrimaria}" />
+                            <Setter Property="Foreground" Value="{DynamicResource CorPrimaria}" />
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding Alerta}" Value="True">
-                                    <Setter Property="Foreground" Value="{StaticResource CorPerigo}" />
+                                    <Setter Property="Foreground" Value="{DynamicResource CorPerigo}" />
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
@@ -34,7 +34,7 @@
 
         <!-- Fatia da rosca e a legenda dela (mesmo desenho do Relatórios) -->
         <DataTemplate x:Key="FatiaDesenho">
-            <Path Data="{Binding Caminho}" Fill="{Binding ChaveCor, Converter={StaticResource Pincel}}" Stroke="{StaticResource CorPainel}"
+            <Path Data="{Binding Caminho}" Fill="{Binding ChaveCor, Converter={StaticResource Pincel}}" Stroke="{DynamicResource CorPainel}"
                   StrokeThickness="1" ToolTip="{Binding Legenda}" />
         </DataTemplate>
         <DataTemplate x:Key="FatiaLegenda">
@@ -54,11 +54,11 @@
         </Style>
         <Style x:Key="SubGrafico" TargetType="TextBlock">
             <Setter Property="FontSize" Value="12" />
-            <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />
+            <Setter Property="Foreground" Value="{DynamicResource CorTextoSuave}" />
             <Setter Property="Margin" Value="0,2,0,10" />
         </Style>
         <Style x:Key="AvisoVazio" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />
+            <Setter Property="Foreground" Value="{DynamicResource CorTextoSuave}" />
             <Setter Property="Visibility" Value="Collapsed" />
         </Style>
     </UserControl.Resources>
@@ -66,15 +66,15 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="0,0,12,24">
             <TextBlock Text="Resumo do estoque" FontSize="22" FontWeight="SemiBold" />
-            <TextBlock Text="O que tem, onde está, o que mais sai e o que está acabando." Foreground="{StaticResource CorTextoSuave}" Margin="0,2,0,12" />
+            <TextBlock Text="O que tem, onde está, o que mais sai e o que está acabando." Foreground="{DynamicResource CorTextoSuave}" Margin="0,2,0,12" />
 
             <!-- Cartões de totais -->
             <v:GradeDeCartoes LarguraMinima="170" MaximoColunas="6" Espaco="12" IgualarAltura="True" Margin="0,0,0,12">
                 <Border Style="{StaticResource Painel}"><StackPanel><TextBlock Text="Peças em estoque" Style="{StaticResource Rotulo}" /><TextBlock Text="{Binding PecasEmEstoque}" Style="{StaticResource Numero}" /><TextBlock Text="{Binding ProdutosAtivos, StringFormat='{}{0} produto(s) ativo(s)'}" Style="{StaticResource SubGrafico}" Margin="0,2,0,0" /></StackPanel></Border>
                 <Border Style="{StaticResource Painel}"><StackPanel><TextBlock Text="Valor de custo" Style="{StaticResource Rotulo}" /><TextBlock Text="{Binding ValorCusto}" Style="{StaticResource Numero}" /></StackPanel></Border>
                 <Border Style="{StaticResource Painel}"><StackPanel><TextBlock Text="Valor de venda" Style="{StaticResource Rotulo}" /><TextBlock Text="{Binding ValorVenda}" Style="{StaticResource Numero}" /></StackPanel></Border>
-                <Border Style="{StaticResource Painel}"><StackPanel><TextBlock Text="Lucro potencial" Style="{StaticResource Rotulo}" /><TextBlock Text="{Binding LucroPotencial}" Style="{StaticResource Numero}" Foreground="{StaticResource CorSerie2}" /></StackPanel></Border>
-                <Border Style="{StaticResource Painel}"><StackPanel><TextBlock Text="Abaixo do mínimo" Style="{StaticResource Rotulo}" /><TextBlock Text="{Binding QtdAbaixoMinimo}" Style="{StaticResource Numero}" Foreground="{StaticResource CorAtencaoBorda}" /><TextBlock Style="{StaticResource SubGrafico}" Margin="0,2,0,0"><Run Text="{Binding QtdBaixo, Mode=OneWay}" /><Run Text=" baixo(s) · " /><Run Text="{Binding QtdEsgotado, Mode=OneWay}" /><Run Text=" esgotado(s)" /></TextBlock></StackPanel></Border>
+                <Border Style="{StaticResource Painel}"><StackPanel><TextBlock Text="Lucro potencial" Style="{StaticResource Rotulo}" /><TextBlock Text="{Binding LucroPotencial}" Style="{StaticResource Numero}" Foreground="{DynamicResource CorSerie2}" /></StackPanel></Border>
+                <Border Style="{StaticResource Painel}"><StackPanel><TextBlock Text="Abaixo do mínimo" Style="{StaticResource Rotulo}" /><TextBlock Text="{Binding QtdAbaixoMinimo}" Style="{StaticResource Numero}" Foreground="{DynamicResource CorAtencaoBorda}" /><TextBlock Style="{StaticResource SubGrafico}" Margin="0,2,0,0"><Run Text="{Binding QtdBaixo, Mode=OneWay}" /><Run Text=" baixo(s) · " /><Run Text="{Binding QtdEsgotado, Mode=OneWay}" /><Run Text=" esgotado(s)" /></TextBlock></StackPanel></Border>
             </v:GradeDeCartoes>
 
             <v:GradeDeCartoes LarguraMinima="440" MaximoColunas="2" Espaco="12" IgualarAltura="True">
@@ -94,12 +94,12 @@
                                     </Style.Triggers>
                                 </Style>
                             </Grid.Style>
-                            <Border BorderBrush="{StaticResource CorBorda}" BorderThickness="0,0,0,1" />
-                            <Border BorderBrush="{StaticResource CorBorda}" BorderThickness="0,1,0,0" VerticalAlignment="Top" Opacity="0.6" />
+                            <Border BorderBrush="{DynamicResource CorBorda}" BorderThickness="0,0,0,1" />
+                            <Border BorderBrush="{DynamicResource CorBorda}" BorderThickness="0,1,0,0" VerticalAlignment="Top" Opacity="0.6" />
                             <Viewbox Stretch="Fill" Margin="4,6">
                                 <Canvas Width="300" Height="100">
-                                    <Path Data="{Binding Movimentacoes.CaminhoSaidas}" Stroke="{StaticResource CorSerie4}" StrokeThickness="2" StrokeLineJoin="Round" />
-                                    <Path Data="{Binding Movimentacoes.CaminhoEntradas}" Stroke="{StaticResource CorSerie2}" StrokeThickness="2" StrokeLineJoin="Round" />
+                                    <Path Data="{Binding Movimentacoes.CaminhoSaidas}" Stroke="{DynamicResource CorSerie4}" StrokeThickness="2" StrokeLineJoin="Round" />
+                                    <Path Data="{Binding Movimentacoes.CaminhoEntradas}" Stroke="{DynamicResource CorSerie2}" StrokeThickness="2" StrokeLineJoin="Round" />
                                 </Canvas>
                             </Viewbox>
                         </Grid>
@@ -111,14 +111,14 @@
                                     </Style.Triggers>
                                 </Style>
                             </Grid.Style>
-                            <TextBlock Text="{Binding Movimentacoes.PrimeiroRotulo}" FontSize="11" Foreground="{StaticResource CorTextoSuave}" />
-                            <TextBlock Text="{Binding Movimentacoes.Escala}" FontSize="11" Foreground="{StaticResource CorTextoSuave}" HorizontalAlignment="Center" />
-                            <TextBlock Text="{Binding Movimentacoes.UltimoRotulo}" FontSize="11" Foreground="{StaticResource CorTextoSuave}" HorizontalAlignment="Right" />
+                            <TextBlock Text="{Binding Movimentacoes.PrimeiroRotulo}" FontSize="11" Foreground="{DynamicResource CorTextoSuave}" />
+                            <TextBlock Text="{Binding Movimentacoes.Escala}" FontSize="11" Foreground="{DynamicResource CorTextoSuave}" HorizontalAlignment="Center" />
+                            <TextBlock Text="{Binding Movimentacoes.UltimoRotulo}" FontSize="11" Foreground="{DynamicResource CorTextoSuave}" HorizontalAlignment="Right" />
                         </Grid>
                         <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                            <Border Width="12" Height="12" CornerRadius="2" Background="{StaticResource CorSerie2}" Margin="0,0,6,0" VerticalAlignment="Center" />
+                            <Border Width="12" Height="12" CornerRadius="2" Background="{DynamicResource CorSerie2}" Margin="0,0,6,0" VerticalAlignment="Center" />
                             <TextBlock Text="{Binding Movimentacoes.TotalEntradas, StringFormat='Entradas: {0}'}" FontSize="12" Margin="0,0,16,0" />
-                            <Border Width="12" Height="12" CornerRadius="2" Background="{StaticResource CorSerie4}" Margin="0,0,6,0" VerticalAlignment="Center" />
+                            <Border Width="12" Height="12" CornerRadius="2" Background="{DynamicResource CorSerie4}" Margin="0,0,6,0" VerticalAlignment="Center" />
                             <TextBlock Text="{Binding Movimentacoes.TotalSaidas, StringFormat='Saídas: {0}'}" FontSize="12" />
                         </StackPanel>
                         <TextBlock Text="Nenhuma movimentação de estoque no período.">
@@ -161,7 +161,7 @@
                                 <ItemsControl ItemsSource="{Binding PizzaCategorias}" ItemTemplate="{StaticResource FatiaDesenho}" Width="200" Height="200">
                                     <ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                                 </ItemsControl>
-                                <Ellipse Width="108" Height="108" Fill="{StaticResource CorPainel}" />
+                                <Ellipse Width="108" Height="108" Fill="{DynamicResource CorPainel}" />
                             </Grid>
                         </Viewbox>
                         <ItemsControl ItemsSource="{Binding PizzaCategorias}" ItemTemplate="{StaticResource FatiaLegenda}" />
@@ -178,7 +178,7 @@
                                 <ItemsControl ItemsSource="{Binding PizzaSobras}" ItemTemplate="{StaticResource FatiaDesenho}" Width="200" Height="200">
                                     <ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                                 </ItemsControl>
-                                <Ellipse Width="108" Height="108" Fill="{StaticResource CorPainel}" />
+                                <Ellipse Width="108" Height="108" Fill="{DynamicResource CorPainel}" />
                             </Grid>
                         </Viewbox>
                         <ItemsControl ItemsSource="{Binding PizzaSobras}" ItemTemplate="{StaticResource FatiaLegenda}" />

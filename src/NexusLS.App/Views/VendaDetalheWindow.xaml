@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Detalhe da venda" Width="860" Height="700" MinWidth="720" MinHeight="520"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
-        Background="{StaticResource CorFundo}" Foreground="{StaticResource CorTexto}">
+        Background="{DynamicResource CorFundo}" Foreground="{DynamicResource CorTexto}">
     <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -47,7 +47,7 @@
                     <TextBlock Margin="0,2"><Run Text="Subtotal: " /><Run Text="{Binding SubtotalTexto, Mode=OneWay}" /></TextBlock>
                     <TextBlock Margin="0,2" Visibility="{Binding TemDesconto, Converter={StaticResource BoolVis}}"><Run Text="Desconto: " /><Run Text="{Binding DescontoTexto, Mode=OneWay}" /></TextBlock>
                     <TextBlock Margin="0,2" Visibility="{Binding TemAcrescimo, Converter={StaticResource BoolVis}}"><Run Text="Acréscimo do cartão: " /><Run Text="{Binding AcrescimoTexto, Mode=OneWay}" /></TextBlock>
-                    <TextBlock Margin="0,4" FontSize="20" FontWeight="Bold" Foreground="{StaticResource CorPrimaria}"><Run Text="Total: " /><Run Text="{Binding TotalTexto, Mode=OneWay}" /></TextBlock>
+                    <TextBlock Margin="0,4" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource CorPrimaria}"><Run Text="Total: " /><Run Text="{Binding TotalTexto, Mode=OneWay}" /></TextBlock>
                 </StackPanel>
 
                 <StackPanel Visibility="{Binding TemTrocas, Converter={StaticResource BoolVis}}" Margin="0,10,0,0">

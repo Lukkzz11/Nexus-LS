@@ -58,6 +58,7 @@ public partial class MainViewModel : ObservableObject
     /// <summary>Usado pelos atalhos da tela Início: abre a tela do item pedido.</summary>
     public void Ir(ItemMenu item)
     {
+        if (item == ItemMenu.Configuracoes) { AbrirConfiguracoes(); return; }
         if (GestaoViewModel.EhDaGestao(item)) { AbrirGestaoCom(item); return; }
         if (!Permitido(item)) return;
         switch (item)
@@ -120,6 +121,17 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand] private void AbrirGestao() => AbrirGestaoCom(ItemMenu.Agenda);
 
     private void AbrirGestaoCom(ItemMenu item) => AbrirJanelaGestao?.Invoke(item);
+
+    /// <summary>A MainWindow define: abre a janela própria das Configurações (fora do menu e da Gestão).</summary>
+    public Action? AbrirJanelaConfiguracoes { get; set; }
+
+    [RelayCommand]
+    private void AbrirConfiguracoes()
+    {
+        // Quem não tem permissão de Configurações no balcão passa pelo PIN da Gestão, como antes.
+        if (Sessao.Pode(Permissao.Configuracoes)) AbrirJanelaConfiguracoes?.Invoke();
+        else AbrirGestaoCom(ItemMenu.Configuracoes);
+    }
 
     private void Abrir(object tela, ItemMenu item)
     {

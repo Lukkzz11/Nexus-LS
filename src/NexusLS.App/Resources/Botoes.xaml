@@ -49,60 +49,60 @@
     </Style>
 
     <Style x:Key="BotaoPrimario" TargetType="Button" BasedOn="{StaticResource BotaoBase}">
-        <Setter Property="Background" Value="{StaticResource CorPrimaria}" />
-        <Setter Property="BorderBrush" Value="{StaticResource CorPrimaria}" />
-        <Setter Property="Foreground" Value="{StaticResource CorSobrePrimaria}" />
+        <Setter Property="Background" Value="{DynamicResource CorPrimaria}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource CorPrimaria}" />
+        <Setter Property="Foreground" Value="{DynamicResource CorSobrePrimaria}" />
         <Style.Triggers>
             <MultiTrigger>
                 <MultiTrigger.Conditions>
                     <Condition Property="IsMouseOver" Value="True" />
                     <Condition Property="IsEnabled" Value="True" />
                 </MultiTrigger.Conditions>
-                <Setter Property="Background" Value="{StaticResource CorPrimariaHover}" />
-                <Setter Property="BorderBrush" Value="{StaticResource CorPrimariaHover}" />
+                <Setter Property="Background" Value="{DynamicResource CorPrimariaHover}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource CorPrimariaHover}" />
             </MultiTrigger>
             <Trigger Property="IsPressed" Value="True">
-                <Setter Property="Background" Value="{StaticResource CorPrimariaPressionada}" />
-                <Setter Property="BorderBrush" Value="{StaticResource CorPrimariaPressionada}" />
+                <Setter Property="Background" Value="{DynamicResource CorPrimariaPressionada}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource CorPrimariaPressionada}" />
             </Trigger>
         </Style.Triggers>
     </Style>
 
     <Style x:Key="BotaoSecundario" TargetType="Button" BasedOn="{StaticResource BotaoBase}">
-        <Setter Property="Background" Value="{StaticResource CorPainel}" />
-        <Setter Property="BorderBrush" Value="{StaticResource CorBordaCampo}" />
-        <Setter Property="Foreground" Value="{StaticResource CorTexto}" />
+        <Setter Property="Background" Value="{DynamicResource CorPainel}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource CorBordaCampo}" />
+        <Setter Property="Foreground" Value="{DynamicResource CorTexto}" />
         <Style.Triggers>
             <MultiTrigger>
                 <MultiTrigger.Conditions>
                     <Condition Property="IsMouseOver" Value="True" />
                     <Condition Property="IsEnabled" Value="True" />
                 </MultiTrigger.Conditions>
-                <Setter Property="Background" Value="{StaticResource CorHover}" />
-                <Setter Property="BorderBrush" Value="{StaticResource CorBordaForte}" />
+                <Setter Property="Background" Value="{DynamicResource CorHover}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource CorBordaForte}" />
             </MultiTrigger>
             <Trigger Property="IsPressed" Value="True">
-                <Setter Property="Background" Value="{StaticResource CorBorda}" />
+                <Setter Property="Background" Value="{DynamicResource CorBorda}" />
             </Trigger>
         </Style.Triggers>
     </Style>
 
     <Style x:Key="BotaoPerigo" TargetType="Button" BasedOn="{StaticResource BotaoBase}">
-        <Setter Property="Background" Value="{StaticResource CorPerigo}" />
-        <Setter Property="BorderBrush" Value="{StaticResource CorPerigo}" />
-        <Setter Property="Foreground" Value="{StaticResource CorSobrePrimaria}" />
+        <Setter Property="Background" Value="{DynamicResource CorPerigo}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource CorPerigo}" />
+        <Setter Property="Foreground" Value="{DynamicResource CorSobrePrimaria}" />
         <Style.Triggers>
             <MultiTrigger>
                 <MultiTrigger.Conditions>
                     <Condition Property="IsMouseOver" Value="True" />
                     <Condition Property="IsEnabled" Value="True" />
                 </MultiTrigger.Conditions>
-                <Setter Property="Background" Value="{StaticResource CorPerigoHover}" />
-                <Setter Property="BorderBrush" Value="{StaticResource CorPerigoHover}" />
+                <Setter Property="Background" Value="{DynamicResource CorPerigoHover}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource CorPerigoHover}" />
             </MultiTrigger>
             <Trigger Property="IsPressed" Value="True">
-                <Setter Property="Background" Value="{StaticResource CorPerigoPressionado}" />
-                <Setter Property="BorderBrush" Value="{StaticResource CorPerigoPressionado}" />
+                <Setter Property="Background" Value="{DynamicResource CorPerigoPressionado}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource CorPerigoPressionado}" />
             </Trigger>
         </Style.Triggers>
     </Style>
@@ -111,18 +111,18 @@
     <Style x:Key="BotaoFantasma" TargetType="Button" BasedOn="{StaticResource BotaoBase}">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderBrush" Value="Transparent" />
-        <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />
+        <Setter Property="Foreground" Value="{DynamicResource CorTextoSuave}" />
         <Style.Triggers>
             <MultiTrigger>
                 <MultiTrigger.Conditions>
                     <Condition Property="IsMouseOver" Value="True" />
                     <Condition Property="IsEnabled" Value="True" />
                 </MultiTrigger.Conditions>
-                <Setter Property="Background" Value="{StaticResource CorHover}" />
-                <Setter Property="Foreground" Value="{StaticResource CorTexto}" />
+                <Setter Property="Background" Value="{DynamicResource CorHover}" />
+                <Setter Property="Foreground" Value="{DynamicResource CorTexto}" />
             </MultiTrigger>
             <Trigger Property="IsPressed" Value="True">
-                <Setter Property="Background" Value="{StaticResource CorBorda}" />
+                <Setter Property="Background" Value="{DynamicResource CorBorda}" />
             </Trigger>
         </Style.Triggers>
     </Style>
@@ -139,23 +139,23 @@
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="FontSize" Value="17" />
-        <Setter Property="Foreground" Value="{StaticResource CorTexto}" />
+        <Setter Property="Foreground" Value="{DynamicResource CorTexto}" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="RadioButton">
-                    <Border x:Name="borda" Background="{StaticResource CorPainel}" BorderBrush="{StaticResource CorBordaCampo}"
+                    <Border x:Name="borda" Background="{DynamicResource CorPainel}" BorderBrush="{DynamicResource CorBordaCampo}"
                             BorderThickness="1" CornerRadius="{StaticResource RaioMedio}" Padding="8,11">
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="borda" Property="BorderBrush" Value="{StaticResource CorPrimaria}" />
+                            <Setter TargetName="borda" Property="BorderBrush" Value="{DynamicResource CorPrimaria}" />
                         </Trigger>
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="borda" Property="Background" Value="{StaticResource CorPrimaria}" />
-                            <Setter TargetName="borda" Property="BorderBrush" Value="{StaticResource CorPrimaria}" />
-                            <Setter Property="Foreground" Value="{StaticResource CorSobrePrimaria}" />
+                            <Setter TargetName="borda" Property="Background" Value="{DynamicResource CorPrimaria}" />
+                            <Setter TargetName="borda" Property="BorderBrush" Value="{DynamicResource CorPrimaria}" />
+                            <Setter Property="Foreground" Value="{DynamicResource CorSobrePrimaria}" />
                         </Trigger>
                         <Trigger Property="IsKeyboardFocused" Value="True">
                             <Setter TargetName="borda" Property="Effect">

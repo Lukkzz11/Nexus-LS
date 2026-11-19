@@ -30,7 +30,7 @@
             <Border Grid.Row="2" Style="{StaticResource Painel}" Padding="0" Margin="0,0,0,18">
                 <DataGrid ItemsSource="{Binding Aliquidar}" SelectedItem="{Binding Selecionado, Mode=TwoWay}" AutoGenerateColumns="False"
                           IsReadOnly="True" SelectionMode="Single" CanUserAddRows="False" HeadersVisibility="Column"
-                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0" Background="Transparent"
+                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{DynamicResource CorLinhaGrade}" BorderThickness="0" Background="Transparent"
                           RowHeight="36" AutomationProperties.Name="Vendas no cartão a liquidar">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Venda" Binding="{Binding Venda, Mode=OneWay}" Width="80" />
@@ -46,7 +46,7 @@
             <Border Grid.Row="4" Style="{StaticResource Painel}" Padding="0">
                 <DataGrid ItemsSource="{Binding Liquidados}" SelectedItem="{Binding LiquidadoSelecionado, Mode=TwoWay}" AutoGenerateColumns="False"
                           IsReadOnly="True" SelectionMode="Single" CanUserAddRows="False" HeadersVisibility="Column"
-                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0" Background="Transparent"
+                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{DynamicResource CorLinhaGrade}" BorderThickness="0" Background="Transparent"
                           RowHeight="36" AutomationProperties.Name="Vendas no cartão já liquidadas">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Venda" Binding="{Binding Venda, Mode=OneWay}" Width="80" />
@@ -66,7 +66,7 @@
                 <StackPanel>
                     <TextBlock Text="O dinheiro caiu" FontSize="18" FontWeight="SemiBold" />
                     <TextBlock Text="Escolha a venda na lista, confira o dia e a conta e informe a taxa que a operadora descontou (se houver). A taxa vira despesa; o valor inteiro da venda continua sendo receita."
-                               TextWrapping="Wrap" FontSize="13" Foreground="{StaticResource CorTextoSuave}" Margin="0,4,0,0" />
+                               TextWrapping="Wrap" FontSize="13" Foreground="{DynamicResource CorTextoSuave}" Margin="0,4,0,0" />
                     <TextBlock Text="Caiu na conta" Style="{StaticResource Rotulo}" />
                     <ComboBox ItemsSource="{Binding Contas}" SelectedItem="{Binding Conta}" DisplayMemberPath="Nome" Padding="8,7"
                               AutomationProperties.Name="Conta onde o cartão caiu" />

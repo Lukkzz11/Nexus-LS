@@ -17,10 +17,10 @@
             <Setter Property="Width" Value="10" />
             <Setter Property="Height" Value="10" />
             <Setter Property="Margin" Value="0,0,8,0" />
-            <Setter Property="Fill" Value="{StaticResource CorPositivo}" />
+            <Setter Property="Fill" Value="{DynamicResource CorPositivo}" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding Fechamento.TurnoAberto}" Value="False">
-                    <Setter Property="Fill" Value="{StaticResource CorAtencaoTexto}" />
+                    <Setter Property="Fill" Value="{DynamicResource CorAtencaoTexto}" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>
@@ -93,7 +93,7 @@
                             <StackPanel>
                                 <TextBlock Text="TOTAL DO DIA" Style="{StaticResource Rotulo}" Margin="0" />
                                 <TextBlock Text="{Binding TotalDiaTexto}" FontSize="{StaticResource TamDestaque}" FontWeight="Bold"
-                                           Foreground="{StaticResource CorPrimaria}" AutomationProperties.Name="Total do dia" />
+                                           Foreground="{DynamicResource CorPrimaria}" AutomationProperties.Name="Total do dia" />
                                 <TextBlock Text="{Binding CanceladasTexto}" Style="{StaticResource TextoApoio}" />
                             </StackPanel>
                         </Border>
@@ -134,7 +134,7 @@
                                         <DataTemplate>
                                             <StackPanel Margin="0,0,22,0">
                                                 <TextBlock Text="{Binding Total}" FontSize="18" FontWeight="SemiBold" />
-                                                <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="{StaticResource TamPequeno}">
+                                                <TextBlock Foreground="{DynamicResource CorTextoSuave}" FontSize="{StaticResource TamPequeno}">
                                                     <Run Text="{Binding Forma, Mode=OneWay}" /><Run Text=" · " /><Run Text="{Binding Vendas, Mode=OneWay}" />
                                                 </TextBlock>
                                             </StackPanel>
@@ -172,18 +172,18 @@
                                   SelectionMode="Single" SelectionUnit="FullRow"
                                   CanUserAddRows="False" CanUserDeleteRows="False"
                                   HeadersVisibility="Column" GridLinesVisibility="Horizontal"
-                                  HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0"
-                                  Background="{StaticResource CorPainel}" RowHeight="38">
+                                  HorizontalGridLinesBrush="{DynamicResource CorLinhaGrade}" BorderThickness="0"
+                                  Background="{DynamicResource CorPainel}" RowHeight="38">
                             <DataGrid.RowStyle>
                                 <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
-                                    <Setter Property="Background" Value="{StaticResource CorPainel}" />
+                                    <Setter Property="Background" Value="{DynamicResource CorPainel}" />
                                     <Style.Triggers>
                                         <!-- venda cancelada: cinza e riscada, mas continua na lista -->
                                         <DataTrigger Binding="{Binding Cancelada}" Value="True">
-                                            <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />
+                                            <Setter Property="Foreground" Value="{DynamicResource CorTextoSuave}" />
                                         </DataTrigger>
                                         <Trigger Property="IsSelected" Value="True">
-                                            <Setter Property="Background" Value="{StaticResource CorSelecao}" />
+                                            <Setter Property="Background" Value="{DynamicResource CorSelecao}" />
                                         </Trigger>
                                     </Style.Triggers>
                                 </Style>
@@ -201,7 +201,7 @@
                                 <DataGridTemplateColumn Header="Pedido" Width="150">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource CorPrimaria}"
+                                            <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource CorPrimaria}"
                                                        VerticalAlignment="Center" TextTrimming="CharacterEllipsis">
                                                 <TextBlock.Text>
                                                     <MultiBinding Converter="{x:Static v:SeloPedidoConverter.Instancia}">
@@ -224,20 +224,20 @@
                         <TextBlock Text="Detalhe da venda" FontSize="18" FontWeight="SemiBold" />
 
                         <TextBlock Text="Selecione uma venda na lista." Margin="0,8,0,0"
-                                   Foreground="{StaticResource CorTextoSuave}"
+                                   Foreground="{DynamicResource CorTextoSuave}"
                                    Visibility="{Binding TemSelecao, Converter={StaticResource BoolInverso}}" />
 
                         <StackPanel Visibility="{Binding TemSelecao, Converter={StaticResource BoolVis}}">
                             <TextBlock Margin="0,8,0,0" FontWeight="SemiBold" FontSize="16"
                                        Text="{Binding Selecionada.Id, StringFormat='Venda nº {0}'}" />
                             <TextBlock Text="{Binding Selecionada.DataHora, StringFormat='dd/MM/yyyy HH:mm'}"
-                                       Foreground="{StaticResource CorTextoSuave}" />
-                            <TextBlock Text="{Binding TextoOperador}" Foreground="{StaticResource CorTextoSuave}" />
+                                       Foreground="{DynamicResource CorTextoSuave}" />
+                            <TextBlock Text="{Binding TextoOperador}" Foreground="{DynamicResource CorTextoSuave}" />
                             <TextBlock Text="{Binding TextoCliente}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,2,0,0" />
 
                             <!-- Trocar o cliente de uma venda já feita (venda a prazo só troca se ainda não recebeu pagamento) -->
                             <StackPanel Margin="0,8,0,0" Visibility="{Binding PodeAlterarCliente, Converter={StaticResource BoolVis}}">
-                                <TextBlock Text="Alterar cliente da venda" Foreground="{StaticResource CorTextoSuave}" FontSize="12" />
+                                <TextBlock Text="Alterar cliente da venda" Foreground="{DynamicResource CorTextoSuave}" FontSize="12" />
                                 <ComboBox ItemsSource="{Binding ClientesParaTroca}" DisplayMemberPath="Texto"
                                           SelectedItem="{Binding ClienteEscolhido}" IsEditable="False" Padding="8,6" Margin="0,2,0,0"
                                           AutomationProperties.Name="Cliente da venda" />
@@ -268,12 +268,12 @@
                             <Separator Margin="0,12" />
 
                             <Grid>
-                                <TextBlock Text="Subtotal" Foreground="{StaticResource CorTextoSuave}" />
+                                <TextBlock Text="Subtotal" Foreground="{DynamicResource CorTextoSuave}" />
                                 <TextBlock HorizontalAlignment="Right"
                                            Text="{Binding Selecionada.SubtotalCentavos, Converter={StaticResource Centavos}}" />
                             </Grid>
                             <Grid Margin="0,2,0,0">
-                                <TextBlock Text="Desconto" Foreground="{StaticResource CorTextoSuave}" />
+                                <TextBlock Text="Desconto" Foreground="{DynamicResource CorTextoSuave}" />
                                 <TextBlock HorizontalAlignment="Right"
                                            Text="{Binding Selecionada.DescontoCentavos, Converter={StaticResource Centavos}}" />
                             </Grid>
@@ -284,12 +284,12 @@
                             </Grid>
                             <Grid Margin="0,6,0,0">
                                 <TextBlock Text="{Binding Selecionada.FormaPagamento, Converter={StaticResource FormaPag}}"
-                                           Foreground="{StaticResource CorTextoSuave}" />
-                                <TextBlock HorizontalAlignment="Right" Foreground="{StaticResource CorTextoSuave}"
+                                           Foreground="{DynamicResource CorTextoSuave}" />
+                                <TextBlock HorizontalAlignment="Right" Foreground="{DynamicResource CorTextoSuave}"
                                            Text="{Binding Selecionada.TrocoCentavos, Converter={StaticResource Centavos}, StringFormat='troco {0}'}" />
                             </Grid>
 
-                            <TextBlock Margin="0,12,0,0" Foreground="{StaticResource CorPerigo}" FontWeight="SemiBold"
+                            <TextBlock Margin="0,12,0,0" Foreground="{DynamicResource CorPerigo}" FontWeight="SemiBold"
                                        TextWrapping="Wrap" Text="{Binding TextoCancelamento}">
                                 <TextBlock.Style>
                                     <Style TargetType="TextBlock">
@@ -302,9 +302,9 @@
                                 </TextBlock.Style>
                             </TextBlock>
 
-                            <Border Margin="0,12,0,0" Padding="10,6" CornerRadius="6" Background="{StaticResource CorSelecaoSuave}"
+                            <Border Margin="0,12,0,0" Padding="10,6" CornerRadius="6" Background="{DynamicResource CorSelecaoSuave}"
                                     Visibility="{Binding TemSeloPedido, Converter={StaticResource BoolVis}}">
-                                <TextBlock Text="{Binding TextoPedido}" FontWeight="SemiBold" Foreground="{StaticResource CorPrimaria}"
+                                <TextBlock Text="{Binding TextoPedido}" FontWeight="SemiBold" Foreground="{DynamicResource CorPrimaria}"
                                            TextWrapping="Wrap" AutomationProperties.Name="Aviso de pedido" />
                             </Border>
 

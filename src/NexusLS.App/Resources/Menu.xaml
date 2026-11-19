@@ -8,14 +8,14 @@
     <!-- Menu lateral: coluna branca com um fio à direita; o item da tela aberta fica azul claro. -->
 
     <Style x:Key="PainelLateral" TargetType="Border">
-        <Setter Property="Background" Value="{StaticResource CorMenu}" />
-        <Setter Property="BorderBrush" Value="{StaticResource CorBorda}" />
+        <Setter Property="Background" Value="{DynamicResource CorMenu}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource CorBorda}" />
         <Setter Property="BorderThickness" Value="0,0,1,0" />
     </Style>
 
     <!-- Título de grupo do menu (VENDAS, ESTOQUE, GESTÃO). -->
     <Style x:Key="SecaoMenu" TargetType="TextBlock">
-        <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />
+        <Setter Property="Foreground" Value="{DynamicResource CorTextoSuave}" />
         <Setter Property="FontSize" Value="{StaticResource TamMicro}" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="Margin" Value="20,20,18,6" />
@@ -26,7 +26,7 @@
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderBrush" Value="Transparent" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="Foreground" Value="{StaticResource CorTexto}" />
+        <Setter Property="Foreground" Value="{DynamicResource CorTexto}" />
         <Setter Property="FontSize" Value="{StaticResource TamCorpo}" />
         <Setter Property="Padding" Value="12,9" />
         <Setter Property="Margin" Value="10,1" />
@@ -46,7 +46,7 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsKeyboardFocused" Value="True">
-                            <Setter TargetName="borda" Property="BorderBrush" Value="{StaticResource CorFoco}" />
+                            <Setter TargetName="borda" Property="BorderBrush" Value="{DynamicResource CorFoco}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -54,7 +54,7 @@
         </Setter>
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Background" Value="{StaticResource CorHover}" />
+                <Setter Property="Background" Value="{DynamicResource CorHover}" />
             </Trigger>
         </Style.Triggers>
     </Style>

@@ -12,7 +12,7 @@
         <Style x:Key="ValorDestaque" TargetType="TextBlock">
             <Setter Property="FontSize" Value="{StaticResource TamDestaque}" />
             <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Foreground" Value="{StaticResource CorPositivo}" />
+            <Setter Property="Foreground" Value="{DynamicResource CorPositivo}" />
         </Style>
 
         <!-- Nome do cartão do formulário. -->
@@ -108,17 +108,17 @@
                                   SelectionMode="Single" SelectionUnit="FullRow"
                                   CanUserAddRows="False" CanUserDeleteRows="False"
                                   HeadersVisibility="Column" RowHeight="38"
-                                  Background="{StaticResource CorPainel}" AutomationProperties.Name="Lista de clientes">
+                                  Background="{DynamicResource CorPainel}" AutomationProperties.Name="Lista de clientes">
                             <DataGrid.RowStyle>
                                 <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
-                                    <Setter Property="Background" Value="{StaticResource CorPainel}" />
+                                    <Setter Property="Background" Value="{DynamicResource CorPainel}" />
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding Ativo}" Value="False">
-                                            <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />
+                                            <Setter Property="Foreground" Value="{DynamicResource CorTextoSuave}" />
                                         </DataTrigger>
                                         <Trigger Property="IsSelected" Value="True">
-                                            <Setter Property="Background" Value="{StaticResource CorSelecao}" />
-                                            <Setter Property="Foreground" Value="{StaticResource CorTexto}" />
+                                            <Setter Property="Background" Value="{DynamicResource CorSelecao}" />
+                                            <Setter Property="Foreground" Value="{DynamicResource CorTexto}" />
                                         </Trigger>
                                     </Style.Triggers>
                                 </Style>
@@ -138,8 +138,8 @@
 
                     <StackPanel Grid.Row="2" Margin="0,14,0,6">
                         <TextBlock Text="Compras do cliente selecionado" Style="{StaticResource TituloSecao}" />
-                        <TextBlock Text="{Binding ResumoCompras}" Foreground="{StaticResource CorTextoSuave}" Margin="0,2,0,0" />
-                        <TextBlock Text="{Binding ResumoAPrazo}" Foreground="{StaticResource CorTextoSuave}" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding ResumoCompras}" Foreground="{DynamicResource CorTextoSuave}" Margin="0,2,0,0" />
+                        <TextBlock Text="{Binding ResumoAPrazo}" Foreground="{DynamicResource CorTextoSuave}" TextWrapping="Wrap" />
                     </StackPanel>
 
                     <Border Grid.Row="3" Style="{StaticResource Painel}" Padding="0">
@@ -147,7 +147,7 @@
                                   AutoGenerateColumns="False" IsReadOnly="True"
                                   SelectionMode="Single" CanUserAddRows="False"
                                   HeadersVisibility="Column" RowHeight="34"
-                                  Background="{StaticResource CorPainel}">
+                                  Background="{DynamicResource CorPainel}">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Nº" Binding="{Binding Id, Mode=OneWay}" Width="70" />
                                 <DataGridTextColumn Header="Data" Width="150"
@@ -198,7 +198,7 @@
                                         <Style TargetType="TextBlock" BasedOn="{StaticResource TextoApoio}">
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding DocumentoComErro}" Value="True">
-                                                    <Setter Property="Foreground" Value="{StaticResource CorPerigo}" />
+                                                    <Setter Property="Foreground" Value="{DynamicResource CorPerigo}" />
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -351,7 +351,7 @@
                                 <ItemsControl ItemsSource="{Binding HistoricoCredito}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <TextBlock Text="{Binding}" TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource CorTextoSuave}" Margin="0,2" />
+                                            <TextBlock Text="{Binding}" TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource CorTextoSuave}" Margin="0,2" />
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
@@ -382,10 +382,10 @@
                                                         </Border>
                                                         <ControlTemplate.Triggers>
                                                             <Trigger Property="IsMouseOver" Value="True">
-                                                                <Setter TargetName="Fundo" Property="Background" Value="{StaticResource CorHover}" />
+                                                                <Setter TargetName="Fundo" Property="Background" Value="{DynamicResource CorHover}" />
                                                             </Trigger>
                                                             <Trigger Property="IsSelected" Value="True">
-                                                                <Setter TargetName="Fundo" Property="Background" Value="{StaticResource CorSelecao}" />
+                                                                <Setter TargetName="Fundo" Property="Background" Value="{DynamicResource CorSelecao}" />
                                                             </Trigger>
                                                         </ControlTemplate.Triggers>
                                                     </ControlTemplate>
@@ -419,7 +419,7 @@
                                     <ItemsControl ItemsSource="{Binding Ajustes}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <TextBlock Text="{Binding}" TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource CorTextoSuave}" Margin="0,2" />
+                                                <TextBlock Text="{Binding}" TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource CorTextoSuave}" Margin="0,2" />
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
@@ -443,7 +443,7 @@
         </Grid>
 
         <!-- ===== Pré-visualização da importação (nada é gravado antes de confirmar) ===== -->
-        <Grid Background="{StaticResource CorSobreposicao}" Panel.ZIndex="10"
+        <Grid Background="{DynamicResource CorSobreposicao}" Panel.ZIndex="10"
               Visibility="{Binding ImportacaoAberta, Converter={StaticResource BoolVis}}">
             <Border Style="{StaticResource Painel}" Margin="48,32" Padding="22">
                 <Grid>
@@ -460,23 +460,23 @@
                                    Text="{Binding ArquivoImportacao, StringFormat='Arquivo: {0}. Nada foi gravado ainda: confira a lista e confirme.'}" />
                     </StackPanel>
 
-                    <Border Grid.Row="1" Style="{StaticResource FaixaAviso}" Margin="0,14,0,12" Background="{StaticResource CorSelecaoSuave}">
-                        <TextBlock Text="{Binding ResumoImportacao}" FontWeight="SemiBold" Foreground="{StaticResource CorTexto}"
+                    <Border Grid.Row="1" Style="{StaticResource FaixaAviso}" Margin="0,14,0,12" Background="{DynamicResource CorSelecaoSuave}">
+                        <TextBlock Text="{Binding ResumoImportacao}" FontWeight="SemiBold" Foreground="{DynamicResource CorTexto}"
                                    TextWrapping="Wrap" AutomationProperties.Name="Resumo da importação" />
                     </Border>
 
-                    <Border Grid.Row="2" BorderBrush="{StaticResource CorBorda}" BorderThickness="1" CornerRadius="{StaticResource RaioMedio}">
+                    <Border Grid.Row="2" BorderBrush="{DynamicResource CorBorda}" BorderThickness="1" CornerRadius="{StaticResource RaioMedio}">
                         <DataGrid ItemsSource="{Binding LinhasImportacao}" AutoGenerateColumns="False" IsReadOnly="True"
                                   SelectionMode="Single" CanUserAddRows="False" HeadersVisibility="Column" RowHeight="34"
-                                  Background="{StaticResource CorPainel}" AutomationProperties.Name="Linhas da importação">
+                                  Background="{DynamicResource CorPainel}" AutomationProperties.Name="Linhas da importação">
                             <DataGrid.RowStyle>
                                 <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding Situacao}" Value="Erro">
-                                            <Setter Property="Foreground" Value="{StaticResource CorNegativo}" />
+                                            <Setter Property="Foreground" Value="{DynamicResource CorNegativo}" />
                                         </DataTrigger>
                                         <DataTrigger Binding="{Binding Situacao}" Value="SemMudanca">
-                                            <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />
+                                            <Setter Property="Foreground" Value="{DynamicResource CorTextoSuave}" />
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>

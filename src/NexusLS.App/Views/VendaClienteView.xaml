@@ -37,7 +37,7 @@
                                     <Setter Property="Opacity" Value="0.6" />
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding Deve}" Value="True">
-                                            <Setter Property="Foreground" Value="{StaticResource CorAtencaoBorda}" />
+                                            <Setter Property="Foreground" Value="{DynamicResource CorAtencaoBorda}" />
                                             <Setter Property="Opacity" Value="1" />
                                             <Setter Property="FontWeight" Value="SemiBold" />
                                         </DataTrigger>

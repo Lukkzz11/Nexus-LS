@@ -18,7 +18,7 @@
 
         <!-- Uma fatia da rosca (Path) e a legenda dela -->
         <DataTemplate x:Key="FatiaDesenho">
-            <Path Data="{Binding Caminho}" Fill="{Binding ChaveCor, Converter={StaticResource Pincel}}" Stroke="{StaticResource CorPainel}"
+            <Path Data="{Binding Caminho}" Fill="{Binding ChaveCor, Converter={StaticResource Pincel}}" Stroke="{DynamicResource CorPainel}"
                   StrokeThickness="1" ToolTip="{Binding Legenda}" />
         </DataTemplate>
         <DataTemplate x:Key="FatiaLegenda">
@@ -37,10 +37,10 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <TextBlock Text="{Binding Rotulo}" TextTrimming="CharacterEllipsis" />
-                    <TextBlock Grid.Column="1" Text="{Binding Texto}" FontSize="12" Foreground="{StaticResource CorTextoSuave}" Margin="12,0,0,0" />
+                    <TextBlock Grid.Column="1" Text="{Binding Texto}" FontSize="12" Foreground="{DynamicResource CorTextoSuave}" Margin="12,0,0,0" />
                 </Grid>
-                <Border Height="8" CornerRadius="4" Margin="0,3,0,0" Background="{StaticResource CorLinhaGrade}">
-                    <Border Background="{StaticResource CorSerie1}" CornerRadius="4" RenderTransformOrigin="0,0.5">
+                <Border Height="8" CornerRadius="4" Margin="0,3,0,0" Background="{DynamicResource CorLinhaGrade}">
+                    <Border Background="{DynamicResource CorSerie1}" CornerRadius="4" RenderTransformOrigin="0,0.5">
                         <Border.RenderTransform><ScaleTransform ScaleX="{Binding Fracao, Mode=OneWay}" /></Border.RenderTransform>
                     </Border>
                 </Border>
@@ -54,10 +54,10 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <TextBlock Text="{Binding Rotulo}" TextTrimming="CharacterEllipsis" />
-                    <TextBlock Grid.Column="1" Text="{Binding Texto}" FontSize="12" Foreground="{StaticResource CorTextoSuave}" Margin="12,0,0,0" />
+                    <TextBlock Grid.Column="1" Text="{Binding Texto}" FontSize="12" Foreground="{DynamicResource CorTextoSuave}" Margin="12,0,0,0" />
                 </Grid>
-                <Border Height="8" CornerRadius="4" Margin="0,3,0,0" Background="{StaticResource CorLinhaGrade}">
-                    <Border Background="{StaticResource CorSerie2}" CornerRadius="4" RenderTransformOrigin="0,0.5">
+                <Border Height="8" CornerRadius="4" Margin="0,3,0,0" Background="{DynamicResource CorLinhaGrade}">
+                    <Border Background="{DynamicResource CorSerie2}" CornerRadius="4" RenderTransformOrigin="0,0.5">
                         <Border.RenderTransform><ScaleTransform ScaleX="{Binding Fracao, Mode=OneWay}" /></Border.RenderTransform>
                     </Border>
                 </Border>
@@ -80,7 +80,7 @@
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding Recuo}" Value="True">
                                     <Setter Property="Margin" Value="18,0,0,0" />
-                                    <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />
+                                    <Setter Property="Foreground" Value="{DynamicResource CorTextoSuave}" />
                                 </DataTrigger>
                                 <DataTrigger Binding="{Binding Destaque}" Value="True">
                                     <Setter Property="FontWeight" Value="SemiBold" />
@@ -101,7 +101,7 @@
                                     <Setter Property="FontWeight" Value="SemiBold" />
                                 </DataTrigger>
                                 <DataTrigger Binding="{Binding Negativo}" Value="True">
-                                    <Setter Property="Foreground" Value="{StaticResource CorPerigo}" />
+                                    <Setter Property="Foreground" Value="{DynamicResource CorPerigo}" />
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
@@ -149,39 +149,39 @@
         <v:GradeDeCartoes Grid.Row="2" Margin="0,0,0,14" LarguraMinima="175" MaximoColunas="6" Espaco="12" IgualarAltura="True">
             <Border Style="{StaticResource CartaoNumero}">
                 <StackPanel>
-                    <TextBlock Text="TOTAL VENDIDO" Foreground="{StaticResource CorTextoSuave}" FontSize="12" />
-                    <TextBlock Text="{Binding TotalTexto}" FontSize="26" FontWeight="Bold" Foreground="{StaticResource CorPrimaria}" />
+                    <TextBlock Text="TOTAL VENDIDO" Foreground="{DynamicResource CorTextoSuave}" FontSize="12" />
+                    <TextBlock Text="{Binding TotalTexto}" FontSize="26" FontWeight="Bold" Foreground="{DynamicResource CorPrimaria}" />
                 </StackPanel>
             </Border>
             <Border Style="{StaticResource CartaoNumero}">
                 <StackPanel>
-                    <TextBlock Text="LUCRO BRUTO" Foreground="{StaticResource CorTextoSuave}" FontSize="12"
+                    <TextBlock Text="LUCRO BRUTO" Foreground="{DynamicResource CorTextoSuave}" FontSize="12"
                                ToolTip="Total vendido menos o custo das mercadorias. Não desconta taxas nem despesas." />
-                    <TextBlock Text="{Binding LucroTexto}" FontSize="26" FontWeight="Bold" Foreground="{StaticResource CorSucesso}"
+                    <TextBlock Text="{Binding LucroTexto}" FontSize="26" FontWeight="Bold" Foreground="{DynamicResource CorSucesso}"
                                AutomationProperties.Name="Lucro bruto" />
                 </StackPanel>
             </Border>
             <Border Style="{StaticResource CartaoNumero}">
                 <StackPanel>
-                    <TextBlock Text="VENDAS" Foreground="{StaticResource CorTextoSuave}" FontSize="12" />
+                    <TextBlock Text="VENDAS" Foreground="{DynamicResource CorTextoSuave}" FontSize="12" />
                     <TextBlock Text="{Binding QuantidadeTexto}" FontSize="26" FontWeight="Bold" />
                 </StackPanel>
             </Border>
             <Border Style="{StaticResource CartaoNumero}">
                 <StackPanel>
-                    <TextBlock Text="TICKET MÉDIO" Foreground="{StaticResource CorTextoSuave}" FontSize="12" />
+                    <TextBlock Text="TICKET MÉDIO" Foreground="{DynamicResource CorTextoSuave}" FontSize="12" />
                     <TextBlock Text="{Binding TicketMedioTexto}" FontSize="26" FontWeight="Bold" />
                 </StackPanel>
             </Border>
             <Border Style="{StaticResource CartaoNumero}">
                 <StackPanel>
-                    <TextBlock Text="DESCONTOS" Foreground="{StaticResource CorTextoSuave}" FontSize="12" />
+                    <TextBlock Text="DESCONTOS" Foreground="{DynamicResource CorTextoSuave}" FontSize="12" />
                     <TextBlock Text="{Binding DescontosTexto}" FontSize="26" FontWeight="Bold" />
                 </StackPanel>
             </Border>
             <Border Style="{StaticResource CartaoNumero}">
                 <StackPanel>
-                    <TextBlock Text="CANCELADAS" Foreground="{StaticResource CorTextoSuave}" FontSize="12" />
+                    <TextBlock Text="CANCELADAS" Foreground="{DynamicResource CorTextoSuave}" FontSize="12" />
                     <TextBlock Text="{Binding CanceladasTexto}" FontSize="26" FontWeight="Bold" />
                 </StackPanel>
             </Border>
@@ -192,12 +192,12 @@
             <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,12,0">
                 <StackPanel>
                     <Border Style="{StaticResource Painel}" Padding="18,14" Visibility="{Binding TemGraficos, Converter={StaticResource BoolInverso}}">
-                        <TextBlock Text="Nenhuma venda neste período para desenhar os gráficos." Foreground="{StaticResource CorTextoSuave}" />
+                        <TextBlock Text="Nenhuma venda neste período para desenhar os gráficos." Foreground="{DynamicResource CorTextoSuave}" />
                     </Border>
 
                     <StackPanel Visibility="{Binding TemGraficos, Converter={StaticResource BoolVis}}">
                         <!-- Comparação com o período anterior -->
-                        <TextBlock Margin="0,0,0,8" Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap">
+                        <TextBlock Margin="0,0,0,8" Foreground="{DynamicResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="Text" Value="Sem vendas no período anterior: não há com o que comparar." />
@@ -219,17 +219,17 @@
                                 <DataTemplate>
                                     <Border Style="{StaticResource CartaoNumero}">
                                         <StackPanel>
-                                            <TextBlock Text="{Binding Titulo}" Foreground="{StaticResource CorTextoSuave}" FontSize="12" />
+                                            <TextBlock Text="{Binding Titulo}" Foreground="{DynamicResource CorTextoSuave}" FontSize="12" />
                                             <TextBlock Text="{Binding Valor}" FontSize="22" FontWeight="Bold" />
-                                            <TextBlock Text="{Binding Variacao}" FontSize="12" TextWrapping="Wrap" Foreground="{StaticResource CorTextoSuave}">
+                                            <TextBlock Text="{Binding Variacao}" FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource CorTextoSuave}">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding Subiu}" Value="True">
-                                                                <Setter Property="Foreground" Value="{StaticResource CorSucesso}" />
+                                                                <Setter Property="Foreground" Value="{DynamicResource CorSucesso}" />
                                                             </DataTrigger>
                                                             <DataTrigger Binding="{Binding Caiu}" Value="True">
-                                                                <Setter Property="Foreground" Value="{StaticResource CorPerigo}" />
+                                                                <Setter Property="Foreground" Value="{DynamicResource CorPerigo}" />
                                                             </DataTrigger>
                                                         </Style.Triggers>
                                                     </Style>
@@ -246,10 +246,10 @@
                             <Border Style="{StaticResource Painel}" Padding="16,12">
                                 <StackPanel>
                                     <DockPanel>
-                                        <TextBlock DockPanel.Dock="Right" Text="{Binding GranularidadeTexto}" Foreground="{StaticResource CorTextoSuave}" FontSize="12" />
+                                        <TextBlock DockPanel.Dock="Right" Text="{Binding GranularidadeTexto}" Foreground="{DynamicResource CorTextoSuave}" FontSize="12" />
                                         <TextBlock Text="Vendas por dia" FontWeight="SemiBold" />
                                     </DockPanel>
-                                    <TextBlock Text="{Binding MaiorBarraTexto}" Foreground="{StaticResource CorTextoSuave}" FontSize="12" Margin="0,2,0,8" />
+                                    <TextBlock Text="{Binding MaiorBarraTexto}" Foreground="{DynamicResource CorTextoSuave}" FontSize="12" Margin="0,2,0,8" />
                                     <ItemsControl ItemsSource="{Binding ColunasPorDia}" AutomationProperties.Name="Gráfico de vendas por dia">
                                         <ItemsControl.ItemsPanel>
                                             <ItemsPanelTemplate>
@@ -264,31 +264,31 @@
                                                             <ColumnDefinition Width="*" />
                                                             <ColumnDefinition Width="*" />
                                                         </Grid.ColumnDefinitions>
-                                                        <Border Grid.Column="0" Margin="0,0,1,0" Background="{StaticResource CorSerie1}" CornerRadius="3,3,0,0"
+                                                        <Border Grid.Column="0" Margin="0,0,1,0" Background="{DynamicResource CorSerie1}" CornerRadius="3,3,0,0"
                                                                 VerticalAlignment="Stretch" RenderTransformOrigin="0.5,1">
                                                             <Border.RenderTransform>
                                                                 <ScaleTransform ScaleY="{Binding Fracao, Mode=OneWay}" />
                                                             </Border.RenderTransform>
                                                         </Border>
-                                                        <Border Grid.Column="1" Margin="1,0,0,0" Background="{StaticResource CorSerieOutros}" CornerRadius="3,3,0,0"
+                                                        <Border Grid.Column="1" Margin="1,0,0,0" Background="{DynamicResource CorSerieOutros}" CornerRadius="3,3,0,0"
                                                                 VerticalAlignment="Stretch" RenderTransformOrigin="0.5,1">
                                                             <Border.RenderTransform>
                                                                 <ScaleTransform ScaleY="{Binding FracaoAnterior, Mode=OneWay}" />
                                                             </Border.RenderTransform>
                                                         </Border>
                                                     </Grid>
-                                                    <Border BorderBrush="{StaticResource CorBorda}" BorderThickness="0,1,0,0" />
-                                                    <TextBlock Text="{Binding Rotulo}" FontSize="10" Foreground="{StaticResource CorTextoSuave}" TextWrapping="NoWrap"
+                                                    <Border BorderBrush="{DynamicResource CorBorda}" BorderThickness="0,1,0,0" />
+                                                    <TextBlock Text="{Binding Rotulo}" FontSize="10" Foreground="{DynamicResource CorTextoSuave}" TextWrapping="NoWrap"
                                                                HorizontalAlignment="Center" Margin="0,4,0,0" />
                                                 </StackPanel>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
                                     <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                                        <Border Width="12" Height="12" CornerRadius="2" Background="{StaticResource CorSerie1}" Margin="0,0,6,0" />
+                                        <Border Width="12" Height="12" CornerRadius="2" Background="{DynamicResource CorSerie1}" Margin="0,0,6,0" />
                                         <TextBlock Text="Período escolhido" FontSize="12" Margin="0,0,16,0" />
                                         <StackPanel Orientation="Horizontal" Visibility="{Binding TemComparacao, Converter={StaticResource BoolVis}}">
-                                            <Border Width="12" Height="12" CornerRadius="2" Background="{StaticResource CorSerieOutros}" Margin="0,0,6,0" />
+                                            <Border Width="12" Height="12" CornerRadius="2" Background="{DynamicResource CorSerieOutros}" Margin="0,0,6,0" />
                                             <TextBlock Text="Período anterior" FontSize="12" />
                                         </StackPanel>
                                     </StackPanel>
@@ -299,13 +299,13 @@
                             <Border Style="{StaticResource Painel}" Padding="16,12">
                                 <StackPanel>
                                     <TextBlock Text="Vendas por forma de pagamento" FontWeight="SemiBold" />
-                                    <TextBlock Text="{Binding TotalFormasTexto, StringFormat='Total {0}'}" Foreground="{StaticResource CorTextoSuave}" FontSize="12" Margin="0,2,0,8" />
+                                    <TextBlock Text="{Binding TotalFormasTexto, StringFormat='Total {0}'}" Foreground="{DynamicResource CorTextoSuave}" FontSize="12" Margin="0,2,0,8" />
                                     <Viewbox Height="170" Margin="0,0,0,8">
                                         <Grid Width="200" Height="200">
                                             <ItemsControl ItemsSource="{Binding PizzaFormas}" ItemTemplate="{StaticResource FatiaDesenho}" Width="200" Height="200">
                                                 <ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                                             </ItemsControl>
-                                            <Ellipse Width="108" Height="108" Fill="{StaticResource CorPainel}" />
+                                            <Ellipse Width="108" Height="108" Fill="{DynamicResource CorPainel}" />
                                         </Grid>
                                     </Viewbox>
                                     <ItemsControl ItemsSource="{Binding PizzaFormas}" ItemTemplate="{StaticResource FatiaLegenda}" />
@@ -316,13 +316,13 @@
                             <Border Style="{StaticResource Painel}" Padding="16,12">
                                 <StackPanel>
                                     <TextBlock Text="Vendas por categoria" FontWeight="SemiBold" />
-                                    <TextBlock Text="{Binding TotalCategoriasTexto, StringFormat='Total {0}'}" Foreground="{StaticResource CorTextoSuave}" FontSize="12" Margin="0,2,0,8" />
+                                    <TextBlock Text="{Binding TotalCategoriasTexto, StringFormat='Total {0}'}" Foreground="{DynamicResource CorTextoSuave}" FontSize="12" Margin="0,2,0,8" />
                                     <Viewbox Height="170" Margin="0,0,0,8">
                                         <Grid Width="200" Height="200">
                                             <ItemsControl ItemsSource="{Binding PizzaCategorias}" ItemTemplate="{StaticResource FatiaDesenho}" Width="200" Height="200">
                                                 <ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                                             </ItemsControl>
-                                            <Ellipse Width="108" Height="108" Fill="{StaticResource CorPainel}" />
+                                            <Ellipse Width="108" Height="108" Fill="{DynamicResource CorPainel}" />
                                         </Grid>
                                     </Viewbox>
                                     <ItemsControl ItemsSource="{Binding PizzaCategorias}" ItemTemplate="{StaticResource FatiaLegenda}" />
@@ -336,7 +336,7 @@
                             <Border Style="{StaticResource Painel}" Padding="16,12">
                                 <StackPanel>
                                     <TextBlock Text="O que mais saiu (peças)" FontWeight="SemiBold" />
-                                    <TextBlock Text="Os 10 produtos com mais peças vendidas." Foreground="{StaticResource CorTextoSuave}" FontSize="12" Margin="0,2,0,8" />
+                                    <TextBlock Text="Os 10 produtos com mais peças vendidas." Foreground="{DynamicResource CorTextoSuave}" FontSize="12" Margin="0,2,0,8" />
                                     <ItemsControl ItemsSource="{Binding RankingPecas}" ItemTemplate="{StaticResource BarraDeRanking}" />
                                 </StackPanel>
                             </Border>
@@ -345,13 +345,13 @@
                             <Border Style="{StaticResource Painel}" Padding="16,12">
                                 <StackPanel>
                                     <TextBlock Text="O que mais faturou (valor)" FontWeight="SemiBold" />
-                                    <TextBlock Text="Os 10 produtos que mais renderam, já com o desconto da venda." Foreground="{StaticResource CorTextoSuave}" FontSize="12" Margin="0,2,0,8" TextWrapping="Wrap" />
+                                    <TextBlock Text="Os 10 produtos que mais renderam, já com o desconto da venda." Foreground="{DynamicResource CorTextoSuave}" FontSize="12" Margin="0,2,0,8" TextWrapping="Wrap" />
                                     <ItemsControl ItemsSource="{Binding RankingValor}" ItemTemplate="{StaticResource BarraDeRankingVerde}" />
                                 </StackPanel>
                             </Border>
                         </v:GradeDeCartoes>
 
-                        <TextBlock Text="{Binding ConferenciaGraficos}" TextWrapping="Wrap" Foreground="{StaticResource CorTextoSuave}" FontSize="12" Margin="0,12,0,16" />
+                        <TextBlock Text="{Binding ConferenciaGraficos}" TextWrapping="Wrap" Foreground="{DynamicResource CorTextoSuave}" FontSize="12" Margin="0,12,0,16" />
                     </StackPanel>
                 </StackPanel>
             </ScrollViewer>
@@ -391,10 +391,10 @@
                                             <TextBlock Text="{Binding Dia}" VerticalAlignment="Center" />
                                             <ProgressBar Grid.Column="1" Value="{Binding Percentual, Mode=OneWay}" Maximum="100"
                                                          Height="14" Margin="0,0,10,0" BorderThickness="0"
-                                                         Foreground="{StaticResource CorPrimaria}" Background="{StaticResource CorLinhaGrade}" />
+                                                         Foreground="{DynamicResource CorPrimaria}" Background="{DynamicResource CorLinhaGrade}" />
                                             <TextBlock Grid.Column="2" Text="{Binding Total}" HorizontalAlignment="Right" VerticalAlignment="Center" />
                                             <TextBlock Grid.Column="3" Text="{Binding Vendas, StringFormat='{}{0}x'}" HorizontalAlignment="Right"
-                                                       VerticalAlignment="Center" Foreground="{StaticResource CorTextoSuave}" />
+                                                       VerticalAlignment="Center" Foreground="{DynamicResource CorTextoSuave}" />
                                         </Grid>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
@@ -417,7 +417,7 @@
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Text="{Binding Forma, Converter={StaticResource FormaPag}}" />
                                         <TextBlock Grid.Column="1" Text="{Binding Vendas, StringFormat='{}{0}x'}" HorizontalAlignment="Right"
-                                                   Foreground="{StaticResource CorTextoSuave}" />
+                                                   Foreground="{DynamicResource CorTextoSuave}" />
                                         <TextBlock Grid.Column="2" Text="{Binding TotalCentavos, Converter={StaticResource Centavos}}"
                                                    HorizontalAlignment="Right" FontWeight="SemiBold" />
                                     </Grid>
@@ -443,10 +443,10 @@
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Text="{Binding Categoria}" />
                                             <TextBlock Grid.Column="1" Text="{Binding Quantidade, StringFormat='{}{0}un'}" HorizontalAlignment="Right"
-                                                       Foreground="{StaticResource CorTextoSuave}" />
+                                                       Foreground="{DynamicResource CorTextoSuave}" />
                                             <TextBlock Grid.Column="2" Text="{Binding Faturamento}" HorizontalAlignment="Right" FontWeight="SemiBold" />
                                             <TextBlock Grid.Column="3" Text="{Binding Lucro}" HorizontalAlignment="Right"
-                                                       Foreground="{StaticResource CorSucesso}" />
+                                                       Foreground="{DynamicResource CorSucesso}" />
                                         </Grid>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
@@ -463,17 +463,17 @@
                           SelectionMode="Single" SelectionUnit="FullRow"
                           CanUserAddRows="False" CanUserDeleteRows="False"
                           HeadersVisibility="Column" GridLinesVisibility="Horizontal"
-                          HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0"
-                          Background="{StaticResource CorPainel}" RowHeight="32">
+                          HorizontalGridLinesBrush="{DynamicResource CorLinhaGrade}" BorderThickness="0"
+                          Background="{DynamicResource CorPainel}" RowHeight="32">
                     <DataGrid.RowStyle>
                         <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
-                            <Setter Property="Background" Value="{StaticResource CorPainel}" />
+                            <Setter Property="Background" Value="{DynamicResource CorPainel}" />
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding Cancelada}" Value="True">
-                                    <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />
+                                    <Setter Property="Foreground" Value="{DynamicResource CorTextoSuave}" />
                                 </DataTrigger>
                                 <Trigger Property="IsSelected" Value="True">
-                                    <Setter Property="Background" Value="{StaticResource CorSelecao}" />
+                                    <Setter Property="Background" Value="{DynamicResource CorSelecao}" />
                                 </Trigger>
                             </Style.Triggers>
                         </Style>
@@ -520,14 +520,14 @@
                             </ItemsControl>
                         </Border>
                     </v:GradeDeCartoes>
-                    <TextBlock Text="{Binding DreAvisos}" TextWrapping="Wrap" Foreground="{StaticResource CorTextoSuave}" Margin="0,10,0,0" />
+                    <TextBlock Text="{Binding DreAvisos}" TextWrapping="Wrap" Foreground="{DynamicResource CorTextoSuave}" Margin="0,10,0,0" />
                 </StackPanel>
             </ScrollViewer>
         </TabItem>
         </TabControl>
 
         <StackPanel Grid.Row="4">
-            <TextBlock Text="{Binding AvisoLucro}" TextWrapping="Wrap" Foreground="{StaticResource CorTextoSuave}" Margin="0,8,0,0" />
+            <TextBlock Text="{Binding AvisoLucro}" TextWrapping="Wrap" Foreground="{DynamicResource CorTextoSuave}" Margin="0,8,0,0" />
             <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" />
         </StackPanel>
     </Grid>

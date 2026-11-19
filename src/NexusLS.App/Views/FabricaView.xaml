@@ -15,9 +15,9 @@
             <Setter Property="CanUserAddRows" Value="False" />
             <Setter Property="HeadersVisibility" Value="Column" />
             <Setter Property="GridLinesVisibility" Value="Horizontal" />
-            <Setter Property="HorizontalGridLinesBrush" Value="{StaticResource CorLinhaGrade}" />
+            <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource CorLinhaGrade}" />
             <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Background" Value="{StaticResource CorPainel}" />
+            <Setter Property="Background" Value="{DynamicResource CorPainel}" />
             <Setter Property="RowHeight" Value="34" />
         </Style>
     </UserControl.Resources>

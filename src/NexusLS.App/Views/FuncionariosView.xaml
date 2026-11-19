@@ -4,7 +4,7 @@
 
     <UserControl.Resources>
         <Style x:Key="AvisoLogin" TargetType="Border" BasedOn="{StaticResource Painel}">
-            <Setter Property="Background" Value="{StaticResource CorAlerta}" />
+            <Setter Property="Background" Value="{DynamicResource CorAlerta}" />
             <Setter Property="Margin" Value="0,0,0,12" />
             <Setter Property="Padding" Value="14,10" />
         </Style>
@@ -50,7 +50,7 @@
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid Width="32" Height="32">
-                                        <Ellipse Fill="{StaticResource CorFundo}" Stroke="{StaticResource CorTextoSuave}" StrokeThickness="0.5" />
+                                        <Ellipse Fill="{DynamicResource CorFundo}" Stroke="{DynamicResource CorTextoSuave}" StrokeThickness="0.5" />
                                         <Ellipse>
                                             <Ellipse.Fill>
                                                 <ImageBrush ImageSource="{Binding Foto, Mode=OneWay, Converter={StaticResource FotoImg}}" Stretch="UniformToFill" />
@@ -83,9 +83,9 @@
                         <TextBlock Text="Telefone (opcional)" Style="{StaticResource Rotulo}" />
                         <TextBox Text="{Binding Telefone, UpdateSourceTrigger=PropertyChanged}" />
                         <Border Width="110" Height="110" HorizontalAlignment="Left" Margin="0,12,0,0" CornerRadius="8" BorderThickness="1"
-                                BorderBrush="{StaticResource CorTextoSuave}" Background="{StaticResource CorFundo}" ClipToBounds="True">
+                                BorderBrush="{DynamicResource CorTextoSuave}" Background="{DynamicResource CorFundo}" ClipToBounds="True">
                             <Grid>
-                                <TextBlock Text="Sem foto" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource CorTextoSuave}" />
+                                <TextBlock Text="Sem foto" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource CorTextoSuave}" />
                                 <Image Source="{Binding FotoImagem}" Stretch="UniformToFill" AutomationProperties.Name="Foto do funcionário" />
                             </Grid>
                         </Border>
