@@ -146,6 +146,7 @@ public static class MontadorNfce
             pend.Add($"O total calculado da nota ({Real(vNf)}) não bate com o total da venda ({Real(venda.TotalCentavos)}).");
 
         var dets = new List<XElement>();
+        var ibsCbsInformado = false;
         int n = 0;
         foreach (var item in venda.Itens)
         {
@@ -167,18 +168,46 @@ public static class MontadorNfce
             var prodEl = new XElement(Ns + "prod",
                 E("cProd", Limpa(cod)), E("cEAN", gtin), E("xProd", Limpa(xProd)));
             if (ncm.Length == 8) prodEl.Add(E("NCM", ncm));
+            var cest = ValidadorDocumento.SoDigitos(prod?.Cest);
+            if (cest.Length == 7) prodEl.Add(E("CEST", cest));
+            var un = string.IsNullOrWhiteSpace(prod?.UnidadeComercial) ? "UN" : prod!.UnidadeComercial!.Trim();
             prodEl.Add(E("CFOP", cfop),
-                E("uCom", "UN"), E("qCom", Dec4(item.Quantidade)), E("vUnCom", Dec4(item.PrecoUnitarioCentavos / 100m)), E("vProd", Dec2(item.TotalCentavos)),
-                E("cEANTrib", gtin), E("uTrib", "UN"), E("qTrib", Dec4(item.Quantidade)), E("vUnTrib", Dec4(item.PrecoUnitarioCentavos / 100m)));
+                E("uCom", un), E("qCom", Dec4(item.Quantidade)), E("vUnCom", Dec4(item.PrecoUnitarioCentavos / 100m)), E("vProd", Dec2(item.TotalCentavos)),
+                E("cEANTrib", gtin), E("uTrib", un), E("qTrib", Dec4(item.Quantidade)), E("vUnTrib", Dec4(item.PrecoUnitarioCentavos / 100m)));
             if (descontos[n - 1] > 0) prodEl.Add(E("vDesc", Dec2(descontos[n - 1])));
             if (outros[n - 1] > 0) prodEl.Add(E("vOutro", Dec2(outros[n - 1])));
             prodEl.Add(E("indTot", "1"));
 
             var imposto = new XElement(Ns + "imposto");
+            var orig = (prod?.OrigemMercadoria ?? 0).ToString(Inv);
             if (crt is "1" or "4")
-                imposto.Add(new XElement(Ns + "ICMS", new XElement(Ns + "ICMSSN102", E("orig", "0"), E("CSOSN", "102"))));
-            imposto.Add(new XElement(Ns + "PIS", new XElement(Ns + "PISNT", E("CST", "07"))),
-                new XElement(Ns + "COFINS", new XElement(Ns + "COFINSNT", E("CST", "07"))));
+            {
+                var csosn = string.IsNullOrWhiteSpace(prod?.CstIcms) ? "102" : prod!.CstIcms!;
+                switch (csosn)
+                {
+                    case "102" or "103" or "300" or "400":
+                        imposto.Add(new XElement(Ns + "ICMS", new XElement(Ns + "ICMSSN102", E("orig", orig), E("CSOSN", csosn))));
+                        break;
+                    case "101":
+                        var pCred = prod?.AliquotaIcmsBp ?? 0;
+                        imposto.Add(new XElement(Ns + "ICMS", new XElement(Ns + "ICMSSN101", E("orig", orig), E("CSOSN", "101"),
+                            E("pCredSN", Dec2(pCred)), E("vCredICMSSN", Dec2(item.TotalCentavos * pCred / 10000)))));
+                        break;
+                    case "500":
+                        imposto.Add(new XElement(Ns + "ICMS", new XElement(Ns + "ICMSSN500", E("orig", orig), E("CSOSN", "500"))));
+                        break;
+                    default:
+                        pend.Add($"CSOSN {csosn} do item {n} ({nome}) ainda não é montado pelo Nexus: use 101, 102, 103, 300, 400 ou 500, ou confirme com o contador.");
+                        break;
+                }
+            }
+            imposto.Add(new XElement(Ns + "PIS", MontarPisCofins("PIS", prod?.CstPis, prod?.AliquotaPisBp ?? 0, item.TotalCentavos, n, nome, pend)),
+                new XElement(Ns + "COFINS", MontarPisCofins("COFINS", prod?.CstCofins, prod?.AliquotaCofinsBp ?? 0, item.TotalCentavos, n, nome, pend)));
+            if (!string.IsNullOrWhiteSpace(prod?.CstIbsCbs) && !string.IsNullOrWhiteSpace(prod?.ClassTribIbsCbs))
+            {
+                imposto.Add(new XElement(Ns + "IBSCBS", E("CST", prod!.CstIbsCbs), E("cClassTrib", prod.ClassTribIbsCbs)));
+                ibsCbsInformado = true;
+            }
             dets.Add(new XElement(Ns + "det", new XAttribute("nItem", n), prodEl, imposto));
         }
 
@@ -240,6 +269,7 @@ public static class MontadorNfce
         avisos.Add("Sem QR Code e sem URL de consulta: dependem do código secreto do CSC (que o Nexus não guarda) e da SEFAZ da UF.");
         avisos.Add("Nada foi enviado à SEFAZ: falta a etapa de transmissão (autorização), o protocolo e o DANFE NFC-e.");
         avisos.Add("A tributação (ICMS CSOSN 102, PIS/COFINS CST 07) é provisória: confirme com o contador antes de emitir.");
+        if (ibsCbsInformado) avisos.Add("IBS/CBS: o XML leva só o CST e o cClassTrib dos produtos classificados; bases, alíquotas e valores (grupo gIBSCBS da NT 2025.002) ainda não são calculados pelo Nexus.");
         if (producao) avisos.Add("O ambiente está em Produção, mas este arquivo é só de conferência.");
         if (venda.Parcelas > 1 && venda.FormaPagamento == FormaPagamento.CartaoCredito) avisos.Add("Venda parcelada no cartão: a nota informa só o valor total; confirme o tratamento do acréscimo com o contador.");
 
@@ -247,6 +277,21 @@ public static class MontadorNfce
         var documento = new XDocument(new XComment($" {AvisoNaoAssinado} "), nfe);
         var xml = new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n").Append(documento.ToString()).ToString();
         return new ResultadoNfce(xml, chave, numero, null, pend, avisos);
+    }
+
+    /// <summary>PIS/COFINS do item: CST 01/02 com alíquota (PISAliq), CST de não incidência 04 a 09 (PISNT) ou o padrão provisório 07.</summary>
+    private static XElement MontarPisCofins(string tributo, string? cst, int aliquotaBp, long baseCentavos, int n, string nome, List<string> pend)
+    {
+        var c = string.IsNullOrWhiteSpace(cst) ? "07" : cst!;
+        if (c is "01" or "02")
+        {
+            if (aliquotaBp <= 0) pend.Add($"{tributo} CST {c} do item {n} ({nome}) precisa da alíquota.");
+            return new XElement(Ns + tributo + "Aliq", E("CST", c), E("vBC", Dec2(baseCentavos)), E(tributo == "PIS" ? "pPIS" : "pCOFINS", Dec2(aliquotaBp)),
+                E(tributo == "PIS" ? "vPIS" : "vCOFINS", Dec2(baseCentavos * aliquotaBp / 10000)));
+        }
+        if (c is "04" or "05" or "06" or "07" or "08" or "09") return new XElement(Ns + tributo + "NT", E("CST", c));
+        pend.Add($"{tributo} CST {c} do item {n} ({nome}) ainda não é montado pelo Nexus: use 01, 02 ou 04 a 09, ou confirme com o contador.");
+        return new XElement(Ns + tributo + "NT", E("CST", "07"));
     }
 
     private static ResultadoNfce Bloqueada(string motivo) => new(null, null, 0, motivo, Array.Empty<string>(), Array.Empty<string>());

@@ -44,6 +44,34 @@ public class Produto : IEntidadeSincronizavel
     /// <summary>CFOP do produto (4 dígitos). Nulo = usa o padrão da página Fiscal. Só local, não é enviado à nuvem.</summary>
     public string? Cfop { get; set; }
 
+    // ---- Dados fiscais completos (NFC-e e reforma tributária). Só locais: não vão para a nuvem. ----
+
+    /// <summary>CEST (7 dígitos), exigido só para mercadorias sujeitas a substituição tributária. Nulo = não informado.</summary>
+    public string? Cest { get; set; }
+
+    /// <summary>Origem da mercadoria (0 a 8). 0 = nacional.</summary>
+    public int OrigemMercadoria { get; set; }
+
+    /// <summary>CSOSN (3 dígitos, Simples) ou CST do ICMS (2 dígitos, regime normal). Nulo = usa o padrão do programa.</summary>
+    public string? CstIcms { get; set; }
+
+    /// <summary>Alíquota do ICMS em centésimos de % (18,00% = 1800).</summary>
+    public int AliquotaIcmsBp { get; set; }
+
+    public string? CstPis { get; set; }
+    public int AliquotaPisBp { get; set; }
+    public string? CstCofins { get; set; }
+    public int AliquotaCofinsBp { get; set; }
+
+    /// <summary>Unidade comercial da nota (UN, PAR, KG...). Nulo = UN.</summary>
+    public string? UnidadeComercial { get; set; }
+
+    /// <summary>Reforma tributária: CST do IBS/CBS (3 dígitos). Nulo = ainda não classificado.</summary>
+    public string? CstIbsCbs { get; set; }
+
+    /// <summary>Reforma tributária: cClassTrib (6 dígitos), a classificação tributária do IBS/CBS.</summary>
+    public string? ClassTribIbsCbs { get; set; }
+
     /// <summary>Preço de varejo.</summary>
     public long PrecoVendaCentavos { get; set; }
 

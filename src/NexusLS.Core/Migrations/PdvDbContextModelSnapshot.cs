@@ -2005,6 +2005,15 @@ namespace NexusLS.Core.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("AliquotaCofinsBp")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("AliquotaIcmsBp")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("AliquotaPisBp")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("Ativo")
                         .HasColumnType("INTEGER");
 
@@ -2015,7 +2024,13 @@ namespace NexusLS.Core.Migrations
                         .HasMaxLength(60)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Cest")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Cfop")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ClassTribIbsCbs")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("CodigoBarras")
@@ -2028,6 +2043,18 @@ namespace NexusLS.Core.Migrations
 
                     b.Property<string>("Cores")
                         .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CstCofins")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CstIbsCbs")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CstIcms")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CstPis")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("EstoqueAtual")
@@ -2053,6 +2080,9 @@ namespace NexusLS.Core.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("OrigemMercadoria")
+                        .HasColumnType("INTEGER");
+
                     b.Property<long>("PrecoAtacadoCentavos")
                         .HasColumnType("INTEGER");
 
@@ -2068,6 +2098,9 @@ namespace NexusLS.Core.Migrations
 
                     b.Property<bool>("Sobra")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("UnidadeComercial")
+                        .HasColumnType("TEXT");
 
                     b.Property<bool>("VenderSemBaixa")
                         .HasColumnType("INTEGER");

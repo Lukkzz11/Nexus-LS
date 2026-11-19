@@ -249,6 +249,9 @@ public partial class EstoqueLojaViewModel : ViewModelBase
     [ObservableProperty] private string _ncm = "";
     [ObservableProperty] private string _cfop = "";
 
+    /// <summary>CEST, origem, ICMS, PIS/COFINS, unidade e IBS/CBS do produto (a seção "Dados fiscais" do cadastro).</summary>
+    public FiscalProdutoViewModel Fiscal { get; } = new();
+
     /// <summary>As grades prontas (letras, calça/bermuda, camisa de botão) e a escolhida para cadastrar de uma vez.</summary>
     public IReadOnlyList<GradeDeTamanho> GradesProntas => GradesDeTamanho.Todas;
     [ObservableProperty] private GradeDeTamanho? _gradeEscolhida;
@@ -488,6 +491,7 @@ public partial class EstoqueLojaViewModel : ViewModelBase
         Cores = b.Cores ?? "";
         Ncm = b.Ncm ?? "";
         Cfop = b.Cfop ?? "";
+        Fiscal.Carregar(b);
         PrecoVenda = Dinheiro.FormatarParaEdicao(b.PrecoVendaCentavos);
         PrecoAtacado = b.PrecoAtacadoCentavos > 0 ? Dinheiro.FormatarParaEdicao(b.PrecoAtacadoCentavos) : "";
         PrecoCusto = Dinheiro.FormatarParaEdicao(b.PrecoCustoCentavos);
@@ -519,6 +523,7 @@ public partial class EstoqueLojaViewModel : ViewModelBase
         Cores = "";
         Ncm = "";
         Cfop = "";
+        Fiscal.Limpar();
         CodigoInterno = "";
         VenderSemBaixa = false;
         Sobra = false;
@@ -605,7 +610,7 @@ public partial class EstoqueLojaViewModel : ViewModelBase
         var minimo = LerInteiro(EstoqueMinimo, "Estoque mínimo");
         var inicial = EhNovo ? LerInteiro(EstoqueInicial, "Estoque inicial") : 0;
 
-        return (new DadosProduto(Nome, CodigoBarras, venda, custo, minimo, Referencia, atacado, Categoria, VenderSemBaixa, Sobra, Cores, Ncm ?? "", Cfop ?? ""), inicial);
+        return (new DadosProduto(Nome, CodigoBarras, venda, custo, minimo, Referencia, atacado, Categoria, VenderSemBaixa, Sobra, Cores, Ncm ?? "", Cfop ?? "", Fiscal.ParaDados()), inicial);
     }
 
     private static int LerInteiro(string texto, string campo)
@@ -629,6 +634,7 @@ public partial class EstoqueLojaViewModel : ViewModelBase
         Cores = produto.Cores ?? "";
         Ncm = produto.Ncm ?? "";
         Cfop = produto.Cfop ?? "";
+        Fiscal.Carregar(produto);
         CodigoInterno = produto.CodigoInterno ?? "";
         VenderSemBaixa = produto.VenderSemBaixa;
         Sobra = produto.Sobra;

@@ -45,6 +45,7 @@ public class ProdutoService
             EstoqueAtual = estoqueInicial,
             Ativo = true
         };
+        if (dados.Fiscal is not null) NexusLS.Core.Fiscal.RegrasFiscaisProduto.Aplicar(produto, dados.Fiscal);
         produto.Tamanhos.Add(new ProdutoTamanho { Tamanho = Tamanhos.SemTamanho, Estoque = estoqueInicial });
         db.Produtos.Add(produto);
 
@@ -91,6 +92,7 @@ public class ProdutoService
         produto.EstoqueMinimo = dados.EstoqueMinimo;
         if (dados.Ncm is not null) produto.Ncm = ncm;
         if (dados.Cfop is not null) produto.Cfop = cfop;
+        if (dados.Fiscal is not null) NexusLS.Core.Fiscal.RegrasFiscaisProduto.Aplicar(produto, dados.Fiscal);
         await db.SaveChangesAsync();
     }
 

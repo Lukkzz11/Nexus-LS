@@ -1,6 +1,7 @@
 ﻿<UserControl x:Class="NexusLS.App.Views.EstoqueLojaView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:NexusLS.App.Views">
 
     <UserControl.Resources>
         <Style x:Key="ColunaNumero" TargetType="TextBlock">
@@ -270,6 +271,8 @@
                                                  ToolTip="Gerado pelo sistema (INT-000001...)" />
                                     </StackPanel>
                                 </Grid>
+
+                                <local:FiscalProdutoControl DataContext="{Binding Fiscal}" />
 
                                 <Grid>
                                     <Grid.ColumnDefinitions>

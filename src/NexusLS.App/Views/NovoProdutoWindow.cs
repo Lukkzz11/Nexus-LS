@@ -19,6 +19,7 @@ public sealed class NovoProdutoWindow : Window
 
     private readonly TextBox _nome = new(), _custo = new(), _varejo = new(), _atacado = new(), _margem = new(), _minimo = new();
     private readonly TextBox _barras = new(), _referencia = new(), _base = new(), _cores = new(), _ncm = new(), _cfop = new();
+    private readonly NexusLS.App.ViewModels.FiscalProdutoViewModel _fiscal = new();
     private readonly ComboBox _categoria = new() { IsEditable = true };
     private readonly CheckBox _semBaixa = new() { Content = "Vender sem baixa de estoque", Margin = new Thickness(0, 0, 18, 0) };
     private readonly CheckBox _sobra = new() { Content = "É sobra (fica fora do catálogo online)" };
@@ -68,6 +69,7 @@ public sealed class NovoProdutoWindow : Window
         var pilha = new StackPanel();
         pilha.Children.Add(Cartao("Identificação e preços", MontarIdentificacao()));
         pilha.Children.Add(Cartao("Códigos", MontarCodigos()));
+        pilha.Children.Add(Cartao("Dados fiscais", new FiscalProdutoControl { DataContext = _fiscal }));
         pilha.Children.Add(Cartao("Tamanhos, cores e quantidades", MontarTamanhos()));
         var rolagem = new ScrollViewer { Content = pilha, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
         Grid.SetRow(rolagem, 1);
@@ -303,6 +305,7 @@ public sealed class NovoProdutoWindow : Window
             _cores.Text = b.Cores ?? "";
             _ncm.Text = b.Ncm ?? "";
             _cfop.Text = b.Cfop ?? "";
+            _fiscal.Carregar(b);
             _varejo.Text = Dinheiro.FormatarParaEdicao(b.PrecoVendaCentavos);
             _atacado.Text = b.PrecoAtacadoCentavos > 0 ? Dinheiro.FormatarParaEdicao(b.PrecoAtacadoCentavos) : "";
             _custo.Text = Dinheiro.FormatarParaEdicao(b.PrecoCustoCentavos);
@@ -336,7 +339,7 @@ public sealed class NovoProdutoWindow : Window
 
             var unico = _aba == "Único" ? Quantidade(_unico) : 0;
             var dados = new DadosProduto(_nome.Text, _barras.Text, venda, custo, minimo, _referencia.Text, atacado, _categoria.Text,
-                _semBaixa.IsChecked == true, _sobra.IsChecked == true, _cores.Text, _ncm.Text, _cfop.Text);
+                _semBaixa.IsChecked == true, _sobra.IsChecked == true, _cores.Text, _ncm.Text, _cfop.Text, _fiscal.ParaDados());
             produto = await _produtos.CadastrarAsync(dados, unico);
 
             var tamanhos = _aba == "Único" ? new Dictionary<string, int>()
