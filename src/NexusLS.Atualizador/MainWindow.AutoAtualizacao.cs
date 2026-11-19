@@ -34,8 +34,7 @@ public partial class MainWindow
 
             await Dispatcher.InvokeAsync(() =>
             {
-                MessageBox.Show(this, $"O Atualizador foi atualizado para a versão {res.Nova.Versao} e vai reabrir agora.",
-                    "Nexus Atualizador", MessageBoxButton.OK, MessageBoxImage.Information);
+                JanelaDialogo.Mostrar("Nexus Hub Atualizado", $"O Nexus Hub foi atualizado para a versão {res.Nova.Versao} e será reiniciado agora.", TipoDialogo.Sucesso, this);
                 Process.Start(new ProcessStartInfo(meuExe) { UseShellExecute = true });
                 Application.Current.Shutdown();
             });

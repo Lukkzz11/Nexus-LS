@@ -69,9 +69,10 @@ public partial class JanelaDialogo : Window
             case TipoDialogo.Confirmacao:
                 BorderIcone.Background = new SolidColorBrush(Color.FromRgb(0xEF, 0xF6, 0xFF));
                 PathIcone.Fill = new SolidColorBrush(Color.FromRgb(0x00, 0x67, 0xB8));
-                PathIcone.Data = Geometry.Parse("M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 16h-2v-2h2v2zm1.07-7.75l-.9.92C12.45 11.9 12 12.5 12 14h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.75z");
+                PathIcone.Data = Geometry.Parse("M 19.35,10.04 C 18.67,6.59 15.64,4 12,4 C 9.11,4 6.6,5.64 5.35,8.04 C 2.34,8.36 0,10.91 0,14 C 0,17.31 2.69,20 6,20 L 19,20 C 21.76,20 24,17.76 24,15 C 24,12.36 21.95,10.22 19.35,10.04 Z M 17,13 L 12,18 L 7,13 L 10,13 L 10,9 L 14,9 L 14,13 Z");
                 BtnCancelar.Visibility = Visibility.Visible;
-                BtnConfirmar.Content = "Continuar";
+                BtnCancelar.Content = "Agora Não";
+                BtnConfirmar.Content = "Confirmar";
                 BtnConfirmar.Background = new SolidColorBrush(Color.FromRgb(0x00, 0x67, 0xB8));
                 BtnConfirmar.BorderBrush = new SolidColorBrush(Color.FromRgb(0x00, 0x67, 0xB8));
                 break;
@@ -112,7 +113,7 @@ public partial class JanelaDialogo : Window
         diag.ShowDialog();
     }
 
-    public static bool Confirmar(string titulo, string mensagem, Window? proprietario = null, string textoConfirmar = "Continuar", string textoCancelar = "Cancelar")
+    public static bool Confirmar(string titulo, string mensagem, Window? proprietario = null, string textoConfirmar = "Confirmar", string textoCancelar = "Cancelar")
     {
         var diag = new JanelaDialogo(titulo, mensagem, TipoDialogo.Confirmacao, proprietario);
         if (!string.IsNullOrWhiteSpace(textoConfirmar)) diag.BtnConfirmar.Content = textoConfirmar;

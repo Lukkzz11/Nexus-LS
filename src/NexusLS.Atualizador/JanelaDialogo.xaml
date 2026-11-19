@@ -80,12 +80,12 @@
             <!-- Rodapé de Ações -->
             <Border Grid.Row="2" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="16,12" CornerRadius="0,0,8,8">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button x:Name="BtnCancelar" Content="Cancelar" MinWidth="100" Height="34" Padding="16,6" Margin="0,0,10,0"
+                    <Button x:Name="BtnCancelar" Content="Agora Não" MinWidth="110" Height="36" Padding="16,6" Margin="0,0,10,0"
                             Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" Foreground="#334155"
                             FontSize="12" FontWeight="SemiBold" Cursor="Hand" Click="BtnCancelar_Click" />
-                    <Button x:Name="BtnConfirmar" Content="OK" MinWidth="110" Height="34" Padding="18,6"
+                    <Button x:Name="BtnConfirmar" Content="Atualizar Agora" MinWidth="130" Height="36" Padding="20,6"
                             Background="#0067B8" BorderBrush="#0067B8" BorderThickness="1" Foreground="#FFFFFF"
-                            FontSize="12" FontWeight="SemiBold" Cursor="Hand" Click="BtnConfirmar_Click" />
+                            FontSize="12" FontWeight="Bold" Cursor="Hand" Click="BtnConfirmar_Click" />
                 </StackPanel>
             </Border>
         </Grid>
