@@ -309,12 +309,14 @@ public partial class MainWindow : Window
             }
 
             var confirm = JanelaDialogo.Confirmar(
-                "Atualizar com Git",
-                $"Foram encontradas atualizações no GitHub:\n\n" +
-                (precisaNexus ? $"• Nexus LS: versão {resNexus.Nova!.Versao}\n" : "• Nexus LS: Atualizado\n") +
-                (precisaBt ? $"• Nexus BarTender: versão {resBt.Nova!.Versao}\n" : "• Nexus BarTender: Atualizado\n") +
-                "\nDeseja baixar e atualizar os aplicativos agora?",
-                this);
+                "Atualização Disponível",
+                $"Foram encontradas atualizações oficiais no GitHub:\n\n" +
+                (precisaNexus ? $"• Nexus LS: nova versão {resNexus.Nova!.Versao}\n" : "• Nexus LS: Atualizado\n") +
+                (precisaBt ? $"• Nexus BarTender: nova versão {resBt.Nova!.Versao}\n" : "• Nexus BarTender: Atualizado\n") +
+                "\nDeseja baixar e instalar os aplicativos agora?",
+                this,
+                textoConfirmar: "Atualizar Agora",
+                textoCancelar: "Agora Não");
 
             if (!confirm) return;
 
@@ -1732,19 +1734,40 @@ public partial class MainWindow : Window
                 encoder.Save(fs);
             }
 
-            // Captura do Novo Popup Customizado no Nexus Hub
+            // Captura dos Popups Customizados no Nexus Hub
             try
             {
+                // 1. Popup de Atualização Oficial Disponível (Confirmação com botão largo sem cortes)
+                var diagUpdate = new JanelaDialogo("Atualização Disponível", "Foram encontradas atualizações oficiais no GitHub:\n\n• Nexus LS: nova versão v1.2.56\n• Nexus BarTender: nova versão v1.2.56\n\nDeseja baixar e instalar os aplicativos agora?", TipoDialogo.Confirmacao, this);
+                diagUpdate.BtnConfirmar.Content = "Atualizar Agora";
+                diagUpdate.BtnCancelar.Content = "Agora Não";
+                diagUpdate.Show();
+                diagUpdate.UpdateLayout();
+                Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.Render);
+
+                int wUp = (int)Math.Max(460, diagUpdate.ActualWidth);
+                int hUp = (int)Math.Max(280, diagUpdate.ActualHeight);
+                var rtbUpdate = new System.Windows.Media.Imaging.RenderTargetBitmap(wUp, hUp, 96, 96, PixelFormats.Pbgra32);
+                rtbUpdate.Render(diagUpdate);
+                var encUpdate = new System.Windows.Media.Imaging.PngBitmapEncoder();
+                encUpdate.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(rtbUpdate));
+                using var fsUpdate = File.Create(Path.Combine(pastaDestino, "Nexus_Hub_06_Popup_Atualizacao.png"));
+                encUpdate.Save(fsUpdate);
+                diagUpdate.Close();
+
+                // 2. Popup de Sucesso / Mensagem do Sistema
                 var diag = new JanelaDialogo("Sistemas Sincronizados", "Todos os aplicativos do Nexus foram verificados e conferem exatamente com a versão oficial do GitHub (v" + VersaoDoHub() + ").\n\n• Nexus LS: Pronto para inicialização\n• Nexus BarTender: Pronto para inicialização", TipoDialogo.Sucesso, this);
                 diag.Show();
                 diag.UpdateLayout();
                 Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.Render);
 
-                var rtbDiag = new System.Windows.Media.Imaging.RenderTargetBitmap(460, 220, 96, 96, PixelFormats.Pbgra32);
+                int wDg = (int)Math.Max(460, diag.ActualWidth);
+                int hDg = (int)Math.Max(240, diag.ActualHeight);
+                var rtbDiag = new System.Windows.Media.Imaging.RenderTargetBitmap(wDg, hDg, 96, 96, PixelFormats.Pbgra32);
                 rtbDiag.Render(diag);
                 var encDiag = new System.Windows.Media.Imaging.PngBitmapEncoder();
                 encDiag.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(rtbDiag));
-                using var fsDiag = File.Create(Path.Combine(pastaDestino, "Nexus_Hub_06_Popup_Customizado.png"));
+                using var fsDiag = File.Create(Path.Combine(pastaDestino, "Nexus_Hub_07_Popup_Customizado.png"));
                 encDiag.Save(fsDiag);
                 diag.Close();
             }

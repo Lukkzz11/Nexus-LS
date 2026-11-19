@@ -67,13 +67,13 @@ public partial class JanelaDialogo : Window
                 break;
 
             case TipoDialogo.Confirmacao:
-                BorderIcone.Background = new SolidColorBrush(Color.FromRgb(0xFE, 0xF2, 0xF2));
-                PathIcone.Fill = new SolidColorBrush(Color.FromRgb(0xDC, 0x26, 0x26));
-                PathIcone.Data = Geometry.Parse("M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z");
+                BorderIcone.Background = new SolidColorBrush(Color.FromRgb(0xEF, 0xF6, 0xFF));
+                PathIcone.Fill = new SolidColorBrush(Color.FromRgb(0x00, 0x67, 0xB8));
+                PathIcone.Data = Geometry.Parse("M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 16h-2v-2h2v2zm1.07-7.75l-.9.92C12.45 11.9 12 12.5 12 14h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.75z");
                 BtnCancelar.Visibility = Visibility.Visible;
-                BtnConfirmar.Content = "Sim, Continuar";
-                BtnConfirmar.Background = new SolidColorBrush(Color.FromRgb(0xDC, 0x26, 0x26));
-                BtnConfirmar.BorderBrush = new SolidColorBrush(Color.FromRgb(0xDC, 0x26, 0x26));
+                BtnConfirmar.Content = "Continuar";
+                BtnConfirmar.Background = new SolidColorBrush(Color.FromRgb(0x00, 0x67, 0xB8));
+                BtnConfirmar.BorderBrush = new SolidColorBrush(Color.FromRgb(0x00, 0x67, 0xB8));
                 break;
 
             default:
@@ -112,9 +112,11 @@ public partial class JanelaDialogo : Window
         diag.ShowDialog();
     }
 
-    public static bool Confirmar(string titulo, string mensagem, Window? proprietario = null)
+    public static bool Confirmar(string titulo, string mensagem, Window? proprietario = null, string textoConfirmar = "Continuar", string textoCancelar = "Cancelar")
     {
         var diag = new JanelaDialogo(titulo, mensagem, TipoDialogo.Confirmacao, proprietario);
+        if (!string.IsNullOrWhiteSpace(textoConfirmar)) diag.BtnConfirmar.Content = textoConfirmar;
+        if (!string.IsNullOrWhiteSpace(textoCancelar)) diag.BtnCancelar.Content = textoCancelar;
         diag.ShowDialog();
         return diag.Confirmado;
     }
