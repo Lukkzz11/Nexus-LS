@@ -196,7 +196,27 @@ public partial class DesignerView : UserControl
 
             if (el.IsSelected)
             {
-                Dispatcher.InvokeAsync(() => AplicarAdorner(elementoVisual, el), System.Windows.Threading.DispatcherPriority.Loaded);
+                if (ReferenceEquals(el, vm.ElementoSelecionado))
+                {
+                    Dispatcher.InvokeAsync(() => AplicarAdorner(elementoVisual, el), System.Windows.Threading.DispatcherPriority.Loaded);
+                }
+                else
+                {
+                    // Demais itens da seleção múltipla ganham um contorno tracejado
+                    var area = SelecaoPorRetangulo.AreaDoElemento(el);
+                    var contorno = new Rectangle
+                    {
+                        Width = EditorDesenhoService.Dip(area.Largura),
+                        Height = EditorDesenhoService.Dip(area.Altura),
+                        Stroke = new SolidColorBrush(Color.FromRgb(0x25, 0x63, 0xEB)),
+                        StrokeThickness = 1.0 / Math.Max(vm.ZoomNivel, 0.01),
+                        StrokeDashArray = new DoubleCollection { 4, 3 },
+                        IsHitTestVisible = false
+                    };
+                    Canvas.SetLeft(contorno, EditorDesenhoService.Dip(area.X));
+                    Canvas.SetTop(contorno, EditorDesenhoService.Dip(area.Y));
+                    EditorCanvas.Children.Add(contorno);
+                }
             }
         }
 
@@ -559,27 +579,33 @@ public partial class DesignerView : UserControl
                 }
             }
 
-            // Seleção múltipla com SHIFT + clique
-            if ((Keyboard.Modifiers & ModifierKeys.Shift) == ModifierKeys.Shift)
+            // Seleção múltipla com SHIFT ou CTRL + clique (alterna o elemento na seleção)
+            if ((Keyboard.Modifiers & (ModifierKeys.Shift | ModifierKeys.Control)) != 0)
             {
                 el.IsSelected = !el.IsSelected;
-                if (el.IsSelected)
+                if (VM != null)
                 {
-                    VM?.SelecionarElemento(el);
+                    VM.ElementoSelecionado = el.IsSelected ? el : VM.Modelo.Elementos.LastOrDefault(i => i.IsSelected);
                 }
-                else
-                {
-                    var restante = VM?.Modelo.Elementos.FirstOrDefault(i => i.IsSelected);
-                    if (restante != null) VM?.SelecionarElemento(restante);
-                    else VM?.DesmarcarSelecao();
-                }
+                ReconstruirCanvas();
                 e.Handled = true;
                 return;
             }
 
             e.Handled = true;
             this.Focus();
-            VM?.SelecionarElemento(el);
+
+            // Clicar num elemento que já faz parte de uma seleção múltipla move o grupo todo
+            var selecionadosAgora = VM?.Modelo.Elementos.Where(i => i.IsSelected && i.Visivel && !i.Bloqueado).ToList();
+            if (el.IsSelected && selecionadosAgora != null && selecionadosAgora.Count > 1)
+            {
+                _origensArrasteMulti = selecionadosAgora.Select(i => (i, i.X, i.Y)).ToList();
+            }
+            else
+            {
+                _origensArrasteMulti = null;
+                VM?.SelecionarElemento(el);
+            }
 
             _estaArrastando = true;
             _elementoSendoArrastado = el;
@@ -592,6 +618,12 @@ public partial class DesignerView : UserControl
 
         element.MouseMove += (s, e) =>
         {
+            if (_estaArrastando && _elementoSendoArrastado == el && _origensArrasteMulti != null)
+            {
+                MoverSelecaoMultipla(e.GetPosition(EditorCanvas));
+                return;
+            }
+
             if (_estaArrastando && _elementoSendoArrastado == el)
             {
                 var pontoAtual = e.GetPosition(EditorCanvas);
@@ -668,6 +700,8 @@ public partial class DesignerView : UserControl
         {
             if (_estaArrastando)
             {
+                var eraMulti = _origensArrasteMulti != null;
+                _origensArrasteMulti = null;
                 _estaArrastando = false;
                 _elementoSendoArrastado = null;
                 element.ReleaseMouseCapture();
@@ -677,8 +711,45 @@ public partial class DesignerView : UserControl
                 DesenharReguas();
                 VM?.RegistrarSnapshot();
                 VM?.AtualizarPreview();
+                if (eraMulti) ReconstruirCanvas();
             }
         };
+    }
+
+    private void MoverSelecaoMultipla(Point pontoAtual)
+    {
+        if (_origensArrasteMulti == null || VM == null) return;
+
+        var dxMm = EditorDesenhoService.Mm(pontoAtual.X - _pontoInicialClique.X);
+        var dyMm = EditorDesenhoService.Mm(pontoAtual.Y - _pontoInicialClique.Y);
+        if ((Keyboard.Modifiers & ModifierKeys.Shift) == ModifierKeys.Shift)
+        {
+            if (Math.Abs(dxMm) >= Math.Abs(dyMm)) dyMm = 0; else dxMm = 0;
+        }
+
+        var step = VM.SnapGrade ? 0.5 : 0.1;
+        foreach (var (alvo, x0, y0) in _origensArrasteMulti)
+        {
+            var (x, y) = Bancada.Prender(
+                Math.Round((x0 + dxMm) / step) * step,
+                Math.Round((y0 + dyMm) / step) * step,
+                VM.Modelo.LarguraMm, VM.Modelo.AlturaMm);
+            alvo.X = x;
+            alvo.Y = y;
+
+            foreach (UIElement filho in EditorCanvas.Children)
+            {
+                if (filho is FrameworkElement fe && ReferenceEquals(fe.Tag, alvo))
+                {
+                    Canvas.SetLeft(fe, EditorDesenhoService.Dip(alvo.X));
+                    Canvas.SetTop(fe, EditorDesenhoService.Dip(alvo.Y));
+                    break;
+                }
+            }
+        }
+
+        _camadaAdorner?.Update();
+        DesenharReguas();
     }
 
     private void AtualizarGuiasMagneticas(double? xMm, double? yMm, double largFolhaMm, double altFolhaMm)
@@ -847,9 +918,17 @@ public partial class DesignerView : UserControl
         }
     }
 
+    // Seleção por retângulo (marquee) na área de criação
     private bool _estaEmMarquee;
-    private Point _pontoInicialMarquee;
+    private bool _marqueeArrastou;
+    private bool _marqueeSomar;
+    private Point _pontoInicialMarquee;      // coordenadas do canvas (já fora do zoom/rolagem)
+    private Point _pontoInicialMarqueeTela;  // coordenadas da área de rolagem (para o limite de arraste)
+    private List<ElementoDesign> _marqueeSelecaoInicial = new();
     private Rectangle? _retanguloMarquee;
+
+    // Arraste de seleção múltipla
+    private List<(ElementoDesign El, double X, double Y)>? _origensArrasteMulti;
 
     // =========================================================================
     // NAVEGAÇÃO PAN (MÃOZINHA) & ZOOM CENTRADO NO CURSOR (ESTILO CAD / COREL)
@@ -869,37 +948,131 @@ public partial class DesignerView : UserControl
             return;
         }
 
-        // Clicar fora de qualquer elemento (na folha vazia ou no fundo cinza) desmarca o elemento
-        if (e.LeftButton == MouseButtonState.Pressed)
+        // Clicar no fundo (folha vazia ou mesa cinza) começa a seleção por retângulo
+        if (e.LeftButton == MouseButtonState.Pressed && e.ChangedButton == MouseButton.Left)
         {
             var hit = e.OriginalSource as DependencyObject;
-            bool clicouEmElemento = false;
             while (hit != null && hit != CanvasScrollViewer)
             {
-                if (hit is Border b && b.Tag is ElementoDesign)
+                if ((hit is Border b && b.Tag is ElementoDesign)
+                    || hit is Thumb
+                    || hit is Adorner
+                    || hit is System.Windows.Controls.Primitives.ScrollBar)
                 {
-                    clicouEmElemento = true;
-                    break;
+                    return;
                 }
-                if (hit is Thumb || hit is Adorner)
-                {
-                    clicouEmElemento = true;
-                    break;
-                }
-                hit = VisualTreeHelper.GetParent(hit);
+                hit = hit is Visual
+                    ? VisualTreeHelper.GetParent(hit)
+                    : LogicalTreeHelper.GetParent(hit);
             }
 
-            if (!clicouEmElemento)
+            this.Focus();
+            IniciarMarquee(e);
+            e.Handled = true;
+        }
+    }
+
+    // =========================================================================
+    // SELEÇÃO POR RETÂNGULO (MARQUEE)
+    // =========================================================================
+    private void IniciarMarquee(MouseButtonEventArgs e)
+    {
+        if (VM == null || EditorCanvas == null) return;
+
+        _estaEmMarquee = true;
+        _marqueeArrastou = false;
+        _marqueeSomar = (Keyboard.Modifiers & (ModifierKeys.Control | ModifierKeys.Shift)) != 0;
+        _marqueeSelecaoInicial = _marqueeSomar
+            ? VM.Modelo.Elementos.Where(el => el.IsSelected).ToList()
+            : new List<ElementoDesign>();
+        _pontoInicialMarquee = e.GetPosition(EditorCanvas);
+        _pontoInicialMarqueeTela = e.GetPosition(CanvasScrollViewer);
+
+        CanvasScrollViewer.CaptureMouse();
+    }
+
+    private void AtualizarMarquee(MouseEventArgs e)
+    {
+        var telaAtual = e.GetPosition(CanvasScrollViewer);
+        if (!_marqueeArrastou)
+        {
+            if (!SelecaoPorRetangulo.PassouDoLimite(
+                    telaAtual.X - _pontoInicialMarqueeTela.X,
+                    telaAtual.Y - _pontoInicialMarqueeTela.Y))
             {
-                this.Focus();
-                VM?.DesmarcarSelecao();
-                RemoverAdorner();
+                return;
+            }
+
+            _marqueeArrastou = true;
+            var zoom = Math.Max(VM?.ZoomNivel ?? 1.0, 0.01);
+            _retanguloMarquee ??= new Rectangle
+            {
+                Stroke = new SolidColorBrush(Color.FromRgb(0x25, 0x63, 0xEB)),
+                Fill = new SolidColorBrush(Color.FromArgb(0x20, 0x25, 0x63, 0xEB)),
+                IsHitTestVisible = false
+            };
+            // Mantém 1 px de traço na tela, qualquer que seja o zoom
+            _retanguloMarquee.StrokeThickness = 1.0 / zoom;
+            _retanguloMarquee.StrokeDashArray = new DoubleCollection { 4, 3 };
+            if (!EditorCanvas.Children.Contains(_retanguloMarquee))
+            {
+                EditorCanvas.Children.Add(_retanguloMarquee);
             }
         }
+
+        var pos = e.GetPosition(EditorCanvas);
+        Canvas.SetLeft(_retanguloMarquee!, Math.Min(pos.X, _pontoInicialMarquee.X));
+        Canvas.SetTop(_retanguloMarquee!, Math.Min(pos.Y, _pontoInicialMarquee.Y));
+        _retanguloMarquee!.Width = Math.Abs(pos.X - _pontoInicialMarquee.X);
+        _retanguloMarquee.Height = Math.Abs(pos.Y - _pontoInicialMarquee.Y);
+    }
+
+    private void EncerrarMarquee(MouseEventArgs? e, bool cancelar)
+    {
+        if (!_estaEmMarquee) return;
+        _estaEmMarquee = false;
+        if (CanvasScrollViewer.IsMouseCaptured) CanvasScrollViewer.ReleaseMouseCapture();
+        if (_retanguloMarquee != null) EditorCanvas.Children.Remove(_retanguloMarquee);
+
+        var vm = VM;
+        if (cancelar || vm == null) return;
+
+        if (!_marqueeArrastou)
+        {
+            // Clique no fundo sem arrastar: limpa a seleção (Ctrl/Shift preserva)
+            if (!_marqueeSomar)
+            {
+                vm.DesmarcarSelecao();
+                RemoverAdorner();
+                ReconstruirCanvas();
+            }
+            return;
+        }
+
+        var fim = e?.GetPosition(EditorCanvas) ?? _pontoInicialMarquee;
+        var retangulo = RetanguloMm.DeDoisPontos(
+            EditorDesenhoService.Mm(_pontoInicialMarquee.X), EditorDesenhoService.Mm(_pontoInicialMarquee.Y),
+            EditorDesenhoService.Mm(fim.X), EditorDesenhoService.Mm(fim.Y));
+
+        var selecionados = SelecaoPorRetangulo.Resolver(vm.Modelo.Elementos, _marqueeSelecaoInicial, retangulo, _marqueeSomar);
+        foreach (var el in vm.Modelo.Elementos)
+        {
+            el.IsSelected = selecionados.Contains(el);
+        }
+
+        vm.ElementoSelecionado = selecionados.LastOrDefault();
+        ReconstruirCanvas();
     }
 
     private void CanvasScrollViewer_PreviewMouseMove(object sender, MouseEventArgs e)
     {
+        if (_estaEmMarquee)
+        {
+            AtualizarMarquee(e);
+            e.Handled = true;
+            return;
+        }
+
         if (_estaEmPan)
         {
             var posAtual = e.GetPosition(CanvasScrollViewer);
@@ -913,6 +1086,13 @@ public partial class DesignerView : UserControl
 
     private void CanvasScrollViewer_PreviewMouseUp(object sender, MouseButtonEventArgs e)
     {
+        if (_estaEmMarquee && e.ChangedButton == MouseButton.Left)
+        {
+            EncerrarMarquee(e, cancelar: false);
+            e.Handled = true;
+            return;
+        }
+
         if (_estaEmPan)
         {
             _estaEmPan = false;
@@ -953,8 +1133,29 @@ public partial class DesignerView : UserControl
         e.Handled = true;
     }
 
+    private void CanvasScrollViewer_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        // Botão direito sobre um elemento fora da seleção seleciona esse elemento antes do menu abrir
+        var hit = e.OriginalSource as DependencyObject;
+        while (hit != null && hit != CanvasScrollViewer)
+        {
+            if (hit is Border b && b.Tag is ElementoDesign el)
+            {
+                if (!el.Bloqueado && !el.IsSelected)
+                {
+                    VM?.SelecionarElemento(el);
+                    ReconstruirCanvas();
+                }
+                return;
+            }
+            hit = hit is Visual ? VisualTreeHelper.GetParent(hit) : LogicalTreeHelper.GetParent(hit);
+        }
+    }
+
     private void ScrollViewer_MouseDown(object sender, MouseButtonEventArgs e)
     {
+        // Botão direito abre o menu de contexto sem perder a seleção
+        if (e.ChangedButton != MouseButton.Left) return;
         this.Focus();
         VM?.DesmarcarSelecao();
         RemoverAdorner();
@@ -962,128 +1163,19 @@ public partial class DesignerView : UserControl
 
     private void Canvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
+        // A seleção por retângulo é tratada na área de rolagem (cobre também a mesa cinza)
         this.Focus();
-        if (VM != null && VM.FerramentaMaoAtiva) return;
-
-        if (e.OriginalSource == EditorCanvas)
-        {
-            VM?.DesmarcarSelecao();
-            RemoverAdorner();
-
-            // Inicia seleção retangular por área (Marquee)
-            _estaEmMarquee = true;
-            _pontoInicialMarquee = e.GetPosition(EditorCanvas);
-
-            if (_retanguloMarquee == null)
-            {
-                _retanguloMarquee = new Rectangle
-                {
-                    Stroke = new SolidColorBrush(Color.FromRgb(0x25, 0x63, 0xEB)),
-                    StrokeThickness = 1,
-                    StrokeDashArray = new DoubleCollection { 3, 3 },
-                    Fill = new SolidColorBrush(Color.FromArgb(0x20, 0x25, 0x63, 0xEB)),
-                    IsHitTestVisible = false
-                };
-            }
-
-            Canvas.SetLeft(_retanguloMarquee, _pontoInicialMarquee.X);
-            Canvas.SetTop(_retanguloMarquee, _pontoInicialMarquee.Y);
-            _retanguloMarquee.Width = 0;
-            _retanguloMarquee.Height = 0;
-
-            if (!EditorCanvas.Children.Contains(_retanguloMarquee))
-            {
-                EditorCanvas.Children.Add(_retanguloMarquee);
-            }
-
-            EditorCanvas.CaptureMouse();
-            e.Handled = true;
-        }
     }
 
     private void Canvas_MouseMove(object sender, MouseEventArgs e)
     {
         if (VM == null || EditorCanvas == null) return;
         var pos = e.GetPosition(EditorCanvas);
-        var xMm = EditorDesenhoService.Mm(pos.X);
-        var yMm = EditorDesenhoService.Mm(pos.Y);
-        VM.AtualizarCoordenadasMouse(xMm, yMm);
-
-        if (_estaEmMarquee && _retanguloMarquee != null)
-        {
-            var x = Math.Min(pos.X, _pontoInicialMarquee.X);
-            var y = Math.Min(pos.Y, _pontoInicialMarquee.Y);
-            var w = Math.Abs(pos.X - _pontoInicialMarquee.X);
-            var h = Math.Abs(pos.Y - _pontoInicialMarquee.Y);
-
-            Canvas.SetLeft(_retanguloMarquee, x);
-            Canvas.SetTop(_retanguloMarquee, y);
-            _retanguloMarquee.Width = w;
-            _retanguloMarquee.Height = h;
-        }
+        VM.AtualizarCoordenadasMouse(EditorDesenhoService.Mm(pos.X), EditorDesenhoService.Mm(pos.Y));
     }
 
     private void Canvas_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {
-        if (_estaEmMarquee)
-        {
-            _estaEmMarquee = false;
-            EditorCanvas.ReleaseMouseCapture();
-
-            if (_retanguloMarquee != null)
-            {
-                var xDip = Canvas.GetLeft(_retanguloMarquee);
-                var yDip = Canvas.GetTop(_retanguloMarquee);
-                var wDip = _retanguloMarquee.Width;
-                var hDip = _retanguloMarquee.Height;
-
-                EditorCanvas.Children.Remove(_retanguloMarquee);
-
-                if (wDip > 4 && hDip > 4 && VM != null)
-                {
-                    var retSelMm = new Rect(
-                        EditorDesenhoService.Mm(xDip),
-                        EditorDesenhoService.Mm(yDip),
-                        EditorDesenhoService.Mm(wDip),
-                        EditorDesenhoService.Mm(hDip)
-                    );
-
-                    ElementoDesign? primeiro = null;
-                    bool temSelecao = false;
-
-                    foreach (var el in VM.Modelo.Elementos)
-                    {
-                        if (!el.Visivel || el.Bloqueado)
-                        {
-                            el.IsSelected = false;
-                            continue;
-                        }
-
-                        var elRect = new Rect(el.X, el.Y, el.Largura, el.Altura);
-                        if (retSelMm.IntersectsWith(elRect))
-                        {
-                            el.IsSelected = true;
-                            primeiro ??= el;
-                            temSelecao = true;
-                        }
-                        else
-                        {
-                            el.IsSelected = false;
-                        }
-                    }
-
-                    if (temSelecao)
-                    {
-                        VM.ElementoSelecionado = primeiro;
-                    }
-                    else
-                    {
-                        VM.DesmarcarSelecao();
-                    }
-                    ReconstruirCanvas();
-                }
-            }
-        }
     }
 
     private void RibbonDesigner_PresetSelecionadoAlterado(string preset)
@@ -1149,6 +1241,14 @@ public partial class DesignerView : UserControl
     private void UserControl_KeyDown(object sender, KeyEventArgs e)
     {
         if (VM == null || e.Handled) return;
+
+        // ESC durante o arraste da seleção por retângulo: cancela sem alterar a seleção
+        if (_estaEmMarquee && e.Key == Key.Escape)
+        {
+            EncerrarMarquee(null, cancelar: true);
+            e.Handled = true;
+            return;
+        }
 
         // Se estiver digitando em uma caixa de texto inline, não intercepta atalhos da prancheta
         if (Keyboard.FocusedElement is TextBox tb)

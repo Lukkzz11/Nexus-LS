@@ -96,35 +96,44 @@ public partial class DesignerViewModel
     }
 
     [RelayCommand]
-    public void SubirCamada(ElementoDesign? el)
-    {
-        el ??= ElementoSelecionado;
-        if (el == null) return;
-        var idx = Modelo.Elementos.IndexOf(el);
-        if (idx >= 0 && idx < Modelo.Elementos.Count - 1)
-        {
-            RegistrarSnapshot();
-            Modelo.Elementos.Move(idx, idx + 1);
-            NotificarCamadasAlteradas();
-            AtualizarPreview();
-            ElementoPropriedadeAlterada?.Invoke(this, EventArgs.Empty);
-        }
-    }
+    public void SubirCamada(ElementoDesign? el) => AplicarOrdemCamadas(OperacaoCamada.SubirUmaCamada, el);
 
     [RelayCommand]
-    public void DescerCamada(ElementoDesign? el)
+    public void DescerCamada(ElementoDesign? el) => AplicarOrdemCamadas(OperacaoCamada.DescerUmaCamada, el);
+
+    /// <summary>Elementos que as operações de camada devem atingir: a seleção múltipla ou, na falta dela, o selecionado.</summary>
+    private List<ElementoDesign> AlvosDeCamada(ElementoDesign? el)
     {
-        el ??= ElementoSelecionado;
-        if (el == null) return;
-        var idx = Modelo.Elementos.IndexOf(el);
-        if (idx > 0)
+        if (el != null && !el.IsSelected) return new List<ElementoDesign> { el };
+
+        var alvos = Modelo.Elementos.Where(e => e.IsSelected).ToList();
+        if (alvos.Count == 0 && ElementoSelecionado != null) alvos.Add(ElementoSelecionado);
+        return alvos;
+    }
+
+    /// <summary>
+    /// Muda a ordem de empilhamento (a ordem da lista é o z-order: tela, impressão e arquivo).
+    /// Registra um único passo de desfazer e só quando algo realmente muda.
+    /// </summary>
+    public void AplicarOrdemCamadas(OperacaoCamada operacao, ElementoDesign? el = null)
+    {
+        var alvos = AlvosDeCamada(el);
+        if (alvos.Count == 0) return;
+
+        var atual = Modelo.Elementos.ToList();
+        if (!OrdemCamadas.Altera(atual, alvos.Contains, operacao)) return;
+
+        RegistrarSnapshot();
+        var nova = OrdemCamadas.Reordenar(atual, alvos.Contains, operacao);
+        for (var i = 0; i < nova.Count; i++)
         {
-            RegistrarSnapshot();
-            Modelo.Elementos.Move(idx, idx - 1);
-            NotificarCamadasAlteradas();
-            AtualizarPreview();
-            ElementoPropriedadeAlterada?.Invoke(this, EventArgs.Empty);
+            var idx = Modelo.Elementos.IndexOf(nova[i]);
+            if (idx != i) Modelo.Elementos.Move(idx, i);
         }
+
+        NotificarCamadasAlteradas();
+        AtualizarPreview();
+        ElementoPropriedadeAlterada?.Invoke(this, EventArgs.Empty);
     }
 
     [RelayCommand]
@@ -508,9 +517,12 @@ public partial class DesignerViewModel
     [RelayCommand]
     public void ExcluirSelecionado()
     {
-        if (ElementoSelecionado == null) return;
+        var alvos = Modelo.Elementos.Where(e => e.IsSelected).ToList();
+        if (alvos.Count == 0 && ElementoSelecionado != null) alvos.Add(ElementoSelecionado);
+        if (alvos.Count == 0) return;
+
         RegistrarSnapshot();
-        Modelo.Elementos.Remove(ElementoSelecionado);
+        foreach (var alvo in alvos) Modelo.Elementos.Remove(alvo);
         ElementoSelecionado = null;
         NotificarCamadasAlteradas();
         AtualizarPreview();
@@ -690,32 +702,10 @@ public partial class DesignerViewModel
     }
 
     [RelayCommand]
-    public void AvancarCamada()
-    {
-        if (ElementoSelecionado == null) return;
-        var idx = Modelo.Elementos.IndexOf(ElementoSelecionado);
-        if (idx >= 0 && idx < Modelo.Elementos.Count - 1)
-        {
-            RegistrarSnapshot();
-            Modelo.Elementos.Move(idx, idx + 1);
-            NotificarCamadasAlteradas();
-            AtualizarPreview();
-        }
-    }
+    public void AvancarCamada() => AplicarOrdemCamadas(OperacaoCamada.SubirUmaCamada);
 
     [RelayCommand]
-    public void RecuarCamada()
-    {
-        if (ElementoSelecionado == null) return;
-        var idx = Modelo.Elementos.IndexOf(ElementoSelecionado);
-        if (idx > 0)
-        {
-            RegistrarSnapshot();
-            Modelo.Elementos.Move(idx, idx - 1);
-            NotificarCamadasAlteradas();
-            AtualizarPreview();
-        }
-    }
+    public void RecuarCamada() => AplicarOrdemCamadas(OperacaoCamada.DescerUmaCamada);
 
     [ObservableProperty]
     private double _mouseXMm;
@@ -730,32 +720,10 @@ public partial class DesignerViewModel
     }
 
     [RelayCommand]
-    public void TrazerParaFrente()
-    {
-        if (ElementoSelecionado == null) return;
-        var idx = Modelo.Elementos.IndexOf(ElementoSelecionado);
-        if (idx >= 0 && idx < Modelo.Elementos.Count - 1)
-        {
-            RegistrarSnapshot();
-            Modelo.Elementos.Move(idx, Modelo.Elementos.Count - 1);
-            NotificarCamadasAlteradas();
-            AtualizarPreview();
-        }
-    }
+    public void TrazerParaFrente() => AplicarOrdemCamadas(OperacaoCamada.TrazerParaFrente);
 
     [RelayCommand]
-    public void EnviarParaTras()
-    {
-        if (ElementoSelecionado == null) return;
-        var idx = Modelo.Elementos.IndexOf(ElementoSelecionado);
-        if (idx > 0)
-        {
-            RegistrarSnapshot();
-            Modelo.Elementos.Move(idx, 0);
-            NotificarCamadasAlteradas();
-            AtualizarPreview();
-        }
-    }
+    public void EnviarParaTras() => AplicarOrdemCamadas(OperacaoCamada.EnviarParaTras);
 
     [RelayCommand]
     public void InserirVariavel(string nomeVariavel)

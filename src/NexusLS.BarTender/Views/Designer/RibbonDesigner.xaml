@@ -243,6 +243,14 @@
                             <ui:SymbolIcon Symbol="ArrowSortUp24" FontSize="14" />
                         </Button>
 
+                        <Button Command="{Binding AvancarCamadaCommand}" Style="{StaticResource BotaoIconeRibbon}" ToolTip="Subir uma camada (Ctrl+])" AutomationProperties.Name="Subir uma camada">
+                            <ui:SymbolIcon Symbol="ArrowUp24" FontSize="14" />
+                        </Button>
+
+                        <Button Command="{Binding RecuarCamadaCommand}" Style="{StaticResource BotaoIconeRibbon}" ToolTip="Descer uma camada (Ctrl+[)" AutomationProperties.Name="Descer uma camada">
+                            <ui:SymbolIcon Symbol="ArrowDown24" FontSize="14" />
+                        </Button>
+
                         <Button Command="{Binding EnviarParaTrasCommand}" Style="{StaticResource BotaoIconeRibbon}" ToolTip="Enviar para Trás (Ctrl+Shift+[)" AutomationProperties.Name="Enviar para trás">
                             <ui:SymbolIcon Symbol="ArrowSortDown24" FontSize="14" />
                         </Button>

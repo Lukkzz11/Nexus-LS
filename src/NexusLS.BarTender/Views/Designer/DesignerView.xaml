@@ -237,7 +237,18 @@
                                   PreviewMouseMove="CanvasScrollViewer_PreviewMouseMove"
                                   PreviewMouseUp="CanvasScrollViewer_PreviewMouseUp"
                                   PreviewMouseWheel="CanvasScrollViewer_PreviewMouseWheel"
+                                  PreviewMouseRightButtonDown="CanvasScrollViewer_PreviewMouseRightButtonDown"
                                   ScrollChanged="CanvasScrollViewer_ScrollChanged">
+                        <ScrollViewer.ContextMenu>
+                            <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+                                <MenuItem Header="Trazer para frente" InputGestureText="Ctrl+Shift+]" Command="{Binding TrazerParaFrenteCommand}" />
+                                <MenuItem Header="Subir uma camada" InputGestureText="Ctrl+]" Command="{Binding AvancarCamadaCommand}" />
+                                <MenuItem Header="Descer uma camada" InputGestureText="Ctrl+[" Command="{Binding RecuarCamadaCommand}" />
+                                <MenuItem Header="Enviar para trás" InputGestureText="Ctrl+Shift+[" Command="{Binding EnviarParaTrasCommand}" />
+                                <Separator />
+                                <MenuItem Header="Excluir" InputGestureText="Del" Command="{Binding ExcluirSelecionadoCommand}" />
+                            </ContextMenu>
+                        </ScrollViewer.ContextMenu>
                         <Grid HorizontalAlignment="Center" VerticalAlignment="Center" Margin="100">
                             <!-- Papel da Etiqueta com Sombra Realista (Mesa de Trabalho Corel/Illustrator) -->
                             <Border Background="White" CornerRadius="2" ClipToBounds="False">
