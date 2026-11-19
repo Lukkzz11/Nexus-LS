@@ -115,14 +115,20 @@ public partial class MainViewModel : ObservableObject
     public IReadOnlyList<FormatoOpcao> FormatosDisponiveis => FormatoOpcao.ListaPadrao;
 
     private readonly IDialogoService _dialogo;
+    private readonly IImpressoraEtiquetas? _impressoraEtiquetas;
 
     public MainViewModel() : this(null, null)
     {
     }
 
-    public MainViewModel(BancoDadosService? dbService, IDialogoService? dialogoService = null)
+    public MainViewModel(
+        BancoDadosService? dbService,
+        IDialogoService? dialogoService = null,
+        bool iniciarAutomaticamente = true,
+        IImpressoraEtiquetas? impressoraEtiquetas = null)
     {
         _dialogo = dialogoService ?? DialogoService.Instancia;
+        _impressoraEtiquetas = impressoraEtiquetas;
         _designerVM = new DesignerViewModel(_dialogo)
         {
             SolicitarIrParaImpressao = IrParaFilaImpressaoAtalho
@@ -146,7 +152,8 @@ public partial class MainViewModel : ObservableObject
 
         CarregarImpressoras();
         AtualizarLicenca();
-        _ = InicializarAsync();
+        if (iniciarAutomaticamente)
+            _ = InicializarAsync();
     }
 
     public void AtualizarLicenca()

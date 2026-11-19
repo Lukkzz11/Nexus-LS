@@ -161,7 +161,15 @@
                                 </Grid>
                             </Button>
 
-                            <!-- 4. Configurações & Impressora -->
+                            <!-- 4. Preparação de Impressão -->
+                            <Button Tag="Preparacao" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaPreparacaoCommand}" Margin="0,0,0,4">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:SymbolIcon Symbol="Print24" Style="{StaticResource IconeDoMenu}" />
+                                    <TextBlock Text="Preparação de Impressão" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+
+                            <!-- 5. Configurações & Impressora -->
                             <TextBlock Text="PREFERÊNCIAS" Style="{StaticResource SecaoMenu}" Margin="20,16,18,6" />
 
                             <Button Tag="Configuracoes" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaConfiguracoesCommand}" Margin="0,0,0,4">
@@ -290,7 +298,7 @@
 
                         <StackPanel Grid.Column="0">
                             <TextBlock Text="Catálogo de Produtos do Nexus LS" Style="{StaticResource TituloTela}" />
-                            <TextBlock Text="Selecione produtos para editar no Estúdio de Etiquetas, gerar códigos EAN-13 ou adicionar à fila." Style="{StaticResource TextoApoio}" Margin="0,2,0,0" />
+                            <TextBlock Text="Selecione produtos para editar no Estúdio de Etiquetas, gerar códigos EAN-13 ou adicionar à fila. Dê dois cliques para informar as quantidades por tamanho." Style="{StaticResource TextoApoio}" Margin="0,2,0,0" />
                         </StackPanel>
 
                         <!-- Badges de Status -->
@@ -754,7 +762,23 @@
                     </Border>
                 </Grid>
 
-                <!-- 4. TELA DE CONFIGURAÇÕES ORGANIZADA EM SEÇÕES -->
+                <!-- 4. TELA DE PREPARAÇÃO DE IMPRESSÃO -->
+                <Grid Margin="20,16">
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding TelaAtiva}" Value="Preparacao">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
+
+                    <views:PreparacaoImpressaoView DataContext="{Binding PreparacaoVM}" />
+                </Grid>
+
+                <!-- 5. TELA DE CONFIGURAÇÕES ORGANIZADA EM SEÇÕES -->
                 <ScrollViewer Margin="20,16" VerticalScrollBarVisibility="Auto">
                     <ScrollViewer.Style>
                         <Style TargetType="ScrollViewer">

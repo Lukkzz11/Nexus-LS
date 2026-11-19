@@ -109,6 +109,50 @@ public class ImpressaoService
         dialogo.PrintDocument(paginator, $"Nexus BarTender - {modelo.Nome}");
         return true;
     }
+
+    /// <summary>
+    /// Impressão a partir da página de preparação: usa a mídia configurada (rolo com gap,
+    /// marca preta, contínuo ou folha) e o modelo já ajustado às medidas dela.
+    /// Reaproveita o mesmo diálogo e a mesma fila de impressão do Windows.
+    /// </summary>
+    public static bool ImprimirComMidia(
+        IEnumerable<ItemFila> itens,
+        ModeloEtiquetaDesign modelo,
+        string nomeLoja,
+        PerfilMidia midia,
+        int primeiraPosicao = 1,
+        string? nomeImpressora = null)
+    {
+        var listaItens = itens.ToList();
+        if (listaItens.Count == 0) return false;
+        if (midia is null) throw new ArgumentNullException(nameof(midia));
+
+        var dialogo = PrepararDialogoImpressao(
+            nomeImpressora,
+            midia.PaginaLarguraMm,
+            midia.PaginaAlturaMm,
+            out _);
+
+        if (dialogo == null) return false;
+
+        try
+        {
+            dialogo.PrintTicket.PageMediaSize = midia.Tipo == TipoMidiaEtiqueta.Folha
+                ? new System.Printing.PageMediaSize(System.Printing.PageMediaSizeName.ISOA4)
+                : new System.Printing.PageMediaSize(
+                    DesenhoEtiquetaService.Dip(midia.PaginaLarguraMm),
+                    DesenhoEtiquetaService.Dip(midia.PaginaAlturaMm));
+        }
+        catch (Exception ex)
+        {
+            // Drivers de térmicas que não aceitam tamanho programático: segue com o papel do driver.
+            App.Log(ex, "Não foi possível configurar a mídia no PrintTicket; usando a configuração do driver.");
+        }
+
+        var paginator = new BarTenderMidiaPaginator(listaItens, modelo, nomeLoja, midia, primeiraPosicao);
+        dialogo.PrintDocument(paginator, $"Nexus BarTender - {midia.Nome}");
+        return true;
+    }
 }
 
 public class BarTenderPaginator : DocumentPaginator
@@ -267,3 +311,90 @@ public class BarTenderDesignPaginator : DocumentPaginator
 }
 
 public record PosicaoItemBarTender(double XMm, double YMm, Produto Produto, string? Tamanho);
+
+/// <summary>
+/// Paginador da preparação: distribui cada cópia na posição da mídia escolhida.
+/// Em rolo de uma coluna, cada etiqueta ocupa uma página; em folha A4, 21 por página.
+/// </summary>
+public class BarTenderMidiaPaginator : DocumentPaginator
+{
+    private readonly List<List<PosicaoItemBarTender>> _paginas = new();
+    private readonly ModeloEtiquetaDesign _modelo;
+    private readonly string _nomeLoja;
+    private readonly PerfilMidia _midia;
+
+    public BarTenderMidiaPaginator(
+        IEnumerable<ItemFila> itens,
+        ModeloEtiquetaDesign modelo,
+        string nomeLoja,
+        PerfilMidia midia,
+        int primeiraPosicao = 1)
+    {
+        _modelo = modelo;
+        _nomeLoja = nomeLoja;
+        _midia = midia;
+
+        PageSize = new Size(
+            EditorDesenhoService.Dip(midia.PaginaLarguraMm),
+            EditorDesenhoService.Dip(midia.PaginaAlturaMm));
+
+        Paginar(itens, primeiraPosicao);
+    }
+
+    private void Paginar(IEnumerable<ItemFila> itens, int primeiraPosicao)
+    {
+        var porPagina = Math.Max(1, _midia.EtiquetasPorPagina);
+        var colunas = Math.Max(1, _midia.Colunas);
+        var indice = Math.Max(0, primeiraPosicao - 1);
+
+        foreach (var item in itens)
+        {
+            for (var copia = 0; copia < item.Quantidade; copia++, indice++)
+            {
+                var pagina = indice / porPagina;
+                var naPagina = indice % porPagina;
+                var coluna = naPagina % colunas;
+                var linha = naPagina / colunas;
+
+                while (_paginas.Count <= pagina)
+                    _paginas.Add(new List<PosicaoItemBarTender>());
+
+                var xMm = _midia.MargemEsquerdaMm + coluna * (_midia.LarguraEtiquetaMm + _midia.EspacoHorizontalMm);
+                var yMm = _midia.MargemSuperiorMm + linha * (_midia.AlturaEtiquetaMm + _midia.EspacoVerticalMm);
+
+                _paginas[pagina].Add(new PosicaoItemBarTender(xMm, yMm, item.Produto, item.Tamanho));
+            }
+        }
+    }
+
+    public override bool IsPageCountValid => true;
+    public override int PageCount => Math.Max(1, _paginas.Count);
+    public override Size PageSize { get; set; }
+    public override IDocumentPaginatorSource Source => null!;
+
+    public override DocumentPage GetPage(int pageNumber)
+    {
+        var visual = new DrawingVisual();
+        using (var dc = visual.RenderOpen())
+        {
+            dc.DrawRectangle(Brushes.White, null, new Rect(PageSize));
+
+            if (pageNumber >= 0 && pageNumber < _paginas.Count)
+            {
+                foreach (var pos in _paginas[pageNumber])
+                {
+                    dc.PushTransform(new TranslateTransform(
+                        EditorDesenhoService.Dip(pos.XMm),
+                        EditorDesenhoService.Dip(pos.YMm)));
+
+                    EditorDesenhoService.Desenhar(dc, _modelo, pos.Produto, pos.Tamanho, _nomeLoja, desenharBordaExterna: false);
+
+                    dc.Pop();
+                }
+            }
+        }
+
+        return new DocumentPage(visual, PageSize, new Rect(PageSize), new Rect(PageSize));
+    }
+}
+

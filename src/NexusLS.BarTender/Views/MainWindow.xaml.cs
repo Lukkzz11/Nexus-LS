@@ -53,7 +53,7 @@ public partial class MainWindow : FluentWindow
     {
         if (DataContext is ViewModels.MainViewModel vm && vm.ProdutoSelecionado != null)
         {
-            vm.UsarProdutoNoEstudioCommand.Execute(vm.ProdutoSelecionado);
+            vm.AbrirProdutoDoCatalogoCommand.Execute(vm.ProdutoSelecionado);
         }
     }
 }

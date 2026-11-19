@@ -1,0 +1,409 @@
+<UserControl x:Class="NexusLS.BarTender.Views.PreparacaoImpressaoView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
+
+    <UserControl.Resources>
+        <!-- Campo pequeno de medida: rótulo em cima e caixa de texto embaixo. -->
+        <Style x:Key="CampoMedida" TargetType="StackPanel">
+            <Setter Property="Margin" Value="0,0,8,10" />
+            <Setter Property="Width" Value="104" />
+        </Style>
+
+        <Style x:Key="RotuloMedida" TargetType="TextBlock" BasedOn="{StaticResource Rotulo}">
+            <Setter Property="FontSize" Value="10.5" />
+            <Setter Property="Margin" Value="0,0,0,3" />
+        </Style>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel MaxWidth="1240" Margin="0,0,6,12">
+
+            <!-- Cabeçalho: produto, referência e as ações de navegação -->
+            <Grid Margin="0,0,0,14">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Preparação de Impressão" Style="{StaticResource TituloTela}" />
+                        <Border Background="{StaticResource CorSelecaoSuave}" BorderBrush="{StaticResource CorSelecao}"
+                                BorderThickness="1" CornerRadius="{StaticResource RaioPequeno}" Padding="8,2"
+                                Margin="12,4,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Selecao.Nome, TargetNullValue='Nenhum produto'}" FontSize="11.5"
+                                       FontWeight="SemiBold" Foreground="{StaticResource CorPrimaria}" />
+                        </Border>
+                        <Border Background="{StaticResource CorSuperficieSubtil}" BorderBrush="{StaticResource CorBordaCampo}"
+                                BorderThickness="1" CornerRadius="{StaticResource RaioPequeno}" Padding="8,2"
+                                Margin="6,4,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Selecao.ReferenciaExibicao, StringFormat='Ref. {0}'}" FontSize="11.5"
+                                       Foreground="{StaticResource CorTextoSuave}" />
+                        </Border>
+                    </StackPanel>
+                    <TextBlock Text="Confira a prévia, o papel e a impressora antes de confirmar. As quantidades e o modelo vinculado ao produto são preservados."
+                               Style="{StaticResource TextoApoio}" Margin="0,3,0,0" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
+                    <Button Command="{Binding VoltarAoCatalogoCommand}" Style="{StaticResource BotaoSecundario}"
+                            Padding="12,7" Margin="0,0,8,0" ToolTip="Voltar ao catálogo sem perder a seleção">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="ArrowLeft24" FontSize="15" Margin="0,0,6,0" VerticalAlignment="Center" />
+                            <TextBlock Text="Catálogo" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding EditarQuantidadesCommand}" Style="{StaticResource BotaoSecundario}"
+                            Padding="12,7" IsEnabled="{Binding TemSelecao}"
+                            ToolTip="Reabrir o modal para corrigir tamanhos e quantidades">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Edit24" FontSize="15" Margin="0,0,6,0" VerticalAlignment="Center" />
+                            <TextBlock Text="Editar quantidades" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="16" />
+                    <ColumnDefinition Width="372" />
+                </Grid.ColumnDefinitions>
+
+                <!-- ===================== PRÉVIA ===================== -->
+                <StackPanel Grid.Column="0">
+                    <Border Style="{StaticResource Painel}" Padding="18" Margin="0,0,0,14">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Prévia real das etiquetas" Style="{StaticResource TituloSecao}" />
+                                    <TextBlock Text="Uma imagem por tamanho, gerada com o modelo vinculado ao produto."
+                                               Style="{StaticResource TextoApoio}" Margin="0,2,0,0" />
+                                </StackPanel>
+                                <Border Grid.Column="1" Background="{StaticResource CorSuperficieSubtil}"
+                                        BorderBrush="{StaticResource CorBordaCampo}" BorderThickness="1"
+                                        CornerRadius="{StaticResource RaioPequeno}" Padding="9,4" VerticalAlignment="Top">
+                                    <TextBlock Text="{Binding ModeloDimensoes, StringFormat='Etiqueta {0}'}"
+                                               FontSize="11.5" FontWeight="SemiBold" Foreground="{StaticResource CorTexto}" />
+                                </Border>
+                            </Grid>
+
+                            <ItemsControl ItemsSource="{Binding PreviaItens}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Width="196" Background="{StaticResource CorSuperficieSuave}"
+                                                BorderBrush="{StaticResource CorBorda}" BorderThickness="1"
+                                                CornerRadius="{StaticResource RaioMedio}" Padding="10" Margin="0,0,12,12">
+                                            <StackPanel>
+                                                <Border Background="White" BorderBrush="{StaticResource CorBorda}"
+                                                        BorderThickness="1" CornerRadius="{StaticResource RaioPequeno}"
+                                                        Height="118" Margin="0,0,0,8">
+                                                    <Image Source="{Binding Imagem}" Stretch="Uniform" Margin="6" />
+                                                </Border>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding Tamanho, StringFormat='Tamanho {0}'}"
+                                                                   FontSize="12.5" FontWeight="Bold"
+                                                                   Foreground="{StaticResource CorTexto}" />
+                                                        <TextBlock Text="{Binding CodigoBarras}" FontSize="10.5"
+                                                                   Foreground="{StaticResource CorTextoSuave}" />
+                                                    </StackPanel>
+                                                    <Border Grid.Column="1" Background="{StaticResource CorSelecaoSuave}"
+                                                            BorderBrush="{StaticResource CorSelecao}" BorderThickness="1"
+                                                            CornerRadius="{StaticResource RaioPequeno}" Padding="8,3"
+                                                            VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding Quantidade, StringFormat='{}{0} un.'}"
+                                                                   FontSize="12" FontWeight="Bold"
+                                                                   Foreground="{StaticResource CorPrimaria}" />
+                                                    </Border>
+                                                </Grid>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <Border Background="{StaticResource CorSuperficieSubtil}" BorderBrush="{StaticResource CorBorda}"
+                                    BorderThickness="1" CornerRadius="{StaticResource RaioMedio}" Padding="12,9">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:SymbolIcon Symbol="PaintBrush24" FontSize="14" Margin="0,0,8,0"
+                                                   Foreground="{StaticResource CorTextoSuave}" VerticalAlignment="Top" />
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding ModeloNome}" FontSize="12" FontWeight="SemiBold"
+                                                   Foreground="{StaticResource CorTexto}" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{Binding ModeloAjuste}" FontSize="11" TextWrapping="Wrap"
+                                                   Foreground="{StaticResource CorTextoSuave}" Margin="0,2,0,0" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Organização na página/rolo -->
+                    <Border Style="{StaticResource Painel}" Padding="18">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Como será organizado" Style="{StaticResource TituloSecao}" />
+                                    <TextBlock Text="{Binding MapaResumo}" Style="{StaticResource TextoApoio}" Margin="0,2,0,0" />
+                                    <TextBlock Text="{Binding OrdemImpressao, StringFormat='Ordem: {0}'}" FontSize="11"
+                                               FontWeight="SemiBold" Foreground="{StaticResource CorTextoSuave}"
+                                               TextTrimming="CharacterEllipsis" Margin="0,3,0,0" />
+                                </StackPanel>
+                                <Border Grid.Column="1" Background="{StaticResource CorDestaqueFundo}"
+                                        BorderBrush="{StaticResource CorDestaqueBorda}" BorderThickness="1"
+                                        CornerRadius="{StaticResource RaioPequeno}" Padding="10,5" VerticalAlignment="Top">
+                                    <TextBlock Text="{Binding PaginasTexto}" FontSize="11.5" FontWeight="SemiBold"
+                                               Foreground="{StaticResource CorDestaqueTexto}" />
+                                </Border>
+                            </Grid>
+
+                            <Border Background="White" BorderBrush="{StaticResource CorBorda}" BorderThickness="1"
+                                    CornerRadius="{StaticResource RaioMedio}" Padding="10">
+                                <Border MaxWidth="{Binding MapaLarguraMaxima}" HorizontalAlignment="Center">
+                                    <ItemsControl ItemsSource="{Binding MapaPagina}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <UniformGrid Columns="{Binding DataContext.MapaColunas, RelativeSource={RelativeSource AncestorType=ItemsControl}}" />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Margin="3" CornerRadius="{StaticResource RaioPequeno}"
+                                                        BorderThickness="1" Height="74">
+                                                    <Border.Style>
+                                                        <Style TargetType="Border">
+                                                            <Setter Property="Background" Value="{StaticResource CorSuperficieSuave}" />
+                                                            <Setter Property="BorderBrush" Value="{StaticResource CorBorda}" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Vazia}" Value="True">
+                                                                    <Setter Property="Background" Value="#FBFCFD" />
+                                                                    <Setter Property="BorderBrush" Value="{StaticResource CorLinhaGrade}" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Border.Style>
+                                                    <Grid>
+                                                        <Image Source="{Binding Imagem}" Stretch="Uniform" Margin="4" />
+                                                        <Border VerticalAlignment="Bottom" HorizontalAlignment="Right"
+                                                                Background="#B3FFFFFF" CornerRadius="3,0,5,0" Padding="5,1" Margin="0,0,0,0">
+                                                            <TextBlock Text="{Binding Detalhe}" FontSize="9.5"
+                                                                       Foreground="{StaticResource CorTextoSuave}" />
+                                                        </Border>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </Border>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- ===================== CONFIGURAÇÃO ===================== -->
+                <StackPanel Grid.Column="2">
+                    <Border Style="{StaticResource Painel}" Padding="18" Margin="0,0,0,14">
+                        <StackPanel>
+                            <TextBlock Text="Impressora e papel" Style="{StaticResource TituloSecao}" Margin="0,0,0,10" />
+
+                            <TextBlock Text="Impressora instalada" Style="{StaticResource Rotulo}" />
+                            <ComboBox ItemsSource="{Binding ImpressorasInstaladas}"
+                                      SelectedItem="{Binding ImpressoraSelecionada, Mode=TwoWay}"
+                                      Margin="0,3,0,10" ToolTip="Impressora que receberá o trabalho" />
+
+                            <TextBlock Text="Perfil da impressora" Style="{StaticResource Rotulo}" />
+                            <ComboBox ItemsSource="{Binding PerfisImpressora}"
+                                      SelectedItem="{Binding PerfilImpressoraSelecionado, Mode=TwoWay}"
+                                      DisplayMemberPath="Nome" Margin="0,3,0,4"
+                                      ToolTip="Referência de largura e sensores; confira no manual do seu modelo" />
+                            <TextBlock Text="{Binding PerfilImpressoraSelecionado.Observacao}" FontSize="10.5"
+                                       Foreground="{StaticResource CorTextoSuave}" TextWrapping="Wrap" Margin="0,0,0,10" />
+
+                            <TextBlock Text="Formato de mídia" Style="{StaticResource Rotulo}" />
+                            <ComboBox ItemsSource="{Binding MidiasDisponiveis}"
+                                      SelectedItem="{Binding MidiaSelecionada, Mode=TwoWay}"
+                                      DisplayMemberPath="Nome" Margin="0,3,0,8"
+                                      ToolTip="Perfis de rolo, folha e tamanhos comuns" />
+
+                            <TextBlock Text="Sensor / tipo de mídia" Style="{StaticResource Rotulo}" />
+                            <ComboBox ItemsSource="{Binding TiposMidia}"
+                                      SelectedItem="{Binding TipoMidiaSelecionado, Mode=TwoWay}"
+                                      DisplayMemberPath="Nome" Margin="0,3,0,10" />
+
+                            <WrapPanel Margin="0,4,0,0">
+                                <StackPanel Style="{StaticResource CampoMedida}">
+                                    <TextBlock Text="Largura etiqueta (mm)" Style="{StaticResource RotuloMedida}" />
+                                    <TextBox Text="{Binding LarguraEtiquetaMm, StringFormat=0.##}" />
+                                </StackPanel>
+                                <StackPanel Style="{StaticResource CampoMedida}">
+                                    <TextBlock Text="Altura etiqueta (mm)" Style="{StaticResource RotuloMedida}" />
+                                    <TextBox Text="{Binding AlturaEtiquetaMm, StringFormat=0.##}" />
+                                </StackPanel>
+                                <StackPanel Style="{StaticResource CampoMedida}">
+                                    <TextBlock Text="Gap horizontal (mm)" Style="{StaticResource RotuloMedida}" />
+                                    <TextBox Text="{Binding EspacoHorizontalMm, StringFormat=0.##}" />
+                                </StackPanel>
+                                <StackPanel Style="{StaticResource CampoMedida}">
+                                    <TextBlock Text="Gap vertical (mm)" Style="{StaticResource RotuloMedida}" />
+                                    <TextBox Text="{Binding EspacoVerticalMm, StringFormat=0.##}" />
+                                </StackPanel>
+                                <StackPanel Style="{StaticResource CampoMedida}">
+                                    <TextBlock Text="Papel largura (mm)" Style="{StaticResource RotuloMedida}" />
+                                    <TextBox Text="{Binding PaginaLarguraMm, StringFormat=0.##}" />
+                                </StackPanel>
+                                <StackPanel Style="{StaticResource CampoMedida}">
+                                    <TextBlock Text="Papel altura (mm)" Style="{StaticResource RotuloMedida}" />
+                                    <TextBox Text="{Binding PaginaAlturaMm, StringFormat=0.##}" />
+                                </StackPanel>
+                                <StackPanel Style="{StaticResource CampoMedida}">
+                                    <TextBlock Text="Margem esq. (mm)" Style="{StaticResource RotuloMedida}" />
+                                    <TextBox Text="{Binding MargemEsquerdaMm, StringFormat=0.##}" />
+                                </StackPanel>
+                                <StackPanel Style="{StaticResource CampoMedida}">
+                                    <TextBlock Text="Margem sup. (mm)" Style="{StaticResource RotuloMedida}" />
+                                    <TextBox Text="{Binding MargemSuperiorMm, StringFormat=0.##}" />
+                                </StackPanel>
+                                <StackPanel Style="{StaticResource CampoMedida}">
+                                    <TextBlock Text="Colunas" Style="{StaticResource RotuloMedida}" />
+                                    <TextBox Text="{Binding Colunas}" />
+                                </StackPanel>
+                                <StackPanel Style="{StaticResource CampoMedida}">
+                                    <TextBlock Text="Linhas" Style="{StaticResource RotuloMedida}" />
+                                    <TextBox Text="{Binding Linhas}" />
+                                </StackPanel>
+                                <StackPanel Style="{StaticResource CampoMedida}" Width="128">
+                                    <TextBlock Text="Máx. impressora (mm)" Style="{StaticResource RotuloMedida}" />
+                                    <TextBox Text="{Binding LarguraMaximaImpressoraMm, StringFormat=0.##}"
+                                             ToolTip="Área imprimível em largura, conforme o manual da impressora" />
+                                </StackPanel>
+                            </WrapPanel>
+
+                            <Button Command="{Binding RestaurarMidiaDoPerfilCommand}" Style="{StaticResource BotaoSecundario}"
+                                    Padding="10,6" HorizontalAlignment="Left" Margin="0,2,0,0"
+                                    ToolTip="Voltar às medidas do perfil de mídia escolhido">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:SymbolIcon Symbol="ArrowReset24" FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                    <TextBlock Text="Restaurar medidas do perfil" FontSize="12" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Aviso de incompatibilidade / medida inválida -->
+                    <Border Background="{StaticResource CorAvisoFundo}" BorderBrush="{StaticResource CorAvisoBorda}"
+                            BorderThickness="1" CornerRadius="{StaticResource RaioMedio}" Padding="12,10" Margin="0,0,0,14"
+                            Visibility="{Binding TemAvisoMidia, Converter={StaticResource BoolParaVisibilidadeConverter}}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <ui:SymbolIcon Grid.Column="0" Symbol="Warning24" FontSize="15" Foreground="{StaticResource CorAvisoTexto}"
+                                           Margin="0,0,8,0" VerticalAlignment="Top" />
+                            <TextBlock Grid.Column="1" Text="{Binding AvisoMidia}" FontSize="11" TextWrapping="Wrap" LineHeight="16"
+                                       Foreground="{StaticResource CorAvisoTexto}" />
+                        </Grid>
+                    </Border>
+
+                    <!-- Conferência final -->
+                    <Border Style="{StaticResource Painel}" Padding="18">
+                        <StackPanel>
+                            <TextBlock Text="Conferência" Style="{StaticResource TituloSecao}" Margin="0,0,0,8" />
+
+                            <Border Background="{StaticResource CorSelecaoSuave}" BorderBrush="{StaticResource CorSelecao}"
+                                    BorderThickness="1" CornerRadius="{StaticResource RaioMedio}" Padding="12,10" Margin="0,0,0,10">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Selecao.Nome}" FontSize="13" FontWeight="Bold"
+                                                   Foreground="{StaticResource CorTexto}" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{Binding Selecao.ReferenciaExibicao, StringFormat='Referência {0}'}"
+                                                   FontSize="11" Foreground="{StaticResource CorTextoSuave}" Margin="0,2,0,0" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding TotalEtiquetas}" FontSize="26" FontWeight="Black"
+                                                   Foreground="{StaticResource CorPrimaria}" HorizontalAlignment="Right" />
+                                        <TextBlock Text="etiquetas" FontSize="10.5" Foreground="{StaticResource CorTextoSuave}"
+                                                   HorizontalAlignment="Right" />
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <ItemsControl ItemsSource="{Binding Conferencia}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,0,0,4">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding Tamanho, StringFormat='Tamanho {0}'}" FontSize="12"
+                                                       Foreground="{StaticResource CorTexto}" />
+                                            <TextBlock Grid.Column="1" Text="{Binding Quantidade, StringFormat='{}{0} un.'}"
+                                                       FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource CorTexto}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <Separator Margin="0,8" Background="{StaticResource CorBorda}" />
+
+                            <TextBlock Text="{Binding ResumoMidia}" FontSize="11" TextWrapping="Wrap"
+                                       Foreground="{StaticResource CorTextoSuave}" Margin="0,0,0,4" />
+                            <TextBlock FontSize="11" TextWrapping="Wrap" Foreground="{StaticResource CorTextoSuave}" Margin="0,0,0,12">
+                                <Run Text="Impressora: " />
+                                <Run Text="{Binding ImpressoraSelecionada, Mode=OneWay, TargetNullValue='padrão do Windows'}" FontWeight="SemiBold" />
+                                <Run Text="{Binding PaginasTexto, Mode=OneWay, StringFormat=' · {0}'}" />
+                            </TextBlock>
+
+                            <Button Command="{Binding ImprimirCommand}" Style="{StaticResource BotaoPrimario}"
+                                    Padding="16,12" IsEnabled="{Binding PodeImprimir}"
+                                    ToolTip="Enviar o trabalho para a impressora escolhida">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:SymbolIcon Symbol="Print24" FontSize="18" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                    <TextBlock Text="CONFIRMAR E IMPRIMIR" FontWeight="Bold" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+
+                            <TextBlock Text="{Binding MensagemStatus}" FontSize="11" TextWrapping="Wrap" Margin="0,10,0,0">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding EnvioConcluido}" Value="True">
+                                                <Setter Property="Foreground" Value="{StaticResource CorPositivo}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Grid>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
