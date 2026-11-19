@@ -18,7 +18,7 @@
         <Style x:Key="Detalhe" TargetType="TextBlock">
             <Setter Property="FontSize" Value="13" />
             <Setter Property="TextWrapping" Value="Wrap" />
-            <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />
+            <Setter Property="Foreground" Value="{DynamicResource CorTextoSuave}" />
         </Style>
     </UserControl.Resources>
 
@@ -26,7 +26,7 @@
         <StackPanel Margin="0,0,12,16">
 
             <!-- Aviso: coisas que não entraram nos saldos -->
-            <Border Visibility="{Binding TemAvisos, Converter={StaticResource BoolVis}}" Background="{StaticResource CorAlerta}"
+            <Border Visibility="{Binding TemAvisos, Converter={StaticResource BoolVis}}" Background="{DynamicResource CorAlerta}"
                     CornerRadius="6" Padding="14,10" Margin="0,0,0,12">
                 <ItemsControl ItemsSource="{Binding Avisos}">
                     <ItemsControl.ItemTemplate>
@@ -98,7 +98,7 @@
                     <TextBlock Text="Por conta" FontSize="16" FontWeight="SemiBold" Margin="18,14,18,8" />
                     <DataGrid ItemsSource="{Binding Contas}" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single"
                               CanUserAddRows="False" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
-                              HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0" Background="Transparent" RowHeight="36"
+                              HorizontalGridLinesBrush="{DynamicResource CorLinhaGrade}" BorderThickness="0" Background="Transparent" RowHeight="36"
                               AutomationProperties.Name="Saldos por conta">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Conta" Binding="{Binding Nome, Mode=OneWay}" Width="2*" MinWidth="140" />
@@ -146,10 +146,10 @@
                                    HorizontalAlignment="Right" Margin="0,8,0,0" AutomationProperties.Name="Resultado do período">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock">
-                                    <Setter Property="Foreground" Value="{StaticResource CorPositivo}" />
+                                    <Setter Property="Foreground" Value="{DynamicResource CorPositivo}" />
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding ResultadoNegativo}" Value="True">
-                                            <Setter Property="Foreground" Value="{StaticResource CorNegativo}" />
+                                            <Setter Property="Foreground" Value="{DynamicResource CorNegativo}" />
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>

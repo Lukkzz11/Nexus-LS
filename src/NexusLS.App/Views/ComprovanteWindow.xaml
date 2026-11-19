@@ -3,8 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:v="clr-namespace:NexusLS.App.Views"
         Title="Editar comprovante de venda" Width="1180" Height="780" MinWidth="900" MinHeight="560"
-        WindowStartupLocation="CenterOwner" Background="{StaticResource CorFundo}"
-        Foreground="{StaticResource CorTexto}">
+        WindowStartupLocation="CenterOwner" Background="{DynamicResource CorFundo}"
+        Foreground="{DynamicResource CorTexto}">
     <Window.InputBindings>
         <KeyBinding Key="S" Modifiers="Ctrl" Command="{Binding SalvarCommand}" />
     </Window.InputBindings>
@@ -19,7 +19,7 @@
             <Border Style="{StaticResource Painel}" Margin="0,0,0,16">
                 <StackPanel>
                     <TextBlock Text="Modelo do comprovante" FontSize="18" FontWeight="SemiBold" />
-                    <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,8"
+                    <TextBlock Foreground="{DynamicResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,8"
                                Text="Life: o estilo do ERP PDV Life. Compacto: um item por linha, enxuto. Comprovante de venda: com número, referência, total da nota, recebido, troco, garantia e assinatura." />
                     <ItemsControl ItemsSource="{Binding Modelos}">
                         <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="3" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
@@ -36,11 +36,11 @@
                 <Border Style="{StaticResource Painel}" Margin="0,0,0,16">
                     <StackPanel>
                         <TextBlock Text="Comprovante de venda (cupom não fiscal 80 mm)" FontSize="18" FontWeight="SemiBold" />
-                        <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
+                        <TextBlock Foreground="{DynamicResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
                                    Text="Escolha o que aparece no comprovante. Ele sai sempre como CUPOM NÃO FISCAL: o programa não emite nota fiscal." />
 
                         <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
-                            <Border Background="White" BorderBrush="{StaticResource CorBorda}" BorderThickness="1" CornerRadius="4"
+                            <Border Background="White" BorderBrush="{DynamicResource CorBorda}" BorderThickness="1" CornerRadius="4"
                                     Width="110" Height="64" Padding="4">
                                 <Grid>
                                     <Image Source="{Binding LogoPrevia}" Stretch="Uniform" AutomationProperties.Name="Logo do cupom" />
@@ -59,7 +59,7 @@
                             <Button Content="Remover" Style="{StaticResource BotaoFantasma}" Margin="6,0,0,0" VerticalAlignment="Center"
                                     Command="{Binding RemoverLogoCommand}" />
                         </StackPanel>
-                        <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="12" TextWrapping="Wrap" Margin="0,6,0,0"
+                        <TextBlock Foreground="{DynamicResource CorTextoSuave}" FontSize="12" TextWrapping="Wrap" Margin="0,6,0,0"
                                    Text="Imagem PNG, JPG ou BMP. O programa reduz e imprime em tons de cinza no topo do cupom." />
 
                         <TextBlock Text="O que mostrar no cupom" Style="{StaticResource Rotulo}" Margin="0,16,0,6" />
@@ -101,7 +101,7 @@
                         <TextBox Text="{Binding CupomTextoGarantia, UpdateSourceTrigger=PropertyChanged}" MaxLength="300"
                                  AcceptsReturn="True" TextWrapping="Wrap" MinLines="2" MaxLines="4" VerticalScrollBarVisibility="Auto"
                                  AutomationProperties.Name="Garantia e termos do cupom" />
-                        <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
+                        <TextBlock Foreground="{DynamicResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
                                    Text="Rodapé: agradecimento, política de trocas, redes sociais. Em branco, sai “OBRIGADO PELA PREFERÊNCIA! VOLTE SEMPRE!”." />
                     </StackPanel>
                 </Border>

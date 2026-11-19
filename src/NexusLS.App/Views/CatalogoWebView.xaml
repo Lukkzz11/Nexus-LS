@@ -5,7 +5,7 @@
              Loaded="AoCarregar" Unloaded="AoDescarregar">
     <Grid>
         <wv2:WebView2 x:Name="Navegador" Visibility="Collapsed" DefaultBackgroundColor="#0F172A" />
-        <TextBlock x:Name="Aviso" Text="Abrindo o editor do catálogo..." Foreground="{StaticResource CorTextoSuave}"
+        <TextBlock x:Name="Aviso" Text="Abrindo o editor do catálogo..." Foreground="{DynamicResource CorTextoSuave}"
                    TextWrapping="Wrap" HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="520" />
     </Grid>
 </UserControl>

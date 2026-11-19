@@ -22,8 +22,8 @@
         <!-- Coluna vertical do gráfico de vendas no tempo -->
         <DataTemplate x:Key="ColunaVertical">
             <StackPanel Margin="2,0" ToolTip="{Binding Texto}">
-                <Border Height="150" BorderBrush="LightGray" BorderThickness="0,0,0,1">
-                    <Border Background="#2563EB" CornerRadius="3,3,0,0" VerticalAlignment="Stretch" RenderTransformOrigin="0.5,1">
+                <Border Height="150" BorderBrush="{DynamicResource CorBordaCampo}" BorderThickness="0,0,0,1">
+                    <Border Background="{DynamicResource CorPrimaria}" CornerRadius="3,3,0,0" VerticalAlignment="Stretch" RenderTransformOrigin="0.5,1">
                         <Border.RenderTransform>
                             <ScaleTransform ScaleY="{Binding Fracao, Mode=OneWay}" />
                         </Border.RenderTransform>
@@ -41,10 +41,10 @@
                                     <TextBlock Text="{Binding Variacao}" FontSize="12">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
-                                                <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />
+                                                <Setter Property="Foreground" Value="{DynamicResource CorTextoSuave}" />
                                                 <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding Subiu}" Value="True"><Setter Property="Foreground" Value="{StaticResource CorPositivo}" /></DataTrigger>
-                                                    <DataTrigger Binding="{Binding Caiu}" Value="True"><Setter Property="Foreground" Value="{StaticResource CorNegativo}" /></DataTrigger>
+                                                    <DataTrigger Binding="{Binding Subiu}" Value="True"><Setter Property="Foreground" Value="{DynamicResource CorPositivo}" /></DataTrigger>
+                                                    <DataTrigger Binding="{Binding Caiu}" Value="True"><Setter Property="Foreground" Value="{DynamicResource CorNegativo}" /></DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
                                         </TextBlock.Style>

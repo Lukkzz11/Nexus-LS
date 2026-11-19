@@ -34,7 +34,7 @@
                         <Border Style="{StaticResource Painel}" Margin="0,0,0,16" Visibility="{Binding TemSeguranca, Converter={StaticResource BoolVis}}">
                             <StackPanel>
                                 <TextBlock Text="Regras do caixa" FontSize="18" FontWeight="SemiBold" />
-                                <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
+                                <TextBlock Foreground="{DynamicResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
                                            Text="Quando a regra pede um gerente, aparece a tela de PIN e só um gerente ou administrador libera. Cada autorização fica registrada em Atividades. Sem funcionários cadastrados, nada é pedido." />
                                 <TextBlock Text="Retirada (sangria ou despesa) acima de quanto precisa de gerente? (R$, em branco = sem limite)" Style="{StaticResource Rotulo}" TextWrapping="Wrap" />
                                 <TextBox Text="{Binding SangriaMaximaTexto, UpdateSourceTrigger=PropertyChanged}" Width="160" HorizontalAlignment="Left"
@@ -47,10 +47,10 @@
                                 <TextBlock Text="{Binding MensagemCaixaRegras}" TextWrapping="Wrap" Margin="0,10,0,0">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="{StaticResource CorPositivo}" />
+                                            <Setter Property="Foreground" Value="{DynamicResource CorPositivo}" />
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding MensagemCaixaRegrasEhErro}" Value="True">
-                                                    <Setter Property="Foreground" Value="{StaticResource CorNegativo}" />
+                                                    <Setter Property="Foreground" Value="{DynamicResource CorNegativo}" />
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -61,7 +61,7 @@
                         <Border Style="{StaticResource Painel}">
                             <StackPanel>
                                 <TextBlock Text="Abertura do caixa" FontSize="18" FontWeight="SemiBold" />
-                                <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,6,0,0"
+                                <TextBlock Foreground="{DynamicResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,6,0,0"
                                            Text="O Nexus já exige o caixa aberto, e do dia de hoje, para finalizar uma venda. O troco inicial padrão fica em Parâmetros." />
                             </StackPanel>
                         </Border>
@@ -72,7 +72,7 @@
                         <Border Style="{StaticResource Painel}" Margin="0,0,0,16" Visibility="{Binding TemSeguranca, Converter={StaticResource BoolVis}}">
                             <StackPanel>
                                 <TextBlock Text="Atraso e limite de crédito" FontSize="18" FontWeight="SemiBold" />
-                                <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
+                                <TextBlock Foreground="{DynamicResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
                                            Text="Valem para as vendas a prazo. A multa e os juros aparecem na ficha do cliente com título vencido, como valor a cobrar por fora; eles não mudam a dívida registrada." />
                                 <TextBlock Text="Multa por atraso (% do saldo vencido, cobrada uma vez)" Style="{StaticResource Rotulo}" TextWrapping="Wrap" />
                                 <TextBox Text="{Binding MultaAtrasoTexto, UpdateSourceTrigger=PropertyChanged}" Width="120" HorizontalAlignment="Left"
@@ -88,10 +88,10 @@
                                 <TextBlock Text="{Binding MensagemCrediario}" TextWrapping="Wrap" Margin="0,10,0,0">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="{StaticResource CorPositivo}" />
+                                            <Setter Property="Foreground" Value="{DynamicResource CorPositivo}" />
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding MensagemCrediarioEhErro}" Value="True">
-                                                    <Setter Property="Foreground" Value="{StaticResource CorNegativo}" />
+                                                    <Setter Property="Foreground" Value="{DynamicResource CorNegativo}" />
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -102,7 +102,7 @@
                         <Border Style="{StaticResource Painel}">
                             <StackPanel>
                                 <TextBlock Text="Como funciona hoje" FontSize="18" FontWeight="SemiBold" />
-                                <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,6,0,0"
+                                <TextBlock Foreground="{DynamicResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,6,0,0"
                                            Text="O prazo da venda a prazo é de 30 dias (dá para ajustar o vencimento de cada título na ficha do cliente). O limite de cada cliente fica no cadastro dele, e a venda é barrada quando passa dele. Os títulos vencidos aparecem destacados na tela Início." />
                             </StackPanel>
                         </Border>
@@ -113,7 +113,7 @@
                         <Border Style="{StaticResource Painel}" Margin="0,0,0,16" Visibility="{Binding TemComissoes, Converter={StaticResource BoolVis}}">
                             <StackPanel>
                                 <TextBlock Text="Regra da comissão" FontSize="18" FontWeight="SemiBold" />
-                                <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
+                                <TextBlock Foreground="{DynamicResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
                                            Text="A comissão é um percentual da venda líquida de cada vendedor (o nome que aparece nas vendas). Quem não tem percentual próprio usa o padrão." />
                                 <TextBlock Text="Comissão padrão (% da venda líquida, 0 = não paga)" Style="{StaticResource Rotulo}" TextWrapping="Wrap" />
                                 <TextBox Text="{Binding ComissaoPadraoTexto, UpdateSourceTrigger=PropertyChanged}" Width="120" HorizontalAlignment="Left"
@@ -146,7 +146,7 @@
                         <Border Style="{StaticResource Painel}" Visibility="{Binding TemComissoes, Converter={StaticResource BoolVis}}">
                             <StackPanel>
                                 <TextBlock Text="Fechamento do mês" FontSize="18" FontWeight="SemiBold" />
-                                <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
+                                <TextBlock Foreground="{DynamicResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
                                            Text="Mostra quanto cada vendedor tem de comissão no mês, pelas regras acima. Só calcula: o pagamento você faz por fora." />
                                 <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
                                     <ComboBox ItemsSource="{Binding MesesComissao}" DisplayMemberPath="Texto" SelectedItem="{Binding MesSelecionado}"
@@ -185,15 +185,15 @@
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
-                                    <TextBlock Text="{Binding ResumoComissao}" Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,10,0,0" />
+                                    <TextBlock Text="{Binding ResumoComissao}" Foreground="{DynamicResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,10,0,0" />
                                 </StackPanel>
                                 <TextBlock Text="{Binding MensagemComissao}" TextWrapping="Wrap" Margin="0,10,0,0">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="{StaticResource CorPositivo}" />
+                                            <Setter Property="Foreground" Value="{DynamicResource CorPositivo}" />
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding MensagemComissaoEhErro}" Value="True">
-                                                    <Setter Property="Foreground" Value="{StaticResource CorNegativo}" />
+                                                    <Setter Property="Foreground" Value="{DynamicResource CorNegativo}" />
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -208,7 +208,7 @@
                         <Border Style="{StaticResource Painel}" Margin="0,0,0,16" Visibility="{Binding TemEstoqueConfig, Converter={StaticResource BoolVis}}">
                             <StackPanel>
                                 <TextBlock Text="Aviso de estoque baixo" FontSize="18" FontWeight="SemiBold" />
-                                <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
+                                <TextBlock Foreground="{DynamicResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
                                            Text="Produto fica abaixo do mínimo quando o estoque atual é menor que o estoque mínimo dele. O mínimo de cada produto é definido no cadastro; o valor sugerido para produtos novos fica em Parâmetros." />
                                 <CheckBox Margin="0,14,0,0" IsChecked="{Binding AvisarEstoqueBaixo}">
                                     <TextBlock Text="Avisar ao abrir o Nexus quando houver produto abaixo do mínimo" TextWrapping="Wrap" />
@@ -218,10 +218,10 @@
                                 <TextBlock Text="{Binding MensagemEstoque}" TextWrapping="Wrap" Margin="0,10,0,0">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="{StaticResource CorPositivo}" />
+                                            <Setter Property="Foreground" Value="{DynamicResource CorPositivo}" />
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding MensagemEstoqueEhErro}" Value="True">
-                                                    <Setter Property="Foreground" Value="{StaticResource CorNegativo}" />
+                                                    <Setter Property="Foreground" Value="{DynamicResource CorNegativo}" />
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -232,7 +232,7 @@
                         <Border Style="{StaticResource Painel}" Visibility="{Binding TemEstoqueConfig, Converter={StaticResource BoolVis}}">
                             <StackPanel>
                                 <TextBlock Text="Situação agora" FontSize="18" FontWeight="SemiBold" />
-                                <TextBlock Text="{Binding ResumoEstoqueBaixo}" Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0" />
+                                <TextBlock Text="{Binding ResumoEstoqueBaixo}" Foreground="{DynamicResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0" />
                                 <ItemsControl ItemsSource="{Binding ListaEstoqueBaixo}" Margin="0,10,0,0">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
@@ -251,7 +251,7 @@
                         <Border Style="{StaticResource Painel}" Visibility="{Binding TemSeguranca, Converter={StaticResource BoolVis}}">
                             <StackPanel>
                                 <TextBlock Text="Avisos ao abrir o Nexus" FontSize="18" FontWeight="SemiBold" />
-                                <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
+                                <TextBlock Foreground="{DynamicResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
                                            Text="Os avisos aparecem juntos, numa janela só, quando o Nexus abre. O aviso de estoque baixo é ligado em Estoque e produtos. Backup que falhou e nova versão já avisam sozinhos." />
                                 <CheckBox Margin="0,14,0,0" IsChecked="{Binding AvisarContas}">
                                     <TextBlock Text="Avisar das contas a pagar vencidas e a vencer (para quem tem acesso ao Financeiro)" TextWrapping="Wrap" />
@@ -283,10 +283,10 @@
                                 <TextBlock Text="{Binding MensagemNotificacoes}" TextWrapping="Wrap" Margin="0,10,0,0">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="{StaticResource CorPositivo}" />
+                                            <Setter Property="Foreground" Value="{DynamicResource CorPositivo}" />
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding MensagemNotificacoesEhErro}" Value="True">
-                                                    <Setter Property="Foreground" Value="{StaticResource CorNegativo}" />
+                                                    <Setter Property="Foreground" Value="{DynamicResource CorNegativo}" />
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -301,7 +301,7 @@
                         <Border Style="{StaticResource Painel}" Visibility="{Binding TemSeguranca, Converter={StaticResource BoolVis}}">
                             <StackPanel>
                                 <TextBlock Text="Padrão da tela de Etiquetas" FontSize="18" FontWeight="SemiBold" />
-                                <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
+                                <TextBlock Foreground="{DynamicResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
                                            Text="É o que a tela de Etiquetas já abre escolhido. Dá para trocar na hora, sem mexer aqui. A impressora e o desenho da etiqueta ficam no Nexus BarTender." />
                                 <TextBlock Text="Formato do papel" Style="{StaticResource Rotulo}" Margin="0,14,0,4" />
                                 <ComboBox ItemsSource="{Binding FormatosEtiqueta}" SelectedItem="{Binding FormatoEtiquetaPadrao}"
@@ -314,10 +314,10 @@
                                 <TextBlock Text="{Binding MensagemEtiquetas}" TextWrapping="Wrap" Margin="0,10,0,0">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="{StaticResource CorPositivo}" />
+                                            <Setter Property="Foreground" Value="{DynamicResource CorPositivo}" />
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding MensagemEtiquetasEhErro}" Value="True">
-                                                    <Setter Property="Foreground" Value="{StaticResource CorNegativo}" />
+                                                    <Setter Property="Foreground" Value="{DynamicResource CorNegativo}" />
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -332,7 +332,7 @@
                         <Border Style="{StaticResource Painel}" Margin="0,0,0,16" Visibility="{Binding TemIntegracoes, Converter={StaticResource BoolVis}}">
                             <StackPanel>
                                 <TextBlock Text="Serviços ligados ao Nexus" FontSize="18" FontWeight="SemiBold" />
-                                <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
+                                <TextBlock Foreground="{DynamicResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
                                            Text="Só mostra a situação. Cada serviço é configurado onde sempre foi: Google em Backup, Mercado Pago em Pagamentos, nuvem e ERP na tela de conexão." />
                                 <ItemsControl ItemsSource="{Binding Integracoes}" Margin="0,10,0,0">
                                     <ItemsControl.ItemTemplate>
@@ -343,7 +343,7 @@
                                                     <ColumnDefinition Width="*" />
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Text="{Binding Nome}" FontWeight="SemiBold" TextWrapping="Wrap" />
-                                                <TextBlock Grid.Column="1" Text="{Binding Situacao}" Foreground="{StaticResource CorTextoSuave}" TextWrapping="Wrap" />
+                                                <TextBlock Grid.Column="1" Text="{Binding Situacao}" Foreground="{DynamicResource CorTextoSuave}" TextWrapping="Wrap" />
                                             </Grid>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
@@ -355,7 +355,7 @@
                         <Border Style="{StaticResource Painel}" Visibility="{Binding TemIntegracoes, Converter={StaticResource BoolVis}}">
                             <StackPanel>
                                 <TextBlock Text="Exportar para o contador" FontSize="18" FontWeight="SemiBold" />
-                                <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
+                                <TextBlock Foreground="{DynamicResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
                                            Text="Gera 3 planilhas do mês (abrem direto no Excel): vendas, itens vendidos e contas a pagar e a receber. As canceladas vêm marcadas na coluna Situação. As contas entram pela data de vencimento." />
                                 <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
                                     <ComboBox ItemsSource="{Binding MesesContador}" DisplayMemberPath="Texto" SelectedItem="{Binding MesContador}"
@@ -365,10 +365,10 @@
                                 <TextBlock Text="{Binding MensagemIntegracoes}" TextWrapping="Wrap" Margin="0,10,0,0">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="{StaticResource CorPositivo}" />
+                                            <Setter Property="Foreground" Value="{DynamicResource CorPositivo}" />
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding MensagemIntegracoesEhErro}" Value="True">
-                                                    <Setter Property="Foreground" Value="{StaticResource CorNegativo}" />
+                                                    <Setter Property="Foreground" Value="{DynamicResource CorNegativo}" />
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -379,7 +379,7 @@
                         <Border Style="{StaticResource Painel}" Margin="0,12,0,0" Visibility="{Binding TemResumoCelular, Converter={StaticResource BoolVis}}">
                             <StackPanel>
                                 <TextBlock Text="Resumo do dia para o celular" FontSize="18" FontWeight="SemiBold" />
-                                <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
+                                <TextBlock Foreground="{DynamicResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
                                            Text="Gera uma página com as vendas de hoje, comparação com ontem, mais vendidos, caixa, contas, crediário e estoque baixo, pronta para ler no celular. Salve numa pasta do Google Drive ou mande o arquivo por WhatsApp ou e-mail. É uma foto do momento: gere de novo para atualizar." />
                                 <CheckBox Content="Salvar com a data no nome (resumo-AAAA-MM-DD.html)" Margin="0,10,0,0"
                                           IsChecked="{Binding ResumoCelularComData}" />
@@ -388,10 +388,10 @@
                                 <TextBlock Text="{Binding MensagemResumoCelular}" TextWrapping="Wrap" Margin="0,10,0,0">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="{StaticResource CorPositivo}" />
+                                            <Setter Property="Foreground" Value="{DynamicResource CorPositivo}" />
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding MensagemResumoCelularEhErro}" Value="True">
-                                                    <Setter Property="Foreground" Value="{StaticResource CorNegativo}" />
+                                                    <Setter Property="Foreground" Value="{DynamicResource CorNegativo}" />
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -406,14 +406,14 @@
                         <Border Style="{StaticResource Painel}" Visibility="{Binding TemSeguranca, Converter={StaticResource BoolVis}}">
                             <StackPanel>
                                 <TextBlock Text="Mensagem de cobrança (WhatsApp)" FontSize="18" FontWeight="SemiBold" />
-                                <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
+                                <TextBlock Foreground="{DynamicResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
                                            Text="É o texto que aparece pronto quando você clica em Cobrar no WhatsApp, na ficha de um cliente com dívida vencida. O WhatsApp só abre com a mensagem escrita: quem envia é você." />
                                 <TextBox Text="{Binding MensagemCobrancaTexto, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap"
                                          MinHeight="100" MaxLength="600" VerticalScrollBarVisibility="Auto" Margin="0,12,0,0"
                                          AutomationProperties.Name="Mensagem de cobrança" />
-                                <TextBlock Text="{Binding CamposDisponiveis}" Foreground="{StaticResource CorTextoSuave}" FontSize="12" TextWrapping="Wrap" Margin="0,6,0,0" />
+                                <TextBlock Text="{Binding CamposDisponiveis}" Foreground="{DynamicResource CorTextoSuave}" FontSize="12" TextWrapping="Wrap" Margin="0,6,0,0" />
                                 <TextBlock Text="Como o cliente vai ler (exemplo)" Style="{StaticResource Rotulo}" Margin="0,14,0,4" />
-                                <Border Padding="12" CornerRadius="8" Background="{StaticResource CorFundo}">
+                                <Border Padding="12" CornerRadius="8" Background="{DynamicResource CorFundo}">
                                     <TextBlock Text="{Binding PreviaCobranca}" TextWrapping="Wrap" />
                                 </Border>
                                 <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
@@ -423,10 +423,10 @@
                                 <TextBlock Text="{Binding MensagemComunicacao}" TextWrapping="Wrap" Margin="0,10,0,0">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="{StaticResource CorPositivo}" />
+                                            <Setter Property="Foreground" Value="{DynamicResource CorPositivo}" />
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding MensagemComunicacaoEhErro}" Value="True">
-                                                    <Setter Property="Foreground" Value="{StaticResource CorNegativo}" />
+                                                    <Setter Property="Foreground" Value="{DynamicResource CorNegativo}" />
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -441,7 +441,7 @@
                         <Border Style="{StaticResource Painel}" Visibility="{Binding TemSeguranca, Converter={StaticResource BoolVis}}">
                             <StackPanel>
                                 <TextBlock Text="Preparação para a NFC-e" FontSize="18" FontWeight="SemiBold" />
-                                <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
+                                <TextBlock Foreground="{DynamicResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
                                            Text="O Nexus ainda não emite nota fiscal. Aqui você deixa os dados prontos. O certificado digital e o código secreto do CSC não são guardados aqui: ficam para a etapa de emissão." />
                                 <TextBlock Text="Regime tributário" Style="{StaticResource Rotulo}" Margin="0,14,0,4" />
                                 <ComboBox ItemsSource="{Binding RegimesFiscais}" SelectedItem="{Binding RegimeFiscal}" Width="260" HorizontalAlignment="Left" Padding="8,7" AutomationProperties.Name="Regime tributário" />
@@ -460,10 +460,10 @@
                                 <TextBlock Text="{Binding MensagemFiscal}" TextWrapping="Wrap" Margin="0,10,0,0">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="{StaticResource CorPositivo}" />
+                                            <Setter Property="Foreground" Value="{DynamicResource CorPositivo}" />
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding MensagemFiscalEhErro}" Value="True">
-                                                    <Setter Property="Foreground" Value="{StaticResource CorNegativo}" />
+                                                    <Setter Property="Foreground" Value="{DynamicResource CorNegativo}" />
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -482,7 +482,7 @@
                         <Border Style="{StaticResource Painel}" Margin="0,12,0,0" Visibility="{Binding TemSeguranca, Converter={StaticResource BoolVis}}">
                             <StackPanel>
                                 <TextBlock Text="Conferir uma nota de teste" FontSize="18" FontWeight="SemiBold" />
-                                <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
+                                <TextBlock Foreground="{DynamicResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
                                            Text="Isto NÃO emite nota. O Nexus pega a última venda, confere se os cadastros bastam e monta um XML só para você olhar. O arquivo não é assinado, não é enviado à SEFAZ e não tem validade fiscal. Usa o que está salvo nas páginas Loja e Fiscal." />
                                 <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
                                     <Button Content="Conferir uma nota de teste" Style="{StaticResource BotaoSecundario}"
@@ -506,12 +506,12 @@
                         <Border Style="{StaticResource Painel}" Margin="0,0,0,16" Visibility="{Binding TemSeguranca, Converter={StaticResource BoolVis}}">
                             <StackPanel>
                                 <TextBlock Text="Bloqueio e acesso" FontSize="18" FontWeight="SemiBold" />
-                                <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
+                                <TextBlock Foreground="{DynamicResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
                                            Text="Vale para este computador. Só funciona quando há funcionários cadastrados (sem eles, o programa abre direto, como sempre)." />
                                 <TextBlock Text="Pedir o PIN de novo depois de quantos minutos parado? (0 = nunca)" Style="{StaticResource Rotulo}" TextWrapping="Wrap" />
                                 <TextBox Text="{Binding MinutosInatividadeTexto, UpdateSourceTrigger=PropertyChanged}" Width="120" HorizontalAlignment="Left"
                                          AutomationProperties.Name="Minutos de inatividade" />
-                                <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
+                                <TextBlock Foreground="{DynamicResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
                                            Text="Parado = sem mexer no mouse nem no teclado. A Gestão fecha sozinha e o PIN é pedido na tela principal." />
                                 <CheckBox Margin="0,16,0,0" IsChecked="{Binding EsconderGestaoSemAcesso}">
                                     <TextBlock Text="Esconder o botão Gestão de quem não tem acesso (desligado: o botão aparece e pede o PIN de um gerente)" TextWrapping="Wrap" />
@@ -521,10 +521,10 @@
                                 <TextBlock Text="{Binding MensagemSeguranca}" TextWrapping="Wrap" Margin="0,10,0,0">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="{StaticResource CorPositivo}" />
+                                            <Setter Property="Foreground" Value="{DynamicResource CorPositivo}" />
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding MensagemSegurancaEhErro}" Value="True">
-                                                    <Setter Property="Foreground" Value="{StaticResource CorNegativo}" />
+                                                    <Setter Property="Foreground" Value="{DynamicResource CorNegativo}" />
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -535,7 +535,7 @@
                         <Border Style="{StaticResource Painel}">
                             <StackPanel>
                                 <TextBlock Text="PIN errado e registro de acessos" FontSize="18" FontWeight="SemiBold" />
-                                <TextBlock Text="{Binding LimiteDePinTexto}" Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,6,0,0" />
+                                <TextBlock Text="{Binding LimiteDePinTexto}" Foreground="{DynamicResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,6,0,0" />
                             </StackPanel>
                         </Border>
                     </StackPanel>
@@ -652,7 +652,7 @@
                             <Border Style="{StaticResource Painel}">
                                 <StackPanel>
                                     <TextBlock Text="Comprovante de venda (cupom não fiscal 80 mm)" FontSize="18" FontWeight="SemiBold" />
-                                    <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
+                                    <TextBlock Foreground="{DynamicResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
                                                Text="Modelo, logo, o que aparece no cupom, mensagens, impressora e largura do papel. A prévia ao lado acompanha o que você muda." />
                                     <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
                                         <Button Content="Editar comprovante…" Style="{StaticResource BotaoPrimario}" Click="EditarComprovante_Click" />
@@ -672,10 +672,15 @@
                 <Border Style="{StaticResource Painel}" Margin="0,0,0,16">
                     <StackPanel>
                         <TextBlock Text="Aparência" FontSize="18" FontWeight="SemiBold" />
-                        <TextBlock Text="Tamanho das telas" Style="{StaticResource Rotulo}" />
+                        <TextBlock Text="Tema" Style="{StaticResource Rotulo}" />
+                        <ComboBox ItemsSource="{Binding Temas}" DisplayMemberPath="Texto" SelectedItem="{Binding TemaSelecionado}"
+                                  Padding="8,7" Width="260" HorizontalAlignment="Left" AutomationProperties.Name="Tema" />
+                        <TextBlock Foreground="{DynamicResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,6,0,0"
+                                   Text="Claro, Escuro ou Automático: no Automático o Nexus usa o mesmo tema do Windows e muda sozinho quando você troca lá. Vale na hora e fica guardado neste computador." />
+                        <TextBlock Text="Tamanho das telas" Style="{StaticResource Rotulo}" Margin="0,16,0,0" />
                         <ComboBox ItemsSource="{Binding Zooms}" DisplayMemberPath="Texto" SelectedItem="{Binding ZoomSelecionado}"
                                   Padding="8,7" Width="220" HorizontalAlignment="Left" AutomationProperties.Name="Tamanho das telas" />
-                        <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,6,0,0"
+                        <TextBlock Foreground="{DynamicResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,6,0,0"
                                    Text="Aumenta ou diminui o conteúdo das telas (o menu lateral não muda). Vale na hora e fica guardado neste computador." />
                     </StackPanel>
                 </Border>
@@ -689,17 +694,17 @@
                         <TextBlock Text="Desconto sugerido por peça na Venda Cliente (R$)" Style="{StaticResource Rotulo}" />
                         <TextBox Text="{Binding DescontoPorPeca, UpdateSourceTrigger=PropertyChanged}" Width="140" HorizontalAlignment="Left"
                                  AutomationProperties.Name="Desconto por peça" />
-                        <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,6,0,0"
+                        <TextBlock Foreground="{DynamicResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,6,0,0"
                                    Text="Ao fechar uma venda para um cliente de atacado, a tela de desconto já abre com este valor vezes a quantidade de peças. Você pode mudar na hora." />
                         <Button Content="Salvar preferências" Style="{StaticResource BotaoPrimario}" Margin="0,14,0,0" HorizontalAlignment="Left"
                                 Command="{Binding SalvarPreferenciasCommand}" />
                         <TextBlock Text="{Binding MensagemPreferencias}" TextWrapping="Wrap" Margin="0,10,0,0">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock">
-                                    <Setter Property="Foreground" Value="{StaticResource CorPositivo}" />
+                                    <Setter Property="Foreground" Value="{DynamicResource CorPositivo}" />
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding MensagemPreferenciasEhErro}" Value="True">
-                                            <Setter Property="Foreground" Value="{StaticResource CorNegativo}" />
+                                            <Setter Property="Foreground" Value="{DynamicResource CorNegativo}" />
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
@@ -716,7 +721,7 @@
                                             <Border Style="{StaticResource Painel}" Margin="0,0,0,16" Visibility="{Binding TemSeguranca, Converter={StaticResource BoolVis}}">
                             <StackPanel>
                                 <TextBlock Text="Limite de desconto" FontSize="18" FontWeight="SemiBold" />
-                                <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
+                                <TextBlock Foreground="{DynamicResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
                                            Text="Desconto acima deste percentual da venda só com a autorização de um gerente ou administrador (PIN). Gerente e administrador não precisam pedir." />
                                 <TextBlock Text="Desconto máximo sem gerente (% da venda, 0 = sem limite)" Style="{StaticResource Rotulo}" TextWrapping="Wrap" />
                                 <TextBox Text="{Binding DescontoMaximoTexto, UpdateSourceTrigger=PropertyChanged}" Width="120" HorizontalAlignment="Left"
@@ -726,10 +731,10 @@
                                 <TextBlock Text="{Binding MensagemDescontoRegras}" TextWrapping="Wrap" Margin="0,10,0,0">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="{StaticResource CorPositivo}" />
+                                            <Setter Property="Foreground" Value="{DynamicResource CorPositivo}" />
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding MensagemDescontoRegrasEhErro}" Value="True">
-                                                    <Setter Property="Foreground" Value="{StaticResource CorNegativo}" />
+                                                    <Setter Property="Foreground" Value="{DynamicResource CorNegativo}" />
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -743,7 +748,7 @@
                     <Border Style="{StaticResource Painel}" Margin="0,0,0,24" VerticalAlignment="Top">
                         <StackPanel>
                             <TextBlock Text="Parâmetros da loja" FontSize="18" FontWeight="SemiBold" />
-                            <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
+                            <TextBlock Foreground="{DynamicResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
                                        Text="Valores que o programa já sugere no dia a dia. Você sempre pode mudar na hora." />
 
                             <!-- os três parâmetros lado a lado em tela larga, um embaixo do outro em tela estreita -->
@@ -762,7 +767,7 @@
                                     <TextBlock Text="Margem desejada sugerida no cadastro do produto (%)" Style="{StaticResource Rotulo}" TextWrapping="Wrap" />
                                     <TextBox Text="{Binding MargemPadrao, UpdateSourceTrigger=PropertyChanged}" Width="160" HorizontalAlignment="Left"
                                              AutomationProperties.Name="Margem padrão" />
-                                    <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
+                                    <TextBlock Foreground="{DynamicResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
                                                Text="Zero deixa o campo em branco." />
                                 </StackPanel>
                             </v:GradeDeCartoes>
@@ -780,7 +785,7 @@
                         Visibility="{Binding TemBackup, Converter={StaticResource BoolVis}}">
                     <StackPanel>
                         <TextBlock Text="Backup dos dados" FontSize="18" FontWeight="SemiBold" />
-                        <TextBlock Text="{Binding UltimoBackupTexto}" Foreground="{StaticResource CorTextoSuave}" Margin="0,4,0,0" />
+                        <TextBlock Text="{Binding UltimoBackupTexto}" Foreground="{DynamicResource CorTextoSuave}" Margin="0,4,0,0" />
 
                         <TextBlock Text="Pasta dos backups" Style="{StaticResource Rotulo}" />
                         <Grid>
@@ -792,7 +797,7 @@
                             <Button Grid.Column="1" Content="Escolher..." Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0"
                                     Command="{Binding EscolherPastaBackupCommand}" />
                         </Grid>
-                        <TextBlock Text="{Binding AvisoBackup}" Foreground="{StaticResource CorAviso}" TextWrapping="Wrap" Margin="0,6,0,0" />
+                        <TextBlock Text="{Binding AvisoBackup}" Foreground="{DynamicResource CorAviso}" TextWrapping="Wrap" Margin="0,6,0,0" />
 
                         <TextBlock Text="Backup automático" Style="{StaticResource Rotulo}" />
                         <ComboBox ItemsSource="{Binding IntervalosBackup}" DisplayMemberPath="Texto"
@@ -816,15 +821,15 @@
                                     Command="{Binding RestaurarCommand}" />
                         </StackPanel>
                         <TextBlock Text="Para restaurar um arquivo de outra pasta, deixe nenhum item selecionado e clique em Restaurar."
-                                   Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,6,0,0" />
+                                   Foreground="{DynamicResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,6,0,0" />
 
                         <TextBlock Text="{Binding MensagemBackup}" TextWrapping="Wrap" Margin="0,10,0,0">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock">
-                                    <Setter Property="Foreground" Value="{StaticResource CorPositivo}" />
+                                    <Setter Property="Foreground" Value="{DynamicResource CorPositivo}" />
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding MensagemBackupEhErro}" Value="True">
-                                            <Setter Property="Foreground" Value="{StaticResource CorNegativo}" />
+                                            <Setter Property="Foreground" Value="{DynamicResource CorNegativo}" />
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
@@ -836,8 +841,8 @@
                         <Border Style="{StaticResource Painel}" Visibility="{Binding TemGoogle, Converter={StaticResource BoolVis}}">
                             <StackPanel IsEnabled="{Binding GoogleOcupado, Converter={StaticResource BoolInverso}}">
                                 <TextBlock Text="Google Drive" FontSize="18" FontWeight="SemiBold" />
-                                <TextBlock Text="{Binding GoogleSituacao}" Foreground="{StaticResource CorTextoSuave}" Margin="0,4,0,0" />
-                                <TextBlock Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,6,0,0"
+                                <TextBlock Text="{Binding GoogleSituacao}" Foreground="{DynamicResource CorTextoSuave}" Margin="0,4,0,0" />
+                                <TextBlock Foreground="{DynamicResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,6,0,0"
                                            Text="Envia uma cópia do backup para a pasta &quot;Nexus Backups&quot; do seu Drive. O programa só enxerga os arquivos que ele mesmo criou. Você precisa criar um acesso (Client ID e Client Secret, tipo &quot;App para computador&quot;) no Google Cloud, com a Google Drive API ativada; o passo a passo está no manual." />
 
                                 <TextBlock Text="Client ID" Style="{StaticResource Rotulo}" />
@@ -869,10 +874,10 @@
                                 <TextBlock Text="{Binding MensagemGoogle}" TextWrapping="Wrap" Margin="0,10,0,0">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="{StaticResource CorPositivo}" />
+                                            <Setter Property="Foreground" Value="{DynamicResource CorPositivo}" />
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding MensagemGoogleEhErro}" Value="True">
-                                                    <Setter Property="Foreground" Value="{StaticResource CorNegativo}" />
+                                                    <Setter Property="Foreground" Value="{DynamicResource CorNegativo}" />
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -910,17 +915,17 @@
                     <StackPanel DataContext="{Binding Atualizacao}">
                         <TextBlock Text="Atualizações" FontSize="18" FontWeight="SemiBold" />
                         <TextBlock Text="{Binding VersaoAtualTexto}" Margin="0,4,0,0" AutomationProperties.Name="Versão do programa" />
-                        <TextBlock Foreground="{StaticResource CorTextoSuave}" TextWrapping="Wrap" FontSize="13" Margin="0,4,0,0"
+                        <TextBlock Foreground="{DynamicResource CorTextoSuave}" TextWrapping="Wrap" FontSize="13" Margin="0,4,0,0"
                                    Text="Ao abrir, o programa procura sozinho uma versão nova e só avisa; nada é instalado sem você clicar em Atualizar agora." />
                         <Button Content="Verificar atualizações" Style="{StaticResource BotaoSecundario}" Margin="0,12,0,0" HorizontalAlignment="Left"
                                 Command="{Binding VerificarAgoraCommand}" />
                         <TextBlock Text="{Binding Mensagem}" TextWrapping="Wrap" Margin="0,10,0,0">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock">
-                                    <Setter Property="Foreground" Value="{StaticResource CorPositivo}" />
+                                    <Setter Property="Foreground" Value="{DynamicResource CorPositivo}" />
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding MensagemEhErro}" Value="True">
-                                            <Setter Property="Foreground" Value="{StaticResource CorNegativo}" />
+                                            <Setter Property="Foreground" Value="{DynamicResource CorNegativo}" />
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
@@ -959,16 +964,16 @@
                         Visibility="{Binding TemLimparDados, Converter={StaticResource BoolVis}}">
                     <StackPanel DataContext="{Binding LimparDados}">
                         <TextBlock Text="Apagar dados" FontSize="18" FontWeight="SemiBold" />
-                        <TextBlock Foreground="{StaticResource CorTextoSuave}" TextWrapping="Wrap" Margin="0,4,0,0"
+                        <TextBlock Foreground="{DynamicResource CorTextoSuave}" TextWrapping="Wrap" Margin="0,4,0,0"
                                    Text="Para começar do zero ou tirar os dados de teste. Antes de apagar, o programa faz um backup de segurança (que nunca é apagado sozinho). Funcionários, configurações e a trilha de atividades nunca são apagados." />
 
                         <RadioButton GroupName="NivelLimpeza" Margin="0,12,0,0" IsChecked="True"
                                      Content="Só o movimento (recomendado)" AutomationProperties.Name="Apagar só o movimento" />
-                        <TextBlock Text="{Binding DescricaoMovimento}" Foreground="{StaticResource CorTextoSuave}" FontSize="13"
+                        <TextBlock Text="{Binding DescricaoMovimento}" Foreground="{DynamicResource CorTextoSuave}" FontSize="13"
                                    TextWrapping="Wrap" Margin="26,0,0,6" />
                         <RadioButton GroupName="NivelLimpeza" IsChecked="{Binding ApagarTudo}"
                                      Content="Tudo da loja" AutomationProperties.Name="Apagar tudo da loja" />
-                        <TextBlock Text="{Binding DescricaoTudo}" Foreground="{StaticResource CorTextoSuave}" FontSize="13"
+                        <TextBlock Text="{Binding DescricaoTudo}" Foreground="{DynamicResource CorTextoSuave}" FontSize="13"
                                    TextWrapping="Wrap" Margin="26,0,0,6" />
 
                         <TextBlock Text="Para confirmar, digite APAGAR" Style="{StaticResource Rotulo}" />
@@ -981,10 +986,10 @@
                         <TextBlock Text="{Binding Mensagem}" TextWrapping="Wrap" Margin="0,10,0,0">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock">
-                                    <Setter Property="Foreground" Value="{StaticResource CorPositivo}" />
+                                    <Setter Property="Foreground" Value="{DynamicResource CorPositivo}" />
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding MensagemEhErro}" Value="True">
-                                            <Setter Property="Foreground" Value="{StaticResource CorNegativo}" />
+                                            <Setter Property="Foreground" Value="{DynamicResource CorNegativo}" />
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
@@ -1000,11 +1005,11 @@
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock x:Name="BreveTitulo" FontSize="18" FontWeight="SemiBold" />
-                                    <Border Background="{StaticResource CorMenuAtivo}" CornerRadius="8" Padding="8,2" Margin="10,0,0,0" VerticalAlignment="Center">
-                                        <TextBlock Text="Em breve" FontSize="12" Foreground="{StaticResource CorPrimaria}" />
+                                    <Border Background="{DynamicResource CorMenuAtivo}" CornerRadius="8" Padding="8,2" Margin="10,0,0,0" VerticalAlignment="Center">
+                                        <TextBlock Text="Em breve" FontSize="12" Foreground="{DynamicResource CorPrimaria}" />
                                     </Border>
                                 </StackPanel>
-                                <TextBlock x:Name="BreveDescricao" Foreground="{StaticResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,6,0,10" />
+                                <TextBlock x:Name="BreveDescricao" Foreground="{DynamicResource CorTextoSuave}" FontSize="13" TextWrapping="Wrap" Margin="0,6,0,10" />
                                 <TextBlock Text="O que vai ter aqui" Style="{StaticResource Rotulo}" />
                                 <ItemsControl x:Name="BreveItens" Margin="0,4,0,0">
                                     <ItemsControl.ItemTemplate>

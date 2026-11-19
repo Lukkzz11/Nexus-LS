@@ -32,7 +32,7 @@
             <Border Grid.Row="2" Style="{StaticResource Painel}" Padding="0">
                 <DataGrid ItemsSource="{Binding Cheques}" SelectedItem="{Binding Selecionado, Mode=TwoWay}" AutoGenerateColumns="False"
                           IsReadOnly="True" SelectionMode="Single" CanUserAddRows="False" HeadersVisibility="Column"
-                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0" Background="Transparent"
+                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{DynamicResource CorLinhaGrade}" BorderThickness="0" Background="Transparent"
                           RowHeight="36" ScrollViewer.HorizontalScrollBarVisibility="Disabled" AutomationProperties.Name="Lista de cheques emitidos">
                     <DataGrid.RowStyle>
                     <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}" />
@@ -68,7 +68,7 @@
                 <StackPanel>
                     <TextBlock Text="Emitir cheque" FontSize="18" FontWeight="SemiBold" />
                     <TextBlock Text="Pagar uma conta com cheque: ela fica em compensação (não sai do saldo) até o cheque compensar. Aí a conta é paga sozinha."
-                               TextWrapping="Wrap" FontSize="13" Foreground="{StaticResource CorTextoSuave}" Margin="0,4,0,0" />
+                               TextWrapping="Wrap" FontSize="13" Foreground="{DynamicResource CorTextoSuave}" Margin="0,4,0,0" />
                     <TextBlock Text="Conta a pagar" Style="{StaticResource Rotulo}" />
                     <ComboBox ItemsSource="{Binding ContasAPagar}" SelectedItem="{Binding FormConta}" DisplayMemberPath="Texto" Padding="8,7"
                               AutomationProperties.Name="Conta a pagar" />

@@ -32,7 +32,7 @@
                         Visibility="{Binding PodeConferir, Converter={StaticResource BoolVis}}">
                     <StackPanel>
                         <TextBlock Text="{Binding Cabecalho}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" />
-                        <TextBlock Text="{Binding ResumoVendas}" Margin="0,6,0,0" Foreground="{StaticResource CorTextoSuave}" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding ResumoVendas}" Margin="0,6,0,0" Foreground="{DynamicResource CorTextoSuave}" TextWrapping="Wrap" />
                         <TextBlock Text="{Binding EsperadoDinheiro}" Margin="0,10,0,0" TextWrapping="Wrap" />
                         <TextBlock Text="{Binding EsperadoCartao}" Margin="0,2,0,0" />
                         <TextBlock Text="{Binding EsperadoPix}" Margin="0,2,0,0" />
@@ -65,7 +65,7 @@
                         Visibility="{Binding PodeConferir, Converter={StaticResource BoolVis}}">
                     <StackPanel>
                         <TextBlock Text="Conferir e fechar" FontSize="18" FontWeight="SemiBold" />
-                        <TextBlock Text="Conte o que há de verdade e digite abaixo. Campo vazio = confere com o esperado." Foreground="{StaticResource CorTextoSuave}" />
+                        <TextBlock Text="Conte o que há de verdade e digite abaixo. Campo vazio = confere com o esperado." Foreground="{DynamicResource CorTextoSuave}" />
 
                         <TextBlock Text="Dinheiro na gaveta" Style="{StaticResource Rotulo}" />
                         <TextBox Width="200" HorizontalAlignment="Left" AutomationProperties.Name="Dinheiro conferido"
@@ -103,7 +103,7 @@
                 <StackPanel>
                     <TextBlock Text="Relatório do caixa por período" FontWeight="SemiBold" />
                     <TextBlock Text="PDF com turnos, vendas por forma de pagamento, sangrias, reforços, despesas e diferenças. Vendas canceladas não entram."
-                               TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource CorTextoSuave}" Margin="0,2,0,8" />
+                               TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource CorTextoSuave}" Margin="0,2,0,8" />
                     <Grid Margin="0,0,0,8">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
@@ -124,7 +124,7 @@
                 </StackPanel>
             </Border>
             <TextBlock Grid.Row="1" Text="Histórico" FontSize="18" FontWeight="SemiBold" Margin="0,24,0,10" />
-            <TextBlock Grid.Row="2" Text="Nenhum fechamento feito ainda." Foreground="{StaticResource CorTextoSuave}">
+            <TextBlock Grid.Row="2" Text="Nenhum fechamento feito ainda." Foreground="{DynamicResource CorTextoSuave}">
                 <TextBlock.Style>
                     <Style TargetType="TextBlock">
                         <Setter Property="Visibility" Value="Collapsed" />
@@ -143,7 +143,7 @@
                         <StackPanel Margin="0,6">
                             <TextBlock Text="{Binding Quando}" FontWeight="SemiBold" />
                             <TextBlock Text="{Binding Diferenca}" />
-                            <TextBlock Text="{Binding Observacao}" Foreground="{StaticResource CorTextoSuave}" TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding Observacao}" Foreground="{DynamicResource CorTextoSuave}" TextWrapping="Wrap" />
                             <Button Content="Conferir de novo" Style="{StaticResource BotaoSecundario}" Margin="0,6,0,0"
                                     Padding="10,4" HorizontalAlignment="Left"
                                     Command="{Binding DataContext.ConferirDeNovoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"

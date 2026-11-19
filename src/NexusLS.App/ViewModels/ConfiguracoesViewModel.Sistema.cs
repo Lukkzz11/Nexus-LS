@@ -9,6 +9,8 @@ namespace NexusLS.App.ViewModels;
 
 public record OpcaoZoom(string Texto, int Percentual);
 
+public record OpcaoTema(string Texto, ModoTema Modo);
+
 public record AtalhoDeTeclado(string Tecla, string Funcao);
 
 /// <summary>Abas Aparência, Vendas (preferências deste computador) e Sistema (onde ficam os dados, licença, atalhos).</summary>
@@ -35,6 +37,17 @@ public partial class ConfiguracoesViewModel
         new("Ctrl+S", "Salvar (nas Configurações)")
     };
 
+    public IReadOnlyList<OpcaoTema> Temas { get; } = new OpcaoTema[]
+    {
+        new("Automático (segue o Windows)", ModoTema.Automatico),
+        new("Claro", ModoTema.Claro),
+        new("Escuro", ModoTema.Escuro)
+    };
+
+    /// <summary>A tela de verdade liga isto ao GerenciadorDeTema; nos testes fica vazio.</summary>
+    public Action<ModoTema> AoMudarTema { get; set; } = _ => { };
+
+    [ObservableProperty] private OpcaoTema? _temaSelecionado;
     [ObservableProperty] private OpcaoZoom? _zoomSelecionado;
     [ObservableProperty] private string _descontoPorPeca = "";
     [ObservableProperty] private string _mensagemPreferencias = "";
@@ -56,6 +69,7 @@ public partial class ConfiguracoesViewModel
         var p = store.Carregar();
         _carregandoPreferencias = true;
         ZoomSelecionado = Zooms.FirstOrDefault(z => z.Percentual == p.ZoomPercentual) ?? Zooms.First(z => z.Percentual == 100);
+        TemaSelecionado = Temas.First(t => t.Modo == RegrasDeTema.Ler(p.Tema));
         DescontoPorPeca = Dinheiro.FormatarParaEdicao(p.DescontoPorPecaCentavos);
         _carregandoPreferencias = false;
         OnPropertyChanged(nameof(TemPreferencias));
@@ -75,6 +89,23 @@ public partial class ConfiguracoesViewModel
         bytes < 1024 * 1024 ? $"{Math.Max(1, bytes / 1024)} KB" : $"{TextoBr.Numero(bytes / 1024.0 / 1024.0, "0.#")} MB";
 
     /// <summary>O zoom vale na hora e fica guardado; o resto das preferências só com o botão Salvar.</summary>
+    partial void OnTemaSelecionadoChanged(OpcaoTema? value)
+    {
+        if (_carregandoPreferencias || value is null || _preferencias is null) return;
+        try
+        {
+            var p = _preferencias.Carregar();
+            p.Tema = value.Modo.ToString();
+            _preferencias.Salvar(p);
+            AoMudarTema(value.Modo);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            MensagemPreferencias = "Não foi possível guardar o tema: " + ex.Message;
+            MensagemPreferenciasEhErro = true;
+        }
+    }
+
     partial void OnZoomSelecionadoChanged(OpcaoZoom? value)
     {
         if (_carregandoPreferencias || value is null || _preferencias is null) return;

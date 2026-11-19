@@ -15,7 +15,7 @@ public sealed class LoginWindow : Window
     private readonly FuncionarioService _servico;
     private readonly ComboBox _funcionarios = new() { DisplayMemberPath = nameof(Funcionario.Nome), MinHeight = 36, Margin = new Thickness(0, 4, 0, 12) };
     private readonly PasswordBox _pin = new() { MinHeight = 36, MaxLength = 8, Margin = new Thickness(0, 4, 0, 0) };
-    private readonly TextBlock _erro = new() { Foreground = System.Windows.Media.Brushes.Firebrick, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 8, 0, 0), MinHeight = 20 };
+    private readonly TextBlock _erro = new() { Foreground = (System.Windows.Media.Brush?)Application.Current?.TryFindResource("CorNegativo") ?? System.Windows.Media.Brushes.Firebrick, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 8, 0, 0), MinHeight = 20 };
     private readonly Button _entrar = new() { Content = "Entrar", IsDefault = true, Padding = new Thickness(20, 8, 20, 8), MinWidth = 110 };
     private readonly StackPanel _painelEntrada = new();
     private readonly StackPanel _painelRecuperacao = new() { Visibility = Visibility.Collapsed };

@@ -7,12 +7,12 @@
         <!-- "Azulejo" usado nos modais (tamanho, pagamento, parcelas...): o selecionado fica azul. -->
         <DataTemplate x:Key="Azulejo" DataType="{x:Type vm:OpcaoViewModel}">
             <Border x:Name="borda" Margin="5" Padding="12,14" CornerRadius="8" BorderThickness="2"
-                    BorderBrush="{StaticResource CorBorda}" Background="{StaticResource CorPainel}">
+                    BorderBrush="{DynamicResource CorBorda}" Background="{DynamicResource CorPainel}">
                 <StackPanel HorizontalAlignment="Center">
                     <TextBlock x:Name="texto" Text="{Binding Texto}" FontSize="22" FontWeight="Bold"
-                               TextAlignment="Center" Foreground="{StaticResource CorTexto}" />
+                               TextAlignment="Center" Foreground="{DynamicResource CorTexto}" />
                     <TextBlock x:Name="detalhe" Text="{Binding Detalhe}" FontSize="13" TextAlignment="Center"
-                               Foreground="{StaticResource CorTextoSuave}" />
+                               Foreground="{DynamicResource CorTextoSuave}" />
                 </StackPanel>
             </Border>
             <DataTemplate.Triggers>
@@ -20,10 +20,10 @@
                     <Setter TargetName="borda" Property="Opacity" Value="0.45" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Selecionada}" Value="True">
-                    <Setter TargetName="borda" Property="Background" Value="{StaticResource CorPrimaria}" />
-                    <Setter TargetName="borda" Property="BorderBrush" Value="{StaticResource CorPrimaria}" />
-                    <Setter TargetName="texto" Property="Foreground" Value="{StaticResource CorSobrePrimaria}" />
-                    <Setter TargetName="detalhe" Property="Foreground" Value="{StaticResource CorSobrePrimariaSuave}" />
+                    <Setter TargetName="borda" Property="Background" Value="{DynamicResource CorPrimaria}" />
+                    <Setter TargetName="borda" Property="BorderBrush" Value="{DynamicResource CorPrimaria}" />
+                    <Setter TargetName="texto" Property="Foreground" Value="{DynamicResource CorSobrePrimaria}" />
+                    <Setter TargetName="detalhe" Property="Foreground" Value="{DynamicResource CorSobrePrimariaSuave}" />
                 </DataTrigger>
             </DataTemplate.Triggers>
         </DataTemplate>
@@ -31,13 +31,13 @@
         <Style x:Key="TituloModal" TargetType="TextBlock">
             <Setter Property="FontSize" Value="26" />
             <Setter Property="FontWeight" Value="Bold" />
-            <Setter Property="Foreground" Value="{StaticResource CorTexto}" />
+            <Setter Property="Foreground" Value="{DynamicResource CorTexto}" />
         </Style>
 
         <!-- "Tecla" do guia de atalhos (como o ERP: F2, F8, Esc...) -->
         <Style x:Key="Tecla" TargetType="Border">
-            <Setter Property="Background" Value="{StaticResource CorSelecaoSuave}" />
-            <Setter Property="BorderBrush" Value="{StaticResource CorBorda}" />
+            <Setter Property="Background" Value="{DynamicResource CorSelecaoSuave}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource CorBorda}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="{StaticResource RaioPequeno}" />
             <Setter Property="Padding" Value="7,2" />
@@ -49,23 +49,23 @@
             <Setter Property="FontSize" Value="{StaticResource TamRotulo}" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="HorizontalAlignment" Value="Center" />
-            <Setter Property="Foreground" Value="{StaticResource CorTexto}" />
+            <Setter Property="Foreground" Value="{DynamicResource CorTexto}" />
         </Style>
         <Style x:Key="PontoCaixaPdv" TargetType="Ellipse">
             <Setter Property="Width" Value="9" />
             <Setter Property="Height" Value="9" />
             <Setter Property="Margin" Value="0,0,7,0" />
-            <Setter Property="Fill" Value="{StaticResource CorPositivo}" />
+            <Setter Property="Fill" Value="{DynamicResource CorPositivo}" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding CaixaAberto}" Value="False">
-                    <Setter Property="Fill" Value="{StaticResource CorAtencaoTexto}" />
+                    <Setter Property="Fill" Value="{DynamicResource CorAtencaoTexto}" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>
 
         <Style x:Key="DicaModal" TargetType="TextBlock">
             <Setter Property="FontSize" Value="13" />
-            <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />
+            <Setter Property="Foreground" Value="{DynamicResource CorTextoSuave}" />
             <Setter Property="Margin" Value="0,18,0,0" />
             <Setter Property="TextWrapping" Value="Wrap" />
         </Style>
@@ -97,7 +97,7 @@
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center"
                                 Visibility="{Binding TemCaixa, Converter={StaticResource BoolVis}}">
                         <Ellipse Style="{StaticResource PontoCaixaPdv}" />
-                        <TextBlock Text="{Binding CaixaTexto}" FontWeight="SemiBold" Foreground="{StaticResource CorTextoSuave}"
+                        <TextBlock Text="{Binding CaixaTexto}" FontWeight="SemiBold" Foreground="{DynamicResource CorTextoSuave}"
                                    AutomationProperties.Name="Situação do caixa" />
                     </StackPanel>
                 </Grid>
@@ -115,7 +115,7 @@
                         </StackPanel>
                     </Border>
                     <TextBlock Text="Buscar produto (F2): nome, referência ou código de barras · Enter escolhe"
-                               Foreground="{StaticResource CorTextoSuave}" FontSize="13" Margin="0,0,0,4" />
+                               Foreground="{DynamicResource CorTextoSuave}" FontSize="13" Margin="0,0,0,4" />
                 </StackPanel>
 
                 <Grid Grid.Row="2">
@@ -126,9 +126,9 @@
                                 <Style.Triggers>
                                     <!-- Atacado: a caixa de busca ganha borda azul; no varejo continua como sempre. -->
                                     <DataTrigger Binding="{Binding EhAtacado}" Value="True">
-                                        <Setter Property="BorderBrush" Value="#2563EB" />
+                                        <Setter Property="BorderBrush" Value="{DynamicResource CorPrimaria}" />
                                         <Setter Property="BorderThickness" Value="3" />
-                                        <Setter Property="Background" Value="#EFF6FF" />
+                                        <Setter Property="Background" Value="{DynamicResource CorSelecaoSuave}" />
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
@@ -137,7 +137,7 @@
                     <!-- Como no ERP: busca vazia com itens no carrinho lembra que Enter finaliza -->
                     <TextBlock Text="Enter para finalizar  ↵" FontWeight="SemiBold" FontSize="14" IsHitTestVisible="False"
                                HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,16,0"
-                               Foreground="{StaticResource CorPrimaria}"
+                               Foreground="{DynamicResource CorPrimaria}"
                                Visibility="{Binding DicaFinalizar, Converter={StaticResource BoolVis}}" />
                 </Grid>
 
@@ -153,12 +153,12 @@
                                     <Setter.Value>
                                         <ControlTemplate TargetType="ListBoxItem">
                                             <Border x:Name="borda" Background="Transparent" Padding="12,6"
-                                                    BorderBrush="{StaticResource CorLinhaGrade}" BorderThickness="0,0,0,1">
+                                                    BorderBrush="{DynamicResource CorLinhaGrade}" BorderThickness="0,0,0,1">
                                                 <ContentPresenter />
                                             </Border>
                                             <ControlTemplate.Triggers>
                                                 <Trigger Property="IsSelected" Value="True">
-                                                    <Setter TargetName="borda" Property="Background" Value="{StaticResource CorSelecao}" />
+                                                    <Setter TargetName="borda" Property="Background" Value="{DynamicResource CorSelecao}" />
                                                 </Trigger>
                                             </ControlTemplate.Triggers>
                                         </ControlTemplate>
@@ -176,14 +176,14 @@
                                     </Grid.ColumnDefinitions>
                                     <StackPanel>
                                         <TextBlock Text="{Binding Nome}" TextTrimming="CharacterEllipsis" />
-                                        <TextBlock FontSize="{StaticResource TamPequeno}" Foreground="{StaticResource CorTextoSuave}">
+                                        <TextBlock FontSize="{StaticResource TamPequeno}" Foreground="{DynamicResource CorTextoSuave}">
                                             <Run Text="Ref: " /><Run Text="{Binding Referencia, Mode=OneWay, TargetNullValue='sem ref.'}" /><Run Text="   " /><Run Text="{Binding CodigoBarras, Mode=OneWay}" FontFamily="Consolas" />
                                         </TextBlock>
                                     </StackPanel>
                                     <TextBlock Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center"
                                                Text="{Binding PrecoVendaCentavos, Converter={StaticResource Centavos}}" />
                                     <TextBlock Grid.Column="2" HorizontalAlignment="Right"
-                                               Foreground="{StaticResource CorTextoSuave}"
+                                               Foreground="{DynamicResource CorTextoSuave}"
                                                Text="{Binding EstoqueAtual, StringFormat='estoque {0}'}" />
                                 </Grid>
                             </DataTemplate>
@@ -199,7 +199,7 @@
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
 
-                        <Grid Margin="14,10" TextElement.Foreground="{StaticResource CorTextoSuave}" TextElement.FontSize="13">
+                        <Grid Margin="14,10" TextElement.Foreground="{DynamicResource CorTextoSuave}" TextElement.FontSize="13">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="140" />
@@ -221,7 +221,7 @@
                         <TextBlock Grid.Row="1" Text="Carrinho vazio. Leia o código de barras ou digite o nome do produto e tecle Enter."
                                    HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap"
                                    TextAlignment="Center" Margin="40" FontSize="18"
-                                   Foreground="{StaticResource CorTextoSuave}"
+                                   Foreground="{DynamicResource CorTextoSuave}"
                                    Visibility="{Binding CarrinhoVazio, Converter={StaticResource BoolVis}}" />
 
                         <ListBox Grid.Row="1" x:Name="ListaItens" ItemsSource="{Binding Itens}"
@@ -237,12 +237,12 @@
                                         <Setter.Value>
                                             <ControlTemplate TargetType="ListBoxItem">
                                                 <Border x:Name="borda" Background="Transparent" Padding="14,6"
-                                                        BorderBrush="{StaticResource CorLinhaGrade}" BorderThickness="0,0,0,1">
+                                                        BorderBrush="{DynamicResource CorLinhaGrade}" BorderThickness="0,0,0,1">
                                                     <ContentPresenter />
                                                 </Border>
                                                 <ControlTemplate.Triggers>
                                                     <Trigger Property="IsSelected" Value="True">
-                                                        <Setter TargetName="borda" Property="Background" Value="{StaticResource CorSelecao}" />
+                                                        <Setter TargetName="borda" Property="Background" Value="{DynamicResource CorSelecao}" />
                                                     </Trigger>
                                                 </ControlTemplate.Triggers>
                                             </ControlTemplate>
@@ -276,7 +276,7 @@
                                                 <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding PrecoEditado}" Value="True">
-                                                            <Setter Property="Background" Value="{StaticResource CorAlerta}" />
+                                                            <Setter Property="Background" Value="{DynamicResource CorAlerta}" />
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
@@ -302,7 +302,7 @@
                                                 <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding PrecoEditado}" Value="True">
-                                                            <Setter Property="Background" Value="{StaticResource CorAlerta}" />
+                                                            <Setter Property="Background" Value="{DynamicResource CorAlerta}" />
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
@@ -321,7 +321,7 @@
                     </Grid>
                 </Border>
 
-                <WrapPanel Grid.Row="5" Margin="0,12,0,0" TextElement.FontSize="13" TextElement.Foreground="{StaticResource CorTextoSuave}">
+                <WrapPanel Grid.Row="5" Margin="0,12,0,0" TextElement.FontSize="13" TextElement.Foreground="{DynamicResource CorTextoSuave}">
                     <StackPanel Orientation="Horizontal" Margin="0,0,16,4"><Border Style="{StaticResource Tecla}"><TextBlock Text="F2" Style="{StaticResource TextoTecla}" /></Border><TextBlock Text="Buscar" VerticalAlignment="Center" /></StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,16,4"><Border Style="{StaticResource Tecla}"><TextBlock Text="Enter" Style="{StaticResource TextoTecla}" /></Border><TextBlock Text="Escolhe o produto · busca vazia fecha a venda" VerticalAlignment="Center" /></StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,16,4"><Border Style="{StaticResource Tecla}"><TextBlock Text="F10" Style="{StaticResource TextoTecla}" /></Border><TextBlock Text="Fecha a venda" VerticalAlignment="Center" /></StackPanel>
@@ -335,8 +335,8 @@
             <Border Grid.Column="2" Style="{StaticResource Painel}" VerticalAlignment="Stretch">
                 <StackPanel>
                     <!-- Venda Cliente: quem está comprando e quanto já deve -->
-                    <Border Visibility="{Binding EmModoCliente, Converter={StaticResource BoolVis}}" Background="{StaticResource CorAtencaoFundo}"
-                            BorderBrush="{StaticResource CorAtencaoBorda}" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,12">
+                    <Border Visibility="{Binding EmModoCliente, Converter={StaticResource BoolVis}}" Background="{DynamicResource CorAtencaoFundo}"
+                            BorderBrush="{DynamicResource CorAtencaoBorda}" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,12">
                         <StackPanel>
                             <TextBlock Text="Venda Cliente" Style="{StaticResource Rotulo}" />
                             <TextBlock Text="{Binding ClienteFixoNome}" FontSize="16" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
@@ -356,8 +356,8 @@
                             <Style TargetType="Button" BasedOn="{StaticResource BotaoSecundario}">
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding EhAtacado}" Value="True">
-                                        <Setter Property="Background" Value="#2563EB" />
-                                        <Setter Property="BorderBrush" Value="#1D4ED8" />
+                                        <Setter Property="Background" Value="{DynamicResource CorPrimaria}" />
+                                        <Setter Property="BorderBrush" Value="{DynamicResource CorPrimariaHover}" />
                                         <Setter Property="Foreground" Value="White" />
                                     </DataTrigger>
                                 </Style.Triggers>
@@ -367,8 +367,8 @@
 
                     <TextBlock Text="SUBTOTAL" Style="{StaticResource Rotulo}" Margin="0,20,0,0" />
                     <TextBlock Text="{Binding SubtotalTexto}" FontSize="52" FontWeight="Bold"
-                               Foreground="{StaticResource CorPrimaria}" />
-                    <TextBlock Text="{Binding ResumoItensTexto}" Foreground="{StaticResource CorTextoSuave}" />
+                               Foreground="{DynamicResource CorPrimaria}" />
+                    <TextBlock Text="{Binding ResumoItensTexto}" Foreground="{DynamicResource CorTextoSuave}" />
 
                     <Button Content="FECHAR VENDA (F10)" Style="{StaticResource BotaoPrimario}" FontSize="20"
                             Padding="16,14" Margin="0,24,0,0" Command="{Binding FecharVendaCommand}" Focusable="False" />
@@ -379,7 +379,7 @@
         </Grid>
 
         <!-- ================= Modais encadeados ================= -->
-        <Grid x:Name="Sobreposicao" Background="{StaticResource CorSobreposicao}" Focusable="True" FocusVisualStyle="{x:Null}"
+        <Grid x:Name="Sobreposicao" Background="{DynamicResource CorSobreposicao}" Focusable="True" FocusVisualStyle="{x:Null}"
               Visibility="{Binding ModalAberto, Converter={StaticResource BoolVis}}">
 
             <!-- TAMANHO -->
@@ -388,7 +388,7 @@
                 <StackPanel>
                     <TextBlock Text="Escolha o tamanho" Style="{StaticResource TituloModal}" />
                     <TextBlock Text="{Binding ProdutoModalTexto}" FontSize="18" Margin="0,4,0,16"
-                               Foreground="{StaticResource CorTextoSuave}" TextWrapping="Wrap" />
+                               Foreground="{DynamicResource CorTextoSuave}" TextWrapping="Wrap" />
                     <ItemsControl ItemsSource="{Binding OpcoesTamanho}" ItemTemplate="{StaticResource Azulejo}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -408,20 +408,20 @@
                 <StackPanel HorizontalAlignment="Stretch">
                     <TextBlock Text="Quantidade" Style="{StaticResource TituloModal}" />
                     <TextBlock Text="{Binding ProdutoModalTexto}" FontSize="18" Margin="0,4,0,0"
-                               Foreground="{StaticResource CorTextoSuave}" TextWrapping="Wrap" />
+                               Foreground="{DynamicResource CorTextoSuave}" TextWrapping="Wrap" />
                     <TextBlock Text="{Binding TamanhoModalTexto}" FontSize="18" FontWeight="SemiBold" />
                     <TextBlock Text="▲" FontSize="26" HorizontalAlignment="Center" Margin="0,16,0,0"
-                               Foreground="{StaticResource CorTextoSuave}" />
+                               Foreground="{DynamicResource CorTextoSuave}" />
                     <!-- Digite o número ou use ↑ ↓. O texto já vem selecionado: é só digitar por cima. -->
                     <TextBox x:Name="CaixaQuantidade" Text="{Binding QuantidadeTexto, UpdateSourceTrigger=PropertyChanged}"
                              FontSize="72" FontWeight="Bold" TextAlignment="Center" HorizontalAlignment="Center"
                              Width="220" Padding="0,4" MaxLength="4"
-                             Foreground="{StaticResource CorPrimaria}"
+                             Foreground="{DynamicResource CorPrimaria}"
                              PreviewTextInput="SoNumeros" InputMethod.IsInputMethodEnabled="False" />
                     <TextBlock Text="▼" FontSize="26" HorizontalAlignment="Center"
-                               Foreground="{StaticResource CorTextoSuave}" />
+                               Foreground="{DynamicResource CorTextoSuave}" />
                     <TextBlock Text="{Binding QuantidadeMaximoTexto}" HorizontalAlignment="Center" Margin="0,8,0,0"
-                               Foreground="{StaticResource CorTextoSuave}" />
+                               Foreground="{DynamicResource CorTextoSuave}" />
                     <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" HorizontalAlignment="Center" />
                     <TextBlock Style="{StaticResource DicaModal}" TextAlignment="Center"
                                Text="Digite o número ou use ↑ ↓ · Enter confirma · Esc volta à busca" />
@@ -433,7 +433,7 @@
                     Visibility="{Binding EmDesconto, Converter={StaticResource BoolVis}}">
                 <StackPanel>
                     <TextBlock Text="Desconto" Style="{StaticResource TituloModal}" />
-                    <TextBlock Text="Pode ficar vazio (sem desconto)." Foreground="{StaticResource CorTextoSuave}" Margin="0,4,0,12" />
+                    <TextBlock Text="Pode ficar vazio (sem desconto)." Foreground="{DynamicResource CorTextoSuave}" Margin="0,4,0,12" />
                     <ItemsControl ItemsSource="{Binding OpcoesDesconto}" ItemTemplate="{StaticResource Azulejo}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -445,7 +445,7 @@
                     <TextBox x:Name="CaixaDesconto" FontSize="28" Padding="12,10"
                              Text="{Binding DescontoTexto, UpdateSourceTrigger=PropertyChanged}" />
                     <TextBlock Text="{Binding DescontoResumo}" FontSize="20" FontWeight="SemiBold" Margin="0,14,0,0"
-                               Foreground="{StaticResource CorPrimaria}" />
+                               Foreground="{DynamicResource CorPrimaria}" />
                     <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" />
                     <TextBlock Style="{StaticResource DicaModal}"
                                Text="← → ↑ ↓ trocam entre R$ e % · Enter segue para o pagamento · Esc volta à busca" />
@@ -459,7 +459,7 @@
                     <Grid>
                         <TextBlock Text="Pagamento" Style="{StaticResource TituloModal}" />
                         <TextBlock Text="{Binding TotalFinalTexto}" FontSize="40" FontWeight="Bold" HorizontalAlignment="Right"
-                                   Foreground="{StaticResource CorPrimaria}" />
+                                   Foreground="{DynamicResource CorPrimaria}" />
                     </Grid>
 
                     <ItemsControl ItemsSource="{Binding OpcoesPagamento}" ItemTemplate="{StaticResource Azulejo}" Margin="0,12,0,0">
@@ -481,7 +481,7 @@
                                         <DataTrigger Binding="{Binding EscolhendoParcelas}" Value="True">
                                             <Setter Property="Text" Value="Escolha as parcelas com as setas (← ↓ menos · → ↑ mais) e tecle Enter para finalizar" />
                                             <Setter Property="FontWeight" Value="Bold" />
-                                            <Setter Property="Foreground" Value="{StaticResource CorPrimaria}" />
+                                            <Setter Property="Foreground" Value="{DynamicResource CorPrimaria}" />
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
@@ -502,7 +502,7 @@
                         <TextBox x:Name="CaixaRecebido" FontSize="28" Padding="12,10"
                                  Text="{Binding ValorRecebidoTexto, UpdateSourceTrigger=PropertyChanged}" />
                         <TextBlock Text="{Binding TrocoTexto}" FontSize="24" FontWeight="Bold" Margin="0,8,0,0"
-                                   Foreground="{StaticResource CorSucesso}" />
+                                   Foreground="{DynamicResource CorSucesso}" />
                     </StackPanel>
 
                     <!-- A prazo: escolher o cliente -->
@@ -517,7 +517,7 @@
 
                     <!-- Vale-troca (F6): quanto ele paga e quanto falta -->
                     <TextBlock Text="{Binding ValeTexto}" TextWrapping="Wrap" FontSize="16" FontWeight="SemiBold" Margin="0,12,0,0"
-                               Foreground="{StaticResource CorSucesso}" />
+                               Foreground="{DynamicResource CorSucesso}" />
 
                     <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" />
                     <TextBlock Style="{StaticResource DicaModal}"
@@ -531,10 +531,10 @@
             <Border Style="{StaticResource Painel}" Width="620" Padding="30" VerticalAlignment="Center" HorizontalAlignment="Center"
                     Visibility="{Binding EmSucesso, Converter={StaticResource BoolVis}}">
                 <StackPanel HorizontalAlignment="Stretch">
-                    <TextBlock Text="✔" FontSize="64" HorizontalAlignment="Center" Foreground="{StaticResource CorSucesso}" />
+                    <TextBlock Text="✔" FontSize="64" HorizontalAlignment="Center" Foreground="{DynamicResource CorSucesso}" />
                     <TextBlock Text="{Binding SucessoTitulo}" Style="{StaticResource TituloModal}" HorizontalAlignment="Center" />
                     <TextBlock Text="{Binding SucessoDetalhe}" FontSize="20" HorizontalAlignment="Center" Margin="0,6,0,18"
-                               Foreground="{StaticResource CorTextoSuave}" TextWrapping="Wrap" TextAlignment="Center" />
+                               Foreground="{DynamicResource CorTextoSuave}" TextWrapping="Wrap" TextAlignment="Center" />
                     <ItemsControl ItemsSource="{Binding OpcoesSucesso}" ItemTemplate="{StaticResource Azulejo}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>

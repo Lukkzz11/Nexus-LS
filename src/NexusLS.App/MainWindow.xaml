@@ -5,13 +5,15 @@
         Title="Nexus" Icon="pack://application:,,,/Assets/nexus.ico" Height="760" Width="1280" MinHeight="600" MinWidth="1000"
         WindowStartupLocation="CenterScreen" WindowState="Maximized"
         ExtendsContentIntoTitleBar="True"
-        WindowBackdropType="None" Background="{StaticResource CorFundo}"
+        WindowBackdropType="None" Background="{DynamicResource CorFundo}" Foreground="{DynamicResource CorTexto}"
         WindowCornerPreference="Round"
         FontFamily="{StaticResource FonteTexto}" FontSize="{StaticResource TamCorpo}">
 
     <ui:FluentWindow.InputBindings>
         <!-- F1 abre o PDV de qualquer tela. -->
         <KeyBinding Key="F1" Command="{Binding IrParaPdvCommand}" />
+        <!-- Ctrl+, abre as Configurações (janela própria). -->
+        <KeyBinding Key="OemComma" Modifiers="Ctrl" Command="{Binding AbrirConfiguracoesCommand}" />
     </ui:FluentWindow.InputBindings>
 
     <ui:FluentWindow.Resources>
@@ -25,10 +27,10 @@
                             <Binding Path="Tag" RelativeSource="{RelativeSource Self}" />
                         </MultiBinding>
                     </DataTrigger.Binding>
-                    <Setter Property="Background" Value="{StaticResource CorMenuAtivo}" />
-                    <Setter Property="BorderBrush" Value="{StaticResource CorSelecao}" />
+                    <Setter Property="Background" Value="{DynamicResource CorMenuAtivo}" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource CorSelecao}" />
                     <Setter Property="FontWeight" Value="SemiBold" />
-                    <Setter Property="Foreground" Value="{StaticResource CorPrimaria}" />
+                    <Setter Property="Foreground" Value="{DynamicResource CorMenuAtivoTexto}" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>
@@ -161,6 +163,12 @@
                             <TextBlock Text="Gestão" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
+                    <Button Tag="Configuracoes" Visibility="{Binding VerConfiguracoes, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Configurações" ToolTip="Abre as configurações numa janela própria (Ctrl+,)" Style="{StaticResource ItemDoMenu}" Command="{Binding AbrirConfiguracoesCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Settings24" Style="{StaticResource IconeDoMenu}" />
+                            <TextBlock Text="Configurações" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
 
                     <!-- Catálogo online: situação da fila de envio e conta do Firebase -->
                     <StackPanel Margin="18,18,14,0" DataContext="{Binding Sincronizacao}">
@@ -216,7 +224,7 @@
 
                 <!-- Aviso de atualização: só aparece quando há versão nova. Nada é instalado sem o usuário clicar. -->
                 <Border DataContext="{Binding Atualizacao}" Visibility="{Binding TemNovaVersao, Converter={StaticResource BoolVis}}"
-                        Background="{StaticResource CorSelecaoSuave}" BorderBrush="{StaticResource CorSelecao}" BorderThickness="1"
+                        Background="{DynamicResource CorSelecaoSuave}" BorderBrush="{DynamicResource CorSelecao}" BorderThickness="1"
                         CornerRadius="{StaticResource RaioMedio}" Padding="16,10" Margin="0,0,0,12">
                     <StackPanel>
                         <WrapPanel>

@@ -13,7 +13,7 @@
     <SolidColorBrush x:Key="CorPainel" Color="White" />           <!-- cartões, tabelas, campos -->
     <SolidColorBrush x:Key="CorMenu" Color="White" />             <!-- menu lateral -->
     <SolidColorBrush x:Key="CorTexto" Color="#111827" />
-    <SolidColorBrush x:Key="CorTextoSuave" Color="#6B7280" />     <!-- rótulos, dicas, cabeçalho de tabela -->
+    <SolidColorBrush x:Key="CorTextoSuave" Color="#656C79" />     <!-- rótulos, dicas, cabeçalho de tabela -->
     <SolidColorBrush x:Key="CorBorda" Color="#E5E7EB" />          <!-- contorno de cartão -->
     <SolidColorBrush x:Key="CorBordaCampo" Color="#D1D5DB" />     <!-- contorno de botão secundário e campo -->
     <SolidColorBrush x:Key="CorBordaForte" Color="#9CA3AF" />
@@ -31,6 +31,7 @@
     <SolidColorBrush x:Key="CorSobrePrimaria" Color="White" />    <!-- texto sobre fundo azul -->
     <SolidColorBrush x:Key="CorSobrePrimariaSuave" Color="#DBEAFE" />
     <SolidColorBrush x:Key="CorMenuAtivo" Color="#EFF6FF" />
+    <SolidColorBrush x:Key="CorMenuAtivoTexto" Color="#2563EB" />   <!-- texto do item ativo do menu -->
 
     <!-- ===== Cores: estados ===== -->
     <SolidColorBrush x:Key="CorSucesso" Color="#0F7B0F" />
@@ -49,6 +50,11 @@
     <SolidColorBrush x:Key="CorColunaFundo" Color="#ECEEF1" />
 
     <!-- Paleta categórica dos gráficos (pizzas): cores bem distintas entre si, na ordem de uso. "Outros" é sempre cinza. -->
+    <SolidColorBrush x:Key="CorEtapaNovo" Color="#2563EB" />
+    <SolidColorBrush x:Key="CorEtapaSeparacao" Color="#D97706" />
+    <SolidColorBrush x:Key="CorEtapaSeparado" Color="#7C3AED" />
+    <SolidColorBrush x:Key="CorEtapaPronto" Color="#0D9488" />
+    <SolidColorBrush x:Key="CorEtapaEntregue" Color="#15803D" />
     <SolidColorBrush x:Key="CorSerie1" Color="#2563EB" />
     <SolidColorBrush x:Key="CorSerie2" Color="#16A34A" />
     <SolidColorBrush x:Key="CorSerie3" Color="#F59E0B" />

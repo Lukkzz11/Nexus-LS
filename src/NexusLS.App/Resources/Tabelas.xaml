@@ -13,32 +13,32 @@
 
     <Style TargetType="DataGrid" BasedOn="{StaticResource {x:Type DataGrid}}">
         <Setter Property="FontSize" Value="{StaticResource TamCorpo}" />
-        <Setter Property="Foreground" Value="{StaticResource CorTexto}" />
+        <Setter Property="Foreground" Value="{DynamicResource CorTexto}" />
         <Setter Property="GridLinesVisibility" Value="Horizontal" />
-        <Setter Property="HorizontalGridLinesBrush" Value="{StaticResource CorLinhaGrade}" />
+        <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource CorLinhaGrade}" />
         <Setter Property="ColumnHeaderHeight" Value="{StaticResource AlturaCabecalhoTabela}" />
         <Setter Property="BorderThickness" Value="0" />
     </Style>
 
     <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
-        <Setter Property="Background" Value="{StaticResource CorCabecalho}" />
-        <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />
+        <Setter Property="Background" Value="{DynamicResource CorCabecalho}" />
+        <Setter Property="Foreground" Value="{DynamicResource CorTextoSuave}" />
         <Setter Property="FontSize" Value="{StaticResource TamPequeno}" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="Padding" Value="8,0" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
-        <Setter Property="BorderBrush" Value="{StaticResource CorBorda}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource CorBorda}" />
         <Setter Property="BorderThickness" Value="0,0,0,1" />
     </Style>
 
     <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Background" Value="{StaticResource CorHover}" />
+                <Setter Property="Background" Value="{DynamicResource CorHover}" />
             </Trigger>
             <Trigger Property="IsSelected" Value="True">
-                <Setter Property="Background" Value="{StaticResource CorSelecao}" />
-                <Setter Property="Foreground" Value="{StaticResource CorTexto}" />
+                <Setter Property="Background" Value="{DynamicResource CorSelecao}" />
+                <Setter Property="Foreground" Value="{DynamicResource CorTexto}" />
             </Trigger>
         </Style.Triggers>
     </Style>

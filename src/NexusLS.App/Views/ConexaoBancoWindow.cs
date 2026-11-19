@@ -249,7 +249,7 @@ public sealed class ConexaoBancoWindow : Window
 
     private static void Mensagem(TextBlock alvo, string texto, bool erro)
     {
-        alvo.Foreground = erro ? System.Windows.Media.Brushes.Firebrick : System.Windows.Media.Brushes.SeaGreen;
+        alvo.Foreground = (System.Windows.Media.Brush?)Application.Current?.TryFindResource(erro ? "CorNegativo" : "CorPositivo") ?? (erro ? System.Windows.Media.Brushes.Firebrick : System.Windows.Media.Brushes.SeaGreen);
         alvo.Text = texto;
     }
 

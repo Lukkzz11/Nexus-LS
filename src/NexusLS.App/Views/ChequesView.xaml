@@ -32,7 +32,7 @@
             <Border Grid.Row="2" Style="{StaticResource Painel}" Padding="0">
                 <DataGrid ItemsSource="{Binding Cheques}" SelectedItem="{Binding Selecionado, Mode=TwoWay}" AutoGenerateColumns="False"
                           IsReadOnly="True" SelectionMode="Single" CanUserAddRows="False" HeadersVisibility="Column"
-                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0" Background="Transparent"
+                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{DynamicResource CorLinhaGrade}" BorderThickness="0" Background="Transparent"
                           RowHeight="36" ScrollViewer.HorizontalScrollBarVisibility="Disabled" AutomationProperties.Name="Lista de cheques">
                     <DataGrid.RowStyle>
                     <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}" />
@@ -80,7 +80,7 @@
                 <StackPanel>
                     <TextBlock Text="{Binding TituloFormulario}" FontSize="18" FontWeight="SemiBold" />
                     <TextBlock Text="Cheque de venda ou de pagamento de cliente nasce pendente sozinho: aqui você completa número, banco e data. O valor não muda."
-                               TextWrapping="Wrap" FontSize="13" Foreground="{StaticResource CorTextoSuave}" Margin="0,4,0,0" />
+                               TextWrapping="Wrap" FontSize="13" Foreground="{DynamicResource CorTextoSuave}" Margin="0,4,0,0" />
                     <TextBlock Text="Valor" Style="{StaticResource Rotulo}" />
                     <TextBox Text="{Binding FormValorTexto, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding ValorEditavel}" AutomationProperties.Name="Valor do cheque" />
                     <TextBlock Text="Emitente (quem assinou)" Style="{StaticResource Rotulo}" />

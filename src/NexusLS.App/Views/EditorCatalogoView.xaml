@@ -12,7 +12,7 @@
         <StackPanel>
             <TextBlock Text="Editor do catálogo" Style="{StaticResource TituloTela}" />
             <TextBlock Text="Escolha como o catálogo online aparece. Salvar guarda neste computador; Publicar envia ao Firebase (documento meta/vitrine)."
-                       TextWrapping="Wrap" Foreground="{StaticResource CorTextoSuave}" Margin="0,2,0,12" />
+                       TextWrapping="Wrap" Foreground="{DynamicResource CorTextoSuave}" Margin="0,2,0,12" />
         </StackPanel>
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
@@ -47,7 +47,7 @@
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Text="{Binding Rotulo}" VerticalAlignment="Center" TextWrapping="Wrap" Margin="0,0,8,0" />
                                         <TextBox Grid.Column="1" Text="{Binding Valor, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="{Binding Rotulo}" />
-                                        <Border Grid.Column="2" Width="28" Height="28" Margin="8,0,0,0" CornerRadius="4" BorderThickness="1" BorderBrush="{StaticResource CorBordaCampo}"
+                                        <Border Grid.Column="2" Width="28" Height="28" Margin="8,0,0,0" CornerRadius="4" BorderThickness="1" BorderBrush="{DynamicResource CorBordaCampo}"
                                                 Background="{Binding Previa, TargetNullValue=Transparent}" />
                                     </Grid>
                                 </DataTemplate>
@@ -56,7 +56,7 @@
                         <ItemsControl ItemsSource="{Binding Avisos}" Margin="0,8,0,0">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding}" TextWrapping="Wrap" Foreground="{StaticResource CorAviso}" Margin="0,2" />
+                                    <TextBlock Text="{Binding}" TextWrapping="Wrap" Foreground="{DynamicResource CorAviso}" Margin="0,2" />
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>

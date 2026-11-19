@@ -393,9 +393,11 @@ internal static class Capturador
                 FontFamily = new FontFamily("Segoe UI"),
                 FontSize = 15,
                 Background = (Brush)Application.Current.Resources["CorFundo"],
+                Foreground = (Brush)Application.Current.Resources["CorTexto"],
                 Content = new Border
                 {
                     Padding = new Thickness(20),
+                    Background = (Brush)Application.Current.Resources["CorFundo"],
                     Child = Ajustada(criarTela(), ajustar)
                 }
             };
@@ -429,7 +431,14 @@ internal static class Capturador
             janela.UpdateLayout();
             Interface.Invoke(DispatcherPriority.ApplicationIdle, () => { });
             var imagem = new RenderTargetBitmap(largura, altura, 96, 96, PixelFormats.Pbgra32);
-            imagem.Render((Visual)janela.Content);
+            var fundoVisual = new DrawingVisual();
+            using (var dc = fundoVisual.RenderOpen())
+            {
+                // Desenha o fundo da janela por baixo: sem isto o tema escuro sairia sobre branco (o conteúdo é transparente).
+                dc.DrawRectangle(janela.Background, null, new Rect(0, 0, largura, altura));
+                dc.DrawRectangle(new VisualBrush((Visual)janela.Content), null, new Rect(0, 0, largura, altura));
+            }
+            imagem.Render(fundoVisual);
             var png = new PngBitmapEncoder();
             png.Frames.Add(BitmapFrame.Create(imagem));
             using (var arquivo = File.Create(caminho)) png.Save(arquivo);

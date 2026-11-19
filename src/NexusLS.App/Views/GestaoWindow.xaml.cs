@@ -46,9 +46,17 @@ public partial class GestaoWindow : Window
         }
 
         var vm = new GestaoViewModel(servicos, zoom, aoMudarZoom, licencaTexto);
-        vm.Ir(inicial);
         try
         {
+            if (inicial == ItemMenu.Configuracoes)
+            {
+                // Configurações têm janela própria: abre só ela (presa a esta chamada para a sessão do PIN valer até fechar).
+                if (GestaoViewModel.Permitido(ItemMenu.Configuracoes))
+                    ConfiguracoesWindow.Abrir(servicos, dono, zoom, aoMudarZoom, licencaTexto,
+                        () => !Sessao.LoginAtivo || Sessao.Atual?.Perfil == PerfilFuncionario.Administrador, modal: true);
+                return;
+            }
+            vm.Ir(inicial);
             new GestaoWindow(vm) { Owner = dono }.ShowDialog();
         }
         finally

@@ -118,39 +118,10 @@ public partial class GestaoViewModel : ObservableObject
     [RelayCommand]
     private void IrParaConfiguracoes()
     {
-        var dialogos = new NexusLS.App.Backup.DialogosBackupWpf();
-        var limpar = new LimparDadosViewModel(_servicos.Limpeza, SouAdministrador, dialogos.Confirmar, () =>
-        {
-            // O carrinho guardado aponta para produtos que acabaram de ser apagados: sai junto.
-            try { File.Delete(NexusLS.Core.Services.RascunhoStore.CaminhoPadrao()); } catch (IOException) { }
-            dialogos.Reiniciar();
-        });
-        var config = new ConfiguracoesViewModel(_servicos.Configuracao, _servicos.Cupons, _servicos.Backup, dialogos, limpar, _servicos.Atualizacao);
-        config.UsarPreferencias(_servicos.Preferencias, z => { Zoom = z; _aoMudarZoom(z); }, _licencaTexto);
-        config.AbrirPasta = pasta => System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", "\"" + pasta + "\"") { UseShellExecute = true });
-        config.UsarSeguranca(_servicos.Seguranca);
-        config.UsarComissoes(_servicos.Comissoes, _servicos.Funcionarios);
-        config.UsarEstoque(_servicos.Estoque);
-        config.UsarNotificacoes();
-        config.UsarComunicacao();
-        config.UsarEtiquetas(_servicos.ModelosEtiqueta);
-        config.UsarFiscal();
-        config.UsarConferenciaNfce(new NexusLS.Core.Fiscal.ConferenciaNfce(_servicos.FabricaBanco));
-        config.EscolherCaminhoXmlConferencia = nome =>
-        {
-            var d = new Microsoft.Win32.SaveFileDialog { FileName = nome, DefaultExt = ".xml", Filter = "XML de conferência (sem validade fiscal)|*.xml", Title = "Salvar XML de conferência (SEM VALIDADE FISCAL)" };
-            return d.ShowDialog() == true ? d.FileName : null;
-        };
-        config.UsarResumoCelular(_servicos.Inicio);
-        config.UsarIntegracoes(_servicos.Contador, () => new (string, string)[]
-        {
-            ("Google Drive (backup e agenda)", _servicos.Google.Situacao()),
-            ("Nuvem Firebase (catálogo e sincronização)", _servicos.Firebase.Carregar().EstaCompleta ? "Configurada." : "Ainda não configurada."),
-            ("Mercado Pago (Pix)", _servicos.PagamentosConfig.Ler() is { MercadoPagoAtivo: true, TemToken: true } ? "Ativo." : "Desligado ou sem token."),
-            ("ERP (importação e envio)", _servicos.ErpConfig.Carregar().EstaCompleta ? "Configurado." : "Ainda não configurado."),
-        });
-        config.UsarGoogle(_servicos.Google, url => System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true }));
-        Abrir(config, ItemMenu.Configuracoes);
+        // As Configurações abrem em janela própria (uma só; se já estiver aberta, só vem para a frente).
+        if (!Permitido(ItemMenu.Configuracoes)) return;
+        var dono = System.Windows.Application.Current?.Windows.OfType<System.Windows.Window>().FirstOrDefault(w => w.IsActive);
+        Views.ConfiguracoesWindow.Abrir(_servicos, dono, Zoom, z => { Zoom = z; _aoMudarZoom(z); }, _licencaTexto, SouAdministrador);
     }
 
     /// <summary>Apagar dados é só do administrador. Com o login desligado (ninguém cadastrado) vale como administrador.</summary>

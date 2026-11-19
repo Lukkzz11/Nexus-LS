@@ -12,8 +12,8 @@
 
     <!-- Cartão: caixa branca de cantos arredondados que agrupa uma parte da tela. -->
     <Style x:Key="Painel" TargetType="Border">
-        <Setter Property="Background" Value="{StaticResource CorPainel}" />
-        <Setter Property="BorderBrush" Value="{StaticResource CorBorda}" />
+        <Setter Property="Background" Value="{DynamicResource CorPainel}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource CorBorda}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="{StaticResource RaioGrande}" />
         <Setter Property="Padding" Value="18" />
@@ -21,23 +21,23 @@
 
     <!-- Aviso em faixa (ex.: "2 produtos abaixo do mínimo"). -->
     <Style x:Key="FaixaAviso" TargetType="Border">
-        <Setter Property="Background" Value="{StaticResource CorAlerta}" />
+        <Setter Property="Background" Value="{DynamicResource CorAlerta}" />
         <Setter Property="CornerRadius" Value="{StaticResource RaioMedio}" />
         <Setter Property="Padding" Value="14,10" />
     </Style>
 
     <!-- Campos de texto e listas suspensas: mesmo contorno e mesma cor de texto em todo o programa. -->
     <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
-        <Setter Property="Foreground" Value="{StaticResource CorTexto}" />
-        <Setter Property="BorderBrush" Value="{StaticResource CorBordaCampo}" />
+        <Setter Property="Foreground" Value="{DynamicResource CorTexto}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource CorBordaCampo}" />
     </Style>
 
     <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
-        <Setter Property="Foreground" Value="{StaticResource CorTexto}" />
-        <Setter Property="BorderBrush" Value="{StaticResource CorBordaCampo}" />
+        <Setter Property="Foreground" Value="{DynamicResource CorTexto}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource CorBordaCampo}" />
     </Style>
 
     <Style TargetType="CheckBox" BasedOn="{StaticResource {x:Type CheckBox}}">
-        <Setter Property="Foreground" Value="{StaticResource CorTexto}" />
+        <Setter Property="Foreground" Value="{DynamicResource CorTexto}" />
     </Style>
 </ResourceDictionary>

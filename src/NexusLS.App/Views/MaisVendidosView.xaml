@@ -11,7 +11,7 @@
 
         <!-- Uma pizza: o desenho (fatias em Path) e a legenda com cor, valor e percentual -->
         <DataTemplate x:Key="FatiaDesenho">
-            <Path Data="{Binding Caminho}" Fill="{Binding ChaveCor, Converter={StaticResource Pincel}}" Stroke="White" StrokeThickness="1" ToolTip="{Binding Legenda}" />
+            <Path Data="{Binding Caminho}" Fill="{Binding ChaveCor, Converter={StaticResource Pincel}}" Stroke="{DynamicResource CorPainel}" StrokeThickness="1" ToolTip="{Binding Legenda}" />
         </DataTemplate>
         <DataTemplate x:Key="FatiaLegenda">
             <StackPanel Orientation="Horizontal" Margin="0,2">
@@ -62,8 +62,8 @@
                       SelectionMode="Single" SelectionUnit="FullRow"
                       CanUserAddRows="False" CanUserDeleteRows="False"
                       HeadersVisibility="Column" GridLinesVisibility="Horizontal"
-                      HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0"
-                      Background="{StaticResource CorPainel}" RowHeight="38" FontSize="16">
+                      HorizontalGridLinesBrush="{DynamicResource CorLinhaGrade}" BorderThickness="0"
+                      Background="{DynamicResource CorPainel}" RowHeight="38" FontSize="16">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="#" Binding="{Binding Posicao, Mode=OneWay}" Width="60" />
                     <DataGridTextColumn Header="Produto" Binding="{Binding Nome, Mode=OneWay}" Width="*" />

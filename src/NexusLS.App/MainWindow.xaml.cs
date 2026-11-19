@@ -31,6 +31,7 @@ public partial class MainWindow : FluentWindow
 
             // A Gestão devolve a sessão do balcão ao fechar; por isso ela fecha antes de bloquear.
             foreach (var g in System.Windows.Application.Current.Windows.OfType<Views.GestaoWindow>().ToList()) g.Close();
+            Views.ConfiguracoesWindow.FecharSeAberta();
             // Outra janela aberta (Pix, impressão, diálogo): espera ela terminar em vez de empilhar o PIN por cima.
             if (System.Windows.Application.Current.Windows.OfType<System.Windows.Window>().Any(w => w != this && w.IsVisible)) return;
 
@@ -62,6 +63,8 @@ public partial class MainWindow : FluentWindow
             return d.ShowDialog(this) == true ? d.FileName : null;
         };
         vm.AbrirJanelaGestao = item => Views.GestaoWindow.Abrir(App.Servicos, this, item, vm.Zoom, z => vm.Zoom = z, () => vm.LicencaTexto);
+        vm.AbrirJanelaConfiguracoes = () => Views.ConfiguracoesWindow.Abrir(App.Servicos, this, vm.Zoom, z => vm.Zoom = z, () => vm.LicencaTexto,
+            () => !Seguranca.Sessao.LoginAtivo || Seguranca.Sessao.Atual?.Perfil == NexusLS.Core.Models.PerfilFuncionario.Administrador);
         vm.AtualizarLicenca();
         IniciarBloqueioPorInatividade(vm);
         vm.AoDetectarLicencaInvalidaNaNuvem = mensagem =>

@@ -73,7 +73,7 @@
                 </WrapPanel>
             </StackPanel>
 
-            <Border Grid.Row="2" Background="{StaticResource CorAlerta}" CornerRadius="6" Padding="12,8"
+            <Border Grid.Row="2" Background="{DynamicResource CorAlerta}" CornerRadius="6" Padding="12,8"
                     Margin="0,0,0,10"
                     Visibility="{Binding TemAlerta, Converter={StaticResource BoolVis}}">
                 <TextBlock Text="{Binding TextoAlerta}" FontWeight="SemiBold" />
@@ -86,21 +86,21 @@
                           SelectionMode="Single" SelectionUnit="FullRow"
                           CanUserAddRows="False" CanUserDeleteRows="False"
                           HeadersVisibility="Column" GridLinesVisibility="Horizontal"
-                          HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0"
-                          Background="{StaticResource CorPainel}" RowHeight="36">
+                          HorizontalGridLinesBrush="{DynamicResource CorLinhaGrade}" BorderThickness="0"
+                          Background="{DynamicResource CorPainel}" RowHeight="36">
                     <DataGrid.RowStyle>
                         <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
-                            <Setter Property="Background" Value="{StaticResource CorPainel}" />
+                            <Setter Property="Background" Value="{DynamicResource CorPainel}" />
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding EstoqueBaixo}" Value="True">
-                                    <Setter Property="Background" Value="{StaticResource CorAlerta}" />
+                                    <Setter Property="Background" Value="{DynamicResource CorAlerta}" />
                                 </DataTrigger>
                                 <DataTrigger Binding="{Binding Ativo}" Value="False">
-                                    <Setter Property="Foreground" Value="{StaticResource CorTextoSuave}" />
+                                    <Setter Property="Foreground" Value="{DynamicResource CorTextoSuave}" />
                                 </DataTrigger>
                                 <Trigger Property="IsSelected" Value="True">
-                                    <Setter Property="Background" Value="{StaticResource CorSelecao}" />
-                                    <Setter Property="Foreground" Value="{StaticResource CorTexto}" />
+                                    <Setter Property="Background" Value="{DynamicResource CorSelecao}" />
+                                    <Setter Property="Foreground" Value="{DynamicResource CorTexto}" />
                                 </Trigger>
                             </Style.Triggers>
                         </Style>
@@ -133,8 +133,8 @@
                           AutoGenerateColumns="False" IsReadOnly="True"
                           SelectionMode="Single" CanUserAddRows="False"
                           HeadersVisibility="Column" GridLinesVisibility="Horizontal"
-                          HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderThickness="0"
-                          Background="{StaticResource CorPainel}" RowHeight="32">
+                          HorizontalGridLinesBrush="{DynamicResource CorLinhaGrade}" BorderThickness="0"
+                          Background="{DynamicResource CorPainel}" RowHeight="32">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Data" Width="132"
                                             Binding="{Binding DataHora, Mode=OneWay, StringFormat='dd/MM/yyyy HH:mm'}" />
@@ -196,16 +196,16 @@
                                         <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <Border Width="84" Height="84" CornerRadius="6" BorderThickness="1" BorderBrush="{StaticResource CorBorda}" ClipToBounds="True">
+                                    <Border Width="84" Height="84" CornerRadius="6" BorderThickness="1" BorderBrush="{DynamicResource CorBorda}" ClipToBounds="True">
                                         <Grid>
                                             <Image Source="{Binding FotoImagem}" Stretch="UniformToFill" AutomationProperties.Name="Foto do produto" />
                                             <TextBlock Text="Sem foto" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                       Foreground="{StaticResource CorTextoSuave}" FontSize="12"
+                                                       Foreground="{DynamicResource CorTextoSuave}" FontSize="12"
                                                        Visibility="{Binding TemFoto, Converter={StaticResource BoolInverso}}" />
                                         </Grid>
                                     </Border>
                                     <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding SituacaoFoto}" TextWrapping="Wrap" Foreground="{StaticResource CorTextoSuave}" FontSize="12" />
+                                        <TextBlock Text="{Binding SituacaoFoto}" TextWrapping="Wrap" Foreground="{DynamicResource CorTextoSuave}" FontSize="12" />
                                         <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
                                             <Button Content="Escolher foto..." Style="{StaticResource BotaoSecundario}" Padding="10,4" Command="{Binding TrocarFotoCommand}"
                                                     AutomationProperties.Name="Escolher foto do produto" />
@@ -287,7 +287,7 @@
                                                  ToolTip="Vazio = vale o preço de varejo" />
                                     </StackPanel>
                                 </Grid>
-                                <TextBlock Text="{Binding AvisoAtacado}" Foreground="#B45309" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,4,0,0">
+                                <TextBlock Text="{Binding AvisoAtacado}" Foreground="{DynamicResource CorAviso}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,4,0,0">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
                                             <Style.Triggers>
@@ -322,7 +322,7 @@
 
                                 <!-- Calculadora de preço -->
                                 <TextBlock Text="{Binding TextoMargem}" TextWrapping="Wrap" Margin="0,8,0,0"
-                                           Foreground="{StaticResource CorTextoSuave}" />
+                                           Foreground="{DynamicResource CorTextoSuave}" />
                                 <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                                     <TextBlock Text="Margem desejada (%)" VerticalAlignment="Center" Margin="0,0,8,0" />
                                     <TextBox Width="80" Text="{Binding MargemDesejada, UpdateSourceTrigger=PropertyChanged}"
@@ -364,19 +364,19 @@
                         <ScrollViewer VerticalScrollBarVisibility="Auto">
                             <StackPanel>
                                 <TextBlock Text="Escolha ou salve um produto primeiro (aba &quot;Produto&quot;)."
-                                           Foreground="{StaticResource CorTextoSuave}" TextWrapping="Wrap"
+                                           Foreground="{DynamicResource CorTextoSuave}" TextWrapping="Wrap"
                                            Visibility="{Binding EhNovo, Converter={StaticResource BoolVis}}" />
 
                                 <StackPanel Visibility="{Binding EstaEditando, Converter={StaticResource BoolVis}}">
                                     <TextBlock Text="{Binding NomeEditando}" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap" />
-                                    <TextBlock Text="{Binding EstoqueTotalTexto}" Foreground="{StaticResource CorTextoSuave}" />
+                                    <TextBlock Text="{Binding EstoqueTotalTexto}" Foreground="{DynamicResource CorTextoSuave}" />
 
                                     <TextBlock Text="Grade de tamanhos (clique no tamanho para ajustá-lo)" Style="{StaticResource Rotulo}" />
                                     <DataGrid ItemsSource="{Binding Grade}" SelectedItem="{Binding TamanhoSelecionado, Mode=TwoWay}"
                                               AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single"
                                               CanUserAddRows="False" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
-                                              HorizontalGridLinesBrush="{StaticResource CorLinhaGrade}" BorderBrush="{StaticResource CorBorda}"
-                                              Background="{StaticResource CorPainel}" RowHeight="32" MaxHeight="190" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                              HorizontalGridLinesBrush="{DynamicResource CorLinhaGrade}" BorderBrush="{DynamicResource CorBorda}"
+                                              Background="{DynamicResource CorPainel}" RowHeight="32" MaxHeight="190" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                                         <DataGrid.Columns>
                                             <DataGridTextColumn Header="Tamanho" Binding="{Binding Tamanho, Mode=OneWay}" Width="*" />
                                             <DataGridTextColumn Header="Cód. barras" Binding="{Binding CodigoBarras, Mode=OneWay}" Width="1.3*" />
@@ -419,7 +419,7 @@
                                     <Separator Margin="0,18" />
 
                                     <TextBlock Text="Ajuste de estoque" FontSize="16" FontWeight="SemiBold" />
-                                    <TextBlock Text="{Binding TextoTamanhoAjuste}" Foreground="{StaticResource CorTextoSuave}"
+                                    <TextBlock Text="{Binding TextoTamanhoAjuste}" Foreground="{DynamicResource CorTextoSuave}"
                                                TextWrapping="Wrap" Margin="0,4,0,0" />
 
                                     <TextBlock Text="Tipo" Style="{StaticResource Rotulo}" />
