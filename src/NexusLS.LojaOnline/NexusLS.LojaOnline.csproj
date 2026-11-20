@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\NexusLS.Core\NexusLS.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- O mesmo pacote do catálogo/editor em JSX que o PDV usa (gerado por web\construir.ps1). -->
+    <EmbeddedResource Include="..\NexusLS.App\Web\catalogo.zip" LogicalName="catalogo.zip" Link="Web\catalogo.zip" />
+    <!-- Um só código para hospedar o catálogo: os arquivos da pasta Web do PDV são compartilhados, não copiados. -->
+    <Compile Include="..\NexusLS.App\Web\PacoteWeb.cs" Link="Web\PacoteWeb.cs" />
+    <Compile Include="..\NexusLS.App\Web\PonteCatalogo.cs" Link="Web\PonteCatalogo.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4314.35" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <ApplicationIcon>nexus.ico</ApplicationIcon>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>NexusLojaOnline</AssemblyName>
+    <Version>1.2.8</Version>
+    <Product>Nexus Loja Online</Product>
+    <AssemblyTitle>Nexus Loja Online - Catálogo online e site da loja</AssemblyTitle>
+  </PropertyGroup>
+
+</Project>

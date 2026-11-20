@@ -13,6 +13,11 @@ Consequência: o catálogo passa a ter **duas fontes de foto**, em ordem de prio
 
 **O que ainda não sei:** em qual campo do documento `empresas/{empresa}/produtos/{id}` do Life ficam as imagens (lista de URLs? caminho no Storage?). O repositório não registra isso. Preciso de um produto de exemplo (campos, sem senha nem chave) para ligar as fotos certo.
 
+## 0b. Estado da construção
+
+- **[feito] Etapa 1 (base):** projeto separado `src/NexusLS.LojaOnline` (programa `NexusLojaOnline.exe`). Abre o mesmo editor/catálogo do PDV dentro do WebView2, lê os produtos do banco do Nexus LS e publica no Firebase do catálogo. O código de hospedagem (`PacoteWeb`, `PonteCatalogo`) é compartilhado com o PDV, não copiado.
+- **[pendente]** Entrar no instalador (`Nexus-Setup.exe`) e no atualizador; fotos do Life (falta o campo); filtros por tamanho, botão de WhatsApp por produto, atacado, link/QR; site público e pedido de volta no Nexus LS.
+
 ## 1. O problema
 
 Hoje o catálogo online é uma parte escondida do Nexus LS: o dono precisa abrir o PDV, ir em Gestão, editar a vitrine e clicar em publicar. O cliente final só vê um catálogo. A loja não tem um site de verdade (endereço próprio, página inicial, sobre, contato) e o pedido do cliente não fecha com pagamento.
