@@ -16,6 +16,8 @@ import { getProductImageUrl, DEFAULT_PRODUCT_FALLBACK } from "../services/imageU
 import { Button } from "../components/ui/Button";
 import { Modal, ModalHeader, ModalBody, ModalFooter } from "../components/ui/Modal";
 import { formatCurrency } from "../utils/formatters";
+import { tamanhosDoProduto } from "../services/produtoCatalogo";
+import { precosDoCartao } from "../services/vitrineConfig";
 import { cn } from "../utils/cn";
 import {
   sanitizarVitrine,
@@ -87,6 +89,14 @@ function enviarAoEditor(mensagem) {
   }
 }
 
+// Faixas de preço do filtro (valor final que o cliente paga na tabela escolhida)
+const FAIXAS_PRECO = [
+  { id: "ate50", rotulo: "Até R$ 50", min: 0, max: 50 },
+  { id: "50a100", rotulo: "R$ 50 a R$ 100", min: 50, max: 100 },
+  { id: "100a200", rotulo: "R$ 100 a R$ 200", min: 100, max: 200 },
+  { id: "200mais", rotulo: "Acima de R$ 200", min: 200, max: Infinity }
+];
+
 export default function CatalogoPublico() {
   const { isAuthenticated } = useAuth();
   const { companyId } = useParams();
@@ -120,6 +130,9 @@ export default function CatalogoPublico() {
   const [busca, setBusca] = useState(searchParams.get("q") || "");
   const [categoriaAtiva, setCategoriaAtiva] = useState(searchParams.get("cat") || "Todos");
   const [pagina, setPagina] = useState(Math.max(1, Number(searchParams.get("pag")) || 1));
+  // Filtro por tamanho (só mostra peças com saldo no tamanho) e por faixa de preço
+  const [tamanhoAtivo, setTamanhoAtivo] = useState(searchParams.get("tam") || "");
+  const [faixaPreco, setFaixaPreco] = useState(searchParams.get("preco") || "");
 
   // Modal de Seleção de Variação (Tamanho & Cor)
   const [produtoModal, setProdutoModal] = useState(null);
@@ -230,17 +243,32 @@ export default function CatalogoPublico() {
     return Array.from(cats);
   }, [produtosDoCatalogo]);
 
+  // Tamanhos que existem de verdade no estoque (com saldo), na ordem de uso
+  const tamanhosDisponiveis = useMemo(() => {
+    const vistos = new Map();
+    produtosDoCatalogo.forEach((p) => {
+      tamanhosDoProduto(p).forEach((t) => {
+        if (t.nome !== "Único" && t.disponivel && (t.estoque === null || t.estoque > 0) && !vistos.has(t.nome)) vistos.set(t.nome, vistos.size);
+      });
+    });
+    return Array.from(vistos.keys());
+  }, [produtosDoCatalogo]);
+
   const produtosFiltrados = useMemo(() => {
+    const faixa = FAIXAS_PRECO.find((f) => f.id === faixaPreco);
     return produtosDoCatalogo.filter((p) => {
       const matchCat = categoriaAtiva === "Todos" || p.categoria === categoriaAtiva;
+      const matchTamanho = !tamanhoAtivo || tamanhosDoProduto(p).some((t) => t.nome === tamanhoAtivo && t.disponivel);
+      const valor = precosDoCartao(p, tipoTabela).final;
+      const matchPreco = !faixa || (valor >= faixa.min && valor < faixa.max);
       const matchBusca =
         !busca.trim() ||
         p.nome?.toLowerCase().includes(busca.toLowerCase()) ||
         p.referencia?.toLowerCase().includes(busca.toLowerCase()) ||
         p.categoria?.toLowerCase().includes(busca.toLowerCase());
-      return matchCat && matchBusca;
+      return matchCat && matchBusca && matchTamanho && matchPreco;
     });
-  }, [produtosDoCatalogo, categoriaAtiva, busca]);
+  }, [produtosDoCatalogo, categoriaAtiva, busca, tamanhoAtivo, faixaPreco, tipoTabela]);
 
   // Páginas da vitrine (0 = todos numa página só)
   const porPagina = cfgProdutos.porPagina;
@@ -248,7 +276,7 @@ export default function CatalogoPublico() {
   const paginaAtual = Math.min(pagina, totalPaginas);
   // Sem páginas (porPagina 0): desenha em blocos de LOTE_VITRINE e mostra "Ver mais". Muitos cartões de uma vez
   // pesam no celular. O tamanho do bloco fica na sessão, então voltar da página do produto reencontra a rolagem.
-  const assinaturaFiltro = `${categoriaAtiva}|${busca.trim()}|${tipoTabela}`;
+  const assinaturaFiltro = `${categoriaAtiva}|${busca.trim()}|${tipoTabela}|${tamanhoAtivo}|${faixaPreco}`;
   const quantidadeVisivel = janelaVitrine?.chave === assinaturaFiltro ? janelaVitrine.n : LOTE_VITRINE;
   const janelaAtiva = porPagina === 0 && !emPrevia;
   const restantesNaVitrine = janelaAtiva ? Math.max(0, produtosFiltrados.length - quantidadeVisivel) : 0;
@@ -332,10 +360,12 @@ export default function CatalogoPublico() {
     definir("q", busca.trim());
     definir("cat", categoriaAtiva !== "Todos" ? categoriaAtiva : "");
     definir("pag", pagina > 1 ? String(pagina) : "");
+    definir("tam", tamanhoAtivo);
+    definir("preco", faixaPreco);
     definir("tabela", tipoTabela === "atacado" ? "atacado" : "");
     novo.delete("sacola");
     if (novo.toString() !== atual.toString()) setSearchParams(novo, { replace: true });
-  }, [busca, categoriaAtiva, pagina, tipoTabela, emPrevia, setSearchParams]);
+  }, [busca, categoriaAtiva, pagina, tipoTabela, tamanhoAtivo, faixaPreco, emPrevia, setSearchParams]);
 
   // A sacola persiste no navegador (mesma da página do produto)
   useEffect(() => {
@@ -875,6 +905,67 @@ export default function CatalogoPublico() {
                       );
                     })}
                   </div>
+
+                  {(tamanhosDisponiveis.length > 0 || produtosDoCatalogo.length > 0) && (
+                    <div className={cn("flex flex-wrap items-center gap-2", centro && "justify-center")} aria-label="Filtros por tamanho e preço">
+                      {tamanhosDisponiveis.length > 0 && (
+                        <>
+                          <span className="vt-sub text-[11px] font-semibold uppercase tracking-wide">Tamanho</span>
+                          {tamanhosDisponiveis.map((tam) => {
+                            const ativo = tamanhoAtivo === tam;
+                            return (
+                              <button
+                                key={tam}
+                                type="button"
+                                aria-pressed={ativo}
+                                onClick={() => {
+                                  setTamanhoAtivo(ativo ? "" : tam);
+                                  setPagina(1);
+                                }}
+                                style={ativo ? undefined : { borderColor: "var(--vt-border)" }}
+                                className={cn(
+                                  "min-w-9 cursor-pointer rounded-full px-3 py-1 text-xs transition-all",
+                                  ativo ? "vt-btn font-semibold shadow-xs" : "vt-sub border font-medium hover:opacity-80"
+                                )}
+                              >
+                                {tam}
+                              </button>
+                            );
+                          })}
+                        </>
+                      )}
+                      <select
+                        aria-label="Faixa de preço"
+                        value={faixaPreco}
+                        onChange={(e) => {
+                          setFaixaPreco(e.target.value);
+                          setPagina(1);
+                        }}
+                        style={{ borderColor: "var(--vt-border)", background: "transparent", color: "var(--vt-pname)" }}
+                        className="h-8 cursor-pointer rounded-full border px-3 text-xs"
+                      >
+                        <option value="">Qualquer preço</option>
+                        {FAIXAS_PRECO.map((f) => (
+                          <option key={f.id} value={f.id}>
+                            {f.rotulo}
+                          </option>
+                        ))}
+                      </select>
+                      {(tamanhoAtivo || faixaPreco) && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setTamanhoAtivo("");
+                            setFaixaPreco("");
+                            setPagina(1);
+                          }}
+                          className="vt-sub cursor-pointer text-xs underline"
+                        >
+                          Limpar filtros
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </section>
               );
             }
