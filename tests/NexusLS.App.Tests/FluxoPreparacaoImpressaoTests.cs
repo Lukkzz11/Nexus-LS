@@ -476,4 +476,43 @@ public class FluxoPreparacaoImpressaoTests : IDisposable
 
         public void Sucesso(string mensagem, string titulo = "Sucesso") => Sucessos.Add(mensagem);
     }
+
+    [Fact]
+    public async Task Catalogo_mantem_filtros_selecao_e_quantidades_depois_de_imprimir_e_voltar()
+    {
+        using (var db = CriarContexto())
+        {
+            var b = BermudaCargo();
+            b.Id = 0; b.Categoria = "Bermuda"; b.Ativo = true;
+            b.Tamanhos = b.Tamanhos.Where(t => t.Tamanho != "Sem tamanho").ToList();
+            db.Produtos.Add(b);
+            db.Produtos.Add(new Produto { Nome = "BONE", Categoria = "Acessorio", Ativo = true, PrecoVendaCentavos = 2000, CodigoInterno = "INT-2" });
+            await db.SaveChangesAsync();
+        }
+
+        var vm = CriarMainViewModel();
+        await vm.RecarregarDadosAsync();
+
+        vm.CategoriaSelecionada = "Bermuda";
+        vm.FiltroTipo = "ComCodigo";
+        var item = vm.TodosProdutos.First(p => p.Nome == "BERMUDA CARGO");
+        vm.ProdutoSelecionado = item;
+
+        var selecao = new SelecaoImpressaoViewModel(item);
+        selecao.DefinirQuantidade("42", 30);
+        selecao.DefinirQuantidade("44", 38);
+        vm.MostrarPreparacao(selecao, item);
+
+        Assert.True(vm.PreparacaoVM.EnviarParaImpressora());
+        vm.PreparacaoVM.VoltarAoCatalogo();
+        Assert.Equal("Catalogo", vm.TelaAtiva);
+
+        await vm.RecarregarDadosAsync();
+
+        Assert.Equal("Bermuda", vm.CategoriaSelecionada);
+        Assert.Equal("ComCodigo", vm.FiltroTipo);
+        Assert.Equal(item.Id, vm.ProdutoSelecionado?.Id);
+        Assert.Equal(new[] { "BERMUDA CARGO" }, vm.ProdutosView.Cast<ProdutoItemViewModel>().Select(p => p.Nome));
+        Assert.Equal(68, vm.PreparacaoVM.Selecao!.Total);
+    }
 }

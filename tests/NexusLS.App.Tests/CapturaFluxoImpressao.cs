@@ -56,6 +56,7 @@ public sealed class CapturaFluxoImpressao
         var selecao = SelecaoBermuda();
         var modelo = Modelo50x30();
 
+        CapturarPadronizar(pasta);
         var modal = new JanelaProdutoCatalogo(selecao);
         RenderizarConteudo(modal, Path.Combine(pasta, "20-modal-produto.png"), 900, 680);
 
@@ -72,6 +73,20 @@ public sealed class CapturaFluxoImpressao
         preparacao.DefinirImpressoras(new[] { "HP LaserJet (exemplo)" }, "HP LaserJet (exemplo)");
         var folha = new PreparacaoImpressaoView { DataContext = preparacao };
         RenderizarTela(folha, Path.Combine(pasta, "22-preparacao-folha.png"), 1360, 980);
+    }
+
+    private static void CapturarPadronizar(string pasta)
+    {
+        Produto Prod(int id, string nome, string refe, params string[] tams) => new()
+        {
+            Id = id, Nome = nome, Referencia = refe, CodigoInterno = "INT-" + id, PrecoVendaCentavos = 7000,
+            Tamanhos = tams.Select((t, i) => new ProdutoTamanho { Tamanho = t, Ordem = i + 1, Estoque = 3 }).ToList()
+        };
+        var bermuda = Prod(45, "BERMUDA CARGO", "1402", "42", "44", "46");
+        var camisa = Prod(62, "CAMISA GOLA POLO", "1202", "P", "M", "G");
+        var vm = new PadronizarEtiquetaViewModel(Modelo50x30(), new[] { bermuda, camisa }, 2, bermuda, "NEXUS LS");
+        var janela = new JanelaPadronizarEtiqueta(vm);
+        RenderizarConteudo(janela, Path.Combine(pasta, "30-padronizar-etiqueta.png"), 1100, 760);
     }
 
     private static SelecaoImpressaoViewModel SelecaoBermuda()
