@@ -272,6 +272,18 @@ public partial class VendasViewModel : ViewModelBase
         MostrarSucesso($"Cupom da venda #{venda.Id} enviado para a impressora.");
     });
 
+    /// <summary>Guarda o comprovante em PDF na gaveta e abre o WhatsApp já com o telefone do cliente, a mensagem e o PDF para anexar.</summary>
+    [RelayCommand]
+    private Task EnviarWhatsAppAsync() => ExecutarAsync(async () =>
+    {
+        if (Selecionada is not { } venda) return;
+        var caminho = await _cupons.GuardarPdfNaGavetaAsync(venda.Id);
+        var nomeLoja = _configuracao is null ? "Nexus LS" : (await _configuracao.ObterAsync()).NomeLoja;
+        var mensagem = NexusLS.Core.Comunicacao.RegrasWhatsApp.MensagemComprovante(venda, nomeLoja);
+        NexusLS.App.Views.WhatsAppWindow.Abrir(null, venda.Cliente?.Telefone ?? "", mensagem, caminho);
+        MostrarSucesso("Comprovante guardado na gaveta e preparado no WhatsApp.");
+    });
+
     /// <summary>Salva a nota da venda selecionada em PDF.</summary>
     [RelayCommand]
     private Task NotaEmPdfAsync() => ExecutarAsync(async () =>

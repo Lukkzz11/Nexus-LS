@@ -27,7 +27,7 @@ public class PacoteCompleto
 
     // Pastas e arquivos que se recriam sozinhos ou são lixo: não entram no pacote.
     private static readonly string[] PastasIgnoradas =
-        { "logs", "atualizacao", "webview2", "web", "cloudflared", "LicenseData", "LicenseProfile" };
+        { "logs", "atualizacao", "webview2", "whatsapp-web", "web", "cloudflared", "LicenseData", "LicenseProfile" };
 
     private readonly string _caminhoBanco;
     private readonly string _raiz;

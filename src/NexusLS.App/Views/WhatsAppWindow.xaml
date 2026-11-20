@@ -1,0 +1,109 @@
+<Window x:Class="NexusLS.App.Views.WhatsAppWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+        Title="WhatsApp — Nexus LS" Width="1280" Height="820" MinWidth="980" MinHeight="600"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource CorFundo}" Foreground="{DynamicResource CorTexto}">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="400" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16,14,12,14">
+            <StackPanel>
+                <TextBlock Text="WhatsApp" Style="{StaticResource TituloTela}" />
+                <TextBlock x:Name="TxtStatus" TextWrapping="Wrap" Margin="0,4,0,10" Foreground="{DynamicResource CorTextoSuave}"
+                           Text="Abrindo o WhatsApp Web... Na primeira vez, leia o QR code no painel ao lado com o celular da loja." />
+
+                <TextBlock Text="Enviar para" Style="{StaticResource Rotulo}" />
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                    <RadioButton x:Name="RbPessoa" Content="Pessoa" IsChecked="True" Margin="0,0,16,0" Checked="AoMudarDestino" />
+                    <RadioButton x:Name="RbGrupo" Content="Grupo" Checked="AoMudarDestino" />
+                </StackPanel>
+                <StackPanel x:Name="PainelPessoa">
+                    <TextBox x:Name="TxtTelefone" ToolTip="DDD + número. Ex.: (81) 99999-0000" AutomationProperties.Name="Telefone do cliente" />
+                </StackPanel>
+                <StackPanel x:Name="PainelGrupo" Visibility="Collapsed">
+                    <ComboBox x:Name="CmbGrupo" IsEditable="True" ToolTip="Nome do grupo, igualzinho ao que aparece no WhatsApp"
+                              AutomationProperties.Name="Nome do grupo" Padding="8,7" />
+                    <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                        <Button Content="Salvar na lista" Style="{StaticResource BotaoSecundario}" Click="SalvarGrupo" />
+                        <Button Content="Remover da lista" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0" Click="RemoverGrupo" />
+                    </StackPanel>
+                </StackPanel>
+
+                <TextBlock Text="Mensagem" Style="{StaticResource Rotulo}" Margin="0,12,0,0" />
+                <TextBox x:Name="TxtMensagem" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="150" MaxHeight="260"
+                         VerticalScrollBarVisibility="Auto" AutomationProperties.Name="Mensagem" />
+
+                <TextBlock Text="Anexo (PDF, imagem...)" Style="{StaticResource Rotulo}" Margin="0,12,0,0" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="TxtAnexo" IsReadOnly="True" AutomationProperties.Name="Arquivo anexado" />
+                    <Button Grid.Column="1" Content="Escolher..." Style="{StaticResource BotaoSecundario}" Margin="6,0,0,0" Click="EscolherAnexo" />
+                    <Button Grid.Column="2" Content="Limpar" Style="{StaticResource BotaoSecundario}" Margin="6,0,0,0" Click="LimparAnexo" />
+                </Grid>
+
+                <CheckBox x:Name="ChkAutomatico" Margin="0,14,0,0" Content="Apertar &quot;Enviar&quot; automaticamente"
+                          ToolTip="Desligado: o programa só prepara a conversa e você clica no botão verde do WhatsApp." />
+
+                <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                    <Button x:Name="BtnEnviar" Content="Enviar" Style="{StaticResource BotaoPrimario}" Click="Enviar" />
+                    <Button x:Name="BtnLote" Content="Enviar para todos os grupos salvos" Style="{StaticResource BotaoSecundario}" Margin="8,0,0,0" Click="EnviarLote" />
+                </StackPanel>
+                <Button x:Name="BtnParar" Content="Parar envio em lote" Style="{StaticResource BotaoPerigo}" Margin="0,8,0,0" Visibility="Collapsed"
+                        HorizontalAlignment="Left" Click="PararLote" />
+                <TextBlock x:Name="TxtResultado" TextWrapping="Wrap" Margin="0,10,0,0" />
+
+                <Expander Header="Ofertas do catálogo" Margin="0,16,0,0">
+                    <StackPanel Margin="0,8,0,0">
+                        <TextBlock Text="Link do catálogo (vai no fim da mensagem)" Style="{StaticResource Rotulo}" />
+                        <TextBox x:Name="TxtLink" AutomationProperties.Name="Link do catálogo" />
+                        <TextBlock Text="Buscar produto" Style="{StaticResource Rotulo}" Margin="0,8,0,0" />
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox x:Name="TxtBusca" KeyDown="BuscaTecla" AutomationProperties.Name="Buscar produto" />
+                            <Button Grid.Column="1" Content="Buscar" Style="{StaticResource BotaoSecundario}" Margin="6,0,0,0" Click="Buscar" />
+                        </Grid>
+                        <ItemsControl x:Name="ListaOfertas" Margin="0,8,0,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,2">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="90" />
+                                        </Grid.ColumnDefinitions>
+                                        <CheckBox IsChecked="{Binding Marcado, Mode=TwoWay}" Content="{Binding Texto}" />
+                                        <TextBox Grid.Column="1" Text="{Binding Promocao, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                 ToolTip="Preço promocional (opcional)" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Button Content="Montar mensagem de ofertas" Style="{StaticResource BotaoSecundario}" Margin="0,8,0,0"
+                                HorizontalAlignment="Left" Click="MontarOfertas" />
+                    </StackPanel>
+                </Expander>
+
+                <TextBlock TextWrapping="Wrap" FontSize="11.5" Margin="0,16,0,0" Foreground="{DynamicResource CorTextoSuave}"
+                           Text="Usa o WhatsApp Web, sem custo. Para evitar bloqueio do número, o envio em lote espera alguns segundos entre uma mensagem e outra. Use só com quem aceita receber suas mensagens." />
+            </StackPanel>
+        </ScrollViewer>
+
+        <Border Grid.Column="1" BorderThickness="1,0,0,0" BorderBrush="{DynamicResource CorBorda}">
+            <Grid>
+                <wv2:WebView2 x:Name="Navegador" />
+                <TextBlock x:Name="AvisoWeb" Visibility="Collapsed" TextWrapping="Wrap" Margin="24" VerticalAlignment="Center" HorizontalAlignment="Center" />
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

@@ -71,6 +71,12 @@
                                 <TextBlock Text="Gaveta" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
+                        <Button Tag="WhatsApp" Visibility="{Binding VerRelatorios, Converter={StaticResource BoolVis}}" AutomationProperties.Name="WhatsApp" ToolTip="Mandar ofertas do catálogo, comprovantes e documentos pelo WhatsApp (sem custo)" Style="{StaticResource ItemDoMenu}" Command="{Binding AbrirWhatsAppCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Symbol="Chat24" Style="{StaticResource IconeDoMenu}" />
+                                <TextBlock Text="WhatsApp" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
                         <TextBlock Text="FINANCEIRO" Style="{StaticResource SecaoMenu}" Margin="20,14,18,6" Visibility="{Binding VerFinanceiro, Converter={StaticResource BoolVis}}" />
                         <Button Tag="Financeiro" Visibility="{Binding VerFinanceiro, Converter={StaticResource BoolVis}}" AutomationProperties.Name="Financeiro" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaFinanceiroCommand}">
                             <StackPanel Orientation="Horizontal">

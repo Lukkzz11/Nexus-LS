@@ -65,8 +65,8 @@ public sealed class RelatorioDiaCaixaTests : IDisposable
         Assert.Equal("%PDF", Encoding.ASCII.GetString(bytes, 0, 4));
 
         // O PDF é texto em WinAnsi: os acentos saem em Latin-1, mas o conteúdo continua legível.
-        var texto = Encoding.Latin1.GetString(bytes);
-        Assert.Contains("LIFE SURF", texto);
+        var texto = PdfTextoApp.Extrair(bytes);
+        Assert.Contains("Life Surf", texto, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Pix", texto);
         Assert.Contains("R$ 40,00", texto);
     }

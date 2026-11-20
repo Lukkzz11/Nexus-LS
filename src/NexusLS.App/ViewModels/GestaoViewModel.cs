@@ -106,7 +106,19 @@ public partial class GestaoViewModel : ObservableObject
     [RelayCommand] private void IrParaRelatorioFinanceiro() => Abrir(new RelatorioFinanceiroViewModel(_servicos.RelatorioFinanceiro), ItemMenu.RelatorioFinanceiro);
     [RelayCommand] private void IrParaRelatorioProdutos() => Abrir(new RelatorioProdutosViewModel(_servicos.RelatorioProdutos), ItemMenu.RelatorioProdutos);
     [RelayCommand] private void IrParaEntradasESaidas() => Abrir(CriarEntradasESaidas(), ItemMenu.EntradasESaidas);
-    [RelayCommand] private void IrParaGaveta() => Abrir(new GavetaViewModel(_servicos.Gaveta), ItemMenu.Gaveta);
+    [RelayCommand] private void IrParaGaveta()
+    {
+        var gaveta = new GavetaViewModel(_servicos.Gaveta);
+        gaveta.EnviarPorWhatsApp = async arquivo =>
+        {
+            var nomeLoja = (await _servicos.Configuracao.ObterAsync()).NomeLoja;
+            NexusLS.App.Views.WhatsAppWindow.Abrir(null, null, NexusLS.Core.Comunicacao.RegrasWhatsApp.MensagemDocumento(arquivo.Nome, nomeLoja), arquivo.Caminho);
+        };
+        Abrir(gaveta, ItemMenu.Gaveta);
+    }
+
+    /// <summary>Abre a janela do WhatsApp (ofertas do catálogo, comprovantes e documentos).</summary>
+    [RelayCommand] private void AbrirWhatsApp() => NexusLS.App.Views.WhatsAppWindow.Abrir(null);
 
     [RelayCommand]
     private void IrParaGestaoEmpresa()
