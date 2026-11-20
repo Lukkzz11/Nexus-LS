@@ -525,6 +525,9 @@ public class GoogleDriveBackup
         var pasta = string.IsNullOrWhiteSpace(_store.Carregar().NomeDaPasta) ? PastaPadrao : _store.Carregar().NomeDaPasta!;
         var id = await _drive.ObterOuCriarPastaAsync(pasta, ct);
         await _drive.EnviarArquivoAsync(id, caminho, ct);
+        // O backup guarda os anexos num zip ao lado do banco: sem ele, restaurar do Drive perderia as fotos e documentos.
+        var anexos = BackupService.CaminhoAnexosDoBackup(caminho);
+        if (File.Exists(anexos)) await _drive.EnviarArquivoAsync(id, anexos, ct);
         return pasta;
     }
 }

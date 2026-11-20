@@ -28,6 +28,10 @@ public static class RegrasDoConsultor
         new RegraFaturamentoDaSemana(),
         new RegraTicketMedioCaiu(),
         new RegraDiaMaisFraco(),
+        new RegraMargemBaixa(),
+        new RegraDescontosAltos(),
+        new RegraClientesSumidos(),
+        new RegraMelhorHorario(),
         new RegraAniversariantes(),
         new RegraFormaDePagamentoDominante()
     ];
@@ -346,6 +350,103 @@ public sealed class RegraFormaDePagamentoDominante : IRegraConsultor
             $"Nos últimos 30 dias, {nome} respondeu por {TextoConsultor.Pct(parte)} do valor vendido ({Dinheiro.Formatar(topo.TotalCentavos)} de {Dinheiro.Formatar(total)}, em {topo.Vendas} de {vendas} vendas)."
             + (aPrazo ? " Venda a prazo é dinheiro a receber: vale acompanhar os vencimentos." : ""),
             aPrazo ? GravidadeSugestao.Atencao : GravidadeSugestao.Informacao, AreaConsultor.Vendas, "Ver o desempenho de vendas")
+        { Destino = DestinoConsultor.Desempenho };
+    }
+}
+
+/// <summary>Margem bruta dos últimos 30 dias abaixo de 25% (receita menos custo gravado nos itens), com dado suficiente.</summary>
+public sealed class RegraMargemBaixa : IRegraConsultor
+{
+    public const string IdFixo = "margem-baixa";
+    public const decimal MargemMinima = 0.25m;
+    public const int ItensMinimos = 20;
+    public const long ReceitaMinimaCentavos = 100_000;
+    public string Id => IdFixo;
+    public AreaConsultor Area => AreaConsultor.Vendas;
+
+    public Sugestao? Avaliar(DadosConsultor d)
+    {
+        if (d.Margem is not { } m) return null;
+        if (m.ItensComCusto < ItensMinimos || m.ReceitaCentavos < ReceitaMinimaCentavos) return null;
+        if (m.ItensSemCusto > m.ItensComCusto) return null; // maioria sem custo: a conta não é confiável
+        var margem = (m.ReceitaCentavos - m.CustoCentavos) / (decimal)m.ReceitaCentavos;
+        if (margem >= MargemMinima) return null;
+        return new Sugestao(IdFixo, "Margem de lucro baixa",
+            $"Nos últimos 30 dias a margem bruta ficou em {TextoConsultor.Pct(margem)} ({Dinheiro.Formatar(m.ReceitaCentavos)} vendidos para {Dinheiro.Formatar(m.CustoCentavos)} de custo). Vale rever preços ou custos."
+            + (m.ItensSemCusto > 0 ? $" ({m.ItensSemCusto} itens sem custo ficaram fora da conta.)" : ""),
+            margem < 0.10m ? GravidadeSugestao.Urgente : GravidadeSugestao.Atencao, AreaConsultor.Vendas, "Ver o desempenho de vendas")
+        { Destino = DestinoConsultor.Desempenho };
+    }
+}
+
+/// <summary>Descontos de 10% ou mais do valor bruto das vendas dos últimos 30 dias, com pelo menos 20 vendas.</summary>
+public sealed class RegraDescontosAltos : IRegraConsultor
+{
+    public const string IdFixo = "descontos-altos";
+    public const decimal Limite = 0.10m;
+    public const int VendasMinimas = 20;
+    public string Id => IdFixo;
+    public AreaConsultor Area => AreaConsultor.Vendas;
+
+    public Sugestao? Avaliar(DadosConsultor d)
+    {
+        if (d.Descontos is not { } x) return null;
+        if (x.Vendas < VendasMinimas || x.SubtotalCentavos <= 0 || x.DescontoCentavos <= 0) return null;
+        var parte = x.DescontoCentavos / (decimal)x.SubtotalCentavos;
+        if (parte < Limite) return null;
+        return new Sugestao(IdFixo, "Descontos altos",
+            $"Nos últimos 30 dias foram dados {Dinheiro.Formatar(x.DescontoCentavos)} em descontos, {TextoConsultor.Pct(parte)} do valor bruto de {Dinheiro.Formatar(x.SubtotalCentavos)} ({x.Vendas} vendas).",
+            GravidadeSugestao.Atencao, AreaConsultor.Vendas, "Ver o desempenho de vendas")
+        { Destino = DestinoConsultor.Desempenho };
+    }
+}
+
+/// <summary>Clientes que compravam (3 compras ou mais) e não aparecem há 90 dias ou mais.</summary>
+public sealed class RegraClientesSumidos : IRegraConsultor
+{
+    public const string IdFixo = "clientes-sumidos";
+    public const int DiasSumido = 90;
+    public const int ComprasMinimas = 3;
+    public string Id => IdFixo;
+    public AreaConsultor Area => AreaConsultor.Vendas;
+
+    public Sugestao? Avaliar(DadosConsultor d)
+    {
+        var lista = d.ClientesSumidos.Where(c => c.Compras >= ComprasMinimas && (d.Hoje.Date - c.UltimaCompra.Date).Days >= DiasSumido)
+            .OrderByDescending(c => c.TotalCentavos).ThenBy(c => c.Nome, StringComparer.CurrentCultureIgnoreCase).ToList();
+        if (lista.Count == 0) return null;
+        var nomes = lista.Take(3).Select(c => $"{c.Nome} (última compra há {TextoConsultor.Dias((d.Hoje.Date - c.UltimaCompra.Date).Days)})").ToList();
+        var inicio = lista.Count == 1 ? "1 cliente que comprava" : $"{lista.Count} clientes que compravam";
+        return new Sugestao(IdFixo, "Clientes sumidos",
+            $"{inicio} não volta há {DiasSumido} dias ou mais. Os de maior gasto: {TextoConsultor.Lista(nomes)}. Que tal chamar para uma novidade?",
+            GravidadeSugestao.Informacao, AreaConsultor.Vendas, "Abrir os clientes")
+        { Destino = DestinoConsultor.Clientes };
+    }
+}
+
+/// <summary>Faixa de 2 horas seguidas que concentra 30% ou mais do valor das últimas 8 semanas (informativo).</summary>
+public sealed class RegraMelhorHorario : IRegraConsultor
+{
+    public const string IdFixo = "melhor-horario";
+    public const decimal ParticipacaoMinima = 0.30m;
+    public const int VendasMinimas = 40;
+    public string Id => IdFixo;
+    public AreaConsultor Area => AreaConsultor.Vendas;
+
+    public Sugestao? Avaliar(DadosConsultor d)
+    {
+        var vendas = d.Horarios.Sum(h => h.Vendas);
+        var total = d.Horarios.Sum(h => h.TotalCentavos);
+        if (vendas < VendasMinimas || total <= 0) return null;
+        var porHora = d.Horarios.GroupBy(h => h.Hora).ToDictionary(g => g.Key, g => g.Sum(h => h.TotalCentavos));
+        long Valor(int h) => porHora.TryGetValue(h, out var v) ? v : 0;
+        var melhor = Enumerable.Range(0, 23).Select(h => (Hora: h, Valor: Valor(h) + Valor(h + 1)))
+            .OrderByDescending(x => x.Valor).ThenBy(x => x.Hora).First();
+        var parte = melhor.Valor / (decimal)total;
+        if (parte < ParticipacaoMinima) return null;
+        return new Sugestao(IdFixo, "Seu melhor horário",
+            $"Nas últimas 8 semanas, das {melhor.Hora}h às {melhor.Hora + 2}h concentrou {TextoConsultor.Pct(parte)} do valor vendido. Vale ter a equipe completa nessa faixa.",
+            GravidadeSugestao.Informacao, AreaConsultor.Vendas, "Ver o desempenho de vendas")
         { Destino = DestinoConsultor.Desempenho };
     }
 }

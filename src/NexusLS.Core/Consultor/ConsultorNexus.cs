@@ -121,7 +121,7 @@ public sealed class ConsultorNexus
             var inicio = hoje.AddDays(-56);
             var vendas = await db.Vendas.AsNoTracking()
                 .Where(v => !v.Cancelada && v.DataHora >= inicio && v.DataHora < hoje)
-                .Select(v => new { v.DataHora, v.TotalCentavos, v.FormaPagamento })
+                .Select(v => new { v.DataHora, v.TotalCentavos, v.FormaPagamento, v.SubtotalCentavos, v.DescontoCentavos })
                 .ToListAsync(ct).ConfigureAwait(false);
             var porDia = Enumerable.Range(0, 56).Select(i => inicio.AddDays(i)).Select(dia =>
             {
@@ -134,7 +134,30 @@ public sealed class ConsultorNexus
             var primeira = await db.Vendas.AsNoTracking().Where(v => !v.Cancelada).OrderBy(v => v.DataHora)
                 .Select(v => (DateTime?)v.DataHora).FirstOrDefaultAsync(ct).ConfigureAwait(false);
             var clientes = await db.Clientes.AsNoTracking().Where(c => c.Ativo && c.DataNascimento != null).ToListAsync(ct).ConfigureAwait(false);
-            dados = dados with { PrimeiraVenda = primeira, VendasPorDia = porDia, Formas = formas };
+            var horarios = vendas.GroupBy(v => v.DataHora.Hour).OrderBy(g => g.Key)
+                .Select(g => new VendasPorHora(g.Key, g.Count(), g.Sum(v => v.TotalCentavos))).ToList();
+            var dos30 = vendas.Where(v => v.DataHora >= ini30).ToList();
+            var descontos = new DescontosDoPeriodo(dos30.Count, dos30.Sum(v => v.SubtotalCentavos), dos30.Sum(v => v.DescontoCentavos));
+            var itens = await (from i in db.ItensVenda.AsNoTracking()
+                               join v in db.Vendas.AsNoTracking() on i.VendaId equals v.Id
+                               where !v.Cancelada && i.Quantidade > 0 && v.DataHora >= ini30 && v.DataHora < hoje
+                               select new { i.TotalCentavos, i.Quantidade, i.CustoUnitarioCentavos }).ToListAsync(ct).ConfigureAwait(false);
+            var comCusto = itens.Where(i => i.CustoUnitarioCentavos is > 0).ToList();
+            var margem = new MargemDoPeriodo(comCusto.Sum(i => i.TotalCentavos), comCusto.Sum(i => i.CustoUnitarioCentavos!.Value * i.Quantidade),
+                comCusto.Count, itens.Count - comCusto.Count);
+            // Clientes sumidos: uma agregação no banco (compras, última e total por cliente).
+            var limiteSumido = hoje.AddDays(-RegraClientesSumidos.DiasSumido);
+            var porCliente = (await db.Vendas.AsNoTracking().Where(v => !v.Cancelada && v.ClienteId != null)
+                .Select(v => new { ClienteId = v.ClienteId!.Value, v.DataHora, v.TotalCentavos })
+                .ToListAsync(ct).ConfigureAwait(false))
+                .GroupBy(v => v.ClienteId)
+                .Select(g => new { ClienteId = g.Key, Compras = g.Count(), Ultima = g.Max(v => v.DataHora), Total = g.Sum(v => v.TotalCentavos) })
+                .Where(x => x.Compras >= RegraClientesSumidos.ComprasMinimas && x.Ultima < limiteSumido).ToList();
+            var ids = porCliente.Select(x => x.ClienteId).ToList();
+            var nomes = await db.Clientes.AsNoTracking().Where(c => c.Ativo && ids.Contains(c.Id)).Select(c => new { c.Id, c.Nome }).ToListAsync(ct).ConfigureAwait(false);
+            var sumidos = (from x in porCliente join c in nomes on x.ClienteId equals c.Id orderby x.Total descending
+                           select new ClienteSumido(c.Id, c.Nome, x.Ultima, x.Compras, x.Total)).Take(20).ToList();
+            dados = dados with { PrimeiraVenda = primeira, VendasPorDia = porDia, Formas = formas, Horarios = horarios, Descontos = descontos, Margem = margem, ClientesSumidos = sumidos };
             dados = dados with { Aniversariantes = AvisosAoAbrir.AniversariantesProximos(clientes, hoje) };
         }
 

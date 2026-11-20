@@ -434,7 +434,7 @@ public sealed class RegrasConsultorTests
     public void Todas_as_regras_tem_id_unico_e_nenhuma_gera_cartao_sem_dados()
     {
         var regras = RegrasDoConsultor.Padrao();
-        Assert.Equal(10, regras.Count);
+        Assert.Equal(14, regras.Count);
         Assert.Equal(regras.Count, regras.Select(r => r.Id).Distinct().Count());
         Assert.All(regras, r => Assert.Null(r.Avaliar(Dados())));
     }
