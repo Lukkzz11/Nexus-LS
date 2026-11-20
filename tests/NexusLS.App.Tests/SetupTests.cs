@@ -15,6 +15,17 @@ public class SetupTests
         Assert.EndsWith("Nexus", OpcoesSetup.Ler([]).Pasta);
     }
 
+    [Fact]
+    public void Loja_online_e_opcional_e_so_entra_com_com_loja()
+    {
+        var padrao = new Instalador(OpcoesSetup.Ler([])).ObterProgramasSelecionados();
+        Assert.DoesNotContain("NexusLojaOnline.exe", padrao);
+        Assert.Contains("NexusBarTender.exe", padrao);
+
+        var comLoja = new Instalador(OpcoesSetup.Ler(["--com-loja"])).ObterProgramasSelecionados();
+        Assert.Contains("NexusLojaOnline.exe", comLoja);
+    }
+
     [Theory]
     [InlineData("lifesurf-principal", "lifesurf-principal")]
     [InlineData("a\",\"x\":\"b", null)]

@@ -174,7 +174,7 @@ public partial class JanelaSetup : Window
                 BtnAvancar.Content = "Instalar Agora";
                 BtnAvancar.Background = new SolidColorBrush(Color.FromRgb(0x16, 0xA3, 0x4A));
                 BtnAvancar.BorderBrush = new SolidColorBrush(Color.FromRgb(0x16, 0xA3, 0x4A));
-                BtnAvancar.IsEnabled = ChkNexus.IsChecked == true || ChkBarTender.IsChecked == true || ChkAtualizador.IsChecked == true;
+                BtnAvancar.IsEnabled = ChkNexus.IsChecked == true || ChkBarTender.IsChecked == true || ChkLojaOnline.IsChecked == true || ChkAtualizador.IsChecked == true;
                 break;
         }
     }
@@ -383,10 +383,11 @@ public partial class JanelaSetup : Window
         {
             _op.InstalarNexusLS = ChkNexus.IsChecked == true;
             _op.InstalarBarTender = ChkBarTender.IsChecked == true;
+            _op.InstalarLojaOnline = ChkLojaOnline.IsChecked == true;
             _op.InstalarAtualizador = ChkAtualizador.IsChecked == true;
             _op.CriarAtalhosDesktop = ChkAtalhos.IsChecked == true;
 
-            if (!_op.InstalarNexusLS && !_op.InstalarBarTender && !_op.InstalarAtualizador)
+            if (!_op.InstalarNexusLS && !_op.InstalarBarTender && !_op.InstalarLojaOnline && !_op.InstalarAtualizador)
             {
                 JanelaDialogo.Mostrar("Aviso de Seleção", "Selecione pelo menos um módulo para prosseguir com a instalação.", TipoDialogo.Aviso, this);
                 return;

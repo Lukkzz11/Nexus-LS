@@ -26,6 +26,8 @@ public sealed class OpcoesSetup
     public bool InstalarNexusLS { get; set; } = true;
     public bool InstalarBarTender { get; set; } = true;
     public bool InstalarAtualizador { get; set; } = true;
+    /// <summary>Loja Online (catálogo e site) é opcional: só entra se a loja marcar ou usar --com-loja.</summary>
+    public bool InstalarLojaOnline { get; set; }
     public bool CriarAtalhosDesktop { get; set; } = true;
 
     public OpcoesSetup(bool silencioso = false, string? empresa = null, string? pasta = null, bool desinstalar = false)
@@ -48,7 +50,8 @@ public sealed class OpcoesSetup
             else if (t.StartsWith("--pasta=", StringComparison.OrdinalIgnoreCase)) op.Pasta = t["--pasta=".Length..].Trim('"');
             else if (t.StartsWith("--chave=", StringComparison.OrdinalIgnoreCase)) op.ChaveLicenca = t["--chave=".Length..].Trim('"').ToUpperInvariant();
             else if (t.Equals("--sem-bartender", StringComparison.OrdinalIgnoreCase)) op.InstalarBarTender = false;
-            else if (t.Equals("--sem-nexus", StringComparison.OrdinalIgnoreCase)) op.InstalarNexusLS = false;
+            else if (t.Equals("--com-loja", StringComparison.OrdinalIgnoreCase)) op.InstalarLojaOnline = true;
+            else if (t.Equals("--sem-nexus",StringComparison.OrdinalIgnoreCase)) op.InstalarNexusLS = false;
             else if (t.Equals("--sem-atualizador", StringComparison.OrdinalIgnoreCase)) op.InstalarAtualizador = false;
         }
         return op;
@@ -92,6 +95,7 @@ public sealed class Instalador
         var lista = new List<string>();
         if (_op.InstalarNexusLS) lista.Add("NexusLS.exe");
         if (_op.InstalarBarTender) lista.Add("NexusBarTender.exe");
+        if (_op.InstalarLojaOnline) lista.Add("NexusLojaOnline.exe");
         if (_op.InstalarAtualizador) lista.Add("atualizador.exe");
         return lista;
     }
@@ -256,6 +260,7 @@ public sealed class Instalador
         {
             ["NexusLS.exe"] = "Nexus LS",
             ["NexusBarTender.exe"] = "Nexus BarTender",
+            ["NexusLojaOnline.exe"] = "Nexus Loja Online",
             ["atualizador.exe"] = "Nexus Atualizador"
         };
 
@@ -291,10 +296,10 @@ public sealed class Instalador
     public static string DesinstaladorPs1(string pasta) =>
         "$ErrorActionPreference = 'SilentlyContinue'\n" +
         "$pasta = '" + pasta.Replace("'", "''") + "'\n" +
-        "Get-Process NexusLS, atualizador, NexusBarTender | Stop-Process -Force\n" +
+        "Get-Process NexusLS, atualizador, NexusBarTender, NexusLojaOnline | Stop-Process -Force\n" +
         "$menu = Join-Path ([Environment]::GetFolderPath('Programs')) 'Nexus'\n" +
         "$desktop = [Environment]::GetFolderPath('DesktopDirectory')\n" +
-        "foreach ($n in 'Nexus LS','Nexus BarTender','Nexus Atualizador','Nexus','Nexus Etiquetas') { Remove-Item (Join-Path $desktop \"$n.lnk\") -Force }\n" +
+        "foreach ($n in 'Nexus LS','Nexus BarTender','Nexus Loja Online','Nexus Atualizador','Nexus','Nexus Etiquetas') { Remove-Item (Join-Path $desktop \"$n.lnk\") -Force }\n" +
         "Remove-Item $menu -Recurse -Force\n" +
         "Remove-Item 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Nexus' -Recurse -Force\n" +
         "Start-Sleep 1\n" +

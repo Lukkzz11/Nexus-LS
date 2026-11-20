@@ -385,6 +385,21 @@
                             </Grid>
                         </Border>
 
+                        <!-- Módulo Loja Online (opcional) -->
+                        <Border Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="16,12" Margin="0,0,0,10">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <CheckBox x:Name="ChkLojaOnline" IsChecked="False" VerticalAlignment="Center" Margin="0,0,12,0" Checked="ChkApp_Changed" Unchecked="ChkApp_Changed" />
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="Nexus Loja Online (Catálogo e Site da Loja) — opcional" FontSize="13" FontWeight="Bold" Foreground="#0F172A" />
+                                    <TextBlock Text="Vitrine online, filtros por tamanho e preço e pedidos por WhatsApp, usando os produtos do Nexus LS." FontSize="11" Foreground="#64748B" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
                         <!-- Módulo Atualizador Hub -->
                         <Border Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="16,12" Margin="0,0,0,16">
                             <Grid>

@@ -417,6 +417,7 @@ public partial class MainWindow : Window
             var resBt = await _atualizadorBarTender.VerificarAsync(exeBt);
 
             AtualizarUiAposChecagemGit(resNexus, resBt);
+            var linhaLoja = await AtualizarLojaOnlineSeInstaladaAsync();
 
             bool precisaNexus = resNexus.Estado == EstadoVerificacao.Disponivel && resNexus.Nova != null;
             bool precisaBt = resBt.Estado == EstadoVerificacao.Disponivel && resBt.Nova != null;
@@ -428,7 +429,8 @@ public partial class MainWindow : Window
                     "Sistemas Atualizados",
                     $"Todos os aplicativos do Nexus já estão na versão mais recente oficial (v{resNexus.Atual}) sincronizada com a nuvem!\n\n" +
                     $"• Nexus LS: Sincronizado e pronto\n" +
-                    $"• Nexus BarTender: Sincronizado e pronto\n\n" +
+                    $"• Nexus BarTender: Sincronizado e pronto\n" +
+                    (linhaLoja is null ? "" : linhaLoja + "\n") + "\n" +
                     "O programa está pronto e nenhuma atualização é necessária.",
                     TipoDialogo.Sucesso,
                     this);
@@ -440,6 +442,7 @@ public partial class MainWindow : Window
                 $"Uma nova versão oficial foi encontrada na nuvem:\n\n" +
                 (precisaNexus ? $"• Nexus LS: nova versão v{resNexus.Nova!.Versao}\n" : "• Nexus LS: Atualizado\n") +
                 (precisaBt ? $"• Nexus BarTender: nova versão v{resBt.Nova!.Versao}\n" : "• Nexus BarTender: Atualizado\n") +
+                (linhaLoja is null ? "" : linhaLoja + "\n") +
                 "\nDeseja baixar e instalar a atualização agora?",
                 this,
                 textoConfirmar: "Atualizar Agora",
