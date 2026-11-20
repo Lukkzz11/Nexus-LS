@@ -313,6 +313,10 @@
                                 </StackPanel>
                             </Button>
 
+                            <Button Command="{Binding DesfazerPadronizacaoCommand}" Style="{StaticResource BotaoSecundario}" Padding="10,7" Margin="0,0,12,0"
+                                    Content="Desfazer padronização" ToolTip="Volta as etiquetas como estavam antes da última padronização"
+                                    Visibility="{Binding PodeDesfazerPadronizacao, Converter={StaticResource BoolParaVisibilidadeConverter}}" />
+
                             <Border Style="{StaticResource PillContador}" Background="{StaticResource CorCabecalho}" BorderBrush="{StaticResource CorBorda}" BorderThickness="1">
                                 <TextBlock Text="{Binding TotalProdutos, StringFormat='{}Total: {0}'}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource CorTexto}" />
                             </Border>

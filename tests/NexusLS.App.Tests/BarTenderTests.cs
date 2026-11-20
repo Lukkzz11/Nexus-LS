@@ -780,7 +780,9 @@ public class BarTenderTests : IDisposable
                     PrecoVendaCentavos = 6000,
                     Tamanhos = new List<ProdutoTamanho>
                     {
-                        new() { Tamanho = "Sem tamanho", Ordem = 0, Estoque = 0 }
+                        new() { Tamanho = "P", Ordem = 1, Estoque = 0 },
+                        new() { Tamanho = "M", Ordem = 2, Estoque = 0 },
+                        new() { Tamanho = "G", Ordem = 3, Estoque = 0 }
                     }
                 }
             );

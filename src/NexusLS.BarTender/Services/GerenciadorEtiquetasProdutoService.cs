@@ -94,6 +94,55 @@ public static class GerenciadorEtiquetasProdutoService
     /// <summary>
     /// Padroniza a etiqueta de vários produtos de uma só vez (em uma única transação no SQLite).
     /// </summary>
+    private sealed record LinhaAnterior(int ProdutoId, bool Existia, string Nome, double LarguraMm, double AlturaMm, string Json);
+
+    private static List<LinhaAnterior>? _ultimoLote;
+
+    /// <summary>Há uma padronização em lote que ainda pode ser desfeita.</summary>
+    public static bool PodeDesfazerLote => _ultimoLote is { Count: > 0 };
+
+    /// <summary>Volta as etiquetas como estavam antes da última padronização em lote.</summary>
+    public static int DesfazerUltimoLote()
+    {
+        var antes = _ultimoLote;
+        var banco = Banco;
+        if (antes is null || antes.Count == 0 || banco is null || !banco.BancoExiste()) return 0;
+        try
+        {
+            using var db = banco.CriarContexto();
+            var ids = antes.Select(a => a.ProdutoId).ToList();
+            var atuais = db.EtiquetasProduto.Where(e => ids.Contains(e.ProdutoId)).ToDictionary(e => e.ProdutoId);
+            foreach (var a in antes)
+            {
+                atuais.TryGetValue(a.ProdutoId, out var linha);
+                if (!a.Existia)
+                {
+                    if (linha is not null) db.EtiquetasProduto.Remove(linha);
+                    continue;
+                }
+                if (linha is null)
+                {
+                    linha = new EtiquetaProduto { ProdutoId = a.ProdutoId };
+                    db.EtiquetasProduto.Add(linha);
+                }
+                linha.Nome = a.Nome;
+                linha.LarguraMm = a.LarguraMm;
+                linha.AlturaMm = a.AlturaMm;
+                linha.Json = a.Json;
+                linha.AtualizadoEm = DateTime.UtcNow;
+            }
+            db.SaveChanges();
+            Invalidar();
+            _ultimoLote = null;
+            return antes.Count;
+        }
+        catch (Exception ex)
+        {
+            App.Log($"DesfazerUltimoLote falhou: {ex.Message}");
+            return 0;
+        }
+    }
+
     public static int SalvarEtiquetaEmLote(IEnumerable<int> produtoIds, ModeloEtiquetaDesign modelo)
     {
         var ids = produtoIds?.Distinct().Where(id => id > 0).ToList() ?? new List<int>();
@@ -114,6 +163,10 @@ public static class GerenciadorEtiquetasProdutoService
                     var existentes = db.EtiquetasProduto
                         .Where(e => ids.Contains(e.ProdutoId))
                         .ToDictionary(e => e.ProdutoId);
+
+                    _ultimoLote = ids.Select(id => existentes.TryGetValue(id, out var e0)
+                        ? new LinhaAnterior(id, true, e0.Nome, e0.LarguraMm, e0.AlturaMm, e0.Json)
+                        : new LinhaAnterior(id, false, "", 0, 0, "")).ToList();
 
                     foreach (var id in ids)
                     {

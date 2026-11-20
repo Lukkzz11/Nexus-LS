@@ -106,17 +106,12 @@ public class BancoDadosService
             return new List<Produto>();
 
         await using var db = CriarContexto();
-        var lista = await db.Produtos
+        return await db.Produtos
             .AsNoTracking()
             .Include(p => p.Tamanhos)
             .Where(p => p.Ativo)
             .OrderBy(p => p.Nome)
             .ToListAsync();
-
-        foreach (var p in lista)
-            NexusLS.Core.Etiquetas.SelecaoEtiquetas.GarantirGradeDoModelo(p);
-
-        return lista;
     }
 
     public async Task<ConfiguracaoLoja?> ObterConfiguracaoLojaAsync()

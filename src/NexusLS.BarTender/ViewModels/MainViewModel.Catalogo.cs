@@ -39,7 +39,30 @@ public partial class MainViewModel
         var modelo = vm.ObterModeloPadronizado();
         if (modelo is null) return;
 
+        var alvo = vm.AplicarApenasFiltrados ? filtrados : todos.Count;
+        var temPropria = TodosProdutos.Count(p => GerenciadorEtiquetasProdutoService.TemEtiquetaPersonalizada(p.Id));
+        if (!_dialogo.Confirmar(
+                $"Vai aplicar o modelo \"{modelo.Nome}\" em até {alvo} produto(s), substituindo etiquetas próprias já existentes ({temPropria} no catálogo).\n\n" +
+                "Depois você pode usar \"Desfazer padronização\" para voltar como estava.",
+                "Padronizar etiquetas", "Padronizar", "Cancelar"))
+            return;
+
         PadronizarEtiquetasComModelo(modelo, vm.AplicarApenasFiltrados);
+        OnPropertyChanged(nameof(PodeDesfazerPadronizacao));
+    }
+
+    public bool PodeDesfazerPadronizacao => GerenciadorEtiquetasProdutoService.PodeDesfazerLote;
+
+    [RelayCommand]
+    public void DesfazerPadronizacao()
+    {
+        var n = GerenciadorEtiquetasProdutoService.DesfazerUltimoLote();
+        foreach (var item in TodosProdutos) item.AtualizarInfoEtiqueta();
+        ProdutosView.Refresh();
+        AtualizarMiniaturasFila();
+        OnPropertyChanged(nameof(PodeDesfazerPadronizacao));
+        if (n > 0) _dialogo.Sucesso($"Padronização desfeita em {n} produto(s).");
+        else _dialogo.Informar("Não há padronização para desfazer.");
     }
 
     /// <summary>

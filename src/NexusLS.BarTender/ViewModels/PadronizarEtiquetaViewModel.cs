@@ -166,7 +166,6 @@ public partial class PadronizarEtiquetaViewModel : ObservableObject
 
     private void CarregarTamanhosAmostra(Produto produto)
     {
-        SelecaoEtiquetas.GarantirGradeDoModelo(produto);
         TamanhosAmostra.Clear();
 
         var reais = (produto.Tamanhos ?? new List<ProdutoTamanho>())

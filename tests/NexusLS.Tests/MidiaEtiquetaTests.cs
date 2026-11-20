@@ -224,52 +224,16 @@ public class MidiaEtiquetaTests
     }
 
     [Fact]
-    public void Produto_de_vestuario_com_apenas_um_tamanho_ou_sem_tamanho_completa_a_grade_do_modelo()
+    public void Produto_com_um_tamanho_nao_ganha_tamanhos_inventados()
     {
-        var bermudaSo42 = new Produto
+        var bermuda = new Produto
         {
-            Id = 45,
-            Nome = "BERMUDA CARGO",
-            Referencia = "1402",
-            Categoria = "Bermuda",
-            PrecoVendaCentavos = 7000,
-            Tamanhos = new List<ProdutoTamanho>
-            {
-                new() { Tamanho = "42", Ordem = 1, Estoque = 0 }
-            }
+            Id = 45, Nome = "BERMUDA CARGO", Referencia = "1402", Categoria = "Bermuda", PrecoVendaCentavos = 7000,
+            Tamanhos = new List<ProdutoTamanho> { new() { Tamanho = "42", Ordem = 1, Estoque = 0 } }
         };
 
-        var selecaoBermuda = SelecaoEtiquetas.DoProduto(bermudaSo42);
-        Assert.Equal(new[] { "42", "44", "46", "48", "50" }, selecaoBermuda.Linhas.Select(l => l.Tamanho));
-
-        var camisaSemGradeNoBanco = new Produto
-        {
-            Id = 62,
-            Nome = "CAMISA GOLA POLO",
-            Referencia = "1202",
-            Categoria = "Camisa Gola Polo",
-            PrecoVendaCentavos = 6000,
-            Tamanhos = new List<ProdutoTamanho>
-            {
-                new() { Tamanho = "Sem tamanho", Ordem = 0, Estoque = 0 }
-            }
-        };
-
-        var selecaoCamisa = SelecaoEtiquetas.DoProduto(camisaSemGradeNoBanco, new Dictionary<string, int>
-        {
-            ["P"] = 5,
-            ["M"] = 8
-        });
-
-        Assert.Contains(selecaoCamisa.Linhas, l => l.Tamanho == "P" && l.Quantidade == 5);
-        Assert.Contains(selecaoCamisa.Linhas, l => l.Tamanho == "M" && l.Quantidade == 8);
-        Assert.Contains(selecaoCamisa.Linhas, l => l.Tamanho == "G");
-        Assert.Contains(selecaoCamisa.Linhas, l => l.Tamanho == "GG");
-        Assert.Contains(selecaoCamisa.Linhas, l => l.Tamanho == "EXG");
-
-        var itensCamisa = selecaoCamisa.ParaItens();
-        Assert.Equal(2, itensCamisa.Count);
-        Assert.Equal("12021", itensCamisa[0].CodigoBarras);
-        Assert.Equal("12022", itensCamisa[1].CodigoBarras);
+        var selecao = SelecaoEtiquetas.DoProduto(bermuda);
+        Assert.Equal(new[] { "42" }, selecao.Linhas.Select(l => l.Tamanho));
+        Assert.Single(bermuda.Tamanhos);
     }
 }
