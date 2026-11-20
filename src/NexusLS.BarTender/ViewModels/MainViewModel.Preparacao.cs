@@ -117,7 +117,8 @@ public partial class MainViewModel
     {
         if (selecao == null) return;
 
-        var modelo = ModeloDoProduto(selecao.Produto);
+        // Tipo escolhido no modal (tag, composição, preço...) vale só para esta impressão.
+        var modelo = selecao.TipoEtiquetaSelecionado.Fabrica?.Invoke() ?? ModeloDoProduto(selecao.Produto);
         _selecoesPorProduto[selecao.Produto.Id] = selecao;
 
         PreparacaoVM.DefinirImpressoras(

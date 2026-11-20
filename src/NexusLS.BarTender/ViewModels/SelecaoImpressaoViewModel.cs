@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using NexusLS.BarTender.Models.Designer;
 using NexusLS.BarTender.Services;
 using NexusLS.Core.Etiquetas;
 using NexusLS.Core.Models;
@@ -128,12 +129,58 @@ public partial class LinhaSelecaoViewModel : ObservableObject
 }
 
 /// <summary>
+/// Tipo de etiqueta que o operador quer imprimir agora (tag, composição, preço...). A opção "vinculada"
+/// (sem fábrica) usa a etiqueta do produto/Estúdio; as outras geram um modelo pronto só para esta impressão.
+/// </summary>
+public sealed record OpcaoTipoEtiqueta(string Nome, string Descricao, Func<ModeloEtiquetaDesign>? Fabrica)
+{
+    public bool EhVinculada => Fabrica is null;
+
+    public static readonly OpcaoTipoEtiqueta Vinculada = new(
+        "Etiqueta vinculada ao produto",
+        "Usa a etiqueta salva do produto (ou o modelo atual do Estúdio).", null);
+
+    public static readonly OpcaoTipoEtiqueta TagVestuario = new(
+        "Tag de roupa · 35 × 60 mm",
+        "Marca no topo, tamanho grande, REF e código de barras.", ModeloEtiquetaDesign.CriarTagVestuarioRefTamanho35x60);
+
+    public static readonly OpcaoTipoEtiqueta ComposicaoVertical = new(
+        "Composição têxtil · 40 × 70 mm",
+        "Composição dos tecidos, CNPJ, tamanho e ícones de lavagem.", ModeloEtiquetaDesign.CriarComposicaoTextilVertical40x70);
+
+    public static readonly OpcaoTipoEtiqueta ComposicaoCompacta = new(
+        "Composição compacta · 35 × 50 mm",
+        "Composição e lavagem resumida com código de barras.", ModeloEtiquetaDesign.CriarComposicaoTextilCompacta35x50);
+
+    public static readonly OpcaoTipoEtiqueta Vestuario = new(
+        "Vestuário completa · 60 × 40 mm",
+        "Logo, composição, tamanho, preço de varejo e atacado.", ModeloEtiquetaDesign.CriarVestuario60x40);
+
+    public static readonly OpcaoTipoEtiqueta PrecoGondola = new(
+        "Preço de gôndola · 50 × 30 mm",
+        "Nome, referência, tamanho, preço em destaque e código de barras.", ModeloEtiquetaDesign.CriarPadrao50x30);
+
+    public static readonly OpcaoTipoEtiqueta Promocao = new(
+        "Promoção DE / POR · 50 × 30 mm",
+        "Preço 'DE' riscado e preço 'POR' em destaque.", ModeloEtiquetaDesign.CriarPromocaoDePor50x30);
+
+    public static IReadOnlyList<OpcaoTipoEtiqueta> ListaPadrao { get; } =
+        new[] { Vinculada, TagVestuario, ComposicaoVertical, ComposicaoCompacta, Vestuario, PrecoGondola, Promocao };
+}
+
+/// <summary>
 /// Seleção de um produto para impressão: tamanhos, quantidades e os dados que o modal e a
 /// preparação mostram. Fica viva enquanto o operador navega, para não perder o que já digitou.
 /// </summary>
 public partial class SelecaoImpressaoViewModel : ObservableObject
 {
     public Produto Produto { get; }
+
+    public IReadOnlyList<OpcaoTipoEtiqueta> TiposEtiqueta => OpcaoTipoEtiqueta.ListaPadrao;
+
+    /// <summary>Tipo escolhido para esta impressão. Não altera o cadastro nem a etiqueta salva do produto.</summary>
+    [ObservableProperty]
+    private OpcaoTipoEtiqueta _tipoEtiquetaSelecionado = OpcaoTipoEtiqueta.Vinculada;
 
     public ObservableCollection<LinhaSelecaoViewModel> Linhas { get; } = new();
 

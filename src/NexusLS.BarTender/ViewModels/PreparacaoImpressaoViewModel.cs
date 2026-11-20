@@ -231,7 +231,11 @@ public partial class PreparacaoImpressaoViewModel : ObservableObject
     /// <summary>Recebe a seleção do modal (a mesma instância é mantida para não perder as quantidades).</summary>
     public void Carregar(SelecaoImpressaoViewModel selecao, ModeloEtiquetaDesign modelo, string nomeLoja)
     {
-        var primeiraCarga = !ReferenceEquals(Selecao, selecao);
+        // Trocar o tipo de etiqueta no modal muda as medidas do modelo: a mídia sugerida acompanha.
+        var primeiraCarga = !ReferenceEquals(Selecao, selecao) ||
+            ModeloOriginal is null ||
+            Math.Abs(ModeloOriginal.LarguraMm - modelo.LarguraMm) > 0.05 ||
+            Math.Abs(ModeloOriginal.AlturaMm - modelo.AlturaMm) > 0.05;
 
         Selecao = selecao;
         Produto = selecao.Produto;

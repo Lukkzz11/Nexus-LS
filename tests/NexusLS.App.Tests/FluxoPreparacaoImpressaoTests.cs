@@ -166,6 +166,40 @@ public class FluxoPreparacaoImpressaoTests : IDisposable
     }
 
     [Fact]
+    public void Tipo_de_etiqueta_escolhido_no_modal_troca_o_modelo_so_para_esta_impressao()
+    {
+        var vm = CriarMainViewModel();
+        vm.AbrirModalProduto = selecao =>
+        {
+            Assert.Same(OpcaoTipoEtiqueta.Vinculada, selecao.TipoEtiquetaSelecionado);
+            Assert.Contains(OpcaoTipoEtiqueta.TagVestuario, selecao.TiposEtiqueta);
+            Assert.Contains(OpcaoTipoEtiqueta.ComposicaoVertical, selecao.TiposEtiqueta);
+            selecao.DefinirQuantidade("42", 5);
+            selecao.TipoEtiquetaSelecionado = OpcaoTipoEtiqueta.ComposicaoVertical;
+            return AcaoProdutoCatalogo.Impressao;
+        };
+
+        vm.AbrirProdutoDoCatalogo(new ProdutoItemViewModel(BermudaCargo()));
+
+        var modelo = vm.PreparacaoVM.ModeloOriginal!;
+        Assert.Contains("Composição", modelo.Nome);
+        Assert.Equal(40, modelo.LarguraMm);
+        Assert.Equal(70, modelo.AlturaMm);
+        // A mídia sugerida acompanha as medidas do tipo escolhido.
+        Assert.Equal(40, vm.PreparacaoVM.LarguraEtiquetaMm);
+        Assert.Equal(70, vm.PreparacaoVM.AlturaEtiquetaMm);
+
+        // Voltar para a etiqueta vinculada não deixa nada do tipo anterior.
+        vm.AbrirModalProduto = selecao =>
+        {
+            selecao.TipoEtiquetaSelecionado = OpcaoTipoEtiqueta.Vinculada;
+            return AcaoProdutoCatalogo.Impressao;
+        };
+        vm.AbrirProdutoDoCatalogo(new ProdutoItemViewModel(BermudaCargo()));
+        Assert.DoesNotContain("Composição", vm.PreparacaoVM.ModeloOriginal!.Nome);
+    }
+
+    [Fact]
     public void Voltar_ao_catalogo_e_reabrir_o_modal_nao_perde_as_quantidades()
     {
         var vm = CriarMainViewModel();

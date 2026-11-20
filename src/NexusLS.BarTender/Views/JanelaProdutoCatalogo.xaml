@@ -73,7 +73,8 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <StackPanel Grid.Column="0">
+                <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" Focusable="False">
+                <StackPanel>
                     <Border Style="{StaticResource Painel}" Padding="16" Margin="0,0,0,12">
                         <StackPanel>
                             <TextBlock Text="DADOS DO PRODUTO" FontSize="10.5" FontWeight="Bold"
@@ -141,6 +142,14 @@
                                        Foreground="{StaticResource CorTexto}" TextTrimming="CharacterEllipsis" />
                             <TextBlock Text="{Binding InfoEtiquetaDimensoes}" FontSize="11.5"
                                        Foreground="{StaticResource CorTextoSuave}" Margin="0,2,0,0" />
+
+                            <TextBlock Text="Imprimir como" FontSize="11" FontWeight="SemiBold"
+                                       Foreground="{StaticResource CorTextoSuave}" Margin="0,12,0,4" />
+                            <ComboBox x:Name="CmbTipoEtiqueta" ItemsSource="{Binding TiposEtiqueta}"
+                                      SelectedItem="{Binding TipoEtiquetaSelecionado, Mode=TwoWay}"
+                                      DisplayMemberPath="Nome" AutomationProperties.Name="Tipo de etiqueta desta impressão" />
+                            <TextBlock Text="{Binding TipoEtiquetaSelecionado.Descricao}" FontSize="11"
+                                       Foreground="{StaticResource CorTextoSuave}" TextWrapping="Wrap" Margin="0,5,0,0" />
                         </StackPanel>
                     </Border>
 
@@ -159,6 +168,7 @@
                         </Grid>
                     </Border>
                 </StackPanel>
+                </ScrollViewer>
 
                 <Border Grid.Column="2" Style="{StaticResource Painel}" Padding="18">
                     <Grid>
