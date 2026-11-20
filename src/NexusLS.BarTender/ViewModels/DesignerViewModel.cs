@@ -49,8 +49,13 @@ public partial class DesignerViewModel : ObservableObject
 
     public Action? SolicitarIrParaImpressao { get; set; }
 
+    public Action? SolicitarPadronizarEtiquetas { get; set; }
+
     [RelayCommand]
     public void IrParaImpressaoRapida() => SolicitarIrParaImpressao?.Invoke();
+
+    [RelayCommand]
+    public void AbrirPadronizarEtiqueta() => SolicitarPadronizarEtiquetas?.Invoke();
 
     partial void OnTamanhoParaTesteChanged(string value)
     {
@@ -618,20 +623,34 @@ public partial class DesignerViewModel : ObservableObject
     /// </summary>
     public void AplicarRegrasInteligentesDeGrade()
     {
-        if (Modelo?.Elementos == null) return;
+        if (PadronizarModeloParaGrade(Modelo, ProdutoAtual, TamanhosParaTesteDisponiveis))
+        {
+            ElementoPropriedadeAlterada?.Invoke(this, EventArgs.Empty);
+        }
+    }
 
-        var refProduto = ProdutoAtual?.Referencia?.Trim();
+    public static bool PadronizarModeloParaGrade(
+        ModeloEtiquetaDesign? modelo,
+        Produto? produtoReferencia = null,
+        IEnumerable<string>? tamanhosExtras = null)
+    {
+        if (modelo?.Elementos == null) return false;
+
+        var refProduto = produtoReferencia?.Referencia?.Trim();
         var tamanhosGrade = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        foreach (var t in TamanhosParaTesteDisponiveis)
+        if (tamanhosExtras != null)
         {
-            if (!string.IsNullOrWhiteSpace(t) && !string.Equals(t, Tamanhos.SemTamanho, StringComparison.OrdinalIgnoreCase))
-                tamanhosGrade.Add(t.Trim());
+            foreach (var t in tamanhosExtras)
+            {
+                if (!string.IsNullOrWhiteSpace(t) && !string.Equals(t, Tamanhos.SemTamanho, StringComparison.OrdinalIgnoreCase))
+                    tamanhosGrade.Add(t.Trim());
+            }
         }
 
-        if (ProdutoAtual?.Tamanhos != null)
+        if (produtoReferencia?.Tamanhos != null)
         {
-            foreach (var t in ProdutoAtual.Tamanhos)
+            foreach (var t in produtoReferencia.Tamanhos)
             {
                 if (!string.IsNullOrWhiteSpace(t.Tamanho) && !string.Equals(t.Tamanho.Trim(), Tamanhos.SemTamanho, StringComparison.OrdinalIgnoreCase))
                     tamanhosGrade.Add(t.Tamanho.Trim());
@@ -640,13 +659,13 @@ public partial class DesignerViewModel : ObservableObject
 
         var tamanhosPadraoVestuario = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            "PP", "P", "M", "G", "GG", "XG", "XXG", "EG", "EGG", "G1", "G2", "G3", "U", "UN",
-            "34", "36", "38", "40", "42", "44", "46", "48", "50", "52", "54", "56"
+            "PP", "P", "M", "G", "GG", "XG", "XXG", "EXG", "EG", "EGG", "G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "G10", "U", "UN",
+            "34", "36", "38", "40", "42", "44", "46", "48", "50", "52", "54", "56", "58", "60"
         };
 
         bool alterou = false;
 
-        foreach (var el in Modelo.Elementos)
+        foreach (var el in modelo.Elementos)
         {
             if (el.Tipo == TipoElemento.Texto)
             {
@@ -672,13 +691,32 @@ public partial class DesignerViewModel : ObservableObject
                         }
                         alterou = true;
                     }
+                    // Se é um número de 3 a 5 dígitos ao lado de "REF" (ex: "1402" salvo num modelo de outro produto) e não é tamanho
+                    else if (txt.Length is >= 3 and <= 6 && txt.All(char.IsLetterOrDigit) && !tamanhosPadraoVestuario.Contains(txt) &&
+                             modelo.Elementos.Any(o => o != el && o.Tipo == TipoElemento.Texto &&
+                                 (o.Texto?.Contains("REF", StringComparison.OrdinalIgnoreCase) == true) &&
+                                 Math.Abs(o.Y - el.Y) < 6.0))
+                    {
+                        el.Variavel = VariavelEtiqueta.Referencia;
+                        el.Texto = "{Ref}";
+                        alterou = true;
+                    }
+                    // Se o texto na base é o nome fixo do produto de origem, vincula ao NomeProduto
+                    else if (produtoReferencia != null &&
+                             !string.IsNullOrWhiteSpace(produtoReferencia.Nome) &&
+                             string.Equals(txt, produtoReferencia.Nome.Trim(), StringComparison.OrdinalIgnoreCase))
+                    {
+                        el.Variavel = VariavelEtiqueta.NomeProduto;
+                        el.Texto = "{Nome}";
+                        alterou = true;
+                    }
                 }
 
                 // Se é o elemento de Tamanho e a caixa ultrapassava a folha (ex: Largura 74.7 numa folha de 35mm), centraliza na folha
-                if (el.Variavel == VariavelEtiqueta.Tamanho && (el.Largura > Modelo.LarguraMm || el.X + el.Largura > Modelo.LarguraMm + 2.0))
+                if (el.Variavel == VariavelEtiqueta.Tamanho && (el.Largura > modelo.LarguraMm || el.X + el.Largura > modelo.LarguraMm + 2.0))
                 {
                     el.X = 2.0;
-                    el.Largura = Math.Max(10.0, Modelo.LarguraMm - 4.0);
+                    el.Largura = Math.Max(10.0, modelo.LarguraMm - 4.0);
                     el.Alinhamento = TextAlignment.Center;
                     alterou = true;
                 }
@@ -686,17 +724,14 @@ public partial class DesignerViewModel : ObservableObject
             else if (el.Tipo == TipoElemento.CodigoBarras && el.TipoCodigo != TipoSimboloCodigo.QrCode)
             {
                 // Garante que o código de barras dependa de Referência + Tamanho quando não for um código externo fixo
-                if (el.Variavel == VariavelEtiqueta.Nenhuma &&
-                    (string.IsNullOrWhiteSpace(el.ValorCodigo) ||
-                     el.ValorCodigo == "7891234567890" ||
-                     (!string.IsNullOrEmpty(refProduto) && string.Equals(el.ValorCodigo.Trim(), refProduto, StringComparison.OrdinalIgnoreCase))))
+                if (el.Variavel == VariavelEtiqueta.Nenhuma)
                 {
                     el.Variavel = VariavelEtiqueta.CodigoBarras;
                     el.ValorCodigo = null;
                     alterou = true;
                 }
 
-                if (!string.IsNullOrEmpty(refProduto) && el.TipoCodigo == TipoSimboloCodigo.Ean13 && refProduto.Length < 12)
+                if (el.TipoCodigo == TipoSimboloCodigo.Ean13 && (string.IsNullOrEmpty(refProduto) || refProduto.Length < 12))
                 {
                     el.TipoCodigo = TipoSimboloCodigo.Code128;
                     alterou = true;
@@ -704,10 +739,7 @@ public partial class DesignerViewModel : ObservableObject
             }
         }
 
-        if (alterou)
-        {
-            ElementoPropriedadeAlterada?.Invoke(this, EventArgs.Empty);
-        }
+        return alterou;
     }
 
     public void AtualizarPreview()

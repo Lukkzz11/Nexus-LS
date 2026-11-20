@@ -385,6 +385,53 @@ public class FluxoPreparacaoImpressaoTests : IDisposable
         Assert.Contains(_dialogos.Informes, i => i.Contains("cancelado", StringComparison.OrdinalIgnoreCase));
     }
 
+    [Fact]
+    public void Editar_quantidades_direto_na_preparacao_atualiza_totais_paginas_e_previa_sem_recriar_cartao()
+    {
+        var selecao = SelecaoBermuda(qtd42: 10, qtd44: 5);
+        var vm = new PreparacaoImpressaoViewModel(_dialogos, _impressora);
+        vm.Carregar(selecao, Modelo50x30(), "NEXUS LS");
+
+        Assert.Equal(15, vm.TotalEtiquetas);
+        Assert.Equal(2, vm.PreviaItens.Count);
+        var cartao42 = vm.PreviaItens.First(p => p.Tamanho == "42");
+
+        // Aumenta a quantidade do 42 direto pelo comando da linha vinculada ao cartão
+        cartao42.Linha!.AumentarCommand.Execute(null);
+
+        Assert.Equal(16, vm.TotalEtiquetas);
+        Assert.Equal(16, vm.PaginasNecessarias);
+        Assert.Same(cartao42, vm.PreviaItens.First(p => p.Tamanho == "42"));
+        Assert.Equal(11, cartao42.Quantidade);
+
+        // Adiciona quantidade em um terceiro tamanho (46) que estava zerado
+        var linha46 = selecao.Linhas.First(l => l.Tamanho == "46");
+        linha46.DefinirQuantidade(4);
+
+        Assert.Equal(20, vm.TotalEtiquetas);
+        Assert.Equal(3, vm.PreviaItens.Count);
+        Assert.Equal(3, vm.Conferencia.Count);
+        Assert.Contains("4 × 46", vm.OrdemImpressao);
+    }
+
+    [Fact]
+    public void Opcoes_visuais_de_formato_e_sensor_possuem_dimensoes_e_descricoes()
+    {
+        var vm = new PreparacaoImpressaoViewModel(_dialogos, _impressora);
+
+        Assert.All(vm.TiposMidia, t =>
+        {
+            Assert.False(string.IsNullOrWhiteSpace(t.NomeCurto));
+            Assert.False(string.IsNullOrWhiteSpace(t.Descricao));
+        });
+
+        Assert.All(vm.MidiasDisponiveis, m =>
+        {
+            Assert.False(string.IsNullOrWhiteSpace(m.Dimensoes));
+            Assert.False(string.IsNullOrWhiteSpace(m.Distribuicao));
+        });
+    }
+
     // ---------------------------------------------------------- auxiliares
 
     private sealed class ImpressoraDeEtiquetasFalsa : IImpressoraEtiquetas

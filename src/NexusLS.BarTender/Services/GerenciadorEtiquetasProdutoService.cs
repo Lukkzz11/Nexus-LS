@@ -91,6 +91,120 @@ public static class GerenciadorEtiquetasProdutoService
         }
     }
 
+    /// <summary>
+    /// Padroniza a etiqueta de vários produtos de uma só vez (em uma única transação no SQLite).
+    /// </summary>
+    public static int SalvarEtiquetaEmLote(IEnumerable<int> produtoIds, ModeloEtiquetaDesign modelo)
+    {
+        var ids = produtoIds?.Distinct().Where(id => id > 0).ToList() ?? new List<int>();
+        if (ids.Count == 0 || modelo is null) return 0;
+
+        try
+        {
+            var banco = Banco;
+            if (banco is not null && banco.BancoExiste())
+            {
+                try
+                {
+                    var json = JsonSerializer.Serialize(modelo, ModeloEtiquetaDesign.JsonOpts);
+                    var nome = string.IsNullOrWhiteSpace(modelo.Nome) ? "Personalizada" : modelo.Nome;
+                    var agora = DateTime.UtcNow;
+
+                    using var db = banco.CriarContexto();
+                    var existentes = db.EtiquetasProduto
+                        .Where(e => ids.Contains(e.ProdutoId))
+                        .ToDictionary(e => e.ProdutoId);
+
+                    foreach (var id in ids)
+                    {
+                        if (!existentes.TryGetValue(id, out var linha))
+                        {
+                            linha = new EtiquetaProduto { ProdutoId = id };
+                            db.EtiquetasProduto.Add(linha);
+                        }
+
+                        linha.Nome = nome;
+                        linha.LarguraMm = modelo.LarguraMm;
+                        linha.AlturaMm = modelo.AlturaMm;
+                        linha.Json = json;
+                        linha.AtualizadoEm = agora;
+                    }
+
+                    db.SaveChanges();
+                    Invalidar();
+                    return ids.Count;
+                }
+                catch (Exception ex)
+                {
+                    App.Log($"SalvarEtiquetaEmLote no banco falhou, usando arquivos: {ex.Message}");
+                }
+            }
+
+            var salvos = 0;
+            Directory.CreateDirectory(PastaEtiquetas);
+            foreach (var id in ids)
+            {
+                modelo.Salvar(ObterCaminhoArquivo(id));
+                salvos++;
+            }
+            Invalidar();
+            return salvos;
+        }
+        catch (Exception ex)
+        {
+            App.Log($"SalvarEtiquetaEmLote falhou: {ex.Message}");
+            return 0;
+        }
+    }
+
+    public sealed record ModeloPersonalizadoSalvo(
+        int ProdutoId,
+        string Titulo,
+        string Subtitulo,
+        ModeloEtiquetaDesign Modelo);
+
+    /// <summary>
+    /// Lista os modelos exclusivos diferentes já salvos pelo operador em produtos do catálogo,
+    /// para que ele possa escolhê-los na tela de Padronizar Etiqueta.
+    /// </summary>
+    public static IReadOnlyList<ModeloPersonalizadoSalvo> ListarModelosPersonalizadosSalvos(
+        IReadOnlyDictionary<int, Produto>? produtosPorId = null)
+    {
+        var resultado = new List<ModeloPersonalizadoSalvo>();
+        var assinaturas = new HashSet<string>(StringComparer.Ordinal);
+
+        foreach (var par in Indice().OrderByDescending(p => p.Key))
+        {
+            var modelo = CarregarEtiquetaProduto(par.Key);
+            if (modelo is null || modelo.Elementos.Count == 0) continue;
+
+            // Agrupa modelos visualmente idênticos para não repetir 70 vezes na lista
+            var resumoElementos = string.Join("|", modelo.Elementos.Select(e =>
+                $"{e.Tipo}:{e.Variavel}:{e.X:0.#}:{e.Y:0.#}:{e.Largura:0.#}:{e.Altura:0.#}:{e.TamanhoFonte:0.#}"));
+            var chave = $"{modelo.Nome}:{modelo.LarguraMm:0.#}x{modelo.AlturaMm:0.#}:{resumoElementos}";
+
+            if (!assinaturas.Add(chave)) continue;
+
+            string titulo;
+            string subtitulo;
+            if (produtosPorId is not null && produtosPorId.TryGetValue(par.Key, out var prod))
+            {
+                var refTxt = !string.IsNullOrWhiteSpace(prod.Referencia) ? $" (Ref. {prod.Referencia})" : "";
+                titulo = $"{modelo.Nome} — {prod.Nome}{refTxt}";
+                subtitulo = $"Modelo salvo por você · {modelo.LarguraMm:0.#} × {modelo.AlturaMm:0.#} mm";
+            }
+            else
+            {
+                titulo = $"{modelo.Nome} (Produto #{par.Key})";
+                subtitulo = $"Modelo salvo por você · {modelo.LarguraMm:0.#} × {modelo.AlturaMm:0.#} mm";
+            }
+
+            resultado.Add(new ModeloPersonalizadoSalvo(par.Key, titulo, subtitulo, modelo));
+        }
+
+        return resultado;
+    }
+
     public static bool RemoverEtiquetaProduto(int produtoId)
     {
         var removeu = false;

@@ -101,6 +101,14 @@ public sealed record PerfilMidia(
         ? $"{Nome} · etiqueta {LarguraEtiquetaMm:0.#} × {AlturaEtiquetaMm:0.#} mm · {DescreverSensor()}"
         : $"{Nome} · {EtiquetasPorPagina} etiqueta(s) por folha · {LarguraEtiquetaMm:0.#} × {AlturaEtiquetaMm:0.#} mm";
 
+    /// <summary>Medida da etiqueta, usada nos cartões de escolha de mídia.</summary>
+    public string Dimensoes => $"{LarguraEtiquetaMm:0.#} × {AlturaEtiquetaMm:0.#} mm";
+
+    /// <summary>Como as etiquetas se distribuem, em uma linha curta.</summary>
+    public string Distribuicao => EhRolo
+        ? Colunas > 1 ? $"{Colunas} colunas no rolo" : "1 etiqueta por vez"
+        : $"{EtiquetasPorPagina} por folha · {Colunas} × {Linhas}";
+
     public string DescreverSensor() => Tipo switch
     {
         TipoMidiaEtiqueta.RoloComGap => $"sensor de gap ({EspacoVerticalMm:0.#} mm entre etiquetas)",

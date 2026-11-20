@@ -168,12 +168,39 @@
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
-                        <StackPanel Grid.Row="0" Margin="0,0,0,12">
-                            <TextBlock Text="Tamanhos e quantidades" FontSize="16" FontWeight="Bold"
-                                       Foreground="{StaticResource CorTexto}" />
-                            <TextBlock Text="Informe quantas etiquetas deseja de cada tamanho. Todos os tamanhos aparecem, mesmo sem saldo: a etiqueta é de produção. Deixe em zero o que não vai imprimir."
-                                       Style="{StaticResource TextoApoio}" Margin="0,3,0,0" />
-                        </StackPanel>
+                        <Grid Grid.Row="0" Margin="0,0,0,12">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <StackPanel Grid.Row="0">
+                                <TextBlock Text="Tamanhos e quantidades" FontSize="16" FontWeight="Bold"
+                                           Foreground="{StaticResource CorTexto}" />
+                                <TextBlock Text="Clique no tamanho ou nos botões (+ / −) para informar a quantidade de cada tamanho. Deixe em zero o que não vai imprimir."
+                                           Style="{StaticResource TextoApoio}" Margin="0,3,0,0" />
+                            </StackPanel>
+
+                            <WrapPanel Grid.Row="1" Margin="0,8,0,0" VerticalAlignment="Center">
+                                <TextBlock Text="Completar grade:" FontSize="11" FontWeight="SemiBold"
+                                           Foreground="{StaticResource CorTextoSuave}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                <Button Content="42 ao 50" Command="{Binding AplicarGradeRapidaCommand}" CommandParameter="Bermuda"
+                                        Style="{StaticResource BotaoSecundario}" Padding="8,3" FontSize="11" Margin="0,0,5,0"
+                                        ToolTip="Exibir todos os tamanhos 42, 44, 46, 48 e 50" />
+                                <Button Content="38 ao 50" Command="{Binding AplicarGradeRapidaCommand}" CommandParameter="Numerica"
+                                        Style="{StaticResource BotaoSecundario}" Padding="8,3" FontSize="11" Margin="0,0,5,0"
+                                        ToolTip="Exibir todos os tamanhos 38 ao 50" />
+                                <Button Content="P ao EXG" Command="{Binding AplicarGradeRapidaCommand}" CommandParameter="Letras"
+                                        Style="{StaticResource BotaoSecundario}" Padding="8,3" FontSize="11" Margin="0,0,5,0"
+                                        ToolTip="Exibir todos os tamanhos P, M, G, GG e EXG" />
+                                <Button Content="G1 ao G6" Command="{Binding AplicarGradeRapidaCommand}" CommandParameter="ExtraLetras"
+                                        Style="{StaticResource BotaoSecundario}" Padding="8,3" FontSize="11" Margin="0,0,5,0"
+                                        ToolTip="Exibir tamanhos extras G1 ao G6" />
+                                <Button Content="52 ao 56" Command="{Binding AplicarGradeRapidaCommand}" CommandParameter="ExtraNumerica"
+                                        Style="{StaticResource BotaoSecundario}" Padding="8,3" FontSize="11"
+                                        ToolTip="Exibir tamanhos extras 52, 54 e 56" />
+                            </WrapPanel>
+                        </Grid>
 
                         <Border Grid.Row="1" BorderBrush="{StaticResource CorBorda}" BorderThickness="1"
                                 CornerRadius="{StaticResource RaioMedio}" Background="{StaticResource CorPainel}">
@@ -213,13 +240,15 @@
                                                             <ColumnDefinition Width="150" />
                                                         </Grid.ColumnDefinitions>
 
-                                                        <Border Grid.Column="0" Background="{StaticResource CorSelecaoSuave}"
+                                                        <Button Grid.Column="0" Command="{Binding AumentarCommand}"
+                                                                Style="{StaticResource BotaoBase}"
+                                                                Background="{StaticResource CorSelecaoSuave}"
                                                                 BorderBrush="{StaticResource CorSelecao}" BorderThickness="1"
-                                                                CornerRadius="{StaticResource RaioPequeno}" Padding="10,5"
-                                                                HorizontalAlignment="Left" VerticalAlignment="Center">
+                                                                Padding="10,5" HorizontalAlignment="Left" VerticalAlignment="Center"
+                                                                ToolTip="Clique para somar +1 neste tamanho">
                                                             <TextBlock Text="{Binding TamanhoExibicao}" FontSize="13"
                                                                        FontWeight="Bold" Foreground="{StaticResource CorPrimaria}" />
-                                                        </Border>
+                                                        </Button>
 
                                                         <TextBlock Grid.Column="1" Text="{Binding EstoqueTexto}"
                                                                    FontSize="12" Foreground="{StaticResource CorTextoSuave}"

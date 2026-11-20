@@ -301,8 +301,18 @@
                             <TextBlock Text="Selecione produtos para editar no Estúdio de Etiquetas, gerar códigos EAN-13 ou adicionar à fila. Dê dois cliques para informar as quantidades por tamanho." Style="{StaticResource TextoApoio}" Margin="0,2,0,0" />
                         </StackPanel>
 
-                        <!-- Badges de Status -->
+                        <!-- Badges de Status e Botão Padronizar Etiqueta -->
                         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button Command="{Binding AbrirPadronizarEtiquetaCommand}" Style="{StaticResource BotaoPrimario}"
+                                    Padding="14,7" Margin="0,0,12,0"
+                                    ToolTip="Escolher um modelo salvo ou feito por você e padronizar todas as etiquetas respeitando Tamanho, Referência e Código de Barras"
+                                    AutomationProperties.Name="Padronizar Etiqueta">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:SymbolIcon Symbol="Sparkle24" FontSize="15" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                    <TextBlock Text="Padronizar Etiqueta" FontWeight="Bold" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+
                             <Border Style="{StaticResource PillContador}" Background="{StaticResource CorCabecalho}" BorderBrush="{StaticResource CorBorda}" BorderThickness="1">
                                 <TextBlock Text="{Binding TotalProdutos, StringFormat='{}Total: {0}'}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource CorTexto}" />
                             </Border>
@@ -352,11 +362,11 @@
                                   EnableRowVirtualization="True"
                                   EnableColumnVirtualization="False"
                                   VirtualizingPanel.IsVirtualizing="True"
-                                  VirtualizingPanel.VirtualizationMode="Recycling"
+                                  VirtualizingPanel.VirtualizationMode="Standard"
                                   ScrollViewer.CanContentScroll="True"
                                   MouseDoubleClick="DataGrid_MouseDoubleClick">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="Código" Binding="{Binding CodigoInterno}" Width="90" IsReadOnly="True" />
+                                <DataGridTextColumn Header="Ref. / Código" Binding="{Binding CodigoExibicaoColuna}" Width="100" IsReadOnly="True" />
 
                                 <DataGridTemplateColumn Header="Produto" Width="3*" SortMemberPath="Nome">
                                     <DataGridTemplateColumn.CellTemplate>
@@ -377,6 +387,7 @@
                                         <DataTemplate>
                                             <ComboBox ItemsSource="{Binding OpcoesTamanho}"
                                                       SelectedItem="{Binding TamanhoSelecionado, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                      IsSynchronizedWithCurrentItem="False"
                                                       Height="28" MinWidth="104" FontSize="11.5"
                                                       VerticalContentAlignment="Center"
                                                       ToolTip="Tamanho que entra na fila. &quot;Todos os tamanhos&quot; cria uma etiqueta para cada tamanho da grade." />
@@ -531,6 +542,15 @@
                             </StackPanel>
 
                             <StackPanel Grid.Column="2" Orientation="Horizontal">
+                                <Button Command="{Binding AbrirPadronizarEtiquetaCommand}" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,0"
+                                        ToolTip="Escolher um modelo salvo ou feito por você e padronizar todas as etiquetas do catálogo"
+                                        AutomationProperties.Name="Padronizar Etiqueta">
+                                    <StackPanel Orientation="Horizontal">
+                                        <ui:SymbolIcon Symbol="Sparkle24" FontSize="15" Foreground="{StaticResource CorPrimaria}" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                        <TextBlock Text="Padronizar Etiqueta" FontWeight="SemiBold" Foreground="{StaticResource CorPrimaria}" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+
                                 <Button Command="{Binding PuxarEstoqueAtualCommand}" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,0"
                                         ToolTip="Carrega na fila de impressão todos os produtos que possuem saldo positivo em estoque" AutomationProperties.Name="Carrega na fila de impressão todos os produtos que possuem saldo positivo em estoque">
                                     <StackPanel Orientation="Horizontal">

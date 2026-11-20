@@ -711,4 +711,154 @@ public class BarTenderTests : IDisposable
         var textoEspacado = EditorDesenhoService.AplicarEspacamento(el.Texto, el.EspacamentoLetras);
         Assert.True(textoEspacado.Length > el.Texto.Length);
     }
+
+    [Fact]
+    public void ProdutoItemViewModel_CodigoExibicaoColuna_PriorizaReferencia_E_ProtegeTamanhoContraReset()
+    {
+        var camisa = new Produto
+        {
+            Id = 15,
+            Nome = "CAMISA GOLA CARECA TEXTURIZADA",
+            Referencia = "1020",
+            CodigoInterno = "INT-000013",
+            Categoria = "Camisa",
+            Tamanhos = new List<ProdutoTamanho>
+            {
+                new() { Tamanho = "P", Ordem = 1 },
+                new() { Tamanho = "M", Ordem = 2 },
+                new() { Tamanho = "G", Ordem = 3 }
+            }
+        };
+
+        var vm = new ProdutoItemViewModel(camisa);
+        Assert.Equal("1020", vm.CodigoExibicaoColuna);
+
+        vm.TamanhoSelecionado = "M";
+        Assert.Equal("10202", vm.CodigoExibicaoColuna);
+        Assert.Equal("10202", vm.CodigoBarrasExibicao);
+
+        // Simula o ComboBox do DataGrid enviando null ou tamanho fora da lista durante reciclagem/troca de tela
+        vm.TamanhoSelecionado = null!;
+        Assert.Equal("M", vm.TamanhoSelecionado);
+
+        vm.TamanhoSelecionado = "";
+        Assert.Equal("M", vm.TamanhoSelecionado);
+
+        vm.TamanhoSelecionado = "Sem tamanho";
+        Assert.Equal("M", vm.TamanhoSelecionado);
+    }
+
+    [Fact]
+    public async Task MainViewModel_PadronizarEtiqueta_AplicaModeloATodosRespeitandoTamanhoReferenciaECodigo()
+    {
+        using (var db = CriarContexto())
+        {
+            db.Produtos.AddRange(
+                new Produto
+                {
+                    Id = 45,
+                    Nome = "BERMUDA CARGO",
+                    Referencia = "1402",
+                    CodigoInterno = "INT-000043",
+                    Categoria = "Bermuda",
+                    Ativo = true,
+                    PrecoVendaCentavos = 7000,
+                    Tamanhos = new List<ProdutoTamanho>
+                    {
+                        new() { Tamanho = "42", Ordem = 1, Estoque = 6 },
+                        new() { Tamanho = "44", Ordem = 2, Estoque = 8 }
+                    }
+                },
+                new Produto
+                {
+                    Id = 62,
+                    Nome = "CAMISA GOLA POLO",
+                    Referencia = "1202",
+                    CodigoInterno = "INT-000060",
+                    Categoria = "Camisa Gola Polo",
+                    Ativo = true,
+                    PrecoVendaCentavos = 6000,
+                    Tamanhos = new List<ProdutoTamanho>
+                    {
+                        new() { Tamanho = "Sem tamanho", Ordem = 0, Estoque = 0 }
+                    }
+                }
+            );
+            await db.SaveChangesAsync();
+        }
+
+        var dbService = new BancoDadosService(_tempDbPath);
+        var mainVm = new MainViewModel(dbService, iniciarAutomaticamente: false);
+        await mainVm.RecarregarDadosAsync();
+
+        Assert.Equal(2, mainVm.TodosProdutos.Count);
+
+        // Simula o usuário criando o modelo da etiqueta no 1402 com "42" digitado e salvando
+        var modeloFeitoPeloUsuario = NexusLS.BarTender.Models.Designer.ModeloEtiquetaDesign.CriarEmBranco(35, 60, "Tag Loja 1402");
+        modeloFeitoPeloUsuario.Elementos.Add(new NexusLS.BarTender.Models.Designer.ElementoDesign
+        {
+            Tipo = NexusLS.BarTender.Models.Designer.TipoElemento.Texto,
+            Texto = "42",
+            TamanhoFonte = 42,
+            X = 2, Y = 10, Largura = 31, Altura = 16
+        });
+        modeloFeitoPeloUsuario.Elementos.Add(new NexusLS.BarTender.Models.Designer.ElementoDesign
+        {
+            Tipo = NexusLS.BarTender.Models.Designer.TipoElemento.Texto,
+            Texto = "REF.:",
+            TamanhoFonte = 8,
+            X = 2, Y = 30, Largura = 10, Altura = 4
+        });
+        modeloFeitoPeloUsuario.Elementos.Add(new NexusLS.BarTender.Models.Designer.ElementoDesign
+        {
+            Tipo = NexusLS.BarTender.Models.Designer.TipoElemento.Texto,
+            Texto = "1402",
+            TamanhoFonte = 10,
+            X = 18, Y = 30, Largura = 15, Altura = 4
+        });
+        modeloFeitoPeloUsuario.Elementos.Add(new NexusLS.BarTender.Models.Designer.ElementoDesign
+        {
+            Tipo = NexusLS.BarTender.Models.Designer.TipoElemento.CodigoBarras,
+            TipoCodigo = NexusLS.BarTender.Models.Designer.TipoSimboloCodigo.Code128,
+            X = 2, Y = 36, Largura = 31, Altura = 12
+        });
+
+        var padronizados = mainVm.PadronizarEtiquetasComModelo(modeloFeitoPeloUsuario);
+        Assert.Equal(2, padronizados);
+
+        // Todos os produtos agora estão com o modelo padronizado vinculado
+        Assert.All(mainVm.TodosProdutos, p =>
+        {
+            Assert.True(p.TemEtiquetaPersonalizada);
+            Assert.Equal("Tag Loja 1402", p.NomeEtiquetaPersonalizada);
+        });
+
+        // Verifica que na Camisa Gola Polo (Ref 1202), o modelo padronizado exibe Tamanho P/M, Ref 1202 e Código 12021/12022
+        var camisaVm = mainVm.TodosProdutos.First(p => p.Id == 62);
+        var modeloCamisa = GerenciadorEtiquetasProdutoService.CarregarEtiquetaProduto(62);
+        Assert.NotNull(modeloCamisa);
+
+        var elTam = modeloCamisa!.Elementos.First(e => e.Variavel == NexusLS.BarTender.Models.Designer.VariavelEtiqueta.Tamanho);
+        var elRef = modeloCamisa.Elementos.First(e => e.Variavel == NexusLS.BarTender.Models.Designer.VariavelEtiqueta.Referencia);
+        var elCod = modeloCamisa.Elementos.First(e => e.Tipo == NexusLS.BarTender.Models.Designer.TipoElemento.CodigoBarras);
+
+        Assert.Equal("P", EditorDesenhoService.ResolverTexto(elTam, camisaVm.Produto, "P", "NEXUS"));
+        Assert.Equal("1202", EditorDesenhoService.ResolverTexto(elRef, camisaVm.Produto, "P", "NEXUS"));
+        Assert.Equal("12021", EditorDesenhoService.ResolverCodigo(elCod, camisaVm.Produto, "P"));
+
+        Assert.Equal("M", EditorDesenhoService.ResolverTexto(elTam, camisaVm.Produto, "M", "NEXUS"));
+        Assert.Equal("1202", EditorDesenhoService.ResolverTexto(elRef, camisaVm.Produto, "M", "NEXUS"));
+        Assert.Equal("12022", EditorDesenhoService.ResolverCodigo(elCod, camisaVm.Produto, "M"));
+
+        // Preserva o tamanho e o produto selecionado após RecarregarDadosAsync
+        camisaVm.TamanhoSelecionado = "G";
+        camisaVm.QuantidadeAdicionar = 7;
+        mainVm.ProdutoSelecionado = camisaVm;
+
+        await mainVm.RecarregarDadosAsync();
+
+        Assert.Equal(62, mainVm.ProdutoSelecionado?.Id);
+        Assert.Equal("G", mainVm.ProdutoSelecionado?.TamanhoSelecionado);
+        Assert.Equal(7, mainVm.ProdutoSelecionado?.QuantidadeAdicionar);
+    }
 }

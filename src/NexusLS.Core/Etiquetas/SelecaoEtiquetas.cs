@@ -54,11 +54,14 @@ public sealed class SelecaoEtiquetas
     /// <summary>
     /// Monta a seleção a partir do produto. Todos os tamanhos cadastrados entram na lista (com zero),
     /// mesmo sem estoque: esta tela é de produção, e a etiqueta pode ser impressa antes de o saldo existir.
-    /// "Sem tamanho" também aparece sempre que estiver cadastrado.
+    /// Se o produto de vestuário veio do banco com apenas 1 tamanho (ex.: só 42) ou só "Sem tamanho",
+    /// completa a grade padrão do modelo para o operador poder clicar nas quantidades de todos os tamanhos.
     /// </summary>
     public static SelecaoEtiquetas DoProduto(Produto produto, IReadOnlyDictionary<string, int>? quantidades = null)
     {
         if (produto is null) throw new ArgumentNullException(nameof(produto));
+
+        GarantirGradeDoModelo(produto);
 
         var linhas = new List<LinhaSelecaoTamanho>();
         var tamanhos = (produto.Tamanhos ?? new List<ProdutoTamanho>())
@@ -79,6 +82,18 @@ public sealed class SelecaoEtiquetas
             linhas.Add(new LinhaSelecaoTamanho(t.Tamanho.Trim(), quantidade, t.Estoque));
         }
 
+        if (quantidades is not null)
+        {
+            foreach (var par in quantidades)
+            {
+                var chave = par.Key?.Trim() ?? "";
+                if (EhSemTamanho(chave)) continue;
+                if (linhas.Any(l => string.Equals(l.Tamanho, chave, StringComparison.OrdinalIgnoreCase))) continue;
+
+                linhas.Add(new LinhaSelecaoTamanho(chave, ValidarQuantidade(par.Value, chave), 0));
+            }
+        }
+
         var semTamanho = tamanhos.FirstOrDefault(t => EhSemTamanho(t.Tamanho));
         if (semTamanho is not null || reais.Count == 0)
             linhas.Add(new LinhaSelecaoTamanho("", QuantidadeDe(quantidades, ""), semTamanho?.Estoque ?? produto.EstoqueAtual));
@@ -87,6 +102,121 @@ public sealed class SelecaoEtiquetas
             linhas.Add(new LinhaSelecaoTamanho("", QuantidadeDe(quantidades, ""), produto.EstoqueAtual));
 
         return new SelecaoEtiquetas(produto, linhas);
+    }
+
+    /// <summary>
+    /// Completa em memória os tamanhos padrão do modelo quando um produto de vestuário possui
+    /// no máximo 1 tamanho real cadastrado no banco (ex.: só "42" ou apenas "Sem tamanho").
+    /// Preserva estoque e ordem dos tamanhos já existentes.
+    /// </summary>
+    public static void GarantirGradeDoModelo(Produto? produto)
+    {
+        if (produto is null) return;
+
+        var lista = produto.Tamanhos ?? new List<ProdutoTamanho>();
+        var reais = lista
+            .Where(t => !EhSemTamanho(t.Tamanho))
+            .Select(t => t.Tamanho.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        if (reais.Count > 1) return;
+
+        var sugeridos = InferirGradePadrao(produto, reais);
+        if (sugeridos.Count <= 1) return;
+
+        produto.Tamanhos ??= new List<ProdutoTamanho>();
+
+        var existentes = produto.Tamanhos
+            .Where(t => !EhSemTamanho(t.Tamanho))
+            .ToDictionary(t => t.Tamanho.Trim(), StringComparer.OrdinalIgnoreCase);
+
+        var semTamanho = produto.Tamanhos.FirstOrDefault(t => EhSemTamanho(t.Tamanho));
+        var novaLista = new List<ProdutoTamanho>();
+        if (semTamanho is not null)
+            novaLista.Add(semTamanho);
+
+        var ordem = 1;
+        foreach (var tam in sugeridos)
+        {
+            if (existentes.TryGetValue(tam, out var existente))
+            {
+                if (existente.Ordem <= 0) existente.Ordem = ordem;
+                novaLista.Add(existente);
+            }
+            else
+            {
+                novaLista.Add(new ProdutoTamanho
+                {
+                    ProdutoId = produto.Id,
+                    Tamanho = tam,
+                    Ordem = ordem,
+                    Estoque = 0
+                });
+            }
+            ordem++;
+        }
+
+        produto.Tamanhos = novaLista;
+    }
+
+    public static IReadOnlyList<string> InferirGradePadrao(Produto produto, IReadOnlyList<string>? tamanhosReais = null)
+    {
+        var reais = tamanhosReais ?? (produto.Tamanhos ?? new List<ProdutoTamanho>())
+            .Where(t => !EhSemTamanho(t.Tamanho))
+            .Select(t => t.Tamanho.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        var categoria = (produto.Categoria ?? "").Trim();
+        var nome = (produto.Nome ?? "").Trim();
+        var unico = reais.Count == 1 ? reais[0].Trim() : "";
+
+        // Se só tem 1 tamanho numérico (ex.: "42" na Bermuda Cargo), expande a grade numérica correspondente
+        if (int.TryParse(unico, out var numUnico) && numUnico >= 34 && numUnico <= 70 && numUnico % 2 == 0)
+        {
+            if (numUnico >= 52)
+                return new[] { "52", "54", "56" };
+            if (numUnico < 42)
+                return new[] { "36", "38", "40", "42", "44", "46", "48", "50" };
+            return new[] { "42", "44", "46", "48", "50" };
+        }
+
+        // Sem categoria definida (como produtos avulsos/testes sintéticos), não inventa grade
+        if (string.IsNullOrWhiteSpace(categoria))
+            return Array.Empty<string>();
+
+        var ehExtra = nome.Contains("EXTRA", StringComparison.OrdinalIgnoreCase) ||
+                      categoria.Contains("EXTRA", StringComparison.OrdinalIgnoreCase);
+        var ehSuper = nome.Contains("SUPER", StringComparison.OrdinalIgnoreCase) ||
+                      categoria.Contains("SUPER", StringComparison.OrdinalIgnoreCase);
+
+        if (categoria.Contains("Bermuda", StringComparison.OrdinalIgnoreCase) ||
+            categoria.Contains("Calça", StringComparison.OrdinalIgnoreCase) ||
+            categoria.Contains("Calca", StringComparison.OrdinalIgnoreCase) ||
+            categoria.Contains("Jeans", StringComparison.OrdinalIgnoreCase))
+        {
+            if (ehExtra)
+                return new[] { "52", "54", "56" };
+            return new[] { "42", "44", "46", "48", "50" };
+        }
+
+        if (categoria.Contains("Camisa", StringComparison.OrdinalIgnoreCase) ||
+            categoria.Contains("Camiseta", StringComparison.OrdinalIgnoreCase) ||
+            categoria.Contains("Polo", StringComparison.OrdinalIgnoreCase) ||
+            categoria.Contains("Short", StringComparison.OrdinalIgnoreCase) ||
+            categoria.Contains("Casaco", StringComparison.OrdinalIgnoreCase) ||
+            categoria.Contains("Blusa", StringComparison.OrdinalIgnoreCase) ||
+            categoria.Contains("Moletom", StringComparison.OrdinalIgnoreCase))
+        {
+            if (ehSuper)
+                return new[] { "G7", "G8", "G9", "G10" };
+            if (ehExtra)
+                return new[] { "G1", "G2", "G3", "G4", "G5", "G6" };
+            return new[] { "P", "M", "G", "GG", "EXG" };
+        }
+
+        return Array.Empty<string>();
     }
 
     /// <summary>Converte a seleção no formato que o paginador de impressão já usa.</summary>

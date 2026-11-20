@@ -171,6 +171,8 @@ public partial class SelecaoImpressaoViewModel : ObservableObject
 
     public bool TemEtiquetaPersonalizada { get; }
 
+    public event EventHandler? QuantidadesAlteradas;
+
     public string ResumoSelecao => Total > 0
         ? string.Join(" · ", Linhas.Where(l => l.TemQuantidade).Select(l => $"{l.TamanhoExibicao}: {l.Quantidade}"))
         : "Nenhuma quantidade informada";
@@ -229,6 +231,70 @@ public partial class SelecaoImpressaoViewModel : ObservableObject
 
         OnPropertyChanged(nameof(ResumoSelecao));
         OnPropertyChanged(nameof(ProdutoTemGrade));
+        QuantidadesAlteradas?.Invoke(this, EventArgs.Empty);
+    }
+
+    [RelayCommand]
+    public void AplicarGradeRapida(string? tipoGrade)
+    {
+        var novosTamanhos = (tipoGrade ?? "").Trim() switch
+        {
+            "Letras" => new[] { "P", "M", "G", "GG", "EXG" },
+            "ExtraLetras" => new[] { "G1", "G2", "G3", "G4", "G5", "G6" },
+            "SuperLetras" => new[] { "G7", "G8", "G9", "G10" },
+            "Bermuda" => new[] { "42", "44", "46", "48", "50" },
+            "Numerica" => new[] { "38", "40", "42", "44", "46", "48", "50" },
+            "ExtraNumerica" => new[] { "52", "54", "56" },
+            _ => Array.Empty<string>()
+        };
+
+        if (novosTamanhos.Length == 0) return;
+
+        var quantidadesAtuais = Linhas.ToDictionary(l => l.Tamanho, l => l.Quantidade, StringComparer.OrdinalIgnoreCase);
+        var estoquesAtuais = Linhas.ToDictionary(l => l.Tamanho, l => l.Estoque, StringComparer.OrdinalIgnoreCase);
+
+        Produto.Tamanhos ??= new List<ProdutoTamanho>();
+        var maiorOrdem = Produto.Tamanhos.Select(t => t.Ordem).DefaultIfEmpty(0).Max();
+
+        foreach (var tam in novosTamanhos)
+        {
+            if (!Produto.Tamanhos.Any(t => string.Equals(t.Tamanho?.Trim(), tam, StringComparison.OrdinalIgnoreCase)))
+            {
+                maiorOrdem++;
+                Produto.Tamanhos.Add(new ProdutoTamanho
+                {
+                    ProdutoId = Produto.Id,
+                    Tamanho = tam,
+                    Ordem = maiorOrdem,
+                    Estoque = estoquesAtuais.GetValueOrDefault(tam, 0)
+                });
+            }
+        }
+
+        // Reconstrói as linhas mantendo o que já estava e acrescentando os novos na ordem natural
+        var semTamanhoLinha = Linhas.FirstOrDefault(l => l.EhSemTamanho);
+        foreach (var tam in novosTamanhos)
+        {
+            if (Linhas.Any(l => string.Equals(l.Tamanho, tam, StringComparison.OrdinalIgnoreCase)))
+                continue;
+
+            var estoque = Produto.Tamanhos
+                .FirstOrDefault(t => string.Equals(t.Tamanho?.Trim(), tam, StringComparison.OrdinalIgnoreCase))?.Estoque ?? 0;
+            var vm = new LinhaSelecaoViewModel(tam, estoque, quantidadesAtuais.GetValueOrDefault(tam, 0));
+            vm.Alterada += (_, _) => AtualizarTotais();
+
+            if (semTamanhoLinha is not null)
+            {
+                var idx = Linhas.IndexOf(semTamanhoLinha);
+                Linhas.Insert(Math.Max(0, idx), vm);
+            }
+            else
+            {
+                Linhas.Add(vm);
+            }
+        }
+
+        AtualizarTotais();
     }
 
     /// <summary>Valida para o botão de impressão e deixa a mensagem pronta na tela.</summary>

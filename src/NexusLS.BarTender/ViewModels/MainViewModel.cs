@@ -131,7 +131,8 @@ public partial class MainViewModel : ObservableObject
         _impressoraEtiquetas = impressoraEtiquetas;
         _designerVM = new DesignerViewModel(_dialogo)
         {
-            SolicitarIrParaImpressao = IrParaFilaImpressaoAtalho
+            SolicitarIrParaImpressao = IrParaFilaImpressaoAtalho,
+            SolicitarPadronizarEtiquetas = AbrirPadronizarEtiqueta
         };
 
         var http = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(10) };
@@ -298,10 +299,16 @@ public partial class MainViewModel : ObservableObject
 
     partial void OnFiltroTipoChanged(string value) => ProdutosView.Refresh();
 
-    partial void OnCategoriaSelecionadaChanged(string value) => ProdutosView.Refresh();
+    partial void OnCategoriaSelecionadaChanged(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return;
+        ProdutosView.Refresh();
+    }
 
     partial void OnProdutoSelecionadoChanged(ProdutoItemViewModel? value)
     {
+        if (value == null && EstaCarregando) return;
+
         if (_produtoDaAssinatura != null)
             _produtoDaAssinatura.PropertyChanged -= ProdutoSelecionado_PropertyChanged;
         _produtoDaAssinatura = value;
@@ -325,6 +332,12 @@ public partial class MainViewModel : ObservableObject
         EstaCarregando = true;
         try
         {
+            var idSelecionadoAnterior = ProdutoSelecionado?.Id;
+            var categoriaAnterior = string.IsNullOrWhiteSpace(CategoriaSelecionada) ? "Todas" : CategoriaSelecionada;
+            var estadoAnteriorPorProduto = TodosProdutos.ToDictionary(
+                p => p.Id,
+                p => (p.TamanhoSelecionado, p.QuantidadeAdicionar));
+
             CaminhoBanco = _dbService.CaminhoAtual;
             GerenciadorEtiquetasProdutoService.Invalidar();
             BancoConectado = _dbService.BancoExiste();
@@ -350,7 +363,13 @@ public partial class MainViewModel : ObservableObject
             TodosProdutos.Clear();
             foreach (var p in produtos)
             {
-                TodosProdutos.Add(new ProdutoItemViewModel(p));
+                var itemVm = new ProdutoItemViewModel(p);
+                if (estadoAnteriorPorProduto.TryGetValue(p.Id, out var estado))
+                {
+                    itemVm.TamanhoSelecionado = estado.TamanhoSelecionado;
+                    itemVm.QuantidadeAdicionar = Math.Max(1, estado.QuantidadeAdicionar);
+                }
+                TodosProdutos.Add(itemVm);
             }
 
             AtualizarContadores();
@@ -362,9 +381,19 @@ public partial class MainViewModel : ObservableObject
             var cats = produtos.Select(p => p.Categoria).Where(c => !string.IsNullOrWhiteSpace(c)).Distinct().OrderBy(c => c);
             foreach (var c in cats) CategoriasDisponiveis.Add(c!);
 
+            CategoriaSelecionada = CategoriasDisponiveis.Contains(categoriaAnterior) ? categoriaAnterior : "Todas";
+
             DesignerVM.SincronizarProdutos(TodosProdutos);
 
-            if (ProdutoSelecionado == null && TodosProdutos.Count > 0)
+            var restaurado = idSelecionadoAnterior.HasValue
+                ? TodosProdutos.FirstOrDefault(p => p.Id == idSelecionadoAnterior.Value)
+                : null;
+
+            if (restaurado != null)
+            {
+                ProdutoSelecionado = restaurado;
+            }
+            else if (TodosProdutos.Count > 0)
             {
                 App.Log("RecarregarDadosAsync: Definindo ProdutoSelecionado = primeiro");
                 ProdutoSelecionado = TodosProdutos[0];
@@ -373,6 +402,8 @@ public partial class MainViewModel : ObservableObject
             {
                 AtualizarPreview();
             }
+
+            ProdutosView.Refresh();
             App.Log("RecarregarDadosAsync SUCCESS");
         }
         catch (Exception ex)

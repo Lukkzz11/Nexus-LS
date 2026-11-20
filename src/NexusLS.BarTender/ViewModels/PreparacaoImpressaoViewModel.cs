@@ -13,12 +13,37 @@ using NexusLS.Core.Services;
 
 namespace NexusLS.BarTender.ViewModels;
 
-public sealed record PreviaEtiquetaPreparacao(
-    string Tamanho,
-    int Quantidade,
-    string CodigoBarras,
-    string Dimensoes,
-    BitmapSource Imagem);
+public sealed partial class PreviaEtiquetaPreparacao : ObservableObject
+{
+    public string Tamanho { get; }
+
+    [ObservableProperty]
+    private int _quantidade;
+
+    public string CodigoBarras { get; }
+
+    public string Dimensoes { get; }
+
+    public BitmapSource Imagem { get; }
+
+    public LinhaSelecaoViewModel? Linha { get; }
+
+    public PreviaEtiquetaPreparacao(
+        string tamanho,
+        int quantidade,
+        string codigoBarras,
+        string dimensoes,
+        BitmapSource imagem,
+        LinhaSelecaoViewModel? linha = null)
+    {
+        Tamanho = tamanho;
+        _quantidade = quantidade;
+        CodigoBarras = codigoBarras;
+        Dimensoes = dimensoes;
+        Imagem = imagem;
+        Linha = linha;
+    }
+}
 
 public sealed record CelulaPreviaPreparacao(
     BitmapSource? Imagem,
@@ -28,8 +53,8 @@ public sealed record CelulaPreviaPreparacao(
 
 public sealed record LinhaConferenciaPreparacao(string Tamanho, int Quantidade);
 
-/// <summary>Opção do seletor de sensor/tipo de mídia (nome em português).</summary>
-public sealed record OpcaoTipoMidia(string Nome, TipoMidiaEtiqueta Tipo);
+/// <summary>Opção do seletor de sensor/tipo de mídia (nome em português e resumo visual).</summary>
+public sealed record OpcaoTipoMidia(string Nome, TipoMidiaEtiqueta Tipo, string NomeCurto = "", string Descricao = "");
 
 /// <summary>
 /// Página filha de preparação: recebe produto, tamanhos, quantidades e o modelo vinculado,
@@ -56,6 +81,8 @@ public partial class PreparacaoImpressaoViewModel : ObservableObject
 
     private readonly IDialogoService _dialogo;
     private readonly IImpressoraEtiquetas _impressora;
+    private readonly Dictionary<string, BitmapSource> _cacheImagens = new(StringComparer.OrdinalIgnoreCase);
+    private SelecaoImpressaoViewModel? _selecaoObservada;
     private bool _carregandoMidia;
 
     public Func<SelecaoImpressaoViewModel, AcaoProdutoCatalogo>? AbrirModalSelecao { get; set; }
@@ -68,10 +95,10 @@ public partial class PreparacaoImpressaoViewModel : ObservableObject
 
     public IReadOnlyList<OpcaoTipoMidia> TiposMidia { get; } = new[]
     {
-        new OpcaoTipoMidia("Rolo com gap (espaço entre etiquetas)", TipoMidiaEtiqueta.RoloComGap),
-        new OpcaoTipoMidia("Rolo com marca preta (black mark)", TipoMidiaEtiqueta.RoloMarcaPreta),
-        new OpcaoTipoMidia("Rolo contínuo (sem gap nem marca)", TipoMidiaEtiqueta.RoloContinuo),
-        new OpcaoTipoMidia("Folha A4 adesiva", TipoMidiaEtiqueta.Folha)
+        new OpcaoTipoMidia("Rolo com gap (espaço entre etiquetas)", TipoMidiaEtiqueta.RoloComGap, "Rolo com gap", "Espaço vazio entre etiquetas"),
+        new OpcaoTipoMidia("Rolo com marca preta (black mark)", TipoMidiaEtiqueta.RoloMarcaPreta, "Marca preta", "Tarja preta atrás da etiqueta"),
+        new OpcaoTipoMidia("Rolo contínuo (sem gap nem marca)", TipoMidiaEtiqueta.RoloContinuo, "Rolo contínuo", "Corte pela altura configurada"),
+        new OpcaoTipoMidia("Folha A4 adesiva", TipoMidiaEtiqueta.Folha, "Folha A4", "Várias etiquetas por folha")
     };
 
     public ObservableCollection<PerfilMidia> MidiasDisponiveis { get; } = new(PerfisMidia.ListaPadrao);
@@ -447,11 +474,41 @@ public partial class PreparacaoImpressaoViewModel : ObservableObject
 
     partial void OnSelecaoChanged(SelecaoImpressaoViewModel? value)
     {
+        if (_selecaoObservada is not null)
+            _selecaoObservada.QuantidadesAlteradas -= Selecao_QuantidadesAlteradas;
+
+        _selecaoObservada = value;
+
+        if (_selecaoObservada is not null)
+            _selecaoObservada.QuantidadesAlteradas += Selecao_QuantidadesAlteradas;
+
+        _cacheImagens.Clear();
         OnPropertyChanged(nameof(TotalEtiquetas));
         OnPropertyChanged(nameof(ResumoConferencia));
         OnPropertyChanged(nameof(OrdemImpressao));
         OnPropertyChanged(nameof(PodeImprimir));
         AtualizarTudo();
+    }
+
+    private void Selecao_QuantidadesAlteradas(object? sender, EventArgs e)
+    {
+        AtualizarQuantidadesAoVivo();
+    }
+
+    /// <summary>
+    /// Recalcula totais, páginas, conferência e mapa ao editar as quantidades direto na tela de preparação,
+    /// reaproveitando os bitmaps já desenhados e mantendo os cartões existentes para não perder o foco do teclado.
+    /// </summary>
+    public void AtualizarQuantidadesAoVivo()
+    {
+        OnPropertyChanged(nameof(TotalEtiquetas));
+        OnPropertyChanged(nameof(ResumoConferencia));
+        OnPropertyChanged(nameof(OrdemImpressao));
+        OnPropertyChanged(nameof(PaginasNecessarias));
+        OnPropertyChanged(nameof(PaginasTexto));
+        OnPropertyChanged(nameof(PodeImprimir));
+        AtualizarConferencia();
+        SincronizarPreviaSemPerderFoco();
     }
 
     private static string DescreverTipo(TipoMidiaEtiqueta tipo) => tipo switch
@@ -467,6 +524,8 @@ public partial class PreparacaoImpressaoViewModel : ObservableObject
 
     private void AtualizarModeloParaMidia()
     {
+        _cacheImagens.Clear();
+
         if (ModeloOriginal is null)
         {
             ModeloParaMidia = null;
@@ -506,6 +565,73 @@ public partial class PreparacaoImpressaoViewModel : ObservableObject
             Conferencia.Add(new LinhaConferenciaPreparacao(linha.TamanhoExibicao, linha.Quantidade));
     }
 
+    private BitmapSource ObterOuRenderizarImagem(LinhaSelecaoViewModel linha)
+    {
+        var chave = linha.Tamanho;
+        if (!_cacheImagens.TryGetValue(chave, out var imagem) && ModeloParaMidia is not null && Produto is not null)
+        {
+            var tamanho = linha.EhSemTamanho ? null : linha.Tamanho;
+            imagem = EditorDesenhoService.RenderizarBitmap(ModeloParaMidia, Produto, tamanho, NomeLoja, escalaDpi: 2.5);
+            _cacheImagens[chave] = imagem;
+        }
+        return imagem!;
+    }
+
+    private void SincronizarPreviaSemPerderFoco()
+    {
+        MapaPagina.Clear();
+
+        if (Selecao is null || ModeloParaMidia is null || Produto is null || Selecao.Total <= 0)
+        {
+            PreviaItens.Clear();
+            MapaResumo = "";
+            return;
+        }
+
+        var dimensoes = $"{ModeloParaMidia.LarguraMm:0.#} × {ModeloParaMidia.AlturaMm:0.#} mm";
+        var comQtd = Selecao.Linhas.Where(l => l.TemQuantidade).ToList();
+
+        // Remove os que zeraram
+        for (var i = PreviaItens.Count - 1; i >= 0; i--)
+        {
+            var card = PreviaItens[i];
+            if (!comQtd.Any(l => string.Equals(l.TamanhoExibicao, card.Tamanho, StringComparison.OrdinalIgnoreCase)))
+                PreviaItens.RemoveAt(i);
+        }
+
+        // Atualiza os existentes ou insere os novos na ordem das linhas
+        for (var idx = 0; idx < comQtd.Count; idx++)
+        {
+            var linha = comQtd[idx];
+            var existente = PreviaItens.FirstOrDefault(p =>
+                string.Equals(p.Tamanho, linha.TamanhoExibicao, StringComparison.OrdinalIgnoreCase));
+
+            var imagem = ObterOuRenderizarImagem(linha);
+            if (existente is not null)
+            {
+                existente.Quantidade = linha.Quantidade;
+            }
+            else
+            {
+                var codigo = CodigoBarrasTamanho.Resolver(Produto, linha.EhSemTamanho ? null : linha.Tamanho) ?? "—";
+                var novo = new PreviaEtiquetaPreparacao(
+                    linha.TamanhoExibicao,
+                    linha.Quantidade,
+                    codigo,
+                    dimensoes,
+                    imagem,
+                    linha);
+
+                if (idx <= PreviaItens.Count)
+                    PreviaItens.Insert(idx, novo);
+                else
+                    PreviaItens.Add(novo);
+            }
+        }
+
+        MontarMapaPagina(_cacheImagens);
+    }
+
     /// <summary>Desenha uma imagem real por tamanho e monta o mapa da primeira página/rolo.</summary>
     public void GerarPrevia()
     {
@@ -518,29 +644,36 @@ public partial class PreparacaoImpressaoViewModel : ObservableObject
             return;
         }
 
-        var imagens = new Dictionary<string, BitmapSource>(StringComparer.OrdinalIgnoreCase);
         var dimensoes = $"{ModeloParaMidia.LarguraMm:0.#} × {ModeloParaMidia.AlturaMm:0.#} mm";
 
         foreach (var linha in Selecao.Linhas.Where(l => l.TemQuantidade))
         {
-            var chave = linha.Tamanho;
-            if (!imagens.TryGetValue(chave, out var imagem))
-            {
-                var tamanho = linha.EhSemTamanho ? null : linha.Tamanho;
-                imagem = EditorDesenhoService.RenderizarBitmap(ModeloParaMidia, Produto, tamanho, NomeLoja, escalaDpi: 2.5);
-                imagens[chave] = imagem;
-            }
-
+            var imagem = ObterOuRenderizarImagem(linha);
             var codigo = CodigoBarrasTamanho.Resolver(Produto, linha.EhSemTamanho ? null : linha.Tamanho) ?? "—";
             PreviaItens.Add(new PreviaEtiquetaPreparacao(
                 linha.TamanhoExibicao,
                 linha.Quantidade,
                 codigo,
                 dimensoes,
-                imagem));
+                imagem,
+                linha));
         }
 
-        MontarMapaPagina(imagens);
+        MontarMapaPagina(_cacheImagens);
+    }
+
+    [RelayCommand]
+    public void SelecionarMidia(PerfilMidia? midia)
+    {
+        if (midia is not null)
+            MidiaSelecionada = midia;
+    }
+
+    [RelayCommand]
+    public void SelecionarTipoMidia(OpcaoTipoMidia? opcao)
+    {
+        if (opcao is not null)
+            TipoMidiaSelecionado = opcao;
     }
 
     private void MontarMapaPagina(IReadOnlyDictionary<string, BitmapSource> imagens)

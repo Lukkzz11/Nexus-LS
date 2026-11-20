@@ -1,7 +1,8 @@
 <UserControl x:Class="NexusLS.BarTender.Views.PreparacaoImpressaoView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:views="clr-namespace:NexusLS.BarTender.Views">
 
     <UserControl.Resources>
         <!-- Campo pequeno de medida: rótulo em cima e caixa de texto embaixo. -->
@@ -13,6 +14,40 @@
         <Style x:Key="RotuloMedida" TargetType="TextBlock" BasedOn="{StaticResource Rotulo}">
             <Setter Property="FontSize" Value="10.5" />
             <Setter Property="Margin" Value="0,0,0,3" />
+        </Style>
+
+        <!-- Cartão visual clicável em ListBox (Formato de mídia e Sensor) -->
+        <Style x:Key="CartaoSeletorMidiaItem" TargetType="ListBoxItem">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0,0,6,6" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Stretch" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Cartao"
+                                Background="{StaticResource CorSuperficieSuave}"
+                                BorderBrush="{StaticResource CorBordaCampo}"
+                                BorderThickness="1.5"
+                                CornerRadius="{StaticResource RaioMedio}"
+                                Padding="8,7">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Cartao" Property="Background" Value="{StaticResource CorHover}" />
+                                <Setter TargetName="Cartao" Property="BorderBrush" Value="{StaticResource CorPrimaria}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Cartao" Property="Background" Value="{StaticResource CorSelecaoSuave}" />
+                                <Setter TargetName="Cartao" Property="BorderBrush" Value="{StaticResource CorPrimaria}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
     </UserControl.Resources>
 
@@ -83,7 +118,7 @@
                                 </Grid.ColumnDefinitions>
                                 <StackPanel>
                                     <TextBlock Text="Prévia real das etiquetas" Style="{StaticResource TituloSecao}" />
-                                    <TextBlock Text="Uma imagem por tamanho, gerada com o modelo vinculado ao produto."
+                                    <TextBlock Text="Uma imagem por tamanho com o modelo vinculado. Você pode ajustar as quantidades direto aqui."
                                                Style="{StaticResource TextoApoio}" Margin="0,2,0,0" />
                                 </StackPanel>
                                 <Border Grid.Column="1" Background="{StaticResource CorSuperficieSubtil}"
@@ -102,7 +137,7 @@
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border Width="196" Background="{StaticResource CorSuperficieSuave}"
+                                        <Border Width="212" Background="{StaticResource CorSuperficieSuave}"
                                                 BorderBrush="{StaticResource CorBorda}" BorderThickness="1"
                                                 CornerRadius="{StaticResource RaioMedio}" Padding="10" Margin="0,0,12,12">
                                             <StackPanel>
@@ -116,27 +151,81 @@
                                                         <ColumnDefinition Width="*" />
                                                         <ColumnDefinition Width="Auto" />
                                                     </Grid.ColumnDefinitions>
-                                                    <StackPanel>
+                                                    <StackPanel VerticalAlignment="Center">
                                                         <TextBlock Text="{Binding Tamanho, StringFormat='Tamanho {0}'}"
                                                                    FontSize="12.5" FontWeight="Bold"
                                                                    Foreground="{StaticResource CorTexto}" />
                                                         <TextBlock Text="{Binding CodigoBarras}" FontSize="10.5"
                                                                    Foreground="{StaticResource CorTextoSuave}" />
                                                     </StackPanel>
-                                                    <Border Grid.Column="1" Background="{StaticResource CorSelecaoSuave}"
-                                                            BorderBrush="{StaticResource CorSelecao}" BorderThickness="1"
-                                                            CornerRadius="{StaticResource RaioPequeno}" Padding="8,3"
-                                                            VerticalAlignment="Center">
-                                                        <TextBlock Text="{Binding Quantidade, StringFormat='{}{0} un.'}"
-                                                                   FontSize="12" FontWeight="Bold"
-                                                                   Foreground="{StaticResource CorPrimaria}" />
-                                                    </Border>
+
+                                                    <!-- Edição rápida de quantidade direto no cartão da prévia -->
+                                                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center"
+                                                                Visibility="{Binding Linha, Converter={StaticResource NullParaColapsadoConverter}}">
+                                                        <Button Command="{Binding Linha.DiminuirCommand}" Style="{StaticResource BotaoSecundario}"
+                                                                Width="24" Height="26" Padding="0" Margin="0,0,3,0"
+                                                                ToolTip="Diminuir quantidade">
+                                                            <ui:SymbolIcon Symbol="Subtract24" FontSize="10" />
+                                                        </Button>
+                                                        <TextBox Text="{Binding Linha.QuantidadeTexto, UpdateSourceTrigger=PropertyChanged}"
+                                                                 Width="44" Height="26" TextAlignment="Center"
+                                                                 VerticalContentAlignment="Center" Padding="1"
+                                                                 FontSize="12" FontWeight="Bold" />
+                                                        <Button Command="{Binding Linha.AumentarCommand}" Style="{StaticResource BotaoSecundario}"
+                                                                Width="24" Height="26" Padding="0" Margin="3,0,0,0"
+                                                                ToolTip="Aumentar quantidade">
+                                                            <ui:SymbolIcon Symbol="Add24" FontSize="10" />
+                                                        </Button>
+                                                    </StackPanel>
                                                 </Grid>
                                             </StackPanel>
                                         </Border>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
+
+                            <!-- Grade rápida de tamanhos e quantidades direto na preparação -->
+                            <Border Background="{StaticResource CorSuperficieSuave}" BorderBrush="{StaticResource CorBorda}"
+                                    BorderThickness="1" CornerRadius="{StaticResource RaioMedio}" Padding="12,10" Margin="0,0,0,10">
+                                <StackPanel>
+                                    <TextBlock Text="Ajustar quantidades por tamanho" FontSize="12" FontWeight="Bold"
+                                               Foreground="{StaticResource CorTexto}" Margin="0,0,0,8" />
+                                    <ItemsControl ItemsSource="{Binding Selecao.Linhas}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <WrapPanel />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Background="{StaticResource CorPainel}" BorderBrush="{StaticResource CorBordaCampo}"
+                                                        BorderThickness="1" CornerRadius="{StaticResource RaioPequeno}"
+                                                        Padding="8,5" Margin="0,0,8,6">
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <Border Background="{StaticResource CorSelecaoSuave}" BorderBrush="{StaticResource CorSelecao}"
+                                                                BorderThickness="1" CornerRadius="4" Padding="7,2" Margin="0,0,6,0" VerticalAlignment="Center">
+                                                            <TextBlock Text="{Binding TamanhoExibicao}" FontSize="11.5" FontWeight="Bold"
+                                                                       Foreground="{StaticResource CorPrimaria}" />
+                                                        </Border>
+                                                        <Button Command="{Binding DiminuirCommand}" Style="{StaticResource BotaoSecundario}"
+                                                                Width="22" Height="24" Padding="0" Margin="0,0,3,0" ToolTip="Diminuir">
+                                                            <ui:SymbolIcon Symbol="Subtract24" FontSize="9.5" />
+                                                        </Button>
+                                                        <TextBox Text="{Binding QuantidadeTexto, UpdateSourceTrigger=PropertyChanged}"
+                                                                 Width="42" Height="24" TextAlignment="Center"
+                                                                 VerticalContentAlignment="Center" Padding="1"
+                                                                 FontSize="11.5" FontWeight="Bold" />
+                                                        <Button Command="{Binding AumentarCommand}" Style="{StaticResource BotaoSecundario}"
+                                                                Width="22" Height="24" Padding="0" Margin="3,0,0,0" ToolTip="Aumentar">
+                                                            <ui:SymbolIcon Symbol="Add24" FontSize="9.5" />
+                                                        </Button>
+                                                    </StackPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
 
                             <Border Background="{StaticResource CorSuperficieSubtil}" BorderBrush="{StaticResource CorBorda}"
                                     BorderThickness="1" CornerRadius="{StaticResource RaioMedio}" Padding="12,9">
@@ -239,16 +328,69 @@
                             <TextBlock Text="{Binding PerfilImpressoraSelecionado.Observacao}" FontSize="10.5"
                                        Foreground="{StaticResource CorTextoSuave}" TextWrapping="Wrap" Margin="0,0,0,10" />
 
-                            <TextBlock Text="Formato de mídia" Style="{StaticResource Rotulo}" />
-                            <ComboBox ItemsSource="{Binding MidiasDisponiveis}"
-                                      SelectedItem="{Binding MidiaSelecionada, Mode=TwoWay}"
-                                      DisplayMemberPath="Nome" Margin="0,3,0,8"
-                                      ToolTip="Perfis de rolo, folha e tamanhos comuns" />
+                            <TextBlock Text="Formato de mídia (escolha o modelo do papel)" Style="{StaticResource Rotulo}" />
+                            <ListBox ItemsSource="{Binding MidiasDisponiveis}"
+                                     SelectedItem="{Binding MidiaSelecionada, Mode=TwoWay}"
+                                     ItemContainerStyle="{StaticResource CartaoSeletorMidiaItem}"
+                                     Background="Transparent" BorderThickness="0" Padding="0"
+                                     MaxHeight="215" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                     Margin="0,4,0,10">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="58" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <views:IlustracaoMidia Grid.Column="0" Midia="{Binding}" Width="52" Height="42"
+                                                                   HorizontalAlignment="Left" VerticalAlignment="Center" />
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Nome}" FontSize="11.5" FontWeight="Bold"
+                                                           Foreground="{StaticResource CorTexto}" TextTrimming="CharacterEllipsis" />
+                                                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                                    <TextBlock Text="{Binding Dimensoes}" FontSize="10.5" FontWeight="SemiBold"
+                                                               Foreground="{StaticResource CorPrimaria}" />
+                                                    <TextBlock Text=" · " FontSize="10.5" Foreground="{StaticResource CorTextoSuave}" />
+                                                    <TextBlock Text="{Binding Distribuicao}" FontSize="10.5"
+                                                               Foreground="{StaticResource CorTextoSuave}" />
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
 
                             <TextBlock Text="Sensor / tipo de mídia" Style="{StaticResource Rotulo}" />
-                            <ComboBox ItemsSource="{Binding TiposMidia}"
-                                      SelectedItem="{Binding TipoMidiaSelecionado, Mode=TwoWay}"
-                                      DisplayMemberPath="Nome" Margin="0,3,0,10" />
+                            <ListBox ItemsSource="{Binding TiposMidia}"
+                                     SelectedItem="{Binding TipoMidiaSelecionado, Mode=TwoWay}"
+                                     ItemContainerStyle="{StaticResource CartaoSeletorMidiaItem}"
+                                     Background="Transparent" BorderThickness="0" Padding="0"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                     Margin="0,4,0,10">
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Columns="2" />
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="46" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <views:IlustracaoMidia Grid.Column="0" Tipo="{Binding Tipo}" Width="40" Height="38"
+                                                                   HorizontalAlignment="Left" VerticalAlignment="Center" />
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding NomeCurto}" FontSize="11" FontWeight="Bold"
+                                                           Foreground="{StaticResource CorTexto}" TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Text="{Binding Descricao}" FontSize="9.5"
+                                                           Foreground="{StaticResource CorTextoSuave}" TextWrapping="Wrap" LineHeight="12" Margin="0,1,0,0" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
 
                             <WrapPanel Margin="0,4,0,0">
                                 <StackPanel Style="{StaticResource CampoMedida}">

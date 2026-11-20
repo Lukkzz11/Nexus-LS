@@ -19,8 +19,29 @@ public partial class ProdutoItemViewModel : ObservableObject
     [ObservableProperty]
     private string? _codigoBarras;
 
-    [ObservableProperty]
     private string _tamanhoSelecionado = Tamanhos.SemTamanho;
+
+    /// <summary>
+    /// Tamanho selecionado na linha do catálogo. Ignora valores nulos ou fora da lista
+    /// enviados pelo ComboBox do WPF durante a virtualização/troca de abas, evitando resetar a linha.
+    /// </summary>
+    public string TamanhoSelecionado
+    {
+        get => _tamanhoSelecionado;
+        set
+        {
+            if (string.IsNullOrWhiteSpace(value)) return;
+            if (OpcoesTamanho is { Count: > 0 } && !OpcoesTamanho.Contains(value, StringComparer.OrdinalIgnoreCase))
+                return;
+
+            var canonic = OpcoesTamanho?.FirstOrDefault(o => string.Equals(o, value, StringComparison.OrdinalIgnoreCase)) ?? value;
+            if (SetProperty(ref _tamanhoSelecionado, canonic))
+            {
+                OnPropertyChanged(nameof(CodigoBarrasExibicao));
+                OnPropertyChanged(nameof(CodigoExibicaoColuna));
+            }
+        }
+    }
 
     [ObservableProperty]
     private int _quantidadeAdicionar = 1;
@@ -43,6 +64,15 @@ public partial class ProdutoItemViewModel : ObservableObject
     /// <summary>Código da etiqueta no tamanho escolhido (EAN-13, ou referência + número do tamanho).</summary>
     public string CodigoBarrasExibicao =>
         CodigoBarrasTamanho.Resolver(Produto, TamanhoParaCodigo) ?? "—";
+
+    /// <summary>
+    /// Código principal mostrado na primeira coluna do catálogo: prioriza a Referência (ou Ref + Tamanho),
+    /// depois o EAN-13 salvo, e só usa INT-0000xx se o produto não tiver referência nem código de barras.
+    /// </summary>
+    public string CodigoExibicaoColuna =>
+        !string.IsNullOrWhiteSpace(Referencia)
+            ? (CodigoBarrasTamanho.ResolverReferencia(Produto, TamanhoParaCodigo) ?? Referencia.Trim())
+            : (!string.IsNullOrWhiteSpace(CodigoBarras) ? CodigoBarras.Trim() : (CodigoInterno ?? "—"));
 
     private string? TamanhoParaCodigo =>
         string.Equals(TamanhoSelecionado, TodosOsTamanhos, StringComparison.OrdinalIgnoreCase) ? "" : TamanhoSelecionado;
@@ -116,9 +146,6 @@ public partial class ProdutoItemViewModel : ObservableObject
         AtualizarInfoEtiqueta();
     }
 
-    partial void OnTamanhoSelecionadoChanged(string value) =>
-        OnPropertyChanged(nameof(CodigoBarrasExibicao));
-
     public void AtualizarInfoEtiqueta()
     {
         var info = GerenciadorEtiquetasProdutoService.ObterInfoEtiqueta(Id);
@@ -134,5 +161,6 @@ public partial class ProdutoItemViewModel : ObservableObject
         OnPropertyChanged(nameof(TemCodigoBarras));
         OnPropertyChanged(nameof(StatusCodigoTexto));
         OnPropertyChanged(nameof(CodigoBarrasExibicao));
+        OnPropertyChanged(nameof(CodigoExibicaoColuna));
     }
 }
