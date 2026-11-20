@@ -2,6 +2,17 @@
 
 Rascunho de 19/11/2026. Marcado como **[existe]**, **[proposto]** ou **[decisão pendente]**. Nada deste documento foi construído ainda; ele serve para fechar o escopo antes de criar o projeto.
 
+## 0. Direção definida pelo dono (19/11/2026)
+
+- O catálogo online **vem para dentro deste projeto** (mesmo repositório e mesmo instalador), em vez de ficar escondido na Gestão do PDV.
+- O app é **híbrido: web + PC**. O mesmo catálogo (React) roda dentro do app do PC (WebView2, como o editor de vitrine já faz hoje) e publicado como site para o cliente final.
+- As **imagens dos produtos vêm do Firestore**, no mesmo modelo do sistema **Life** (ERP PDV Life, projeto `pdv---lifesurf`), para o catálogo ter fotos e aparência parecidas com as do Life.
+- Regra de ouro mantida: o Nexus **só lê** o projeto do ERP Life; nada é gravado lá (`GuardaErp`). As fotos novas e a vitrine continuam indo ao Firebase **do catálogo** (projeto A).
+
+Consequência: o catálogo passa a ter **duas fontes de foto**, em ordem de prioridade: (1) foto do produto no Nexus (`FotoUrl`/`FotoArquivo`); (2) foto do mesmo produto no Firestore do Life (leitura). Casamento do produto pela referência/`nexusGuid`.
+
+**O que ainda não sei:** em qual campo do documento `empresas/{empresa}/produtos/{id}` do Life ficam as imagens (lista de URLs? caminho no Storage?). O repositório não registra isso. Preciso de um produto de exemplo (campos, sem senha nem chave) para ligar as fotos certo.
+
 ## 1. O problema
 
 Hoje o catálogo online é uma parte escondida do Nexus LS: o dono precisa abrir o PDV, ir em Gestão, editar a vitrine e clicar em publicar. O cliente final só vê um catálogo. A loja não tem um site de verdade (endereço próprio, página inicial, sobre, contato) e o pedido do cliente não fecha com pagamento.
@@ -35,6 +46,8 @@ Ideia: um **app separado** (como o BarTender), focado só em vender pela interne
 | App do dono | Desktop Windows (WPF, .NET 10), igual ao resto do Nexus. Edita o site, publica, vê pedidos. |
 | Site do cliente | Páginas estáticas geradas (React/Vite) hospedadas de graça (Firebase Hosting ou Cloudflare Pages). |
 | Dados públicos | Firebase projeto A (leitura pública), como hoje. Nada de dado financeiro ou de cliente. |
+| Fotos | Projeto A (Storage) para as do Nexus; leitura das fotos do Life no Firestore do ERP, sem gravar nada lá. |
+| Híbrido | Um só código do catálogo: abre no WebView2 dentro do app do PC e é publicado como site. |
 | Pedidos | Coleção própria no Firebase; o Nexus LS importa (já existe o caminho). |
 | Domínio | Endereço grátis da hospedagem; domínio próprio opcional (o dono compra). |
 | Distribuição | Mesmo release do GitHub e mesmo instalador/atualizador do Nexus. |
@@ -64,4 +77,5 @@ Regra mantida: **grava local, publica só no clique, a nuvem é cópia.**
 3. Hospedagem: **grátis com endereço do provedor** ou o dono já tem domínio?
 4. O app novo **substitui** a vitrine dentro do Nexus LS ou **convive** com ela por um tempo?
 5. Vendas só **varejo** ou também **atacado** (com preço e quantidade mínima próprios)?
-6. Nome: **Nexus Loja Online**, **Nexus Vitrine** ou outro?
+6. Em que campo do produto do Life ficam as imagens? (veja a seção 0)
+7. Nome: **Nexus Loja Online**, **Nexus Vitrine** ou outro?
