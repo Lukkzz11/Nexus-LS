@@ -1020,8 +1020,16 @@ public partial class DesignerView : UserControl
             }
         }
 
+        // Rolagem automática: arrastando perto da borda (ou para fora), a área acompanha o mouse.
+        const double borda = 24, passo = 20;
+        var sv = CanvasScrollViewer;
+        if (telaAtual.X < borda) sv.ScrollToHorizontalOffset(Math.Max(0, sv.HorizontalOffset - passo));
+        else if (telaAtual.X > sv.ViewportWidth - borda) sv.ScrollToHorizontalOffset(Math.Min(sv.ScrollableWidth, sv.HorizontalOffset + passo));
+        if (telaAtual.Y < borda) sv.ScrollToVerticalOffset(Math.Max(0, sv.VerticalOffset - passo));
+        else if (telaAtual.Y > sv.ViewportHeight - borda) sv.ScrollToVerticalOffset(Math.Min(sv.ScrollableHeight, sv.VerticalOffset + passo));
+
         var pos = e.GetPosition(EditorCanvas);
-        Canvas.SetLeft(_retanguloMarquee!, Math.Min(pos.X, _pontoInicialMarquee.X));
+        Canvas.SetLeft(_retanguloMarquee!,Math.Min(pos.X, _pontoInicialMarquee.X));
         Canvas.SetTop(_retanguloMarquee!, Math.Min(pos.Y, _pontoInicialMarquee.Y));
         _retanguloMarquee!.Width = Math.Abs(pos.X - _pontoInicialMarquee.X);
         _retanguloMarquee.Height = Math.Abs(pos.Y - _pontoInicialMarquee.Y);

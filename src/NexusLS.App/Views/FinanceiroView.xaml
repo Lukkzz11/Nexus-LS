@@ -150,6 +150,7 @@
                           BorderThickness="0" Background="Transparent" AutomationProperties.Name="Lista de contas">
                     <DataGrid.RowStyle>
                         <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
+                            <Setter Property="Background" Value="{DynamicResource CorPainel}" />
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding Atrasado}" Value="True">
                                     <Setter Property="Foreground" Value="{DynamicResource CorPerigo}" />

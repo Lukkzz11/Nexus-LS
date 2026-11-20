@@ -198,6 +198,53 @@ public class CamadasESelecaoRetanguloTests
     }
 
     [Fact]
+    public void ViewModel_Duplicar_ComSelecaoMultipla_DuplicaTodosESelecionaOsNovos()
+    {
+        var vm = NovoVm(out var fundo, out var meio, out var topo);
+        fundo.IsSelected = true;
+        meio.IsSelected = true;
+        vm.ElementoSelecionado = meio;
+
+        vm.DuplicarSelecionadoCommand.Execute(null);
+
+        Assert.Equal(5, vm.Modelo.Elementos.Count);
+        var novos = vm.Modelo.Elementos.Skip(3).ToList();
+        Assert.All(novos, n => Assert.True(n.IsSelected));
+        Assert.False(fundo.IsSelected);
+        Assert.False(meio.IsSelected);
+        Assert.True(novos[0].X > fundo.X);
+        Assert.True(novos[1].X > meio.X);
+    }
+
+    [Fact]
+    public void ViewModel_CopiarERecortarEColar_ComSelecaoMultipla_LevamTodos()
+    {
+        var vm = NovoVm(out var fundo, out var meio, out var topo);
+        fundo.IsSelected = true;
+        topo.IsSelected = true;
+        vm.ElementoSelecionado = topo;
+
+        vm.CopiarCommand.Execute(null);
+        vm.ColarCommand.Execute(null);
+        Assert.Equal(5, vm.Modelo.Elementos.Count);
+        Assert.Equal(2, vm.Modelo.Elementos.Count(e => e.IsSelected));
+
+        vm.RecortarCommand.Execute(null);
+        Assert.Equal(3, vm.Modelo.Elementos.Count);
+        vm.ColarCommand.Execute(null);
+        Assert.Equal(5, vm.Modelo.Elementos.Count);
+    }
+
+    [Fact]
+    public void ViewModel_Duplicar_SemMarcacao_UsaOElementoPrincipal()
+    {
+        var vm = NovoVm(out _, out var meio, out _);
+        vm.ElementoSelecionado = meio;
+        vm.DuplicarSelecionadoCommand.Execute(null);
+        Assert.Equal(4, vm.Modelo.Elementos.Count);
+    }
+
+    [Fact]
     public void ViewModel_TrazerParaFrente_ComSelecaoMultipla_MoveOsDoisEDesfazRefaz()
     {
         var vm = NovoVm(out var fundo, out var meio, out var topo);

@@ -787,22 +787,39 @@ public partial class DesignerViewModel : ObservableObject
         AbaInspetorAtiva = aba;
     }
 
+    /// <summary>Os elementos que Copiar/Recortar/Duplicar usam: todos os marcados (na ordem das camadas) ou, sem marcação, o principal.</summary>
+    private List<ElementoDesign> AlvosDaSelecao()
+    {
+        var alvos = Modelo.Elementos.Where(e => e.IsSelected).ToList();
+        if (alvos.Count == 0 && ElementoSelecionado != null) alvos.Add(ElementoSelecionado);
+        return alvos;
+    }
+
+    /// <summary>Marca exatamente estes elementos (o último vira o principal).</summary>
+    private void SelecionarVarios(IReadOnlyList<ElementoDesign> elementos)
+    {
+        foreach (var item in Modelo.Elementos) item.IsSelected = elementos.Contains(item);
+        ElementoSelecionado = elementos.Count > 0 ? elementos[^1] : null;
+    }
+
     [RelayCommand]
     public void Copiar()
     {
-        if (ElementoSelecionado == null) return;
+        var alvos = AlvosDaSelecao();
+        if (alvos.Count == 0) return;
         _areaTransferencia.Clear();
-        _areaTransferencia.Add(ElementoSelecionado.Clonar());
+        foreach (var e in alvos) _areaTransferencia.Add(e.Clonar());
     }
 
     [RelayCommand]
     public void Recortar()
     {
-        if (ElementoSelecionado == null) return;
+        var alvos = AlvosDaSelecao();
+        if (alvos.Count == 0) return;
         RegistrarSnapshot();
         _areaTransferencia.Clear();
-        _areaTransferencia.Add(ElementoSelecionado.Clonar());
-        Modelo.Elementos.Remove(ElementoSelecionado);
+        foreach (var e in alvos) _areaTransferencia.Add(e.Clonar());
+        foreach (var e in alvos) Modelo.Elementos.Remove(e);
         ElementoSelecionado = null;
         NotificarCamadasAlteradas();
         AtualizarPreview();
@@ -813,21 +830,18 @@ public partial class DesignerViewModel : ObservableObject
     {
         if (_areaTransferencia.Count == 0) return;
         RegistrarSnapshot();
-        ElementoDesign? ultimoColado = null;
+        var colados = new List<ElementoDesign>();
         foreach (var item in _areaTransferencia)
         {
             var novo = item.Clonar();
-            novo.X = Math.Min(Modelo.LarguraMm - novo.Largura, novo.X + 2.0);
-            novo.Y = Math.Min(Modelo.AlturaMm - novo.Altura, novo.Y + 2.0);
+            novo.X = Math.Max(0, Math.Min(Modelo.LarguraMm - novo.Largura, novo.X + 2.0));
+            novo.Y = Math.Max(0, Math.Min(Modelo.AlturaMm - novo.Altura, novo.Y + 2.0));
             novo.Nome = novo.Nome.Replace(" (Cópia)", "") + " (Colado)";
             Modelo.Elementos.Add(novo);
-            ultimoColado = novo;
+            colados.Add(novo);
         }
         NotificarCamadasAlteradas();
-        if (ultimoColado != null)
-        {
-            SelecionarElemento(ultimoColado);
-        }
+        SelecionarVarios(colados);
         AtualizarPreview();
     }
 

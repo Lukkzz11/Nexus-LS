@@ -531,14 +531,20 @@ public partial class DesignerViewModel
     [RelayCommand]
     public void DuplicarSelecionado()
     {
-        if (ElementoSelecionado == null) return;
+        var alvos = AlvosDaSelecao();
+        if (alvos.Count == 0) return;
         RegistrarSnapshot();
-        var clone = ElementoSelecionado.Clonar();
-        clone.X = Math.Min(Modelo.LarguraMm - clone.Largura, clone.X + 2.0);
-        clone.Y = Math.Min(Modelo.AlturaMm - clone.Altura, clone.Y + 2.0);
-        Modelo.Elementos.Add(clone);
+        var clones = new List<ElementoDesign>();
+        foreach (var alvo in alvos)
+        {
+            var clone = alvo.Clonar();
+            clone.X = Math.Max(0, Math.Min(Modelo.LarguraMm - clone.Largura, clone.X + 2.0));
+            clone.Y = Math.Max(0, Math.Min(Modelo.AlturaMm - clone.Altura, clone.Y + 2.0));
+            Modelo.Elementos.Add(clone);
+            clones.Add(clone);
+        }
         NotificarCamadasAlteradas();
-        SelecionarElemento(clone);
+        SelecionarVarios(clones);
     }
 
     // =========================================================================
