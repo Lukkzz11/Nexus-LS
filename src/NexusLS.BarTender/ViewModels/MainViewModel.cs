@@ -131,7 +131,7 @@ public partial class MainViewModel : ObservableObject
         _impressoraEtiquetas = impressoraEtiquetas;
         _designerVM = new DesignerViewModel(_dialogo)
         {
-            SolicitarIrParaImpressao = IrParaFilaImpressaoAtalho,
+            SolicitarIrParaImpressao = ImprimirDoEstudio,
             SolicitarPadronizarEtiquetas = AbrirPadronizarEtiqueta
         };
 
@@ -474,7 +474,7 @@ public partial class MainViewModel : ObservableObject
         if (produtoItem == null) return;
 
         // Mostra os tamanhos do produto; ao escolher um, o Estúdio abre a etiqueta já com ele.
-        var tamanhos = (produtoItem.Produto.Tamanhos ?? new List<ProdutoTamanho>())
+        var tamanhos = (produtoItem.Produto.Tamanhos ?? new List<ProdutoTamanho>()).OrderBy(t => t.Ordem)
             .Select(t => (t.Tamanho ?? "").Trim())
             .Where(t => t.Length > 0 && !string.Equals(t, Tamanhos.SemTamanho, StringComparison.OrdinalIgnoreCase))
             .Distinct(StringComparer.OrdinalIgnoreCase)

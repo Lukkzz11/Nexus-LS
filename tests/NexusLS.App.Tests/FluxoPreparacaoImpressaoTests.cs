@@ -166,6 +166,59 @@ public class FluxoPreparacaoImpressaoTests : IDisposable
     }
 
     [Fact]
+    public void Ctrl_P_no_estudio_abre_o_modal_do_produto_e_leva_a_preparacao_com_o_desenho_da_tela()
+    {
+        var vm = CriarMainViewModel();
+        var produto = BermudaCargo();
+        vm.TodosProdutos.Add(new ProdutoItemViewModel(produto));
+        vm.DesignerVM.DefinirProduto(produto, "Loja", carregarEtiquetaSalvaSeHouver: false);
+        var desenhoDaTela = vm.DesignerVM.Modelo;
+        vm.TelaAtiva = "Estudio";
+
+        var abriuModal = false;
+        vm.AbrirModalProduto = selecao =>
+        {
+            abriuModal = true;
+            selecao.DefinirQuantidade("42", 10);
+            return AcaoProdutoCatalogo.Impressao;
+        };
+
+        vm.DesignerVM.IrParaImpressaoRapidaCommand.Execute(null);
+
+        Assert.True(abriuModal);
+        Assert.Equal("Preparacao", vm.TelaAtiva);
+        Assert.Equal(10, vm.PreparacaoVM.TotalEtiquetas);
+        Assert.Same(desenhoDaTela, vm.PreparacaoVM.ModeloOriginal);
+    }
+
+    [Fact]
+    public void Ctrl_P_no_estudio_fechando_o_modal_continua_no_estudio()
+    {
+        var vm = CriarMainViewModel();
+        var produto = BermudaCargo();
+        vm.TodosProdutos.Add(new ProdutoItemViewModel(produto));
+        vm.DesignerVM.DefinirProduto(produto, "Loja", carregarEtiquetaSalvaSeHouver: false);
+        vm.TelaAtiva = "Estudio";
+        vm.AbrirModalProduto = _ => AcaoProdutoCatalogo.Nenhuma;
+
+        vm.DesignerVM.IrParaImpressaoRapidaCommand.Execute(null);
+
+        Assert.Equal("Estudio", vm.TelaAtiva);
+    }
+
+    [Fact]
+    public void Ctrl_P_no_estudio_sem_produto_vai_direto_para_a_fila()
+    {
+        var vm = CriarMainViewModel();
+        vm.TelaAtiva = "Estudio";
+        vm.AbrirModalProduto = _ => throw new InvalidOperationException("não deveria abrir o modal");
+
+        vm.DesignerVM.IrParaImpressaoRapidaCommand.Execute(null);
+
+        Assert.Equal("Fila", vm.TelaAtiva);
+    }
+
+    [Fact]
     public void Tipo_de_etiqueta_escolhido_no_modal_troca_o_modelo_so_para_esta_impressao()
     {
         var vm = CriarMainViewModel();

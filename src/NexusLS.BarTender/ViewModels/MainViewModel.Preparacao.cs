@@ -61,6 +61,31 @@ public partial class MainViewModel
     }
 
     /// <summary>
+    /// Ctrl+P no Estúdio: com um produto aberto, mostra o mesmo modal do catálogo (quantidade por tamanho) e, em
+    /// "Ir para Impressão", leva à preparação com o desenho atual do Estúdio. Sem produto, vai direto à fila.
+    /// </summary>
+    public void ImprimirDoEstudio()
+    {
+        var produto = DesignerVM.ProdutoAtual;
+        var item = produto is null ? null : TodosProdutos.FirstOrDefault(p => p.Produto.Id == produto.Id);
+        if (item is null)
+        {
+            IrParaFilaImpressaoAtalho();
+            return;
+        }
+
+        if (!_selecoesPorProduto.TryGetValue(item.Produto.Id, out var selecao))
+        {
+            selecao = new SelecaoImpressaoViewModel(item);
+            _selecoesPorProduto[item.Produto.Id] = selecao;
+        }
+
+        // "Abrir no Estúdio" ou fechar: continua onde está (o desenho não é recarregado).
+        if (AbrirModalProduto(selecao) == AcaoProdutoCatalogo.Impressao)
+            MostrarPreparacao(selecao, item, usarModeloDoEstudio: true);
+    }
+
+    /// <summary>
     /// "Editar quantidades" dentro da preparação: reabre o mesmo modal com a seleção atual.
     /// A ação de Estúdio é tratada pela própria página (callback IrParaEstudio).
     /// </summary>
@@ -113,12 +138,14 @@ public partial class MainViewModel
     /// Leva a seleção para a página de preparação usando o modelo vinculado ao produto
     /// (ou o modelo atual do Estúdio quando o produto ainda não tem etiqueta própria).
     /// </summary>
-    public void MostrarPreparacao(SelecaoImpressaoViewModel selecao, ProdutoItemViewModel? item = null)
+    public void MostrarPreparacao(SelecaoImpressaoViewModel selecao, ProdutoItemViewModel? item = null, bool usarModeloDoEstudio = false)
     {
         if (selecao == null) return;
 
         // Tipo escolhido no modal (tag, composição, preço...) vale só para esta impressão.
-        var modelo = selecao.TipoEtiquetaSelecionado.Fabrica?.Invoke() ?? ModeloDoProduto(selecao.Produto);
+        // Vindo do Estúdio (Ctrl+P), a etiqueta "vinculada" é o desenho que está na tela, mesmo sem salvar.
+        var modelo = selecao.TipoEtiquetaSelecionado.Fabrica?.Invoke()
+                     ?? (usarModeloDoEstudio ? DesignerVM.Modelo : ModeloDoProduto(selecao.Produto));
         _selecoesPorProduto[selecao.Produto.Id] = selecao;
 
         PreparacaoVM.DefinirImpressoras(
