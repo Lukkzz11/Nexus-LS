@@ -48,8 +48,11 @@ $exeOrigem = Join-Path $PastaAlinhavo "target\release\alinhavo.exe"
 if (-not $PularCompilacao) {
     Write-Host "==> Compilando Alinhavo $versao (cargo build -p atl-app --release)..." -ForegroundColor Cyan
     Push-Location $PastaAlinhavo
+    # o cargo escreve avisos normais no stderr; no PowerShell 5.1 isso viraria erro com "Stop"
+    $antes = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
     try { cargo build -p atl-app --release; if ($LASTEXITCODE -ne 0) { throw "Falha ao compilar o Alinhavo." } }
-    finally { Pop-Location }
+    finally { $ErrorActionPreference = $antes; Pop-Location }
 }
 if (-not (Test-Path $exeOrigem)) { throw "alinhavo.exe nao encontrado em $exeOrigem" }
 
