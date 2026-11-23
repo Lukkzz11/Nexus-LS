@@ -137,14 +137,14 @@
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border Width="212" Background="{StaticResource CorSuperficieSuave}"
+                                        <Border Width="172" Background="{StaticResource CorSuperficieSuave}"
                                                 BorderBrush="{StaticResource CorBorda}" BorderThickness="1"
-                                                CornerRadius="{StaticResource RaioMedio}" Padding="10" Margin="0,0,12,12">
+                                                CornerRadius="{StaticResource RaioMedio}" Padding="8" Margin="0,0,10,10">
                                             <StackPanel>
                                                 <Border Background="White" BorderBrush="{StaticResource CorBorda}"
                                                         BorderThickness="1" CornerRadius="{StaticResource RaioPequeno}"
-                                                        Height="118" Margin="0,0,0,8">
-                                                    <Image Source="{Binding Imagem}" Stretch="Uniform" Margin="6" />
+                                                        Height="88" Margin="0,0,0,7">
+                                                    <Image Source="{Binding Imagem}" Stretch="Uniform" Margin="5" />
                                                 </Border>
                                                 <Grid>
                                                     <Grid.ColumnDefinitions>
@@ -153,9 +153,9 @@
                                                     </Grid.ColumnDefinitions>
                                                     <StackPanel VerticalAlignment="Center">
                                                         <TextBlock Text="{Binding Tamanho, StringFormat='Tamanho {0}'}"
-                                                                   FontSize="12.5" FontWeight="Bold"
+                                                                   FontSize="11.5" FontWeight="Bold"
                                                                    Foreground="{StaticResource CorTexto}" />
-                                                        <TextBlock Text="{Binding CodigoBarras}" FontSize="10.5"
+                                                        <TextBlock Text="{Binding CodigoBarras}" FontSize="9.5"
                                                                    Foreground="{StaticResource CorTextoSuave}" />
                                                     </StackPanel>
 
@@ -163,18 +163,18 @@
                                                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center"
                                                                 Visibility="{Binding Linha, Converter={StaticResource NullParaColapsadoConverter}}">
                                                         <Button Command="{Binding Linha.DiminuirCommand}" Style="{StaticResource BotaoSecundario}"
-                                                                Width="24" Height="26" Padding="0" Margin="0,0,3,0"
+                                                                Width="20" Height="23" Padding="0" Margin="0,0,2,0"
                                                                 ToolTip="Diminuir quantidade">
-                                                            <ui:SymbolIcon Symbol="Subtract24" FontSize="10" />
+                                                            <ui:SymbolIcon Symbol="Subtract24" FontSize="9" />
                                                         </Button>
                                                         <TextBox Text="{Binding Linha.QuantidadeTexto, UpdateSourceTrigger=PropertyChanged}"
-                                                                 Width="44" Height="26" TextAlignment="Center"
-                                                                 VerticalContentAlignment="Center" Padding="1"
-                                                                 FontSize="12" FontWeight="Bold" />
+                                                                 Width="34" Height="23" TextAlignment="Center"
+                                                                 VerticalContentAlignment="Center" Padding="0"
+                                                                 FontSize="11" FontWeight="Bold" />
                                                         <Button Command="{Binding Linha.AumentarCommand}" Style="{StaticResource BotaoSecundario}"
-                                                                Width="24" Height="26" Padding="0" Margin="3,0,0,0"
+                                                                Width="20" Height="23" Padding="0" Margin="2,0,0,0"
                                                                 ToolTip="Aumentar quantidade">
-                                                            <ui:SymbolIcon Symbol="Add24" FontSize="10" />
+                                                            <ui:SymbolIcon Symbol="Add24" FontSize="9" />
                                                         </Button>
                                                     </StackPanel>
                                                 </Grid>
@@ -278,7 +278,7 @@
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
                                                 <Border Margin="3" CornerRadius="{StaticResource RaioPequeno}"
-                                                        BorderThickness="1" Height="74">
+                                                        BorderThickness="1" Height="58">
                                                     <Border.Style>
                                                         <Style TargetType="Border">
                                                             <Setter Property="Background" Value="{StaticResource CorSuperficieSuave}" />
@@ -333,7 +333,7 @@
                                      SelectedItem="{Binding MidiaSelecionada, Mode=TwoWay}"
                                      ItemContainerStyle="{StaticResource CartaoSeletorMidiaItem}"
                                      Background="Transparent" BorderThickness="0" Padding="0"
-                                     MaxHeight="215" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                     MaxHeight="260" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                      Margin="0,4,0,10">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
@@ -356,6 +356,32 @@
                                                 </StackPanel>
                                             </StackPanel>
                                         </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+
+                            <TextBlock Text="Etiquetas por fileira (depende do papel)" Style="{StaticResource Rotulo}" />
+                            <ListBox ItemsSource="{Binding OpcoesFileira}"
+                                     SelectedItem="{Binding FileiraSelecionada, Mode=TwoWay}"
+                                     ItemContainerStyle="{StaticResource CartaoSeletorMidiaItem}"
+                                     Background="Transparent" BorderThickness="0" Padding="0"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                     Margin="0,4,0,10"
+                                     ToolTip="Escolha quantas etiquetas o papel imprime lado a lado">
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Columns="3" />
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Nome}" FontSize="11" FontWeight="Bold"
+                                                       Foreground="{StaticResource CorTexto}" />
+                                            <TextBlock Text="{Binding Descricao}" FontSize="9.5"
+                                                       Foreground="{StaticResource CorTextoSuave}"
+                                                       TextWrapping="Wrap" LineHeight="12" Margin="0,1,0,0" />
+                                        </StackPanel>
                                     </DataTemplate>
                                 </ListBox.ItemTemplate>
                             </ListBox>

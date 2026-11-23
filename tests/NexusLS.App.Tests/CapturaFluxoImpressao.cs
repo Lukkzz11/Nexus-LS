@@ -73,6 +73,12 @@ public sealed class CapturaFluxoImpressao
         preparacao.DefinirImpressoras(new[] { "HP LaserJet (exemplo)" }, "HP LaserJet (exemplo)");
         var folha = new PreparacaoImpressaoView { DataContext = preparacao };
         RenderizarTela(folha, Path.Combine(pasta, "22-preparacao-folha.png"), 1360, 980);
+
+        preparacao.MidiaSelecionada = PerfisMidia.RoloTagRoupas2Colunas50x75;
+        preparacao.PerfilImpressoraSelecionado = PerfilImpressora.Perfis[0];
+        preparacao.DefinirImpressoras(new[] { "Zebra ZD230 (exemplo)" }, "Zebra ZD230 (exemplo)");
+        var tag = new PreparacaoImpressaoView { DataContext = preparacao };
+        RenderizarTela(tag, Path.Combine(pasta, "23-preparacao-tag-2-colunas.png"), 1360, 980);
     }
 
     private static void CapturarPadronizar(string pasta)

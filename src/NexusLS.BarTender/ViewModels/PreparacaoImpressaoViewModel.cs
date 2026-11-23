@@ -57,6 +57,12 @@ public sealed record LinhaConferenciaPreparacao(string Tamanho, int Quantidade);
 public sealed record OpcaoTipoMidia(string Nome, TipoMidiaEtiqueta Tipo, string NomeCurto = "", string Descricao = "");
 
 /// <summary>
+/// Quantas etiquetas a mídia imprime lado a lado em cada fileira. Varia com o papel:
+/// rolo simples (1), tag de roupas com 2 colunas (2) ou folha com 3 colunas (3).
+/// </summary>
+public sealed record OpcaoFileira(int Colunas, string Nome, string Descricao);
+
+/// <summary>
 /// Página filha de preparação: recebe produto, tamanhos, quantidades e o modelo vinculado,
 /// mostra a prévia real, configura mídia/impressora e envia para o Windows.
 /// Não grava nada no banco e não altera o modelo do produto.
@@ -102,6 +108,13 @@ public partial class PreparacaoImpressaoViewModel : ObservableObject
     };
 
     public ObservableCollection<PerfilMidia> MidiasDisponiveis { get; } = new(PerfisMidia.ListaPadrao);
+
+    public IReadOnlyList<OpcaoFileira> OpcoesFileira { get; } = new[]
+    {
+        new OpcaoFileira(1, "1 por fileira", "Uma etiqueta na largura"),
+        new OpcaoFileira(2, "2 por fileira", "Duas lado a lado"),
+        new OpcaoFileira(3, "3 por fileira", "Três lado a lado")
+    };
 
     public ObservableCollection<string> ImpressorasInstaladas { get; } = new();
 
@@ -182,6 +195,9 @@ public partial class PreparacaoImpressaoViewModel : ObservableObject
 
     [ObservableProperty]
     private PerfilMidia? _midiaSelecionada;
+
+    [ObservableProperty]
+    private OpcaoFileira? _fileiraSelecionada;
 
     [ObservableProperty]
     private PerfilImpressora _perfilImpressoraSelecionado = PerfilImpressora.Perfis[0];
@@ -288,6 +304,7 @@ public partial class PreparacaoImpressaoViewModel : ObservableObject
             MargemEsquerdaMm = 0;
             MargemSuperiorMm = 0;
             NomeMidia = $"Do modelo ({modelo.LarguraMm:0.#} × {modelo.AlturaMm:0.#} mm)";
+            FileiraSelecionada = OpcoesFileira.FirstOrDefault(o => o.Colunas == 1);
         }
         finally
         {
@@ -347,7 +364,7 @@ public partial class PreparacaoImpressaoViewModel : ObservableObject
             if (Selecao is null || Selecao.Total <= 0) return "Nenhuma etiqueta";
             return TipoMidia == TipoMidiaEtiqueta.Folha
                 ? $"{PaginasNecessarias} folha(s) A4 · {EtiquetasPorPagina} etiqueta(s) por folha"
-                : $"{PaginasNecessarias} página(s) no rolo · {EtiquetasPorPagina} por vez";
+                : $"{PaginasNecessarias} página(s) no rolo · {EtiquetasPorPagina} por página";
         }
     }
 
@@ -432,11 +449,39 @@ public partial class PreparacaoImpressaoViewModel : ObservableObject
             MargemSuperiorMm = midia.MargemSuperiorMm;
             Colunas = midia.Colunas;
             Linhas = midia.Linhas;
+            FileiraSelecionada = OpcoesFileira.FirstOrDefault(o => o.Colunas == midia.Colunas);
         }
         finally
         {
             _carregandoMidia = false;
         }
+    }
+
+    /// <summary>
+    /// Ao trocar a quantidade de etiquetas por fileira, alarga a página do rolo para caber
+    /// as colunas. Na folha A4 o tamanho é fixo, então só a distribuição muda.
+    /// </summary>
+    partial void OnColunasChanged(int value)
+    {
+        if (_carregandoMidia) return;
+
+        var opcao = OpcoesFileira.FirstOrDefault(o => o.Colunas == value);
+        if (!ReferenceEquals(opcao, FileiraSelecionada))
+            FileiraSelecionada = opcao;
+
+        if (TipoMidia == TipoMidiaEtiqueta.Folha || value < 1) return;
+
+        Linhas = 1;
+        PaginaAlturaMm = AlturaEtiquetaMm;
+        PaginaLarguraMm = Math.Round(
+            MargemEsquerdaMm * 2 + value * LarguraEtiquetaMm + (value - 1) * EspacoHorizontalMm, 2);
+    }
+
+    partial void OnFileiraSelecionadaChanged(OpcaoFileira? value)
+    {
+        if (value is null || _carregandoMidia) return;
+        if (Colunas != value.Colunas)
+            Colunas = value.Colunas;
     }
 
     private void AtualizarMidia()
@@ -685,12 +730,16 @@ public partial class PreparacaoImpressaoViewModel : ObservableObject
         if (Selecao is null) return;
 
         var ehFolha = TipoMidia == TipoMidiaEtiqueta.Folha;
-        var limite = ehFolha ? EtiquetasPorPagina : Math.Min(6, Selecao.Total);
-        MapaColunas = ehFolha ? Math.Max(1, Colunas) : 1;
+        var colunas = Math.Max(1, Colunas);
 
-        // No rolo, uma "página" é a própria etiqueta: a célula mantém a proporção real da mídia
-        // em vez de esticar pela largura toda.
-        const double alturaCelula = 74;
+        // No rolo mostramos 4 etiquetas em 1 coluna, 6 em 2 colunas e 6 em 3 colunas:
+        // o suficiente para o operador conferir a fileira sem uma prévia gigante.
+        var linhasVisiveis = colunas >= 3 ? 2 : colunas == 2 ? 3 : 4;
+        var limite = ehFolha ? EtiquetasPorPagina : Math.Min(colunas * linhasVisiveis, Selecao.Total);
+        MapaColunas = colunas;
+
+        // A célula mantém a proporção real da mídia em vez de esticar pela largura toda.
+        const double alturaCelula = 58;
         MapaLarguraMaxima = ehFolha || PaginaAlturaMm <= 0
             ? double.PositiveInfinity
             : Math.Max(60, alturaCelula * (PaginaLarguraMm / PaginaAlturaMm));
@@ -716,7 +765,9 @@ public partial class PreparacaoImpressaoViewModel : ObservableObject
 
         MapaResumo = ehFolha
             ? $"Primeira folha · {MapaPagina.Count(c => !c.Vazia)} de {EtiquetasPorPagina} posições"
-            : $"Primeiras {Math.Min(limite, Selecao.Total)} de {Selecao.Total} etiquetas (uma por vez no rolo)";
+            : colunas > 1
+                ? $"Primeiras {limite} de {Selecao.Total} etiquetas · {colunas} por fileira"
+                : $"Primeiras {limite} de {Selecao.Total} etiquetas · 1 por vez no rolo";
     }
 
     // ---------------------------------------------------------------- ações

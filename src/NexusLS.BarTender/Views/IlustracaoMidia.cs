@@ -135,6 +135,12 @@ public sealed class IlustracaoMidia : FrameworkElement
 
         if (tipo == TipoMidiaEtiqueta.RoloContinuo)
         {
+            if (colunas > 1)
+            {
+                DesenharContinuoEmColunas(dc, x0, y0, linerW, linerH, colunas);
+                return;
+            }
+
             // Papel contínuo sem espaço entre etiquetas, com linhas tracejadas de corte
             var fitaRect = new Rect(x0 + 2.5, y0 + 2, Math.Max(8, linerW - 5), Math.Max(10, linerH - 4));
             dc.DrawRectangle(PapelEtiqueta, BordaEtiqueta, fitaRect);
@@ -195,6 +201,53 @@ public sealed class IlustracaoMidia : FrameworkElement
                         null,
                         new Rect(x0 + 1, ey + etqH + 0.8, Math.Max(6, linerW - 2), Math.Max(1.5, gapY - 1.6)));
                 }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Tag/rolo contínuo com mais de uma coluna: o papel é uma faixa única, cortada por linhas
+    /// tracejadas na largura (colunas) e no comprimento (altura da etiqueta).
+    /// </summary>
+    private static void DesenharContinuoEmColunas(
+        DrawingContext dc,
+        double x0,
+        double y0,
+        double linerW,
+        double linerH,
+        int colunas)
+    {
+        const double padX = 2.5;
+        const double padY = 2.0;
+        var utilW = Math.Max(8, linerW - (2 * padX));
+        var utilH = Math.Max(8, linerH - (2 * padY));
+        var colW = utilW / colunas;
+        var linhaH = utilH / 2.0;
+
+        dc.DrawRectangle(PapelEtiqueta, BordaEtiqueta, new Rect(x0 + padX, y0 + padY, utilW, utilH));
+
+        for (var c = 1; c < colunas; c++)
+        {
+            var xCorte = x0 + padX + (c * colW);
+            dc.DrawLine(LinhaCortePen, new Point(xCorte, y0 + padY), new Point(xCorte, y0 + padY + utilH));
+        }
+
+        dc.DrawLine(
+            LinhaCortePen,
+            new Point(x0 + padX, y0 + padY + linhaH),
+            new Point(x0 + padX + utilW, y0 + padY + linhaH));
+
+        for (var r = 0; r < 2; r++)
+        {
+            for (var c = 0; c < colunas; c++)
+            {
+                var celula = new Rect(
+                    x0 + padX + (c * colW) + 1.5,
+                    y0 + padY + (r * linhaH) + 1.5,
+                    Math.Max(2, colW - 3),
+                    Math.Max(2, linhaH - 3));
+
+                DesenharSimulacaoConteudo(dc, celula);
             }
         }
     }

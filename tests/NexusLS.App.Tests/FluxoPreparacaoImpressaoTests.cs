@@ -258,6 +258,42 @@ public class FluxoPreparacaoImpressaoTests : IDisposable
     }
 
     [Fact]
+    public void Preparacao_imprime_tag_de_roupas_com_duas_colunas_50x75()
+    {
+        var vm = new PreparacaoImpressaoViewModel(_dialogos, _impressora);
+        vm.Carregar(SelecaoBermuda(), Modelo50x30(), "NEXUS LS");
+
+        vm.MidiaSelecionada = PerfisMidia.RoloTagRoupas2Colunas50x75;
+
+        Assert.Equal(TipoMidiaEtiqueta.RoloContinuo, vm.TipoMidia);
+        Assert.Equal(2, vm.Colunas);
+        Assert.Equal(2, vm.EtiquetasPorPagina);
+        Assert.Equal(50, vm.LarguraEtiquetaMm);
+        Assert.Equal(75, vm.AlturaEtiquetaMm);
+
+        // A prévia mostra a fileira real: 2 colunas × até 3 linhas = 6 posições.
+        Assert.Equal(2, vm.MapaColunas);
+        Assert.Equal(6, vm.MapaPagina.Count);
+        Assert.Contains("por fileira", vm.MapaResumo, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Escolher_3_etiquetas_por_fileira_alarga_a_pagina_do_rolo()
+    {
+        var vm = new PreparacaoImpressaoViewModel(_dialogos, _impressora);
+        vm.Carregar(SelecaoBermuda(), Modelo50x30(), "NEXUS LS");
+
+        vm.FileiraSelecionada = vm.OpcoesFileira.First(o => o.Colunas == 3);
+
+        Assert.Equal(3, vm.Colunas);
+        Assert.Equal(150, vm.PaginaLarguraMm);
+        Assert.Equal(30, vm.PaginaAlturaMm);
+        Assert.Equal(3, vm.EtiquetasPorPagina);
+        Assert.Equal(3, vm.MapaColunas);
+        Assert.Equal(6, vm.MapaPagina.Count);
+    }
+
+    [Fact]
     public void Preparacao_sugere_a_midia_com_as_medidas_do_modelo()
     {
         var modelo = Modelo50x30();

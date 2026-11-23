@@ -159,6 +159,23 @@ public class MidiaEtiquetaTests
         Assert.Equal(38.1, folha.AlturaEtiquetaMm);
     }
 
+    [Fact]
+    public void Tag_de_roupas_tem_duas_colunas_de_50x75_no_catalogo()
+    {
+        var tag = PerfisMidia.RoloTagRoupas2Colunas50x75;
+
+        Assert.Contains(PerfisMidia.ListaPadrao, m => ReferenceEquals(m, tag));
+        Assert.Equal(TipoMidiaEtiqueta.RoloContinuo, tag.Tipo);
+        Assert.Equal(2, tag.Colunas);
+        Assert.Equal(1, tag.Linhas);
+        Assert.Equal(2, tag.EtiquetasPorPagina);
+        Assert.Equal(50, tag.LarguraEtiquetaMm);
+        Assert.Equal(75, tag.AlturaEtiquetaMm);
+        Assert.Equal(100, tag.PaginaLarguraMm);
+        Assert.Equal(75, tag.PaginaAlturaMm);
+        Assert.Empty(tag.Validar(104));
+    }
+
     [Theory]
     [InlineData(TipoMidiaEtiqueta.RoloComGap)]
     [InlineData(TipoMidiaEtiqueta.RoloMarcaPreta)]

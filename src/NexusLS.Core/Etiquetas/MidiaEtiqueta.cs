@@ -183,6 +183,13 @@ public static class PerfisMidia
         50, 30, 3, 0, 2, 1, 106, 30, 1.5, 0,
         "Duas etiquetas lado a lado por fileira; confira a largura do papel no manual.");
 
+    // Tag de roupas: rolo contínuo com duas colunas de 50 × 75 mm (cerca de 800 unidades por rolo).
+    // Como o papel é contínuo, o comprimento de cada tag é a altura configurada.
+    public static readonly PerfilMidia RoloTagRoupas2Colunas50x75 = new(
+        "Tag de roupas · 2 colunas 50 × 75 mm", TipoMidiaEtiqueta.RoloContinuo,
+        50, 75, 0, 0, 2, 1, 100, 75, 0, 0,
+        "Rolo de tag de roupas com 2 colunas (50 × 75 mm), cerca de 800 unidades. Papel contínuo: confirme o sensor no manual da impressora.");
+
     // Folha A4 3 × 7: 63,5 × 38,1 mm. É o gabarito equivalente ao Pimaco A4260/A4360
     // (21 etiquetas por folha) e ao Avery L7160. Medidas conferidas com o catálogo do fabricante.
     public static readonly PerfilMidia FolhaA4TresPorSete = new(
@@ -198,6 +205,7 @@ public static class PerfisMidia
     public static IReadOnlyList<PerfilMidia> ListaPadrao { get; } = new[]
     {
         Rolo50x30Gap,
+        RoloTagRoupas2Colunas50x75,
         Rolo40x25Gap,
         Rolo60x40Gap,
         Rolo100x50Gap,
