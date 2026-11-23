@@ -27,7 +27,7 @@ if (Test-Path $saida) { Remove-Item $saida -Recurse -Force }
 New-Item -ItemType Directory $saida | Out-Null
 
 # Alinhavo (Moldes e costura 3D): compila o app Rust e gera src\NexusLS.Setup\Pacotes\Alinhavo.zip,
-# que o Nexus-Setup.exe embute (nao e enviado separado ao GitHub; o outro PC nao precisa de Rust).
+# que o Nexus-Setup.exe embute (tambem vai como asset da release: Alinhavo.zip, .sha256 e alinhavo-versao.txt; o outro PC nao precisa de Rust).
 & (Join-Path $PSScriptRoot "publicar-alinhavo.ps1")
 if (-not $?) { throw "Falha ao gerar o pacote do Alinhavo." }
 if (-not (Test-Path (Join-Path $PSScriptRoot "src\NexusLS.Setup\Pacotes\Alinhavo.zip"))) { throw "Pacote do Alinhavo nao foi gerado." }
@@ -55,12 +55,21 @@ foreach ($p in $projetos) {
     $hash = (Get-FileHash (Join-Path $saida $p.Exe) -Algorithm SHA256).Hash.ToLower()
     [IO.File]::WriteAllText((Join-Path $saida ($p.Exe + ".sha256")), "$hash  $($p.Exe)`n", (New-Object Text.UTF8Encoding($false)))
 }
+# Alinhavo na release (alem de embutido no Setup): o Hub instala/atualiza direto da nuvem por estes 3 arquivos.
+$extrasAlinhavo = @("Alinhavo.zip", "Alinhavo.zip.sha256", "alinhavo-versao.txt")
+Copy-Item (Join-Path $PSScriptRoot "publicar\Alinhavo.zip") (Join-Path $saida "Alinhavo.zip")
+$hashAl = (Get-FileHash (Join-Path $saida "Alinhavo.zip") -Algorithm SHA256).Hash.ToLower()
+[IO.File]::WriteAllText((Join-Path $saida "Alinhavo.zip.sha256"), "$hashAl  Alinhavo.zip`n", (New-Object Text.UTF8Encoding($false)))
+$versaoAl = (Get-Content (Join-Path $PSScriptRoot "publicar\Alinhavo\versao.txt") -Raw).Trim()
+[IO.File]::WriteAllText((Join-Path $saida "alinhavo-versao.txt"), "$versaoAl`n", (New-Object Text.UTF8Encoding($false)))
+
 $arquivoNotas = Join-Path $saida "notas.md"
 [IO.File]::WriteAllText($arquivoNotas, $Notas.Trim() + "`n", (New-Object Text.UTF8Encoding($false)))
 Get-ChildItem $saida | ForEach-Object { "{0,-34} {1,8:N1} MB" -f $_.Name, ($_.Length / 1MB) }
 if ($SoGerar) { Write-Host "Pronto (modo -SoGerar): nada foi enviado. Arquivos em $saida"; exit 0 }
 
 $arquivos = $projetos | ForEach-Object { Join-Path $saida $_.Exe; Join-Path $saida ($_.Exe + ".sha256") }
+$arquivos += $extrasAlinhavo | ForEach-Object { Join-Path $saida $_ }
 gh release create "v$Versao" @arquivos --repo $Repositorio --title "Nexus $Versao" --notes-file $arquivoNotas
 if ($LASTEXITCODE -ne 0) { throw "O envio ao GitHub falhou." }
 git tag -a "v$Versao" -m "Nexus $Versao" 2>$null

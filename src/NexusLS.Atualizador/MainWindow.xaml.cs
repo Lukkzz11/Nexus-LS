@@ -54,6 +54,7 @@ public partial class MainWindow : Window
         CarregarStatusVersao();
         CarregarStatusVersaoBarTender();
         CarregarStatusVersaoAlinhavo();
+        _ = VerificarAlinhavoNuvemAsync(silencioso: true);
 
         // Faz checagem automática e não bloqueante do Git vs Instalado na inicialização
         _ = VerificarAtualizacoesGitBackgroundAsync();

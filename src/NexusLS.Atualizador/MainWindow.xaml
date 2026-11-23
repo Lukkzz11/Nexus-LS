@@ -476,6 +476,7 @@
                                         <TextBlock x:Name="TxtProntoAlinhavo" Grid.Column="1" Text="Pronto para uso" FontSize="11" Foreground="#15803D" FontWeight="Bold" VerticalAlignment="Center" />
                                     </Grid>
                                 </Border>
+                                <ProgressBar x:Name="PrgAlinhavo" Height="6" Visibility="Collapsed" Margin="0,10,0,0" Foreground="#7C3AED" Background="#E2E8F0" BorderThickness="0" />
                             </StackPanel>
 
                             <!-- Linha de Ações: ABRIR ALINHAVO + Atalho de Pasta -->
@@ -504,8 +505,8 @@
                                         </ControlTemplate>
                                     </Button.Template>
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <Path Data="{StaticResource IconePlay}" Width="13" Height="13" Fill="#FFFFFF" Stretch="Uniform" Margin="0,0,10,0" VerticalAlignment="Center" />
-                                        <TextBlock Text="ABRIR ALINHAVO" FontWeight="Bold" FontSize="13" VerticalAlignment="Center" />
+                                        <Path x:Name="IcoBtnAlinhavo" Data="{StaticResource IconePlay}" Width="13" Height="13" Fill="#FFFFFF" Stretch="Uniform" Margin="0,0,10,0" VerticalAlignment="Center" />
+                                        <TextBlock x:Name="TxtBtnAlinhavo" Text="ABRIR ALINHAVO" FontWeight="Bold" FontSize="13" VerticalAlignment="Center" />
                                     </StackPanel>
                                 </Button>
                                 <Button Grid.Column="2" Width="48" Height="48" Style="{StaticResource BotaoSecundario}" Padding="0"
@@ -775,7 +776,7 @@
                                 </Grid.ColumnDefinitions>
                                 <StackPanel>
                                     <TextBlock Text="Alinhavo (Moldes e costura 3D)" FontSize="16" FontWeight="Bold" Foreground="#0F172A" />
-                                    <TextBlock Text="Aplicativo instalado junto com o Nexus Hub. Novas versões chegam por um novo instalador do Hub." FontSize="12" Foreground="#64748B" Margin="0,3,0,0" />
+                                    <TextBlock Text="Instale e atualize direto da nuvem pelo botão do Alinhavo na tela inicial, sem precisar do instalador." FontSize="12" Foreground="#64748B" Margin="0,3,0,0" />
                                 </StackPanel>
                                 <Border Grid.Column="1" Background="#F5F3FF" BorderBrush="#DDD6FE" BorderThickness="1"
                                         CornerRadius="16" Padding="12,4" VerticalAlignment="Center">
@@ -784,6 +785,12 @@
                             </Grid>
 
                             <WrapPanel Margin="0,0,0,10">
+                                <Button Style="{StaticResource BotaoPrimario}" Margin="0,0,10,10" Padding="18,10" Click="BtnVerificarAlinhavo_Click">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Path Data="{StaticResource IconeAtualizar}" Width="14" Height="14" Fill="#FFFFFF" Stretch="Uniform" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                        <TextBlock Text="Buscar Atualizações do Alinhavo" FontWeight="SemiBold" />
+                                    </StackPanel>
+                                </Button>
                                 <Button Style="{StaticResource BotaoSecundario}" Margin="0,0,10,10" Padding="16,10" Click="BtnAbrirPastaAlinhavo_Click">
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                         <Path Data="{StaticResource IconePasta}" Width="14" Height="14" Fill="#334155" Stretch="Uniform" Margin="0,0,8,0" VerticalAlignment="Center" />
