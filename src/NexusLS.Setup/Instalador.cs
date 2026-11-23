@@ -26,6 +26,8 @@ public sealed class OpcoesSetup
     public bool InstalarNexusLS { get; set; } = true;
     public bool InstalarBarTender { get; set; } = true;
     public bool InstalarAtualizador { get; set; } = true;
+    /// <summary>Alinhavo (Moldes e costura 3D): vem dentro do instalador, na subpasta "Alinhavo".</summary>
+    public bool InstalarAlinhavo { get; set; } = true;
     /// <summary>Loja Online (catálogo e site) é opcional: só entra se a loja marcar ou usar --com-loja.</summary>
     public bool InstalarLojaOnline { get; set; }
     public bool CriarAtalhosDesktop { get; set; } = true;
@@ -53,6 +55,7 @@ public sealed class OpcoesSetup
             else if (t.Equals("--com-loja", StringComparison.OrdinalIgnoreCase)) op.InstalarLojaOnline = true;
             else if (t.Equals("--sem-nexus",StringComparison.OrdinalIgnoreCase)) op.InstalarNexusLS = false;
             else if (t.Equals("--sem-atualizador", StringComparison.OrdinalIgnoreCase)) op.InstalarAtualizador = false;
+            else if (t.Equals("--sem-alinhavo", StringComparison.OrdinalIgnoreCase)) op.InstalarAlinhavo = false;
         }
         return op;
     }
@@ -100,10 +103,48 @@ public sealed class Instalador
         return lista;
     }
 
+    /// <summary>Executável do Alinhavo dentro da pasta de instalação (o pacote leva também assets\manequim).</summary>
+    public const string ExeAlinhavo = @"Alinhavo\alinhavo.exe";
+    /// <summary>Nome do pacote do Alinhavo (zip com alinhavo.exe, assets\manequim e versao.txt).</summary>
+    public const string PacoteAlinhavo = "Alinhavo.zip";
+
+    /// <summary>Tudo que vira atalho: os executáveis baixados mais o Alinhavo, quando marcado.</summary>
+    public List<string> ObterProgramasComAtalho()
+    {
+        var lista = ObterProgramasSelecionados();
+        if (_op.InstalarAlinhavo) lista.Add(ExeAlinhavo);
+        return lista;
+    }
+
     public bool HaProgramaAberto()
     {
-        var selecionados = ObterProgramasSelecionados();
+        var selecionados = ObterProgramasComAtalho();
         return selecionados.Any(p => Process.GetProcessesByName(Path.GetFileNameWithoutExtension(p)).Length > 0);
+    }
+
+    /// <summary>Abre o pacote do Alinhavo: embutido neste instalador ou, se não houver, ao lado dele.</summary>
+    public static Stream? AbrirPacoteAlinhavo()
+    {
+        var embutido = typeof(Instalador).Assembly.GetManifestResourceStream(PacoteAlinhavo);
+        if (embutido != null) return embutido;
+
+        var candidatos = new[]
+        {
+            Path.Combine(AppContext.BaseDirectory, PacoteAlinhavo),
+            Path.Combine(AppContext.BaseDirectory, "para-outro-pc", PacoteAlinhavo),
+            Path.Combine(@"C:\NexusLS\publicar", PacoteAlinhavo)
+        };
+        var arquivo = candidatos.FirstOrDefault(File.Exists);
+        return arquivo is null ? null : File.OpenRead(arquivo);
+    }
+
+    /// <summary>Descompacta o pacote do Alinhavo na pasta final, substituindo os arquivos da versão anterior.</summary>
+    public static void ExtrairPacoteAlinhavo(Stream pacote, string pastaAlinhavo)
+    {
+        Directory.CreateDirectory(pastaAlinhavo);
+        System.IO.Compression.ZipFile.ExtractToDirectory(pacote, pastaAlinhavo, overwriteFiles: true);
+        if (!File.Exists(Path.Combine(pastaAlinhavo, "alinhavo.exe")))
+            throw new InvalidDataException("O pacote do Alinhavo está incompleto: alinhavo.exe não foi encontrado.");
     }
 
     /// <summary>
@@ -119,8 +160,8 @@ public sealed class Instalador
     public async Task InstalarAsync(IProgress<(double Percentual, string Texto)> progresso, CancellationToken ct = default)
     {
         var programas = ObterProgramasSelecionados();
-        if (programas.Count == 0)
-            throw new InvalidOperationException("Selecione pelo menos um programa para instalar (Nexus LS, BarTender ou Atualizador).");
+        if (programas.Count == 0 && !_op.InstalarAlinhavo)
+            throw new InvalidOperationException("Selecione pelo menos um programa para instalar (Nexus LS, BarTender, Alinhavo ou Atualizador).");
 
         if (HaProgramaAberto())
             throw new InvalidOperationException("Feche os programas do Nexus que estiverem abertos antes de prosseguir com a instalação.");
@@ -211,6 +252,15 @@ public sealed class Instalador
                 AtualizadorService.TrocarExecutavel(destinoFinal, caminho);
             }
 
+            // 4b. Alinhavo: pacote que já vem dentro do instalador (sem Rust nem internet no destino)
+            if (_op.InstalarAlinhavo)
+            {
+                progresso.Report((90, "Instalando o Alinhavo (Moldes e costura 3D)…"));
+                using var pacote = AbrirPacoteAlinhavo()
+                    ?? throw new InvalidOperationException($"O pacote do Alinhavo ({PacoteAlinhavo}) não está neste instalador. Gere o instalador com publicar-tudo.ps1 ou desmarque o Alinhavo.");
+                ExtrairPacoteAlinhavo(pacote, Path.Combine(_op.Pasta, "Alinhavo"));
+            }
+
             // 5. Configuração da Conexão com o ERP
             if (_op.InstalarNexusLS)
             {
@@ -221,7 +271,7 @@ public sealed class Instalador
             if (_op.CriarAtalhosDesktop)
             {
                 progresso.Report((94, "Criando atalhos na Área de Trabalho e Menu Iniciar…"));
-                CriarAtalhos(programas);
+                CriarAtalhos(ObterProgramasComAtalho());
             }
 
             // 7. Registro de Desinstalação no Painel de Controle do Windows
@@ -261,7 +311,8 @@ public sealed class Instalador
             ["NexusLS.exe"] = "Nexus LS",
             ["NexusBarTender.exe"] = "Nexus BarTender",
             ["NexusLojaOnline.exe"] = "Nexus Loja Online",
-            ["atualizador.exe"] = "Nexus Atualizador"
+            ["atualizador.exe"] = "Nexus Atualizador",
+            [ExeAlinhavo] = "Alinhavo"
         };
 
         foreach (var pasta in new[] { Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), menu })
@@ -272,7 +323,7 @@ public sealed class Instalador
                 var atalho = Path.Combine(pasta, nomeAmigavel + ".lnk");
                 dynamic s = shell.CreateShortcut(atalho);
                 s.TargetPath = Path.Combine(_op.Pasta, exe);
-                s.WorkingDirectory = _op.Pasta;
+                s.WorkingDirectory = Path.GetDirectoryName(Path.Combine(_op.Pasta, exe));
                 s.IconLocation = Path.Combine(_op.Pasta, exe) + ",0";
                 s.Save();
             }
@@ -296,10 +347,10 @@ public sealed class Instalador
     public static string DesinstaladorPs1(string pasta) =>
         "$ErrorActionPreference = 'SilentlyContinue'\n" +
         "$pasta = '" + pasta.Replace("'", "''") + "'\n" +
-        "Get-Process NexusLS, atualizador, NexusBarTender, NexusLojaOnline | Stop-Process -Force\n" +
+        "Get-Process NexusLS, atualizador, NexusBarTender, NexusLojaOnline, alinhavo | Stop-Process -Force\n" +
         "$menu = Join-Path ([Environment]::GetFolderPath('Programs')) 'Nexus'\n" +
         "$desktop = [Environment]::GetFolderPath('DesktopDirectory')\n" +
-        "foreach ($n in 'Nexus LS','Nexus BarTender','Nexus Loja Online','Nexus Atualizador','Nexus','Nexus Etiquetas') { Remove-Item (Join-Path $desktop \"$n.lnk\") -Force }\n" +
+        "foreach ($n in 'Nexus LS','Nexus BarTender','Nexus Loja Online','Nexus Atualizador','Alinhavo','Nexus','Nexus Etiquetas') { Remove-Item (Join-Path $desktop \"$n.lnk\") -Force }\n" +
         "Remove-Item $menu -Recurse -Force\n" +
         "Remove-Item 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Nexus' -Recurse -Force\n" +
         "Start-Sleep 1\n" +

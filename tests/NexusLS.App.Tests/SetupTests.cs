@@ -1,3 +1,4 @@
+using System.IO;
 using NexusLS.Setup;
 
 namespace NexusLS.App.Tests;
@@ -24,6 +25,69 @@ public class SetupTests
 
         var comLoja = new Instalador(OpcoesSetup.Ler(["--com-loja"])).ObterProgramasSelecionados();
         Assert.Contains("NexusLojaOnline.exe", comLoja);
+    }
+
+    [Fact]
+    public void Alinhavo_vem_marcado_ganha_atalho_e_sai_com_sem_alinhavo()
+    {
+        var padrao = new Instalador(OpcoesSetup.Ler([]));
+        Assert.Contains(Instalador.ExeAlinhavo, padrao.ObterProgramasComAtalho());
+        // o Alinhavo nao e baixado da nuvem: nao entra na lista de executaveis a baixar
+        Assert.DoesNotContain(Instalador.ExeAlinhavo, padrao.ObterProgramasSelecionados());
+
+        var sem = new Instalador(OpcoesSetup.Ler(["--sem-alinhavo"]));
+        Assert.DoesNotContain(Instalador.ExeAlinhavo, sem.ObterProgramasComAtalho());
+    }
+
+    [Fact]
+    public void Pacote_do_alinhavo_e_extraido_com_exe_manequim_e_versao()
+    {
+        var temp = Path.Combine(Path.GetTempPath(), "alinhavo-teste-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            using var ms = new MemoryStream();
+            using (var zip = new System.IO.Compression.ZipArchive(ms, System.IO.Compression.ZipArchiveMode.Create, leaveOpen: true))
+            {
+                foreach (var (nome, texto) in new[] { ("alinhavo.exe", "exe"), ("assets/manequim/m.glb", "glb"), ("versao.txt", "0.1.0\n") })
+                {
+                    using var w = new StreamWriter(zip.CreateEntry(nome).Open());
+                    w.Write(texto);
+                }
+            }
+            ms.Position = 0;
+            Instalador.ExtrairPacoteAlinhavo(ms, temp);
+
+            Assert.True(File.Exists(Path.Combine(temp, "alinhavo.exe")));
+            Assert.True(File.Exists(Path.Combine(temp, "assets", "manequim", "m.glb")));
+            Assert.Equal("0.1.0", File.ReadAllText(Path.Combine(temp, "versao.txt")).Trim());
+        }
+        finally { try { Directory.Delete(temp, true); } catch { } }
+    }
+
+    [Fact]
+    public void Pacote_do_alinhavo_sem_exe_e_recusado()
+    {
+        var temp = Path.Combine(Path.GetTempPath(), "alinhavo-teste-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            using var ms = new MemoryStream();
+            using (var zip = new System.IO.Compression.ZipArchive(ms, System.IO.Compression.ZipArchiveMode.Create, leaveOpen: true))
+            {
+                using var w = new StreamWriter(zip.CreateEntry("versao.txt").Open());
+                w.Write("0.1.0");
+            }
+            ms.Position = 0;
+            Assert.Throws<InvalidDataException>(() => Instalador.ExtrairPacoteAlinhavo(ms, temp));
+        }
+        finally { try { Directory.Delete(temp, true); } catch { } }
+    }
+
+    [Fact]
+    public void Desinstalador_para_o_processo_e_remove_o_atalho_do_alinhavo()
+    {
+        var ps = Instalador.DesinstaladorPs1(@"C:\x");
+        Assert.Contains("alinhavo", ps);
+        Assert.Contains("'Alinhavo'", ps);
     }
 
     [Theory]

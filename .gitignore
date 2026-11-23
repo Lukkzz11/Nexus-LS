@@ -504,3 +504,6 @@ atualizador-web/
 **/bin/
 **/obj/
 
+
+# Pacote do Alinhavo gerado por publicar-alinhavo.ps1 (embutido no Nexus-Setup.exe)
+src/NexusLS.Setup/Pacotes/

@@ -174,7 +174,7 @@ public partial class JanelaSetup : Window
                 BtnAvancar.Content = "Instalar Agora";
                 BtnAvancar.Background = new SolidColorBrush(Color.FromRgb(0x16, 0xA3, 0x4A));
                 BtnAvancar.BorderBrush = new SolidColorBrush(Color.FromRgb(0x16, 0xA3, 0x4A));
-                BtnAvancar.IsEnabled = ChkNexus.IsChecked == true || ChkBarTender.IsChecked == true || ChkLojaOnline.IsChecked == true || ChkAtualizador.IsChecked == true;
+                BtnAvancar.IsEnabled = ChkNexus.IsChecked == true || ChkBarTender.IsChecked == true || ChkAlinhavo.IsChecked == true || ChkLojaOnline.IsChecked == true || ChkAtualizador.IsChecked == true;
                 break;
         }
     }
@@ -383,11 +383,12 @@ public partial class JanelaSetup : Window
         {
             _op.InstalarNexusLS = ChkNexus.IsChecked == true;
             _op.InstalarBarTender = ChkBarTender.IsChecked == true;
+            _op.InstalarAlinhavo = ChkAlinhavo.IsChecked == true;
             _op.InstalarLojaOnline = ChkLojaOnline.IsChecked == true;
             _op.InstalarAtualizador = ChkAtualizador.IsChecked == true;
             _op.CriarAtalhosDesktop = ChkAtalhos.IsChecked == true;
 
-            if (!_op.InstalarNexusLS && !_op.InstalarBarTender && !_op.InstalarLojaOnline && !_op.InstalarAtualizador)
+            if (!_op.InstalarNexusLS && !_op.InstalarBarTender && !_op.InstalarAlinhavo && !_op.InstalarLojaOnline && !_op.InstalarAtualizador)
             {
                 JanelaDialogo.Mostrar("Aviso de Seleção", "Selecione pelo menos um módulo para prosseguir com a instalação.", TipoDialogo.Aviso, this);
                 return;
@@ -494,7 +495,7 @@ public partial class JanelaSetup : Window
     {
         return
             "CONTRATO DE LICENÇA DE USO DE SOFTWARE — NEXUS\n\n" +
-            "1. CONCESSÃO DA LICENÇA: A Nexus concede ao cliente uma licença comercial, intransferível e não exclusiva para utilizar o software Nexus LS e seus módulos correspondentes (Frente de Caixa PDV, BarTender e Hub Atualizador) de acordo com o plano contratado.\n\n" +
+            "1. CONCESSÃO DA LICENÇA: A Nexus concede ao cliente uma licença comercial, intransferível e não exclusiva para utilizar o software Nexus LS e seus módulos correspondentes (Frente de Caixa PDV, BarTender, Alinhavo e Hub Atualizador) de acordo com o plano contratado.\n\n" +
             "2. CONTROLE DE DISPOSITIVOS E HWID: O uso é vinculado ao identificador de hardware (HWID) de cada computador autorizado. O número de terminais operando simultaneamente não poderá exceder o limite estabelecido no plano da licença.\n\n" +
             "3. PROTEÇÃO DE DADOS: O software processa e armazena os dados de operações e estoque com criptografia e segurança, atendendo às diretrizes da LGPD (Lei Geral de Proteção de Dados).\n\n" +
             "4. ATUALIZAÇÕES E SUPORTE: O cliente tem direito a atualizações de segurança e correções durante o período de vigência da licença comercial ativa.\n\n" +
@@ -539,6 +540,7 @@ public partial class JanelaSetup : Window
                 {
                     ChkNexus.IsChecked = true;
                     ChkBarTender.IsChecked = true;
+                    ChkAlinhavo.IsChecked = true;
                     ChkAtualizador.IsChecked = true;
                     ChkAtalhos.IsChecked = true;
                 }

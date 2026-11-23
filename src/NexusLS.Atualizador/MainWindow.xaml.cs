@@ -53,6 +53,7 @@ public partial class MainWindow : Window
         CarregarStatusLicenca();
         CarregarStatusVersao();
         CarregarStatusVersaoBarTender();
+        CarregarStatusVersaoAlinhavo();
 
         // Faz checagem automática e não bloqueante do Git vs Instalado na inicialização
         _ = VerificarAtualizacoesGitBackgroundAsync();
@@ -1680,6 +1681,16 @@ public partial class MainWindow : Window
             bool btOk = File.Exists(exeBT);
             SetBadgeStatus(BrdDiagBarTender, TxtDiagBarTenderStatus, btOk ? true : (bool?)null, "Instalado e Pronto", "Não Instalado", "Módulo Opcional");
 
+            // 6b. Alinhavo
+            CarregarStatusVersaoAlinhavo();
+            var exeAl = _exeAlinhavo;
+            bool alExiste = File.Exists(exeAl);
+            bool alManequim = alExiste && ManequimAlinhavoPresente(exeAl);
+            TxtDiagAlinhavoDesc.Text = alExiste
+                ? (alManequim ? "Executável alinhavo.exe e manequim 3D localizados" : "alinhavo.exe localizado, mas falta assets\\manequim")
+                : "alinhavo.exe não localizado";
+            SetBadgeStatus(BrdDiagAlinhavo, TxtDiagAlinhavoStatus, alExiste ? alManequim : (bool?)null, "Instalado e Pronto", "Manequim Ausente", "Módulo Opcional");
+
             // 7. Sistema de Updates
             TxtDiagUpdatesStatus.Text = "Checando...";
             bool updateOk = false;
@@ -1743,7 +1754,8 @@ public partial class MainWindow : Window
                 $"Cliente: {TxtLicencaCliente.Text} | Empresa: {TxtLicencaEmpresa.Text}\r\n" +
                 $"Plano: {TxtLicencaPlano.Text} | Validade: {TxtLicencaValidade.Text}\r\n" +
                 $"Executável Nexus LS: {TxtCaminhoExe.Text} ({TxtVersaoStatus.Text})\r\n" +
-                $"Executável BarTender: {TxtCaminhoBarTenderExe.Text} ({TxtStatusModuloBarTender.Text})";
+                $"Executável BarTender: {TxtCaminhoBarTenderExe.Text} ({TxtStatusModuloBarTender.Text})\r\n" +
+                $"Executável Alinhavo: {_exeAlinhavo} ({TxtStatusModuloAlinhavo.Text})";
 
             Clipboard.SetText(relatorio);
             TxtStatusGeral.Text = "Relatório de diagnóstico copiado para a área de transferência!";
@@ -1918,7 +1930,7 @@ public partial class MainWindow : Window
                 diagUpdate.Close();
 
                 // 2. Popup de Sucesso / Mensagem do Sistema
-                var diag = new JanelaDialogo("Sistemas Sincronizados", "Todos os aplicativos do Nexus foram verificados e conferem com a versão oficial na nuvem (v" + VersaoDoHub() + ").\n\n• Nexus LS: Pronto para inicialização\n• Nexus BarTender: Pronto para inicialização", TipoDialogo.Sucesso, this);
+                var diag = new JanelaDialogo("Sistemas Sincronizados", "Todos os aplicativos do Nexus foram verificados e conferem com a versão oficial na nuvem (v" + VersaoDoHub() + ").\n\n• Nexus LS: Pronto para inicialização\n• Nexus BarTender: Pronto para inicialização\n• Alinhavo: Pronto para inicialização", TipoDialogo.Sucesso, this);
                 diag.Show();
                 diag.UpdateLayout();
                 Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.Render);

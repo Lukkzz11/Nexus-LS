@@ -10,6 +10,12 @@
     <Resource Include="Assets\emblema-branco.png" />
   </ItemGroup>
 
+  <!-- Pacote do Alinhavo (alinhavo.exe + assets\manequim + versao.txt), gerado por publicar-alinhavo.ps1.
+       Entra DENTRO do Nexus-Setup.exe, então o outro PC não precisa de Rust nem de internet para ele. -->
+  <ItemGroup>
+    <EmbeddedResource Include="Pacotes\Alinhavo.zip" LogicalName="Alinhavo.zip" Condition="Exists('Pacotes\Alinhavo.zip')" />
+  </ItemGroup>
+
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>

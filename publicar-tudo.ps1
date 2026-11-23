@@ -26,6 +26,12 @@ $saida = Join-Path $PSScriptRoot "publicar_release"
 if (Test-Path $saida) { Remove-Item $saida -Recurse -Force }
 New-Item -ItemType Directory $saida | Out-Null
 
+# Alinhavo (Moldes e costura 3D): compila o app Rust e gera src\NexusLS.Setup\Pacotes\Alinhavo.zip,
+# que o Nexus-Setup.exe embute (nao e enviado separado ao GitHub; o outro PC nao precisa de Rust).
+& (Join-Path $PSScriptRoot "publicar-alinhavo.ps1")
+if (-not $?) { throw "Falha ao gerar o pacote do Alinhavo." }
+if (-not (Test-Path (Join-Path $PSScriptRoot "src\NexusLS.Setup\Pacotes\Alinhavo.zip"))) { throw "Pacote do Alinhavo nao foi gerado." }
+
 # projeto, nome do exe final
 $projetos = @(
     @{ P = "src/NexusLS.App";        Exe = "NexusLS.exe" },

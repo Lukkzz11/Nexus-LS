@@ -206,7 +206,7 @@
                         </StackPanel>
                         <StackPanel Grid.Column="1" VerticalAlignment="Top" Margin="10,2,0,0">
                             <TextBlock x:Name="TxtStep4" Text="Componentes" FontSize="12" FontWeight="SemiBold" Foreground="#94A3B8" />
-                            <TextBlock Text="Nexus LS, BarTender e Hub" FontSize="10" Foreground="#64748B" />
+                            <TextBlock Text="Nexus LS, BarTender, Alinhavo e Hub" FontSize="10" Foreground="#64748B" />
                         </StackPanel>
                     </Grid>
 
@@ -342,7 +342,7 @@
                                 <Path Data="{StaticResource IconePasta}" Width="20" Height="20" Fill="#0067B8" Stretch="Uniform" Margin="0,0,12,0" VerticalAlignment="Center" />
                                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                     <TextBlock x:Name="TxtInfoDisco" Text="Espaço livre em disco: Verificando..." FontSize="12" FontWeight="SemiBold" Foreground="#334155" />
-                                    <TextBlock Text="Espaço necessário aproximado: 350 MB" FontSize="11" Foreground="#64748B" Margin="0,2,0,0" />
+                                    <TextBlock Text="Espaço necessário aproximado: 400 MB" FontSize="11" Foreground="#64748B" Margin="0,2,0,0" />
                                 </StackPanel>
                             </Grid>
                         </Border>
@@ -381,6 +381,21 @@
                                 <StackPanel Grid.Column="1">
                                     <TextBlock Text="Nexus BarTender (Impressão Térmica de Etiquetas)" FontSize="13" FontWeight="Bold" Foreground="#0F172A" />
                                     <TextBlock Text="Impressão de gôndola, etiquetas de produtos e integração direta com o ERP." FontSize="11" Foreground="#64748B" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- Módulo Alinhavo (vem dentro do instalador) -->
+                        <Border Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="16,12" Margin="0,0,0,10">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <CheckBox x:Name="ChkAlinhavo" IsChecked="True" VerticalAlignment="Center" Margin="0,0,12,0" Checked="ChkApp_Changed" Unchecked="ChkApp_Changed" />
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="Alinhavo (Moldes e Costura 3D)" FontSize="13" FontWeight="Bold" Foreground="#0F172A" />
+                                    <TextBlock Text="Moldes de costura e simulação no manequim 3D. Já vem dentro deste instalador." FontSize="11" Foreground="#64748B" />
                                 </StackPanel>
                             </Grid>
                         </Border>

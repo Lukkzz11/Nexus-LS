@@ -223,10 +223,12 @@
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="22" />
                         <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="22" />
+                        <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
 
                     <!-- CARTÃO 1: NEXUS LS (ERP & PDV) -->
-                    <Border x:Name="CardAppNexus" Grid.Column="0" Style="{StaticResource CardBranco}" Padding="26"
+                    <Border x:Name="CardAppNexus" Grid.Column="0" Style="{StaticResource CardBranco}" Padding="20"
                             Cursor="Hand" MouseDown="CardAppNexus_MouseDown">
                         <Grid>
                             <Grid.RowDefinitions>
@@ -237,7 +239,7 @@
                             </Grid.RowDefinitions>
 
                             <!-- Faixa Superior de Destaque Fluent Blue -->
-                            <Border Grid.Row="0" Height="3" Background="#0067B8" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="-26,-26,-26,18" CornerRadius="8,8,0,0" />
+                            <Border Grid.Row="0" Height="3" Background="#0067B8" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="-20,-20,-20,18" CornerRadius="8,8,0,0" />
 
                             <!-- Cabeçalho do Card: Ícone + Título + Badge de Status -->
                             <StackPanel Grid.Row="1">
@@ -249,20 +251,20 @@
 
                                     <!-- Ícone Grande Nexus LS -->
                                     <Border Grid.Column="0" Background="#EFF6FF" BorderBrush="#DBEAFE" BorderThickness="1"
-                                            CornerRadius="14" Width="56" Height="56" Margin="0,0,16,0" VerticalAlignment="Center">
+                                            CornerRadius="14" Width="56" Height="56" Margin="0,0,12,0" VerticalAlignment="Center">
                                         <Image Source="pack://application:,,,/Assets/emblema.png" Width="32" Height="34"
                                                HorizontalAlignment="Center" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality" />
                                     </Border>
 
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                            <TextBlock Text="Nexus LS" FontSize="22" FontWeight="Bold" Foreground="#0F172A" />
+                                        <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <TextBlock Text="Nexus LS" FontSize="16" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,10,0" />
                                             <Border Background="#F0FDF4" BorderBrush="#BBF7D0" BorderThickness="1"
-                                                    CornerRadius="12" Padding="8,2" Margin="10,0,0,0" VerticalAlignment="Center">
+                                                    CornerRadius="12" Padding="8,2" Margin="0,4,0,0" VerticalAlignment="Center">
                                                 <TextBlock x:Name="TxtBadgeNexusLS" Text="● Instalado" FontSize="11" FontWeight="Bold" Foreground="#15803D" />
                                             </Border>
-                                        </StackPanel>
-                                        <TextBlock Text="Sistema ERP e Frente de Caixa (PDV)" FontSize="13" Foreground="#64748B" Margin="0,3,0,0" />
+                                        </WrapPanel>
+                                        <TextBlock Text="Sistema ERP e Frente de Caixa (PDV)" TextWrapping="Wrap" FontSize="13" Foreground="#64748B" Margin="0,3,0,0" />
                                     </StackPanel>
                                 </Grid>
                             </StackPanel>
@@ -323,7 +325,7 @@
                     </Border>
 
                     <!-- CARTÃO 2: NEXUS BARTENDER -->
-                    <Border x:Name="CardAppBarTender" Grid.Column="2" Style="{StaticResource CardBranco}" Padding="26"
+                    <Border x:Name="CardAppBarTender" Grid.Column="2" Style="{StaticResource CardBranco}" Padding="20"
                             Cursor="Hand" MouseDown="CardAppBarTender_MouseDown">
                         <Grid>
                             <Grid.RowDefinitions>
@@ -334,7 +336,7 @@
                             </Grid.RowDefinitions>
 
                             <!-- Faixa Superior de Destaque Esmeralda -->
-                            <Border Grid.Row="0" Height="3" Background="#059669" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="-26,-26,-26,18" CornerRadius="8,8,0,0" />
+                            <Border Grid.Row="0" Height="3" Background="#059669" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="-20,-20,-20,18" CornerRadius="8,8,0,0" />
 
                             <!-- Cabeçalho do Card: Ícone + Título + Badge de Status -->
                             <StackPanel Grid.Row="1">
@@ -346,19 +348,19 @@
 
                                     <!-- Ícone Grande BarTender -->
                                     <Border Grid.Column="0" Background="#F0FDF4" BorderBrush="#DCFCE7" BorderThickness="1"
-                                            CornerRadius="14" Width="56" Height="56" Margin="0,0,16,0" VerticalAlignment="Center">
+                                            CornerRadius="14" Width="56" Height="56" Margin="0,0,12,0" VerticalAlignment="Center">
                                         <Path Data="{StaticResource IconeEtiqueta}" Width="26" Height="26" Fill="#16A34A" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                     </Border>
 
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                            <TextBlock Text="Nexus BarTender" FontSize="22" FontWeight="Bold" Foreground="#0F172A" />
+                                        <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <TextBlock Text="Nexus BarTender" FontSize="16" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,10,0" />
                                             <Border Background="#F0FDF4" BorderBrush="#BBF7D0" BorderThickness="1"
-                                                    CornerRadius="12" Padding="8,2" Margin="10,0,0,0" VerticalAlignment="Center">
+                                                    CornerRadius="12" Padding="8,2" Margin="0,4,0,0" VerticalAlignment="Center">
                                                 <TextBlock x:Name="TxtBadgeBarTender" Text="● Instalado" FontSize="11" FontWeight="Bold" Foreground="#15803D" />
                                             </Border>
-                                        </StackPanel>
-                                        <TextBlock Text="Gerenciamento e impressão de etiquetas" FontSize="13" Foreground="#64748B" Margin="0,3,0,0" />
+                                        </WrapPanel>
+                                        <TextBlock Text="Gerenciamento e impressão de etiquetas" TextWrapping="Wrap" FontSize="13" Foreground="#64748B" Margin="0,3,0,0" />
                                     </StackPanel>
                                 </Grid>
                             </StackPanel>
@@ -412,6 +414,102 @@
                                 </Button>
                                 <Button Grid.Column="2" Width="48" Height="48" Style="{StaticResource BotaoSecundario}" Padding="0"
                                         ToolTip="Abrir pasta de instalação do BarTender" Click="BtnAbrirPastaBarTender_Click">
+                                    <Path Data="{StaticResource IconePasta}" Width="16" Height="16" Fill="#475569" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Button>
+                            </Grid>
+                        </Grid>
+                    </Border>
+
+                    <!-- CARTÃO 3: ALINHAVO (MOLDES E COSTURA 3D) -->
+                    <Border x:Name="CardAppAlinhavo" Grid.Column="4" Style="{StaticResource CardBranco}" Padding="20"
+                            Cursor="Hand" MouseDown="CardAppAlinhavo_MouseDown">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <!-- Faixa Superior de Destaque Violeta -->
+                            <Border Grid.Row="0" Height="3" Background="#7C3AED" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="-20,-20,-20,18" CornerRadius="8,8,0,0" />
+
+                            <!-- Cabeçalho do Card: Ícone + Título + Badge de Status -->
+                            <StackPanel Grid.Row="1">
+                                <Grid Margin="0,0,0,16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Ícone Grande Alinhavo -->
+                                    <Border Grid.Column="0" Background="#F5F3FF" BorderBrush="#EDE9FE" BorderThickness="1"
+                                            CornerRadius="14" Width="56" Height="56" Margin="0,0,12,0" VerticalAlignment="Center">
+                                        <Path Data="{StaticResource IconeAlinhavo}" Width="26" Height="26" Fill="#7C3AED" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <TextBlock Text="Alinhavo" FontSize="16" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,10,0" />
+                                            <Border Background="#F0FDF4" BorderBrush="#BBF7D0" BorderThickness="1"
+                                                    CornerRadius="12" Padding="8,2" Margin="0,4,0,0" VerticalAlignment="Center">
+                                                <TextBlock x:Name="TxtBadgeAlinhavo" Text="● Instalado" FontSize="11" FontWeight="Bold" Foreground="#15803D" />
+                                            </Border>
+                                        </WrapPanel>
+                                        <TextBlock Text="Moldes e costura 3D" FontSize="13" Foreground="#64748B" Margin="0,3,0,0" />
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+
+                            <!-- Descrição e Detalhes da Versão -->
+                            <StackPanel Grid.Row="2" VerticalAlignment="Center" Margin="0,0,0,20">
+                                <TextBlock Text="Criação de moldes de costura, simulação do caimento da roupa no manequim 3D e exportação para impressão e corte."
+                                           FontSize="13" Foreground="#475569" TextWrapping="Wrap" LineHeight="20" Margin="0,0,0,14" />
+
+                                <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="12,8">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock x:Name="TxtVersaoDetalheAlinhavo" Text="Versão instalada: v0.1.0" FontSize="12" FontWeight="SemiBold" Foreground="#334155" VerticalAlignment="Center" />
+                                        <TextBlock x:Name="TxtProntoAlinhavo" Grid.Column="1" Text="Pronto para uso" FontSize="11" Foreground="#15803D" FontWeight="Bold" VerticalAlignment="Center" />
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
+
+                            <!-- Linha de Ações: ABRIR ALINHAVO + Atalho de Pasta -->
+                            <Grid Grid.Row="3">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="8" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Button x:Name="BtnIniciarAlinhavo" Height="48"
+                                        Background="#7C3AED" Foreground="White" BorderThickness="0"
+                                        Cursor="Hand" Click="BtnIniciarAlinhavo_Click">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="b" Background="{TemplateBinding Background}" CornerRadius="6">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="b" Property="Background" Value="#6D28D9" />
+                                                </Trigger>
+                                                <Trigger Property="IsPressed" Value="True">
+                                                    <Setter TargetName="b" Property="Background" Value="#5B21B6" />
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Path Data="{StaticResource IconePlay}" Width="13" Height="13" Fill="#FFFFFF" Stretch="Uniform" Margin="0,0,10,0" VerticalAlignment="Center" />
+                                        <TextBlock Text="ABRIR ALINHAVO" FontWeight="Bold" FontSize="13" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Grid.Column="2" Width="48" Height="48" Style="{StaticResource BotaoSecundario}" Padding="0"
+                                        ToolTip="Abrir pasta de instalação do Alinhavo" Click="BtnAbrirPastaAlinhavo_Click">
                                     <Path Data="{StaticResource IconePasta}" Width="16" Height="16" Fill="#475569" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                 </Button>
                             </Grid>
@@ -661,6 +759,40 @@
 
                             <ProgressBar x:Name="PrgAtualizacaoBarTender" Height="8" Visibility="Collapsed" Margin="0,0,0,6" Foreground="#059669" Background="#E2E8F0" BorderThickness="0" />
                             <TextBlock x:Name="TxtVersaoBarTenderInstalada" Text="Executável pronto" FontSize="11" Foreground="#64748B" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Seção Alinhavo -->
+                    <Border Style="{StaticResource CardBranco}" Padding="24" Margin="0,20,0,0">
+                        <StackPanel>
+                            <!-- Faixa Superior Violeta -->
+                            <Border Height="3" Background="#7C3AED" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="-24,-24,-24,18" CornerRadius="8,8,0,0" />
+
+                            <Grid Margin="0,0,0,16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Alinhavo (Moldes e costura 3D)" FontSize="16" FontWeight="Bold" Foreground="#0F172A" />
+                                    <TextBlock Text="Aplicativo instalado junto com o Nexus Hub. Novas versões chegam por um novo instalador do Hub." FontSize="12" Foreground="#64748B" Margin="0,3,0,0" />
+                                </StackPanel>
+                                <Border Grid.Column="1" Background="#F5F3FF" BorderBrush="#DDD6FE" BorderThickness="1"
+                                        CornerRadius="16" Padding="12,4" VerticalAlignment="Center">
+                                    <TextBlock x:Name="TxtStatusModuloAlinhavo" Text="v0.1.0" FontSize="12" FontWeight="Bold" Foreground="#6D28D9" />
+                                </Border>
+                            </Grid>
+
+                            <WrapPanel Margin="0,0,0,10">
+                                <Button Style="{StaticResource BotaoSecundario}" Margin="0,0,10,10" Padding="16,10" Click="BtnAbrirPastaAlinhavo_Click">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Path Data="{StaticResource IconePasta}" Width="14" Height="14" Fill="#334155" Stretch="Uniform" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                        <TextBlock Text="Abrir Pasta do Alinhavo" FontWeight="SemiBold" />
+                                    </StackPanel>
+                                </Button>
+                            </WrapPanel>
+
+                            <TextBlock x:Name="TxtVersaoAlinhavoInstalada" Text="Executável pronto" FontSize="11" Foreground="#64748B" TextWrapping="Wrap" />
                         </StackPanel>
                     </Border>
                 </StackPanel>
@@ -958,6 +1090,25 @@
                                 </Grid>
                             </Border>
 
+                            <!-- Item 5b: Instalação Alinhavo -->
+                            <Border BorderBrush="#F1F5F9" BorderThickness="0,0,0,1" Padding="0,10">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <Path Data="{StaticResource IconeAlinhavo}" Width="18" Height="18" Fill="#7C3AED" Stretch="Uniform" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="Instalação do Alinhavo (Moldes e costura 3D)" FontSize="13" FontWeight="SemiBold" Foreground="#0F172A" />
+                                        <TextBlock x:Name="TxtDiagAlinhavoDesc" Text="Executável alinhavo.exe e manequim 3D localizados" FontSize="11" Foreground="#64748B" />
+                                    </StackPanel>
+                                    <Border Grid.Column="2" x:Name="BrdDiagAlinhavo" Background="#F0FDF4" BorderBrush="#BBF7D0" BorderThickness="1" CornerRadius="12" Padding="10,3">
+                                        <TextBlock x:Name="TxtDiagAlinhavoStatus" Text="Instalado" FontSize="11" FontWeight="Bold" Foreground="#15803D" />
+                                    </Border>
+                                </Grid>
+                            </Border>
+
                             <!-- Item 6: Integridade de Arquivos -->
                             <Border BorderBrush="#F1F5F9" BorderThickness="0,0,0,1" Padding="0,10">
                                 <Grid>
@@ -1049,12 +1200,13 @@
                                 </StackPanel>
                             </StackPanel>
 
-                            <TextBlock Text="O Nexus Hub centraliza o lançamento, a atualização e a validação de licenças dos sistemas Nexus LS (ERP e Frente de Caixa) e Nexus BarTender (Estúdio de Etiquetas), proporcionando uma experiência de gestão comercial moderna e ágil para o seu negócio."
+                            <TextBlock Text="O Nexus Hub centraliza o lançamento, a atualização e a validação de licenças dos sistemas Nexus LS (ERP e Frente de Caixa) e Nexus BarTender (Estúdio de Etiquetas), além do Alinhavo (Moldes e costura 3D), proporcionando uma experiência de gestão comercial moderna e ágil para o seu negócio."
                                        FontSize="13" Foreground="#334155" LineHeight="22" TextWrapping="Wrap" Margin="0,0,0,24" />
 
                             <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="18" Margin="0,0,0,24">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="*" />
@@ -1070,6 +1222,10 @@
                                     <StackPanel Grid.Column="2">
                                         <TextBlock Text="NEXUS BARTENDER" FontSize="11" FontWeight="Bold" Foreground="#64748B" />
                                         <TextBlock x:Name="TxtSobreVersaoBarTender" Text="v1.2.6" FontSize="14" FontWeight="Bold" Foreground="#059669" Margin="0,2,0,0" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="3">
+                                        <TextBlock Text="ALINHAVO" FontSize="11" FontWeight="Bold" Foreground="#64748B" />
+                                        <TextBlock x:Name="TxtSobreVersaoAlinhavo" Text="v0.1.0" FontSize="14" FontWeight="Bold" Foreground="#7C3AED" Margin="0,2,0,0" />
                                     </StackPanel>
                                 </Grid>
                             </Border>
