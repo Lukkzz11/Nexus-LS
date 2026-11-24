@@ -80,6 +80,14 @@ public partial class MainViewModel
             _selecoesPorProduto[item.Produto.Id] = selecao;
         }
 
+        // Sem nada digitado ainda: começa com 1 do tamanho que está em teste no Estúdio.
+        if (!selecao.Linhas.Any(l => l.TemQuantidade))
+        {
+            var emTeste = DesignerVM.TamanhoParaTeste;
+            var linha = selecao.Linhas.FirstOrDefault(l => !l.EhSemTamanho && l.Tamanho == emTeste);
+            linha?.DefinirQuantidade(1);
+        }
+
         // "Abrir no Estúdio" ou fechar: continua onde está (o desenho não é recarregado).
         if (AbrirModalProduto(selecao) == AcaoProdutoCatalogo.Impressao)
             MostrarPreparacao(selecao, item, usarModeloDoEstudio: true);
