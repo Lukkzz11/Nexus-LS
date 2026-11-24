@@ -1,3 +1,14 @@
 {
-  "apps": []
+  "apps": [
+    {
+      "id": "order-separator",
+      "nome": "Order Separator",
+      "subtitulo": "Pedidos de estamparia",
+      "descricao": "Pedidos, grade de tamanhos e pastas de clientes. O carimbo exige CorelDRAW 2022; as ferramentas de imagem exigem Python.",
+      "cor": "#EA580C",
+      "versao": "1.0.0",
+      "pacote": "OrderSeparator.zip",
+      "exe": "Order Separator.exe"
+    }
+  ]
 }
