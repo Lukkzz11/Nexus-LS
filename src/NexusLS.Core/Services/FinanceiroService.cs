@@ -249,7 +249,7 @@ public class FinanceiroService
         if (l.PagoEm is not null) throw new RegraDeNegocioException("Lançamento pago não pode ser cancelado. Estorne o pagamento primeiro.");
         await ExigirSemChequePendenteAsync(db, l.Id);
         l.Cancelado = true;
-        l.MotivoCancelamento = motivo.Trim();
+        l.MotivoCancelamento = motivo!.Trim();
         l.CanceladoEm = _agora();
         l.CanceladoPor = Limpar(OperadorAtual.Nome);
         AtividadeService.Registrar(db, TipoAtividade.LancamentoCancelado,

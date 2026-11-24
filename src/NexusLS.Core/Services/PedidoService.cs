@@ -203,7 +203,7 @@ public class PedidoService
 
         var agora = _agora();
         p.Status = StatusPedido.Cancelado;
-        p.MotivoCancelamento = motivo.Trim();
+        p.MotivoCancelamento = motivo!.Trim();
         p.AtualizadoEm = agora;
         p.Historico.Add(new EventoPedido { Status = StatusPedido.Cancelado, DataHora = agora, Operador = Operador(operador), Observacao = motivo.Trim() });
         AtividadeService.Registrar(db, TipoAtividade.PedidoCancelado,
