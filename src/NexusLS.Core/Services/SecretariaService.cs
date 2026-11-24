@@ -4,7 +4,7 @@ using NexusLS.Core.Models;
 
 namespace NexusLS.Core.Services;
 
-public enum AssuntoTarefa { Pagar, Receber, Compromisso, Pedido, Aniversario, Estoque }
+public enum AssuntoTarefa { Pagar, Receber, Compromisso, Pedido, Aniversario, Estoque, Orcamento }
 
 /// <summary>Um item da lista "o que fazer". <paramref name="Telefone"/> e <paramref name="Mensagem"/> só quando dá para chamar no WhatsApp.</summary>
 public record TarefaDaSecretaria(AssuntoTarefa Assunto, string Titulo, string Detalhe, bool Urgente,
@@ -74,6 +74,16 @@ public class SecretariaService
                 pronto ? p.ClienteTelefone : null,
                 pronto ? $"Olá, {PrimeiroNome(p.ClienteNome)}! Aqui é da {nomeLoja}. Seu pedido {p.Numero} está pronto para retirada." : null));
         }
+
+        // Orçamento sem resposta: do dia seguinte até uma semana depois de vencer, vale chamar o cliente.
+        var desde = hoje.AddDays(-DiasAFrente);
+        var semResposta = await db.Orcamentos.AsNoTracking()
+            .Where(o => o.Status == StatusOrcamento.Aberto && o.CriadoEm < hoje && o.ValidoAte >= desde).ToListAsync();
+        foreach (var o in semResposta.OrderBy(o => o.ValidoAte))
+            tarefas.Add(new(AssuntoTarefa.Orcamento, $"Cobrar resposta: orçamento {o.Numero} de {o.ClienteNome}",
+                $"{(o.ValidoAte.Date < hoje ? "Venceu em" : "Vale até")} {o.ValidoAte:dd/MM} · {Dinheiro.Formatar(o.TotalCentavos)}",
+                false, o.ClienteTelefone,
+                $"Olá, {PrimeiroNome(o.ClienteNome)}! Aqui é da {nomeLoja}. Conseguiu ver o orçamento {o.Numero}?"));
 
         if (clientes)
         {

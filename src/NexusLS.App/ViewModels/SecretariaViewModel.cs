@@ -124,6 +124,7 @@ public partial class SecretariaViewModel : ViewModelBase
         AssuntoTarefa.Receber => "RECEBER",
         AssuntoTarefa.Compromisso => "AGENDA",
         AssuntoTarefa.Pedido => "PEDIDO",
+        AssuntoTarefa.Orcamento => "ORÇAMENTO",
         AssuntoTarefa.Aniversario => "ANIVERSÁRIO",
         _ => "ESTOQUE"
     };

@@ -7,7 +7,7 @@ using NexusLS.Core.Models;
 namespace NexusLS.App.ViewModels;
 
 /// <summary>Os itens do menu lateral. O nome do item é também o "Tag" do botão: assim o menu destaca o da tela aberta.</summary>
-public enum ItemMenu { Inicio, Pdv, VendaCliente, Caixa, Pedidos, MaisVendidos, Desempenho, EstoqueDaLoja, ResumoEstoque, Fabrica, CalculadoraPrecos, Compras, Fornecedores, Etiquetas, Clientes, Agenda, EditorCatalogo, Financeiro, ContasESaldos, Relatorios, CatalogoOnline, Funcionarios, Atividades, Configuracoes, Trocas, RelatorioFinanceiro, RelatorioProdutos, GestaoEmpresa, EntradasESaidas, Gaveta, Secretaria }
+public enum ItemMenu { Inicio, Pdv, VendaCliente, Caixa, Pedidos, MaisVendidos, Desempenho, EstoqueDaLoja, ResumoEstoque, Fabrica, CalculadoraPrecos, Compras, Fornecedores, Etiquetas, Clientes, Agenda, EditorCatalogo, Financeiro, ContasESaldos, Relatorios, CatalogoOnline, Funcionarios, Atividades, Configuracoes, Trocas, RelatorioFinanceiro, RelatorioProdutos, GestaoEmpresa, EntradasESaidas, Gaveta, Secretaria, Orcamentos }
 
 /// <summary>
 /// ViewModel = a "lógica da tela". Ele guarda os dados que a tela mostra e os comandos dos botões,
@@ -68,6 +68,7 @@ public partial class MainViewModel : ObservableObject
             case ItemMenu.VendaCliente: IrParaVendaCliente(); break;
             case ItemMenu.Caixa: IrParaCaixa(); break;
             case ItemMenu.Pedidos: IrParaPedidos(); break;
+            case ItemMenu.Orcamentos: IrParaOrcamentos(); break;
             case ItemMenu.Trocas: IrParaTrocas(); break;
             case ItemMenu.MaisVendidos: IrParaMaisVendidos(); break;
             case ItemMenu.Desempenho: IrParaDesempenho(); break;
@@ -91,6 +92,13 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand] private void IrParaCaixa() => Abrir(new VendasViewModel(_servicos.Vendas, _servicos.Cupons, _servicos.Caixa,
         new FechamentoViewModel(_servicos.Caixa, _servicos.Configuracao, _servicos.RelatorioCaixa), _servicos.Clientes, _servicos.Configuracao, _servicos.Pedidos), ItemMenu.Caixa);
     [RelayCommand] private void IrParaTrocas() => Abrir(new TrocasViewModel(_servicos.Trocas, _servicos.Cupons), ItemMenu.Trocas);
+    [RelayCommand]
+    private void IrParaOrcamentos() => Abrir(new OrcamentosViewModel(_servicos.Orcamentos, _servicos.Produtos, _servicos.Clientes,
+        _servicos.Configuracao, _servicos.Gaveta)
+    {
+        AbrirWhatsApp = (telefone, mensagem, anexo) => NexusLS.App.Views.WhatsAppWindow.Abrir(null, telefone, mensagem, anexo),
+        AbrirArquivo = caminho => System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(caminho) { UseShellExecute = true })
+    }, ItemMenu.Orcamentos);
     [RelayCommand] private void IrParaPedidos() => Abrir(new PedidosViewModel(_servicos.Pedidos, _servicos.Produtos, _servicos.Clientes, _servicos.Cupons), ItemMenu.Pedidos);
     [RelayCommand] private void IrParaDesempenho() => Abrir(new DesempenhoVendasViewModel(_servicos.Desempenho, resumo: _servicos.ResumoVendas), ItemMenu.Desempenho);
     [RelayCommand] private void IrParaMaisVendidos() => Abrir(new MaisVendidosViewModel(_servicos.Relatorios), ItemMenu.MaisVendidos);
@@ -142,7 +150,7 @@ public partial class MainViewModel : ObservableObject
         ItemMenu.Inicio => true,
         ItemMenu.Pdv or ItemMenu.VendaCliente => Sessao.Pode(Permissao.Vender),
         ItemMenu.Caixa or ItemMenu.Trocas => Sessao.Pode(Permissao.Caixa),
-        ItemMenu.Pedidos => Sessao.Pode(Permissao.Vender),
+        ItemMenu.Pedidos or ItemMenu.Orcamentos => Sessao.Pode(Permissao.Vender),
         ItemMenu.MaisVendidos or ItemMenu.Desempenho or ItemMenu.Relatorios => Sessao.Pode(Permissao.Relatorios),
         ItemMenu.EstoqueDaLoja or ItemMenu.ResumoEstoque or ItemMenu.Etiquetas or ItemMenu.Fabrica => Sessao.Pode(Permissao.Estoque),
         _ => false

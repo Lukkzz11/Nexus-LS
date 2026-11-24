@@ -8,7 +8,7 @@ namespace NexusLS.Core.Services;
 public enum NivelLimpeza
 {
     /// <summary>
-    /// Vendas, caixa, pedidos, compras, financeiro, pagamentos de clientes e histórico de estoque.
+    /// Vendas, caixa, orçamentos, pedidos, compras, financeiro, pagamentos de clientes e histórico de estoque.
     /// Fica: produtos (com o estoque de agora), clientes (sem dívidas), fornecedores, contas financeiras, funcionários e configurações.
     /// </summary>
     Movimento = 1,
@@ -47,7 +47,7 @@ public class LimpezaService
     public static string Descricao(NivelLimpeza nivel) => nivel switch
     {
         NivelLimpeza.Movimento =>
-            "Apaga vendas, caixa, pedidos, compras, financeiro, cheques, transferências, pagamentos de clientes e o histórico de estoque. " +
+            "Apaga vendas, caixa, orçamentos, pedidos, compras, financeiro, cheques, transferências, pagamentos de clientes e o histórico de estoque. " +
             "Mantém produtos (com o estoque de agora), clientes, fornecedores, contas, funcionários e configurações.",
         _ =>
             "Apaga TUDO que é da loja: além do movimento, os produtos, clientes e fornecedores. " +
@@ -74,6 +74,8 @@ public class LimpezaService
         var apagados = new Dictionary<string, int>();
 
         // A ordem importa: primeiro quem aponta para outros (itens, eventos), por último os cadastros.
+        apagados["Itens de orçamento"] = await db.ItensOrcamento.ExecuteDeleteAsync();
+        apagados["Orçamentos"] = await db.Orcamentos.ExecuteDeleteAsync();
         apagados["Eventos de pedido"] = await db.EventosPedido.ExecuteDeleteAsync();
         apagados["Itens de pedido"] = await db.ItensPedido.ExecuteDeleteAsync();
         apagados["Pedidos"] = await db.Pedidos.ExecuteDeleteAsync();

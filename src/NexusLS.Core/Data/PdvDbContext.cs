@@ -41,6 +41,8 @@ public class PdvDbContext : DbContext
     public DbSet<OrdemProducaoGrade> GradesOrdemProducao => Set<OrdemProducaoGrade>();
     public DbSet<PerdaProducao> PerdasProducao => Set<PerdaProducao>();
     public DbSet<Funcionario> Funcionarios => Set<Funcionario>();
+    public DbSet<Orcamento> Orcamentos => Set<Orcamento>();
+    public DbSet<ItemOrcamento> ItensOrcamento => Set<ItemOrcamento>();
     public DbSet<Pedido> Pedidos => Set<Pedido>();
     public DbSet<ItemPedido> ItensPedido => Set<ItemPedido>();
     public DbSet<EventoPedido> EventosPedido => Set<EventoPedido>();
@@ -302,6 +304,23 @@ public class PdvDbContext : DbContext
             e.HasIndex(p => p.Status);
             e.HasIndex(p => p.VendaId);
             e.HasIndex(p => p.CriadoEm);
+        });
+
+        modelBuilder.Entity<Orcamento>(e =>
+        {
+            e.Property(o => o.Numero).IsRequired().HasMaxLength(20);
+            e.Property(o => o.ClienteNome).IsRequired().HasMaxLength(150);
+            e.Property(o => o.ClienteTelefone).HasMaxLength(30);
+            e.Property(o => o.Observacao).HasMaxLength(500);
+            e.HasMany(o => o.Itens).WithOne().HasForeignKey(i => i.OrcamentoId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(o => o.Status);
+        });
+
+        modelBuilder.Entity<ItemOrcamento>(e =>
+        {
+            e.Property(i => i.Nome).IsRequired().HasMaxLength(200);
+            e.Property(i => i.Tamanho).IsRequired().HasMaxLength(30);
+            e.Ignore(i => i.TotalCentavos);
         });
 
         modelBuilder.Entity<ItemPedido>(e =>

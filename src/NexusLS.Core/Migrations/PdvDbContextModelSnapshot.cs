@@ -1273,6 +1273,41 @@ namespace NexusLS.Core.Migrations
                     b.ToTable("FilaSincronizacao");
                 });
 
+            modelBuilder.Entity("NexusLS.Core.Models.ItemOrcamento", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("OrcamentoId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("PrecoUnitarioCentavos")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ProdutoId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Quantidade")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Tamanho")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrcamentoId");
+
+                    b.ToTable("ItensOrcamento");
+                });
+
             modelBuilder.Entity("NexusLS.Core.Models.ItemPedido", b =>
                 {
                     b.Property<int>("Id")
@@ -1701,6 +1736,58 @@ namespace NexusLS.Core.Migrations
                     b.HasIndex("TurnoId", "DataHora");
 
                     b.ToTable("MovimentosCaixa");
+                });
+
+            modelBuilder.Entity("NexusLS.Core.Models.Orcamento", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ClienteId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ClienteNome")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ClienteTelefone")
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CriadoEm")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("DescontoCentavos")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Numero")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Observacao")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("PedidoId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("TotalCentavos")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("ValidoAte")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Status");
+
+                    b.ToTable("Orcamentos");
                 });
 
             modelBuilder.Entity("NexusLS.Core.Models.OrdemProducao", b =>
@@ -2631,6 +2718,15 @@ namespace NexusLS.Core.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("NexusLS.Core.Models.ItemOrcamento", b =>
+                {
+                    b.HasOne("NexusLS.Core.Models.Orcamento", null)
+                        .WithMany("Itens")
+                        .HasForeignKey("OrcamentoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("NexusLS.Core.Models.ItemPedido", b =>
                 {
                     b.HasOne("NexusLS.Core.Models.Pedido", null)
@@ -2754,6 +2850,11 @@ namespace NexusLS.Core.Migrations
             modelBuilder.Entity("NexusLS.Core.Models.LancamentoEmpresa", b =>
                 {
                     b.Navigation("Anexos");
+                });
+
+            modelBuilder.Entity("NexusLS.Core.Models.Orcamento", b =>
+                {
+                    b.Navigation("Itens");
                 });
 
             modelBuilder.Entity("NexusLS.Core.Models.OrdemProducao", b =>

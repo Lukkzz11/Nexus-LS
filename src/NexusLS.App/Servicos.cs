@@ -44,6 +44,7 @@ public sealed class ContainerDeServicos
     public FornecedorService Fornecedores { get; }
     public CompraService Compras { get; }
     public PedidoService Pedidos { get; }
+    public OrcamentoService Orcamentos { get; }
     public FuncionarioService Funcionarios { get; }
     public AtividadeService Atividades { get; }
     public ContaFinanceiraService ContasFinanceiras { get; }
@@ -136,6 +137,7 @@ public sealed class ContainerDeServicos
         Fornecedores = new(fabrica);
         Compras = new(fabrica);
         Pedidos = new(fabrica);
+        Orcamentos = new(fabrica);
         Funcionarios = new(fabrica);
         Comissoes = new(fabrica);
         Contador = new(fabrica);

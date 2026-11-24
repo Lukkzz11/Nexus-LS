@@ -49,12 +49,12 @@
             <DataTemplate DataType="{x:Type vm:CalculadoraPrecosViewModel}">
                 <views:CalculadoraPrecosView />
             </DataTemplate>
-            <DataTemplate DataType="{x:Type vm:SecretariaViewModel}">
-                <views:SecretariaView />
-            </DataTemplate>
-            <DataTemplate DataType="{x:Type vm:AgendaViewModel}">
-                <views:AgendaView />
-            </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:SecretariaViewModel}">
+        <views:SecretariaView />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:AgendaViewModel}">
+        <views:AgendaView />
+    </DataTemplate>
             <DataTemplate DataType="{x:Type vm:EditorCatalogoViewModel}">
                 <views:EditorCatalogoView />
             </DataTemplate>
@@ -112,9 +112,12 @@
     <DataTemplate DataType="{x:Type vm:AtividadesViewModel}">
         <views:AtividadesView />
     </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:OrcamentosViewModel}">
+        <views:OrcamentosView />
+    </DataTemplate>
     <DataTemplate DataType="{x:Type vm:PedidosViewModel}">
-                <views:PedidosView />
-            </DataTemplate>
+        <views:PedidosView />
+    </DataTemplate>
             <DataTemplate DataType="{x:Type vm:FinanceiroViewModel}">
                 <views:FinanceiroView />
             </DataTemplate>

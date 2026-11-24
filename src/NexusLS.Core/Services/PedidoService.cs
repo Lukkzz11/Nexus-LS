@@ -179,6 +179,34 @@ public class PedidoService
         return pedido;
     }
 
+    /// <summary>O pedido de um orçamento aprovado. O total é o do orçamento (já com o desconto).</summary>
+    internal static Pedido DoOrcamento(Orcamento o, DateTime agora, string? operador)
+    {
+        var nota = $"Orçamento {o.Numero}"
+            + (o.DescontoCentavos > 0 ? $" (desconto de {Dinheiro.Formatar(o.DescontoCentavos)})" : "")
+            + (string.IsNullOrWhiteSpace(o.Observacao) ? "" : $". {o.Observacao}");
+        var pedido = new Pedido
+        {
+            Origem = OrigemPedido.Encomenda,
+            Status = StatusPedido.Novo,
+            ClienteId = o.ClienteId,
+            ClienteNome = o.ClienteNome,
+            ClienteTelefone = o.ClienteTelefone,
+            TotalCentavos = o.TotalCentavos,
+            Observacao = nota.Length > 300 ? nota[..300] : nota,
+            CriadoEm = agora,
+            AtualizadoEm = agora
+        };
+        foreach (var i in o.Itens)
+            pedido.Itens.Add(new ItemPedido
+            {
+                ProdutoId = i.ProdutoId, Nome = i.Nome, Tamanho = i.Tamanho,
+                Quantidade = i.Quantidade, PrecoUnitarioCentavos = i.PrecoUnitarioCentavos
+            });
+        pedido.Historico.Add(new EventoPedido { Status = StatusPedido.Novo, DataHora = agora, Operador = Operador(operador), Observacao = $"Criado pelo orçamento {o.Numero}" });
+        return pedido;
+    }
+
     internal static void FinalizarNumero(Pedido pedido) => pedido.Numero = RegrasPedido.NumeroDoPedido(pedido.CriadoEm, pedido.Id);
 
     public async Task<Pedido> AvancarAsync(int id, string? operador = null)
