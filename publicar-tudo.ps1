@@ -63,6 +63,20 @@ $hashAl = (Get-FileHash (Join-Path $saida "Alinhavo.zip") -Algorithm SHA256).Has
 $versaoAl = (Get-Content (Join-Path $PSScriptRoot "publicar\Alinhavo\versao.txt") -Raw).Trim()
 [IO.File]::WriteAllText((Join-Path $saida "alinhavo-versao.txt"), "$versaoAl`n", (New-Object Text.UTF8Encoding($false)))
 
+# Catalogo de apps (pagina "Mais apps" do Hub): a lista e os zips citados nela vao em TODA release.
+$catalogo = Get-Content (Join-Path $PSScriptRoot "catalogopps.json") -Raw -Encoding UTF8 | ConvertFrom-Json
+$extrasCatalogo = @("catalogo-apps.json") + @($catalogo.apps | Where-Object { $_.pacote } | ForEach-Object { $_.pacote })
+Copy-Item (Join-Path $PSScriptRoot "catalogopps.json") (Join-Path $saida "catalogo-apps.json")
+foreach ($nome in $extrasCatalogo) {
+    if ($nome -ne "catalogo-apps.json") {
+        $origem = Join-Path $PSScriptRoot "catalogo\pacotes\$nome"
+        if (-not (Test-Path $origem)) { throw "Pacote do catalogo nao encontrado: $origem" }
+        Copy-Item $origem (Join-Path $saida $nome)
+    }
+    $hashCat = (Get-FileHash (Join-Path $saida $nome) -Algorithm SHA256).Hash.ToLower()
+    [IO.File]::WriteAllText((Join-Path $saida "$nome.sha256"), "$hashCat  $nome`n", (New-Object Text.UTF8Encoding($false)))
+}
+
 $arquivoNotas = Join-Path $saida "notas.md"
 [IO.File]::WriteAllText($arquivoNotas, $Notas.Trim() + "`n", (New-Object Text.UTF8Encoding($false)))
 Get-ChildItem $saida | ForEach-Object { "{0,-34} {1,8:N1} MB" -f $_.Name, ($_.Length / 1MB) }
@@ -70,6 +84,7 @@ if ($SoGerar) { Write-Host "Pronto (modo -SoGerar): nada foi enviado. Arquivos e
 
 $arquivos = $projetos | ForEach-Object { Join-Path $saida $_.Exe; Join-Path $saida ($_.Exe + ".sha256") }
 $arquivos += $extrasAlinhavo | ForEach-Object { Join-Path $saida $_ }
+$arquivos += $extrasCatalogo | ForEach-Object { Join-Path $saida $_; Join-Path $saida "$_.sha256" }
 gh release create "v$Versao" @arquivos --repo $Repositorio --title "Nexus $Versao" --notes-file $arquivoNotas
 if ($LASTEXITCODE -ne 0) { throw "O envio ao GitHub falhou." }
 git tag -a "v$Versao" -m "Nexus $Versao" 2>$null

@@ -55,6 +55,7 @@ public partial class MainWindow : Window
         CarregarStatusVersaoBarTender();
         CarregarStatusVersaoAlinhavo();
         _ = VerificarAlinhavoNuvemAsync(silencioso: true);
+        _ = CarregarCatalogoAsync();
 
         // Faz checagem automática e não bloqueante do Git vs Instalado na inicialização
         _ = VerificarAtualizacoesGitBackgroundAsync();
@@ -112,12 +113,14 @@ public partial class MainWindow : Window
     private void NavegarPara(string pagina)
     {
         PageInicio.Visibility = pagina == "inicio" ? Visibility.Visible : Visibility.Collapsed;
+        PageCatalogo.Visibility = pagina == "catalogo" ? Visibility.Visible : Visibility.Collapsed;
         PageAtualizacoes.Visibility = pagina == "atualizacoes" ? Visibility.Visible : Visibility.Collapsed;
         PageLicenca.Visibility = pagina == "licenca" ? Visibility.Visible : Visibility.Collapsed;
         PageDiagnostico.Visibility = pagina == "diagnostico" ? Visibility.Visible : Visibility.Collapsed;
         PageSobre.Visibility = pagina == "sobre" ? Visibility.Visible : Visibility.Collapsed;
 
         AtualizarMenu(BtnMenuInicio, pagina == "inicio");
+        AtualizarMenu(BtnMenuCatalogo, pagina == "catalogo");
         AtualizarMenu(BtnMenuAtualizacoes, pagina == "atualizacoes");
         AtualizarMenu(BtnMenuLicenca, pagina == "licenca");
         AtualizarMenu(BtnMenuDiagnostico, pagina == "diagnostico");
@@ -128,6 +131,10 @@ public partial class MainWindow : Window
             case "inicio":
                 TxtTituloPagina.Text = "Início — Central de Aplicativos";
                 TxtSubtituloPagina.Text = "Gerenciamento e inicialização rápida do ecossistema Nexus";
+                break;
+            case "catalogo":
+                TxtTituloPagina.Text = "Mais apps";
+                TxtSubtituloPagina.Text = "Outros aplicativos Nexus disponíveis para a sua empresa";
                 break;
             case "atualizacoes":
                 TxtTituloPagina.Text = "Atualizações do Sistema";
@@ -1869,6 +1876,7 @@ public partial class MainWindow : Window
             var telas = new (string rota, string arquivo)[]
             {
                 ("inicio", "Nexus_Hub_01_Inicio.png"),
+                ("catalogo", "Nexus_Hub_08_Mais_Apps.png"),
                 ("atualizacoes", "Nexus_Hub_02_Atualizacoes.png"),
                 ("licenca", "Nexus_Hub_03_Licenca.png"),
                 ("diagnostico", "Nexus_Hub_04_Diagnostico.png"),

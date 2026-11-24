@@ -57,7 +57,7 @@ public class FonteAlinhavo
     }
 }
 
-/// <summary>Baixar, conferir e instalar o pacote do Alinhavo. Cada falha vira uma mensagem simples em português.</summary>
+/// <summary>Baixar, conferir e instalar o pacote .zip do Alinhavo (e dos apps do catálogo). Cada falha vira uma mensagem simples em português.</summary>
 public static class InstalacaoAlinhavo
 {
     public const string ArquivoVersao = "versao.txt";
@@ -84,14 +84,15 @@ public static class InstalacaoAlinhavo
     /// Se algo falha, o arquivo parcial é apagado e nada muda no computador.
     /// </summary>
     public static async Task<string> BaixarAsync(IFonteAtualizacao fonte, InfoVersao zip, string pastaTemporaria,
-        IProgress<double>? progresso = null, CancellationToken ct = default)
+        IProgress<double>? progresso = null, CancellationToken ct = default,
+        string nomeDoApp = "Alinhavo", string nomeDoZip = FonteAlinhavo.NomeDoZip)
     {
         if (string.IsNullOrWhiteSpace(zip.Sha256))
-            throw new RegraDeAtualizacaoException("Esta versão do Alinhavo não traz a assinatura de conferência (SHA-256) e por segurança não será instalada.");
+            throw new RegraDeAtualizacaoException($"Esta versão do {nomeDoApp} não traz a assinatura de conferência (SHA-256) e por segurança não será instalada.");
 
         Directory.CreateDirectory(pastaTemporaria);
-        VerificarEspaco(pastaTemporaria, zip.Tamanho * 3, "baixar");
-        var destino = Path.Combine(pastaTemporaria, FonteAlinhavo.NomeDoZip);
+        VerificarEspaco(pastaTemporaria, zip.Tamanho * 3, "baixar", nomeDoApp);
+        var destino = Path.Combine(pastaTemporaria, nomeDoZip);
         try
         {
             await using (var arquivo = new FileStream(destino, FileMode.Create, FileAccess.Write, FileShare.None))
@@ -104,11 +105,11 @@ public static class InstalacaoAlinhavo
 
             var tamanho = new FileInfo(destino).Length;
             if (zip.Tamanho > 0 && tamanho != zip.Tamanho)
-                throw new RegraDeAtualizacaoException("O download do Alinhavo veio incompleto. Tente de novo.");
+                throw new RegraDeAtualizacaoException($"O download do {nomeDoApp} veio incompleto. Tente de novo.");
 
             var hash = await AtualizadorService.Sha256DoArquivoAsync(destino, ct).ConfigureAwait(false);
             if (!string.Equals(hash, zip.Sha256.Trim(), StringComparison.OrdinalIgnoreCase))
-                throw new RegraDeAtualizacaoException("O arquivo baixado do Alinhavo não confere com a assinatura (SHA-256) e foi descartado. Nada foi instalado.");
+                throw new RegraDeAtualizacaoException($"O arquivo baixado do {nomeDoApp} não confere com a assinatura (SHA-256) e foi descartado. Nada foi instalado.");
 
             progresso?.Report(1.0);
             return destino;
@@ -124,12 +125,12 @@ public static class InstalacaoAlinhavo
     /// Extrai o zip numa pasta ao lado, confere que tem alinhavo.exe e só então troca a pasta instalada
     /// (a anterior vai para ".antigo" e é apagada). O Alinhavo precisa estar fechado.
     /// </summary>
-    public static void Instalar(string zip, string pastaDestino)
+    public static void Instalar(string zip, string pastaDestino, string nomeDoApp = "Alinhavo", string exe = ExeAlinhavo)
     {
         var pai = Path.GetDirectoryName(Path.GetFullPath(pastaDestino).TrimEnd('\\', '/'))
             ?? throw new RegraDeAtualizacaoException("Pasta de instalação inválida.");
         Directory.CreateDirectory(pai);
-        VerificarEspaco(pai, new FileInfo(zip).Length * 4, "instalar");
+        VerificarEspaco(pai, new FileInfo(zip).Length * 4, "instalar", nomeDoApp);
 
         var novo = pastaDestino.TrimEnd('\\', '/') + ".novo";
         var antigo = pastaDestino.TrimEnd('\\', '/') + AtualizadorService.SufixoDoAntigo;
@@ -137,8 +138,8 @@ public static class InstalacaoAlinhavo
         {
             ApagarPasta(novo);
             ZipFile.ExtractToDirectory(zip, novo, overwriteFiles: true);
-            if (!File.Exists(Path.Combine(novo, ExeAlinhavo)))
-                throw new RegraDeAtualizacaoException("O pacote do Alinhavo está incompleto (falta o alinhavo.exe). Nada foi instalado.");
+            if (!File.Exists(Path.Combine(novo, exe)))
+                throw new RegraDeAtualizacaoException($"O pacote do {nomeDoApp} está incompleto (falta o {exe}). Nada foi instalado.");
 
             ApagarPasta(antigo);
             if (Directory.Exists(pastaDestino)) Directory.Move(pastaDestino, antigo);
@@ -153,7 +154,7 @@ public static class InstalacaoAlinhavo
         catch (InvalidDataException)
         {
             ApagarPasta(novo);
-            throw new RegraDeAtualizacaoException("O arquivo do Alinhavo está corrompido e não pôde ser aberto. Tente de novo.");
+            throw new RegraDeAtualizacaoException($"O arquivo do {nomeDoApp} está corrompido e não pôde ser aberto. Tente de novo.");
         }
         catch
         {
@@ -163,28 +164,28 @@ public static class InstalacaoAlinhavo
     }
 
     /// <summary>Texto simples para o usuário, sem jargão, para qualquer falha do download/instalação.</summary>
-    public static string Traduzir(Exception ex) => ex switch
+    public static string Traduzir(Exception ex, string nomeDoApp = "Alinhavo") => ex switch
     {
         RegraDeAtualizacaoException r => r.Message,
         OperationCanceledException => "A operação foi cancelada.",
         HttpRequestException or TaskCanceledException => "Não foi possível falar com a nuvem. Confira a internet e tente de novo.",
         InvalidDataException => "O arquivo recebido da nuvem foi recusado por segurança.",
-        UnauthorizedAccessException => "O Windows não deixou gravar na pasta do Alinhavo. Feche o Alinhavo e tente de novo.",
+        UnauthorizedAccessException => $"O Windows não deixou gravar na pasta do {nomeDoApp}. Feche o {nomeDoApp} e tente de novo.",
         IOException io when SemEspaco(io) => "Não há espaço livre suficiente no disco. Libere espaço e tente de novo.",
-        IOException => "Não foi possível gravar os arquivos do Alinhavo (algum arquivo pode estar aberto). Feche o Alinhavo e tente de novo.",
+        IOException => $"Não foi possível gravar os arquivos do {nomeDoApp} (algum arquivo pode estar aberto). Feche o {nomeDoApp} e tente de novo.",
         _ => "Não foi possível concluir: " + ex.Message
     };
 
     private static bool SemEspaco(IOException io) => (io.HResult & 0xFFFF) is 112 or 39; // ERROR_DISK_FULL / ERROR_HANDLE_DISK_FULL
 
-    private static void VerificarEspaco(string pasta, long necessario, string acao)
+    private static void VerificarEspaco(string pasta, long necessario, string acao, string nomeDoApp)
     {
         if (necessario <= 0) return;
         try
         {
             var raiz = Path.GetPathRoot(Path.GetFullPath(pasta));
             if (!string.IsNullOrEmpty(raiz) && new DriveInfo(raiz).AvailableFreeSpace < necessario)
-                throw new RegraDeAtualizacaoException($"Não há espaço livre suficiente no disco para {acao} o Alinhavo (precisa de cerca de {necessario / 1048576 + 1} MB).");
+                throw new RegraDeAtualizacaoException($"Não há espaço livre suficiente no disco para {acao} o {nomeDoApp} (precisa de cerca de {necessario / 1048576 + 1} MB).");
         }
         catch (ArgumentException) { }
         catch (IOException) { }

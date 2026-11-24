@@ -106,6 +106,13 @@
                         </StackPanel>
                     </Button>
 
+                    <Button x:Name="BtnMenuCatalogo" Style="{StaticResource ItemMenuLateral}" Click="BtnMenuCatalogo_Click">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Path Data="{StaticResource IconeDownload}" Width="16" Height="16" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Stretch="Uniform" Margin="0,0,12,0" />
+                            <TextBlock Text="Mais apps" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
                     <Button x:Name="BtnMenuAtualizacoes" Style="{StaticResource ItemMenuLateral}" Click="BtnMenuAtualizacoes_Click">
                         <Grid Width="180">
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -607,6 +614,35 @@
                     </Grid>
                 </Border>
             </Grid>
+
+            <!-- ==================== PÁGINA: MAIS APPS (CATÁLOGO DA NUVEM) ==================== -->
+            <ScrollViewer x:Name="PageCatalogo" Grid.Row="1" Margin="28,20,28,16" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
+                <StackPanel>
+                    <TextBlock x:Name="TxtCatalogoAviso" FontSize="13" Foreground="#64748B" TextWrapping="Wrap" Margin="0,0,0,14" />
+                    <ItemsControl x:Name="ListaCatalogo">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource CardBranco}" Width="330" Height="250" Padding="20" Margin="0,0,18,18">
+                                    <DockPanel>
+                                        <Border DockPanel.Dock="Top" Height="3" Background="{Binding Cor}" Margin="-20,-20,-20,16" CornerRadius="8,8,0,0" />
+                                        <TextBlock DockPanel.Dock="Top" Text="{Binding Nome}" FontSize="16" FontWeight="Bold" Foreground="#0F172A" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock DockPanel.Dock="Top" Text="{Binding Subtitulo}" FontSize="12" Foreground="#64748B" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" />
+                                        <Button DockPanel.Dock="Bottom" Content="{Binding TextoBotao}" IsEnabled="{Binding Livre}" Height="40"
+                                                Style="{StaticResource BotaoPrimario}" Click="BtnAppCatalogo_Click" />
+                                        <TextBlock DockPanel.Dock="Bottom" Text="{Binding Situacao}" FontSize="12" FontWeight="SemiBold" Foreground="#334155" TextTrimming="CharacterEllipsis" Margin="0,0,0,8" />
+                                        <TextBlock Text="{Binding Descricao}" FontSize="12" Foreground="#475569" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" Margin="0,10,0,8" />
+                                    </DockPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
 
             <!-- ==================== PÁGINA 2: ATUALIZAÇÕES ==================== -->
             <ScrollViewer x:Name="PageAtualizacoes" Grid.Row="1" Margin="28,20,28,16" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
