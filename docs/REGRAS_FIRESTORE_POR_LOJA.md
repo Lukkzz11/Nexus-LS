@@ -1,43 +1,29 @@
-# Regras do Firestore por loja (rascunho para o Lucas publicar)
+# Regras do Firestore por loja
 
-O Nexus **nunca** altera `firestore.rules`. Este texto é só uma sugestão; confira com quem mantém o ERP Life antes de publicar. Nada aqui foi testado no Firestore real.
+Arquivo pronto: [`firebase/firestore.lojas.rules`](../firebase/firestore.lojas.rules). Nada foi publicado nem testado no Firestore real.
 
-## Estrutura usada pelo Nexus (nova, não toca nas coleções do ERP Life)
-```
-empresas/{empresaId}/lojas/{lojaId}
-empresas/{empresaId}/lojas/{lojaId}/dias/{AAAA-MM-DD}
-empresas/{empresaId}/lojas/{lojaId}/estoque/{produto}
-empresas/{empresaId}/lojas/{lojaId}/lancamentos/{id}
-empresas/{empresaId}/precos/{produto}/lojas/{lojaId}
-```
+**Qual projeto:** o mesmo do **Catálogo online** (o Nexus usa essas credenciais para as lojas). Nunca o projeto do ERP Life; o app recusa gravar nele.
 
-## Ideia das regras
-- Cada computador entra com uma conta própria (e-mail/senha da Firebase Auth) que recebe um *custom claim*: `empresaId`, `lojaId` e `papel` (`admin` ou `loja`).
-- Administrador lê e escreve em toda a empresa.
-- Conta de loja lê e escreve só em `lojas/{sua lojaId}/...` e só **lê** os preços da sua loja.
-- Ninguém de loja escreve em `precos`.
+## Passo a passo
+1. **Authentication:** crie uma conta (e-mail e senha) para o administrador e uma para cada outra loja.
+2. **Em cada computador:** Catálogo online > informe projeto, chave da API e a conta daquela loja. Em Gestão da empresa > Lojas, preencha "Empresa na nuvem" (igual em todos) e copie o "Código da loja".
+3. **No arquivo de regras:** preencha `ehDonoDaLicenca()` com os e-mails já publicados hoje e `contas()` com um e-mail por linha (`loja: '*'` = administrador).
+4. **Console > Firestore > Regras:** cole o arquivo, teste no Simulador e publique.
 
-```
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    function daEmpresa(e) { return request.auth != null && request.auth.token.empresaId == e; }
-    function admin(e)     { return daEmpresa(e) && request.auth.token.papel == 'admin'; }
-    function daLoja(e, l) { return daEmpresa(e) && request.auth.token.lojaId == l; }
+## Testes no Simulador (provider "password", com o e-mail no token)
+Troque `E` pela empresa e `L2` pelo código da loja 2.
 
-    match /empresas/{e}/lojas/{l} {
-      allow read, write: if admin(e) || daLoja(e, l);
-      match /{sub=**} { allow read, write: if admin(e) || daLoja(e, l); }
-    }
-    match /empresas/{e}/precos/{produto}/lojas/{l} {
-      allow read: if admin(e) || daLoja(e, l);
-      allow write: if admin(e);
-    }
-  }
-}
-```
+| Conta | Operação | Caminho | Esperado |
+|---|---|---|---|
+| loja 2 | get | `/empresas/E/lojas/L2` | permitido |
+| loja 2 | create | `/empresas/E/lojas/L2/dias/2026-01-01` | permitido |
+| loja 2 | get | `/empresas/E/lojas/OUTRA` | negado |
+| loja 2 | create | `/empresas/E/precos/p1/lojas/L2` | negado |
+| admin | create | `/empresas/E/precos/p1/lojas/L2` | permitido |
+| sem login | get | `/empresas/E/lojas/L2` | negado |
+| sem login | get | `/produtos/qualquer` | permitido (catálogo público) |
 
 ## Cuidados
-- Mantenha as regras atuais do ERP Life; acrescente estas sem apagar as existentes.
-- Dois computadores com o mesmo `lojaId` (banco copiado) escreveriam no mesmo lugar: gere um id novo em cada loja.
-- Sem essas regras, a tela não impede uma loja de ler outra: a proteção real é a regra do Firestore.
+- Loja que também publica o catálogo precisa estar nas duas listas.
+- Banco copiado de um computador para outro repete o "Código da loja": não faça isso.
+- Loja nova: criar a conta, acrescentar a linha em `contas()` e publicar de novo.

@@ -1,0 +1,86 @@
+rules_version = '2';
+
+// Regras do projeto Firebase do CATÁLOGO do Nexus LS quando há VÁRIAS LOJAS.
+// É o firestore.rules (catálogo) + a parte das lojas, num arquivo só: colar este SUBSTITUI o que está no console,
+// então antes copie para cá os e-mails que já estão publicados.
+//
+// Preencha as 2 listas abaixo. Não precisa de script nem de chave de administrador.
+//
+// IMPORTANTE: não foi executado num emulador nem no Firestore real. Teste no "Simulador de regras" do console.
+// Crie as contas em Authentication ANTES de publicar (e-mail listado sem conta poderia ser registrado por outra pessoa).
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------------- PREENCHER ----------------
+
+    // Quem publica o catálogo (igual ao firestore.rules atual).
+    function ehDonoDaLicenca() {
+      return request.auth != null
+          && request.auth.token.email in [
+            'TROQUE-PELO-EMAIL-DA-LICENCA@exemplo.com'
+          ];
+    }
+
+    // Uma linha por conta, com o e-mail em minúsculas.
+    //   empresa: o mesmo texto do campo "Empresa na nuvem" (Gestão da empresa > Lojas), igual em todos os computadores.
+    //   loja:    o "Código da loja" daquele computador. Para o administrador, use '*'.
+    function contas() {
+      return {
+        'admin@exemplo.com': { 'empresa': 'TROQUE-EMPRESA', 'loja': '*' },
+        'loja2@exemplo.com': { 'empresa': 'TROQUE-EMPRESA', 'loja': 'TROQUE-CODIGO-DA-LOJA-2' }
+      };
+    }
+
+    // ---------------- NÃO PRECISA MUDAR ----------------
+
+    function daEmpresa(e) {
+      return request.auth != null
+          && request.auth.token.email in contas()
+          && contas()[request.auth.token.email].empresa == e;
+    }
+    function admin(e)     { return daEmpresa(e) && contas()[request.auth.token.email].loja == '*'; }
+    function daLoja(e, l) { return daEmpresa(e) && contas()[request.auth.token.email].loja == l; }
+
+    // Catálogo online (público para leitura).
+    match /produtos/{produtoId} {
+      allow read: if true;
+      allow create, update: if ehDonoDaLicenca()
+        && request.resource.data.origem == 'nexus-ls'
+        && request.resource.data.nome is string
+        && request.resource.data.precoVendaCentavos is int
+        && request.resource.data.precoVendaCentavos >= 0;
+      allow delete: if false;
+    }
+
+    match /meta/{docId} {
+      allow read: if true;
+      allow create, update: if ehDonoDaLicenca();
+      allow delete: if false;
+    }
+
+    // Lojas: o administrador vê todas; cada loja só a sua. Listar as lojas é só do administrador.
+    match /empresas/{e}/lojas/{l} {
+      allow read: if admin(e) || daLoja(e, l);
+      allow create, update: if admin(e) || daLoja(e, l);
+      allow delete: if false;
+
+      match /{colecao}/{id} {
+        allow read: if admin(e) || daLoja(e, l);
+        allow create, update: if (admin(e) || daLoja(e, l)) && colecao in ['dias', 'estoque', 'lancamentos'];
+        allow delete: if false;
+      }
+    }
+
+    // Preço por loja: só o administrador define; a loja lê o dela.
+    match /empresas/{e}/precos/{produto}/lojas/{l} {
+      allow read: if admin(e) || daLoja(e, l);
+      allow create, update: if admin(e);
+      allow delete: if false;
+    }
+
+    match /{outro=**} {
+      allow read, write: if false;
+    }
+  }
+}
