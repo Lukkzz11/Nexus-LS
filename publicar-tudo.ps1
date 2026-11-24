@@ -64,9 +64,9 @@ $versaoAl = (Get-Content (Join-Path $PSScriptRoot "publicar\Alinhavo\versao.txt"
 [IO.File]::WriteAllText((Join-Path $saida "alinhavo-versao.txt"), "$versaoAl`n", (New-Object Text.UTF8Encoding($false)))
 
 # Catalogo de apps (pagina "Mais apps" do Hub): a lista e os zips citados nela vao em TODA release.
-$catalogo = Get-Content (Join-Path $PSScriptRoot "catalogopps.json") -Raw -Encoding UTF8 | ConvertFrom-Json
+$catalogo = Get-Content (Join-Path $PSScriptRoot "catalogo\apps.json") -Raw -Encoding UTF8 | ConvertFrom-Json
 $extrasCatalogo = @("catalogo-apps.json") + @($catalogo.apps | Where-Object { $_.pacote } | ForEach-Object { $_.pacote })
-Copy-Item (Join-Path $PSScriptRoot "catalogopps.json") (Join-Path $saida "catalogo-apps.json")
+Copy-Item (Join-Path $PSScriptRoot "catalogo\apps.json") (Join-Path $saida "catalogo-apps.json")
 foreach ($nome in $extrasCatalogo) {
     if ($nome -ne "catalogo-apps.json") {
         $origem = Join-Path $PSScriptRoot "catalogo\pacotes\$nome"
