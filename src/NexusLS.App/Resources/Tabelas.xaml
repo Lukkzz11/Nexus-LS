@@ -32,6 +32,7 @@
     </Style>
 
     <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
+        <Setter Property="Background" Value="{DynamicResource CorPainel}" />
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
                 <Setter Property="Background" Value="{DynamicResource CorHover}" />
