@@ -47,6 +47,12 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="0,16,0,16">
                         <TextBlock Text="VENDAS" Style="{StaticResource SecaoMenu}" Margin="20,0,18,6" />
+                        <Button Tag="Secretaria" AutomationProperties.Name="Secretária" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaSecretariaCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Symbol="ClipboardTaskListLtr24" Style="{StaticResource IconeDoMenu}" />
+                                <TextBlock Text="Secretária" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
                         <Button Tag="Agenda" AutomationProperties.Name="Agenda" Style="{StaticResource ItemDoMenu}" Command="{Binding IrParaAgendaCommand}">
                             <StackPanel Orientation="Horizontal">
                                 <ui:SymbolIcon Symbol="CalendarLtr24" Style="{StaticResource IconeDoMenu}" />

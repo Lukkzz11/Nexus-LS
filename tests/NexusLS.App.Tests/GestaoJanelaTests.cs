@@ -106,7 +106,7 @@ public sealed class GestaoJanelaTests : IDisposable
         });
         Assert.Equal(new[]
         {
-            "Agenda", "Clientes", "Relatorios", "Gaveta", "WhatsApp",
+            "Secretaria", "Agenda", "Clientes", "Relatorios", "Gaveta", "WhatsApp",
             "Financeiro", "ContasESaldos", "RelatorioFinanceiro",
             "RelatorioProdutos", "Compras", "Fornecedores", "CalculadoraPrecos",
             "Funcionarios", "Atividades",

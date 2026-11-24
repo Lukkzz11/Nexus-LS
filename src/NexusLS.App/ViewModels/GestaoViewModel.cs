@@ -35,7 +35,7 @@ public partial class GestaoViewModel : ObservableObject
     /// <summary>Quais itens da Gestão cada permissão libera. A Agenda é de quem entrou na Gestão.</summary>
     public static bool Permitido(ItemMenu item) => item switch
     {
-        ItemMenu.Agenda => true,
+        ItemMenu.Agenda or ItemMenu.Secretaria => true,
         ItemMenu.Clientes => Sessao.Pode(Permissao.Clientes),
         ItemMenu.Financeiro or ItemMenu.ContasESaldos => Sessao.Pode(Permissao.Financeiro),
         ItemMenu.EntradasESaidas or ItemMenu.RelatorioFinanceiro => Sessao.Pode(Permissao.Financeiro),
@@ -49,7 +49,7 @@ public partial class GestaoViewModel : ObservableObject
     };
 
     /// <summary>Itens que esta janela sabe abrir (o MainViewModel manda para cá os atalhos do Início).</summary>
-    public static bool EhDaGestao(ItemMenu item) => item is ItemMenu.Agenda or ItemMenu.Clientes or ItemMenu.Financeiro or ItemMenu.ContasESaldos
+    public static bool EhDaGestao(ItemMenu item) => item is ItemMenu.Agenda or ItemMenu.Secretaria or ItemMenu.Clientes or ItemMenu.Financeiro or ItemMenu.ContasESaldos
         or ItemMenu.Relatorios or ItemMenu.Funcionarios or ItemMenu.Configuracoes or ItemMenu.CatalogoOnline or ItemMenu.Atividades
         or ItemMenu.Compras or ItemMenu.Fornecedores or ItemMenu.CalculadoraPrecos
         or ItemMenu.RelatorioFinanceiro or ItemMenu.RelatorioProdutos or ItemMenu.GestaoEmpresa or ItemMenu.EntradasESaidas or ItemMenu.Gaveta;
@@ -94,6 +94,7 @@ public partial class GestaoViewModel : ObservableObject
             case ItemMenu.GestaoEmpresa: IrParaGestaoEmpresa(); break;
             case ItemMenu.EntradasESaidas: IrParaEntradasESaidas(); break;
             case ItemMenu.Gaveta: IrParaGaveta(); break;
+            case ItemMenu.Secretaria: IrParaSecretaria(); break;
             default: IrParaAgenda(); break;
         }
     }
@@ -130,6 +131,19 @@ public partial class GestaoViewModel : ObservableObject
 
     private EntradasESaidasViewModel CriarEntradasESaidas() => new(_servicos.LancamentosEmpresa, _servicos.AnexosEmpresa);
     [RelayCommand] private void IrParaAgenda() => Abrir(new AgendaViewModel(_servicos.Agenda, null, _servicos.AgendaNoGoogle), ItemMenu.Agenda);
+    [RelayCommand]
+    private void IrParaSecretaria()
+    {
+        var secretaria = new SecretariaViewModel(_servicos.Secretaria, _servicos.Financeiro,
+            async () => (await _servicos.Posicao.CalcularAsync(DateTime.Today, DateTime.Today)).SaldoDisponivelCentavos,
+            async () => (await _servicos.Configuracao.ObterAsync()).NomeLoja,
+            Sessao.Pode(Permissao.Financeiro), Sessao.Pode(Permissao.Clientes))
+        {
+            AbrirWhatsApp = (telefone, mensagem) => NexusLS.App.Views.WhatsAppWindow.Abrir(null, telefone, mensagem)
+        };
+        Abrir(secretaria, ItemMenu.Secretaria);
+    }
+
     [RelayCommand] private void IrParaClientes()
     {
         var clientes = new ClientesViewModel(_servicos.Clientes, _servicos.TitulosPrazo);
