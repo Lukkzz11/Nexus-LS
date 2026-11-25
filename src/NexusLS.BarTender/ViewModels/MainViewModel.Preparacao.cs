@@ -43,6 +43,13 @@ public partial class MainViewModel
         return vm;
     }
 
+    /// <summary>O modal sempre abre com a mesma grade de tamanhos escolhida no Estúdio.</summary>
+    private AcaoProdutoCatalogo AbrirModalComGrade(SelecaoImpressaoViewModel selecao)
+    {
+        selecao.UsarGrade(DesignerVM.TamanhosDaGradeDe(selecao.Produto.Id));
+        return AbrirModalProduto(selecao);
+    }
+
     /// <summary>Duplo clique no catálogo: abre o modal com quantidades por tamanho.</summary>
     [RelayCommand]
     public void AbrirProdutoDoCatalogo(ProdutoItemViewModel? produtoItem)
@@ -57,7 +64,7 @@ public partial class MainViewModel
             _selecoesPorProduto[produtoItem.Produto.Id] = selecao;
         }
 
-        AplicarAcaoDoModal(selecao, AbrirModalProduto(selecao));
+        AplicarAcaoDoModal(selecao, AbrirModalComGrade(selecao));
     }
 
     /// <summary>
@@ -80,6 +87,8 @@ public partial class MainViewModel
             _selecoesPorProduto[item.Produto.Id] = selecao;
         }
 
+        selecao.UsarGrade(DesignerVM.TamanhosDaGradeDe(item.Produto.Id));
+
         // Sem nada digitado ainda: começa com 1 do tamanho que está em teste no Estúdio.
         if (!selecao.Linhas.Any(l => l.TemQuantidade))
         {
@@ -89,7 +98,7 @@ public partial class MainViewModel
         }
 
         // "Abrir no Estúdio" ou fechar: continua onde está (o desenho não é recarregado).
-        if (AbrirModalProduto(selecao) == AcaoProdutoCatalogo.Impressao)
+        if (AbrirModalComGrade(selecao) == AcaoProdutoCatalogo.Impressao)
             MostrarPreparacao(selecao, item, usarModeloDoEstudio: true);
     }
 
@@ -99,7 +108,7 @@ public partial class MainViewModel
     /// </summary>
     private AcaoProdutoCatalogo AbrirModalDaPreparacao(SelecaoImpressaoViewModel selecao)
     {
-        var acao = AbrirModalProduto(selecao);
+        var acao = AbrirModalComGrade(selecao);
         if (acao == AcaoProdutoCatalogo.Impressao)
             MostrarPreparacao(selecao);
         return acao;

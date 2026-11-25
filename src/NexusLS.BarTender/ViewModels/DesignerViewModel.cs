@@ -81,6 +81,13 @@ public partial class DesignerViewModel : ObservableObject
 
     private bool _restaurandoGrade;
 
+    /// <summary>Tamanhos da grade pronta escolhida para o produto; vazio quando ele usa os do cadastro.</summary>
+    public IReadOnlyList<string> TamanhosDaGradeDe(int produtoId)
+    {
+        var nome = PreferenciasBarTender.Carregar(CaminhoPreferencias).GradePorProduto.GetValueOrDefault(produtoId);
+        return GradesDeTamanho.Todas.FirstOrDefault(g => g.Nome == nome)?.Tamanhos ?? Array.Empty<string>();
+    }
+
     /// <summary>O tamanho em teste não está no cadastro: aparece na etiqueta, mas o código continua o do produto.</summary>
     public bool TamanhoForaDoCadastro =>
         ProdutoAtual != null && TemTamanhoEmTeste &&

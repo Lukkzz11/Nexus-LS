@@ -65,6 +65,39 @@ public sealed class EstudioGradeTamanhosTests : IDisposable
     }
 
     [Fact]
+    public void BotaoRapidoDeGrade_NaoAlteraOProduto_EImprimeComOCodigoDoProduto()
+    {
+        var produto = SemTamanhos();
+        var selecao = new SelecaoImpressaoViewModel(produto);
+
+        selecao.AplicarGradeRapida("Bermuda");
+        selecao.DefinirQuantidade("44", 2);
+
+        Assert.Single(produto.Tamanhos);
+        var item = Assert.Single(selecao.ParaSelecao().ParaItens());
+        Assert.Equal("44", item.Tamanho);
+        Assert.Equal("1453", item.CodigoBarras);
+    }
+
+    [Fact]
+    public void GradeDoEstudio_ApareceNaImpressao_ETrocarMantemOQueJaTemQuantidade()
+    {
+        var vm = Estudio(SemTamanhos());
+        vm.GradeSelecionada = GradesDeTamanho.CalcaBermuda.Nome;
+        var selecao = new SelecaoImpressaoViewModel(SemTamanhos());
+
+        selecao.UsarGrade(vm.TamanhosDaGradeDe(9001));
+        Assert.Equal(GradesDeTamanho.CalcaBermuda.Tamanhos.Append(""), selecao.Linhas.Select(l => l.Tamanho));
+
+        selecao.DefinirQuantidade("40", 3);
+        vm.GradeSelecionada = DesignerViewModel.GradeDoCadastro;
+        selecao.UsarGrade(vm.TamanhosDaGradeDe(9001));
+
+        Assert.Equal(new[] { "40", "" }, selecao.Linhas.Select(l => l.Tamanho));
+        Assert.Equal(3, selecao.Total);
+    }
+
+    [Fact]
     public void TamanhoForaDoCadastro_NaoGanhaNumeroNoCodigo_ParaOPdvConseguirLer()
     {
         Assert.Equal("1453", CodigoBarrasTamanho.Resolver(SemTamanhos(), "M"));

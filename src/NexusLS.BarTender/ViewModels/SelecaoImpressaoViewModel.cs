@@ -297,51 +297,53 @@ public partial class SelecaoImpressaoViewModel : ObservableObject
 
         if (novosTamanhos.Length == 0) return;
 
-        var quantidadesAtuais = Linhas.ToDictionary(l => l.Tamanho, l => l.Quantidade, StringComparer.OrdinalIgnoreCase);
-        var estoquesAtuais = Linhas.ToDictionary(l => l.Tamanho, l => l.Estoque, StringComparer.OrdinalIgnoreCase);
+        AcrescentarTamanhos(novosTamanhos);
+        AtualizarTotais();
+    }
 
-        Produto.Tamanhos ??= new List<ProdutoTamanho>();
-        var maiorOrdem = Produto.Tamanhos.Select(t => t.Ordem).DefaultIfEmpty(0).Max();
+    /// <summary>Linhas que entraram por causa da grade escolhida no Estúdio (saem se a grade mudar).</summary>
+    private readonly List<LinhaSelecaoViewModel> _linhasDaGrade = new();
 
-        foreach (var tam in novosTamanhos)
+    /// <summary>
+    /// Mostra aqui os tamanhos da grade escolhida no Estúdio. Trocar de grade tira os da anterior,
+    /// menos os que já têm quantidade digitada.
+    /// </summary>
+    public void UsarGrade(IReadOnlyList<string> tamanhos)
+    {
+        foreach (var linha in _linhasDaGrade
+                     .Where(l => !l.TemQuantidade && !tamanhos.Contains(l.Tamanho, StringComparer.OrdinalIgnoreCase))
+                     .ToList())
         {
-            if (!Produto.Tamanhos.Any(t => string.Equals(t.Tamanho?.Trim(), tam, StringComparison.OrdinalIgnoreCase)))
-            {
-                maiorOrdem++;
-                Produto.Tamanhos.Add(new ProdutoTamanho
-                {
-                    ProdutoId = Produto.Id,
-                    Tamanho = tam,
-                    Ordem = maiorOrdem,
-                    Estoque = estoquesAtuais.GetValueOrDefault(tam, 0)
-                });
-            }
+            Linhas.Remove(linha);
+            _linhasDaGrade.Remove(linha);
         }
 
-        // Reconstrói as linhas mantendo o que já estava e acrescentando os novos na ordem natural
-        var semTamanhoLinha = Linhas.FirstOrDefault(l => l.EhSemTamanho);
-        foreach (var tam in novosTamanhos)
+        _linhasDaGrade.AddRange(AcrescentarTamanhos(tamanhos));
+        AtualizarTotais();
+    }
+
+    /// <summary>
+    /// Acrescenta linhas só nesta tela, antes da linha "Único". O produto não é alterado: um tamanho fora do cadastro
+    /// sai com o código de barras do próprio produto, que o PDV sabe ler.
+    /// </summary>
+    private List<LinhaSelecaoViewModel> AcrescentarTamanhos(IEnumerable<string> tamanhos)
+    {
+        var novas = new List<LinhaSelecaoViewModel>();
+        foreach (var tam in tamanhos)
         {
             if (Linhas.Any(l => string.Equals(l.Tamanho, tam, StringComparison.OrdinalIgnoreCase)))
                 continue;
 
-            var estoque = Produto.Tamanhos
-                .FirstOrDefault(t => string.Equals(t.Tamanho?.Trim(), tam, StringComparison.OrdinalIgnoreCase))?.Estoque ?? 0;
-            var vm = new LinhaSelecaoViewModel(tam, estoque, quantidadesAtuais.GetValueOrDefault(tam, 0));
-            vm.Alterada += (_, _) => AtualizarTotais();
+            var linha = new LinhaSelecaoViewModel(tam, 0);
+            linha.Alterada += (_, _) => AtualizarTotais();
 
-            if (semTamanhoLinha is not null)
-            {
-                var idx = Linhas.IndexOf(semTamanhoLinha);
-                Linhas.Insert(Math.Max(0, idx), vm);
-            }
-            else
-            {
-                Linhas.Add(vm);
-            }
+            var unico = Linhas.FirstOrDefault(l => l.EhSemTamanho);
+            if (unico is null) Linhas.Add(linha);
+            else Linhas.Insert(Linhas.IndexOf(unico), linha);
+            novas.Add(linha);
         }
 
-        AtualizarTotais();
+        return novas;
     }
 
     /// <summary>Valida para o botão de impressão e deixa a mensagem pronta na tela.</summary>
