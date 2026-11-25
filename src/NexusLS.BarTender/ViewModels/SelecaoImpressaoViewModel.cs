@@ -241,6 +241,9 @@ public partial class SelecaoImpressaoViewModel : ObservableObject
             Linhas.Add(vm);
         }
 
+        _linhaUnica = Linhas.FirstOrDefault(l => l.EhSemTamanho);
+        AjustarLinhaUnica();
+
         var info = GerenciadorEtiquetasProdutoService.ObterInfoEtiqueta(produto.Id);
         TemEtiquetaPersonalizada = info.TemPersonalizada;
         InfoEtiquetaNome = info.NomeModelo;
@@ -298,6 +301,7 @@ public partial class SelecaoImpressaoViewModel : ObservableObject
         if (novosTamanhos.Length == 0) return;
 
         AcrescentarTamanhos(novosTamanhos);
+        AjustarLinhaUnica();
         AtualizarTotais();
     }
 
@@ -319,11 +323,29 @@ public partial class SelecaoImpressaoViewModel : ObservableObject
         }
 
         _linhasDaGrade.AddRange(AcrescentarTamanhos(tamanhos));
+        AjustarLinhaUnica();
         AtualizarTotais();
     }
 
+    private readonly LinhaSelecaoViewModel? _linhaUnica;
+
+    /// <summary>A linha "Único" só existe quando não há nenhum tamanho para escolher.</summary>
+    private void AjustarLinhaUnica()
+    {
+        if (_linhaUnica is null) return;
+
+        if (Linhas.Any(l => !l.EhSemTamanho))
+        {
+            if (Linhas.Remove(_linhaUnica)) _linhaUnica.DefinirQuantidade(0);
+        }
+        else if (!Linhas.Contains(_linhaUnica))
+        {
+            Linhas.Add(_linhaUnica);
+        }
+    }
+
     /// <summary>
-    /// Acrescenta linhas só nesta tela, antes da linha "Único". O produto não é alterado: um tamanho fora do cadastro
+    /// Acrescenta linhas só nesta tela. O produto não é alterado: um tamanho fora do cadastro
     /// sai com o código de barras do próprio produto, que o PDV sabe ler.
     /// </summary>
     private List<LinhaSelecaoViewModel> AcrescentarTamanhos(IEnumerable<string> tamanhos)
@@ -337,9 +359,7 @@ public partial class SelecaoImpressaoViewModel : ObservableObject
             var linha = new LinhaSelecaoViewModel(tam, 0);
             linha.Alterada += (_, _) => AtualizarTotais();
 
-            var unico = Linhas.FirstOrDefault(l => l.EhSemTamanho);
-            if (unico is null) Linhas.Add(linha);
-            else Linhas.Insert(Linhas.IndexOf(unico), linha);
+            Linhas.Add(linha);
             novas.Add(linha);
         }
 

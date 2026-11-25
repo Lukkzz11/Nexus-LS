@@ -87,14 +87,28 @@ public sealed class EstudioGradeTamanhosTests : IDisposable
         var selecao = new SelecaoImpressaoViewModel(SemTamanhos());
 
         selecao.UsarGrade(vm.TamanhosDaGradeDe(9001));
-        Assert.Equal(GradesDeTamanho.CalcaBermuda.Tamanhos.Append(""), selecao.Linhas.Select(l => l.Tamanho));
+        Assert.Equal(GradesDeTamanho.CalcaBermuda.Tamanhos, selecao.Linhas.Select(l => l.Tamanho));
 
         selecao.DefinirQuantidade("40", 3);
         vm.GradeSelecionada = DesignerViewModel.GradeDoCadastro;
         selecao.UsarGrade(vm.TamanhosDaGradeDe(9001));
 
-        Assert.Equal(new[] { "40", "" }, selecao.Linhas.Select(l => l.Tamanho));
+        Assert.Equal(new[] { "40" }, selecao.Linhas.Select(l => l.Tamanho));
         Assert.Equal(3, selecao.Total);
+    }
+
+    [Fact]
+    public void LinhaUnica_SomeQuandoHaTamanhos_EVoltaQuandoNaoHa()
+    {
+        var selecao = new SelecaoImpressaoViewModel(SemTamanhos(), new Dictionary<string, int> { [""] = 1 });
+        Assert.Equal("", Assert.Single(selecao.Linhas).Tamanho);
+
+        selecao.UsarGrade(new[] { "G7", "G8" });
+        Assert.Equal(new[] { "G7", "G8" }, selecao.Linhas.Select(l => l.Tamanho));
+        Assert.Equal(0, selecao.Total);
+
+        selecao.UsarGrade(Array.Empty<string>());
+        Assert.Equal("", Assert.Single(selecao.Linhas).Tamanho);
     }
 
     [Fact]

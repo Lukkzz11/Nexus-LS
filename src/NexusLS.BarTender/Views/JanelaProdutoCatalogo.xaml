@@ -206,6 +206,9 @@
                                 <Button Content="G1 ao G6" Command="{Binding AplicarGradeRapidaCommand}" CommandParameter="ExtraLetras"
                                         Style="{StaticResource BotaoSecundario}" Padding="8,3" FontSize="11" Margin="0,0,5,0"
                                         ToolTip="Exibir tamanhos extras G1 ao G6" />
+                                <Button Content="G7 ao G10" Command="{Binding AplicarGradeRapidaCommand}" CommandParameter="SuperLetras"
+                                        Style="{StaticResource BotaoSecundario}" Padding="8,3" FontSize="11" Margin="0,0,5,0"
+                                        ToolTip="Exibir tamanhos extras G7 ao G10" />
                                 <Button Content="52 ao 56" Command="{Binding AplicarGradeRapidaCommand}" CommandParameter="ExtraNumerica"
                                         Style="{StaticResource BotaoSecundario}" Padding="8,3" FontSize="11"
                                         ToolTip="Exibir tamanhos extras 52, 54 e 56" />
