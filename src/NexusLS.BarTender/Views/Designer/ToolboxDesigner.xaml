@@ -12,169 +12,101 @@
         <Style x:Key="BotaoToolbox" TargetType="Button" BasedOn="{StaticResource BotaoSecundario}">
             <Setter Property="Padding" Value="10,7" />
             <Setter Property="Margin" Value="0,0,0,5" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
             <Setter Property="HorizontalContentAlignment" Value="Left" />
             <Setter Property="FontSize" Value="12" />
         </Style>
-
-        <Style x:Key="BotaoVariavelRapida" TargetType="Button" BasedOn="{StaticResource BotaoSecundario}">
-            <Setter Property="Padding" Value="10,6" />
-            <Setter Property="Margin" Value="0,0,0,4" />
-            <Setter Property="HorizontalContentAlignment" Value="Left" />
-            <Setter Property="FontSize" Value="{StaticResource TamPequeno}" />
-            <Setter Property="Background" Value="{StaticResource CorSuperficieSuave}" />
-            <Setter Property="BorderBrush" Value="{StaticResource CorBorda}" />
-        </Style>
-
-        <Style x:Key="ExpanderCategoriaToolbox" TargetType="Expander">
-            <Setter Property="IsExpanded" Value="True" />
-            <Setter Property="Margin" Value="0,0,0,10" />
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-        </Style>
     </UserControl.Resources>
 
-    <!-- ==================== COLUNA ESQUERDA: TOOLBOX EM CATEGORIAS EXPANSÍVEIS ==================== -->
     <Border Background="{StaticResource CorPainel}" BorderBrush="{StaticResource CorBorda}" BorderThickness="0,0,1,0" Padding="12,10">
         <ScrollViewer VerticalScrollBarVisibility="Auto">
             <StackPanel>
-
-                <!-- Categoria 1: Textos & Formas -->
-                <Expander Style="{StaticResource ExpanderCategoriaToolbox}">
-                    <Expander.Header>
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <ui:SymbolIcon Symbol="TextFont24" FontSize="14" Foreground="{StaticResource CorPrimaria}" Margin="0,0,6,0" VerticalAlignment="Center" />
-                            <TextBlock Text="TEXTOS &amp; FORMAS" Foreground="{StaticResource CorTexto}" FontWeight="Bold" FontSize="10.5" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Expander.Header>
-                    <StackPanel Margin="0,8,0,2">
-                        <Button Command="{Binding AdicionarTextoCommand}" Style="{StaticResource BotaoToolbox}" ToolTip="Inserir caixa de texto livre">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <ui:SymbolIcon Symbol="TextFont24" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center" />
-                                <TextBlock Text="Texto Livre" FontWeight="SemiBold" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
-
-                        <Button Command="{Binding AdicionarTamanhoCommand}" Style="{StaticResource BotaoToolbox}" ToolTip="Insere o tamanho selecionado (muda automaticamente para cada tamanho da grade)">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <ui:SymbolIcon Symbol="TextExpand24" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center" Foreground="{StaticResource CorPrimaria}" />
-                                <TextBlock Text="Tamanho" FontWeight="Bold" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
-
-                        <Button Command="{Binding AdicionarRetanguloCommand}" Style="{StaticResource BotaoToolbox}" ToolTip="Inserir retângulo ou moldura">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <ui:SymbolIcon Symbol="Square24" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center" />
-                                <TextBlock Text="Moldura / Retângulo" FontWeight="SemiBold" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
-
-                        <Button Command="{Binding AdicionarLinhaCommand}" Style="{StaticResource BotaoToolbox}" ToolTip="Inserir linha divisória horizontal">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <ui:SymbolIcon Symbol="LineHorizontal124" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center" />
-                                <TextBlock Text="Linha Divisória" FontWeight="SemiBold" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
+                <TextBlock Text="Dados do produto" Style="{StaticResource Rotulo}" Margin="0,0,0,8" />
+                <Button Command="{Binding InserirVariavelCommand}" CommandParameter="NomeProduto" Style="{StaticResource BotaoToolbox}">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="Box24" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center" />
+                        <TextBlock Text="Nome" VerticalAlignment="Center" />
                     </StackPanel>
-                </Expander>
+                </Button>
+                <Button Command="{Binding InserirVariavelCommand}" CommandParameter="PrecoVarejo" Style="{StaticResource BotaoToolbox}">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="Money24" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center" />
+                        <TextBlock Text="Preço" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Command="{Binding AdicionarTamanhoCommand}" Style="{StaticResource BotaoToolbox}" ToolTip="Muda sozinho conforme o tamanho escolhido">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="TextExpand24" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center" />
+                        <TextBlock Text="Tamanho" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Command="{Binding InserirVariavelCommand}" CommandParameter="Referencia" Style="{StaticResource BotaoToolbox}">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="Tag24" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center" />
+                        <TextBlock Text="Referência" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Command="{Binding AdicionarCodigoBarrasCommand}" Style="{StaticResource BotaoToolbox}">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="BarcodeScanner24" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center" />
+                        <TextBlock Text="Código de barras" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
 
-                <Border Background="{StaticResource CorBorda}" Height="1" Margin="0,0,0,8" />
+                <TextBlock Text="Livre" Style="{StaticResource Rotulo}" Margin="0,12,0,8" />
+                <Button Command="{Binding AdicionarTextoCommand}" Style="{StaticResource BotaoToolbox}">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="TextFont24" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center" />
+                        <TextBlock Text="Texto" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Command="{Binding AdicionarImagemCommand}" Style="{StaticResource BotaoToolbox}">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="Image24" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center" />
+                        <TextBlock Text="Logo / imagem" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
 
-                <!-- Categoria 2: Códigos & Mídia -->
-                <Expander Style="{StaticResource ExpanderCategoriaToolbox}">
-                    <Expander.Header>
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <ui:SymbolIcon Symbol="BarcodeScanner24" FontSize="14" Foreground="{StaticResource CorPrimaria}" Margin="0,0,6,0" VerticalAlignment="Center" />
-                            <TextBlock Text="CÓDIGOS &amp; MÍDIA" Foreground="{StaticResource CorTexto}" FontWeight="Bold" FontSize="10.5" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Expander.Header>
-                    <StackPanel Margin="0,8,0,2">
-                        <Button Command="{Binding AdicionarCodigoBarrasCommand}" Style="{StaticResource BotaoToolbox}" ToolTip="Abrir gerador de Código de Barras 1D (Code 128 / EAN-13)">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Expander Header="Mais itens" Margin="0,12,0,0" Background="Transparent" BorderThickness="0">
+                    <StackPanel Margin="0,8,0,0">
+                        <Button Command="{Binding InserirVariavelCommand}" CommandParameter="PrecoAtacado" Style="{StaticResource BotaoToolbox}">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Symbol="Money24" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                <TextBlock Text="Preço de atacado" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <Button Command="{Binding InserirVariavelCommand}" CommandParameter="NomeLoja" Style="{StaticResource BotaoToolbox}">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Symbol="BuildingShop24" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                <TextBlock Text="Nome da loja" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <Button Command="{Binding InserirVariavelCommand}" CommandParameter="CodigoBarras" Style="{StaticResource BotaoToolbox}">
+                            <StackPanel Orientation="Horizontal">
                                 <ui:SymbolIcon Symbol="BarcodeScanner24" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center" />
-                                <TextBlock Text="Código de Barras 1D" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                <TextBlock Text="Campo de código (EAN)" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
-
-                        <Button Command="{Binding AdicionarQrCodeCommand}" Style="{StaticResource BotaoToolbox}" ToolTip="Abrir gerador de QR Code 2D (Pix, Instagram, Catálogo)">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Command="{Binding AdicionarQrCodeCommand}" Style="{StaticResource BotaoToolbox}">
+                            <StackPanel Orientation="Horizontal">
                                 <ui:SymbolIcon Symbol="QrCode24" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center" />
-                                <TextBlock Text="QR Code 2D (Pix/Link)" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                <TextBlock Text="QR Code (Pix ou link)" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
-
-                        <Button Command="{Binding AdicionarImagemCommand}" Style="{StaticResource BotaoToolbox}" ToolTip="Importar logotipo da marca ou imagem PNG/JPG">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <ui:SymbolIcon Symbol="Image24" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center" />
-                                <TextBlock Text="Logotipo / Imagem" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        <Button Command="{Binding AdicionarRetanguloCommand}" Style="{StaticResource BotaoToolbox}">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Symbol="Square24" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                <TextBlock Text="Moldura" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
-                    </StackPanel>
-                </Expander>
-
-                <Border Background="{StaticResource CorBorda}" Height="1" Margin="0,0,0,8" />
-
-                <!-- Categoria 3: Campos Dinâmicos do Produto (Nexus LS) -->
-                <Expander Style="{StaticResource ExpanderCategoriaToolbox}">
-                    <Expander.Header>
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <ui:SymbolIcon Symbol="Box24" FontSize="14" Foreground="{StaticResource CorPrimaria}" Margin="0,0,6,0" VerticalAlignment="Center" />
-                            <TextBlock Text="CAMPOS DO PRODUTO" Foreground="{StaticResource CorTexto}" FontWeight="Bold" FontSize="10.5" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Expander.Header>
-                    <StackPanel Margin="0,6,0,2">
-                        <TextBlock Text="Vínculo automático com o cadastro:" Style="{StaticResource TextoApoio}" FontSize="10.5" Margin="0,0,0,8" />
-
-                        <Button Command="{Binding InserirVariavelCommand}" CommandParameter="NomeProduto" Style="{StaticResource BotaoVariavelRapida}">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <ui:SymbolIcon Symbol="Add24" FontSize="13" Foreground="{StaticResource CorPrimaria}" Margin="0,0,6,0" VerticalAlignment="Center" />
-                                <TextBlock Text="Nome do Produto" FontWeight="SemiBold" Foreground="{StaticResource CorPrimaria}" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
-
-                        <Button Command="{Binding InserirVariavelCommand}" CommandParameter="PrecoVarejo" Style="{StaticResource BotaoVariavelRapida}">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <ui:SymbolIcon Symbol="Add24" FontSize="13" Foreground="{StaticResource CorPrimaria}" Margin="0,0,6,0" VerticalAlignment="Center" />
-                                <TextBlock Text="Preço de Varejo (R$)" FontWeight="SemiBold" Foreground="{StaticResource CorPrimaria}" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
-
-                        <Button Command="{Binding InserirVariavelCommand}" CommandParameter="PrecoAtacado" Style="{StaticResource BotaoVariavelRapida}">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <ui:SymbolIcon Symbol="Add24" FontSize="13" Foreground="{StaticResource CorPrimaria}" Margin="0,0,6,0" VerticalAlignment="Center" />
-                                <TextBlock Text="Preço de Atacado" FontWeight="SemiBold" Foreground="{StaticResource CorPrimaria}" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
-
-                        <Button Command="{Binding InserirVariavelCommand}" CommandParameter="Referencia" Style="{StaticResource BotaoVariavelRapida}">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <ui:SymbolIcon Symbol="Add24" FontSize="13" Foreground="{StaticResource CorPrimaria}" Margin="0,0,6,0" VerticalAlignment="Center" />
-                                <TextBlock Text="Referência (REF)" FontWeight="SemiBold" Foreground="{StaticResource CorPrimaria}" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
-
-                        <Button Command="{Binding InserirVariavelCommand}" CommandParameter="Tamanho" Style="{StaticResource BotaoVariavelRapida}">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <ui:SymbolIcon Symbol="Add24" FontSize="13" Foreground="{StaticResource CorPrimaria}" Margin="0,0,6,0" VerticalAlignment="Center" />
-                                <TextBlock Text="Grade de Tamanho" FontWeight="SemiBold" Foreground="{StaticResource CorPrimaria}" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
-
-                        <Button Command="{Binding InserirVariavelCommand}" CommandParameter="CodigoBarras" Style="{StaticResource BotaoVariavelRapida}">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <ui:SymbolIcon Symbol="Add24" FontSize="13" Foreground="{StaticResource CorPrimaria}" Margin="0,0,6,0" VerticalAlignment="Center" />
-                                <TextBlock Text="Código de Barras (EAN)" FontWeight="SemiBold" Foreground="{StaticResource CorPrimaria}" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
-
-                        <Button Command="{Binding InserirVariavelCommand}" CommandParameter="NomeLoja" Style="{StaticResource BotaoVariavelRapida}">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <ui:SymbolIcon Symbol="Add24" FontSize="13" Foreground="{StaticResource CorPrimaria}" Margin="0,0,6,0" VerticalAlignment="Center" />
-                                <TextBlock Text="Cabeçalho da Loja" FontWeight="SemiBold" Foreground="{StaticResource CorPrimaria}" VerticalAlignment="Center" />
+                        <Button Command="{Binding AdicionarLinhaCommand}" Style="{StaticResource BotaoToolbox}">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Symbol="LineHorizontal124" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                <TextBlock Text="Linha" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
                     </StackPanel>
                 </Expander>
-
             </StackPanel>
         </ScrollViewer>
     </Border>

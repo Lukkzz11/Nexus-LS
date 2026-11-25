@@ -67,47 +67,103 @@ public partial class DesignerViewModel : ObservableObject
         }
     }
 
+    /// <summary>Opção da lista de grades que mostra só os tamanhos cadastrados no produto.</summary>
+    public const string GradeDoCadastro = "Do cadastro";
+
+    public IReadOnlyList<string> GradesDisponiveis { get; } =
+        new[] { GradeDoCadastro }.Concat(GradesDeTamanho.Todas.Select(g => g.Nome)).ToArray();
+
+    [ObservableProperty]
+    private string _gradeSelecionada = GradeDoCadastro;
+
+    /// <summary>Arquivo onde a grade de cada produto fica guardada (nulo = o padrão do BarTender).</summary>
+    public string? CaminhoPreferencias { get; set; }
+
+    private bool _restaurandoGrade;
+
+    /// <summary>O tamanho em teste não está no cadastro: aparece na etiqueta, mas o código continua o do produto.</summary>
+    public bool TamanhoForaDoCadastro =>
+        ProdutoAtual != null && TemTamanhoEmTeste &&
+        ProdutoAtual.Tamanhos?.Any(t => string.Equals(t.Tamanho?.Trim(), TamanhoParaTeste, StringComparison.OrdinalIgnoreCase)) != true;
+
+    /// <summary>Há um tamanho escolhido, mas o desenho não tem onde mostrá-lo.</summary>
+    public bool FaltaTamanhoNaEtiqueta =>
+        TemTamanhoEmTeste && Modelo?.Elementos.Any(e =>
+            e.Variavel == VariavelEtiqueta.Tamanho || e.Texto?.Contains("{Tamanho}") == true) == false;
+
+    private bool TemTamanhoEmTeste =>
+        !string.IsNullOrWhiteSpace(TamanhoParaTeste) &&
+        !string.Equals(TamanhoParaTeste, Tamanhos.SemTamanho, StringComparison.OrdinalIgnoreCase);
+
+    private void NotificarAvisosDeTamanho()
+    {
+        OnPropertyChanged(nameof(TamanhoForaDoCadastro));
+        OnPropertyChanged(nameof(FaltaTamanhoNaEtiqueta));
+    }
+
     partial void OnProdutoAtualChanged(Produto? value)
     {
+        var salva = value is null
+            ? null
+            : PreferenciasBarTender.Carregar(CaminhoPreferencias).GradePorProduto.GetValueOrDefault(value.Id);
+
+        _restaurandoGrade = true;
+        GradeSelecionada = salva != null && GradesDisponiveis.Contains(salva) ? salva : GradeDoCadastro;
+        _restaurandoGrade = false;
+
+        MontarTamanhosParaTeste();
+    }
+
+    partial void OnGradeSelecionadaChanged(string value)
+    {
+        if (_restaurandoGrade || string.IsNullOrEmpty(value)) return;
+
+        if (ProdutoAtual != null)
+        {
+            var preferencias = PreferenciasBarTender.Carregar(CaminhoPreferencias);
+            if (value == GradeDoCadastro) preferencias.GradePorProduto.Remove(ProdutoAtual.Id);
+            else preferencias.GradePorProduto[ProdutoAtual.Id] = value;
+            preferencias.Salvar(CaminhoPreferencias);
+        }
+
+        MontarTamanhosParaTeste();
+        AtualizarPreview();
+    }
+
+    private void MontarTamanhosParaTeste()
+    {
+        var anterior = TamanhoParaTeste;
+        var lista = TamanhosDaGradeEscolhida();
+
         TamanhosParaTesteDisponiveis.Clear();
-        if (value?.Tamanhos != null && value.Tamanhos.Count > 0)
-        {
-            var temTamanhosReais = value.Tamanhos.Any(t =>
-                !string.IsNullOrWhiteSpace(t.Tamanho) &&
-                !string.Equals(t.Tamanho.Trim(), Tamanhos.SemTamanho, StringComparison.OrdinalIgnoreCase));
+        foreach (var t in lista) TamanhosParaTesteDisponiveis.Add(t);
 
-            foreach (var t in value.Tamanhos.OrderBy(x => x.Ordem))
-            {
-                var nomeTam = t.Tamanho?.Trim();
-                if (string.IsNullOrWhiteSpace(nomeTam)) continue;
+        TamanhoParaTeste = lista.Contains(anterior) ? anterior : lista.Contains("M") ? "M" : lista[0];
+        NotificarAvisosDeTamanho();
+    }
 
-                // Se o produto possui grade real (ex: 42 ao 50, P ao GG) e a linha "Sem tamanho" está zerada, oculta "Sem tamanho"
-                if (temTamanhosReais &&
-                    string.Equals(nomeTam, Tamanhos.SemTamanho, StringComparison.OrdinalIgnoreCase) &&
-                    t.Estoque <= 0)
-                {
-                    continue;
-                }
+    private List<string> TamanhosDaGradeEscolhida()
+    {
+        var grade = GradesDeTamanho.Todas.FirstOrDefault(g => g.Nome == GradeSelecionada);
+        if (grade != null) return grade.Tamanhos.ToList();
 
-                if (!TamanhosParaTesteDisponiveis.Contains(nomeTam))
-                {
-                    TamanhosParaTesteDisponiveis.Add(nomeTam);
-                }
-            }
-        }
+        var cadastrados = ProdutoAtual?.Tamanhos?
+            .Where(t => !string.IsNullOrWhiteSpace(t.Tamanho))
+            .OrderBy(t => t.Ordem)
+            .ToList() ?? new List<ProdutoTamanho>();
 
-        if (TamanhosParaTesteDisponiveis.Count == 0)
-        {
-            TamanhosParaTesteDisponiveis.Add("P");
-            TamanhosParaTesteDisponiveis.Add("M");
-            TamanhosParaTesteDisponiveis.Add("G");
-            TamanhosParaTesteDisponiveis.Add("GG");
-        }
+        bool EhSemTamanho(ProdutoTamanho t) =>
+            string.Equals(t.Tamanho.Trim(), Tamanhos.SemTamanho, StringComparison.OrdinalIgnoreCase);
 
-        if (!TamanhosParaTesteDisponiveis.Contains(TamanhoParaTeste))
-        {
-            TamanhoParaTeste = TamanhosParaTesteDisponiveis.Contains("M") ? "M" : TamanhosParaTesteDisponiveis.First();
-        }
+        // Com grade real, a linha "Sem tamanho" zerada só atrapalha.
+        var temTamanhosReais = cadastrados.Any(t => !EhSemTamanho(t));
+        var lista = cadastrados
+            .Where(t => !(temTamanhosReais && t.Estoque <= 0 && EhSemTamanho(t)))
+            .Select(t => t.Tamanho.Trim())
+            .Distinct()
+            .ToList();
+
+        return lista.Count > 0 ? lista : new List<string> { "P", "M", "G", "GG" };
     }
 
     [ObservableProperty]
@@ -744,6 +800,7 @@ public partial class DesignerViewModel : ObservableObject
 
     public void AtualizarPreview()
     {
+        NotificarAvisosDeTamanho();
         try
         {
             var tam = !string.IsNullOrWhiteSpace(TamanhoParaTeste) && TamanhoParaTeste != "Sem tamanho"

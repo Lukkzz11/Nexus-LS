@@ -1186,21 +1186,6 @@ public partial class DesignerView : UserControl
     {
     }
 
-    private void RibbonDesigner_PresetSelecionadoAlterado(string preset)
-    {
-        VM?.AplicarPreset(preset);
-        ReconstruirCanvas();
-    }
-
-    private void PresetComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (e.AddedItems.Count > 0 && e.AddedItems[0] is string preset)
-        {
-            VM?.AplicarPreset(preset);
-            ReconstruirCanvas();
-        }
-    }
-
     private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
     {
         UserControl_KeyDown(sender, e);

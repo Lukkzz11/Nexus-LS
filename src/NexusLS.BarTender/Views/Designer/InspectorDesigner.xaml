@@ -161,7 +161,7 @@
                                     </Button>
 
                                     <!-- Predefinições Rápidas de Tamanho -->
-                                    <TextBlock Text="TAMANHOS RÁPIDOS (MM)" Foreground="{StaticResource CorTextoSuave}" FontSize="{StaticResource TamMicro}" FontWeight="Bold" Margin="0,0,0,6" />
+                                    <TextBlock Text="MEDIDAS PRONTAS DA FOLHA (MM)" Foreground="{StaticResource CorTextoSuave}" FontSize="{StaticResource TamMicro}" FontWeight="Bold" Margin="0,0,0,6" />
                                     <UniformGrid Columns="2" Margin="0,0,0,8">
                                         <Button Command="{Binding DefinirTamanhoFolhaCommand}" CommandParameter="35x60" Style="{StaticResource BotaoSecundario}" Margin="0,0,3,4" Padding="4,5" Content="35 × 60 mm (Tag)" FontSize="11" />
                                         <Button Command="{Binding DefinirTamanhoFolhaCommand}" CommandParameter="50x30" Style="{StaticResource BotaoSecundario}" Margin="3,0,0,4" Padding="4,5" Content="50 × 30 mm" FontSize="11" />
@@ -171,19 +171,16 @@
                                         <Button Command="{Binding DefinirTamanhoFolhaCommand}" CommandParameter="30x20" Style="{StaticResource BotaoSecundario}" Margin="3,0,0,0" Padding="4,5" Content="30 × 20 mm (Joias)" FontSize="11" />
                                     </UniformGrid>
 
-                                    <Border Background="{StaticResource CorDestaqueFundo}" BorderBrush="{StaticResource CorDestaqueBorda}" BorderThickness="1" CornerRadius="4" Padding="8,6" Margin="0,8,0,0">
-                                        <TextBlock Text="💡 Clique em qualquer objeto na etiqueta para editar suas propriedades específicas (texto, código, imagem ou forma)." FontSize="10.5" Foreground="{StaticResource CorPrimariaPressionada}" TextWrapping="Wrap" />
-                                    </Border>
                                 </StackPanel>
                             </Border>
 
                             <!-- Opções de Guias e Grade da Prancheta -->
                             <Border Style="{StaticResource SubsecaoCard}">
                                 <StackPanel>
-                                    <TextBlock Text="GRADE &amp; GUIAS DE PRECISÃO" FontWeight="Bold" FontSize="11" Foreground="{StaticResource CorTexto}" Margin="0,0,0,8" />
-                                    <CheckBox Content="Exibir Grade Milimétrica (5 mm)" IsChecked="{Binding MostrarGrade, Mode=TwoWay}" Margin="0,0,0,6" />
-                                    <CheckBox Content="Ativar Imã Magnético e Guias de Alinhamento" IsChecked="{Binding SnapGrade, Mode=TwoWay}" Margin="0,0,0,6" />
-                                    <CheckBox Content="Visualizar Dados Reais do Produto" IsChecked="{Binding MostrarDadosReais, Mode=TwoWay}" />
+                                    <TextBlock Text="AJUDAS NA TELA" FontWeight="Bold" FontSize="11" Foreground="{StaticResource CorTexto}" Margin="0,0,0,8" />
+                                    <CheckBox Content="Grade de 5 mm" IsChecked="{Binding MostrarGrade, Mode=TwoWay}" Margin="0,0,0,6" />
+                                    <CheckBox Content="Ímã e guias de alinhamento" IsChecked="{Binding SnapGrade, Mode=TwoWay}" Margin="0,0,0,6" />
+                                    <CheckBox Content="Mostrar dados reais" IsChecked="{Binding MostrarDadosReais, Mode=TwoWay}" />
                                 </StackPanel>
                             </Border>
                         </StackPanel>

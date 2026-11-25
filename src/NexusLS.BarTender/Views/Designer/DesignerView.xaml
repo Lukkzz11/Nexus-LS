@@ -70,17 +70,17 @@
             <!-- 1: Área de Trabalho CAD (Toolbox Esquerda + Canvas Central + Inspector Direita) -->
             <RowDefinition Height="*" />
             <!-- 2: Barra de Status Inferior -->
-            <RowDefinition Height="28" />
+            <RowDefinition Height="30" />
         </Grid.RowDefinitions>
 
         <!-- 0: Ribbon Superior Modular -->
-        <local:RibbonDesigner Grid.Row="0" PresetSelecionadoAlterado="RibbonDesigner_PresetSelecionadoAlterado" />
+        <local:RibbonDesigner Grid.Row="0" />
 
     <!-- ==================== 1: ÁREA DE TRABALHO CAD ==================== -->
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <!-- Esquerda: Caixa de Ferramentas & Variáveis (240px) -->
-                <ColumnDefinition Width="240" />
+                <ColumnDefinition Width="210" />
                 <!-- Centro: Bancada com Réguas e Canvas da Etiqueta -->
                 <ColumnDefinition Width="*" />
                 <!-- Direita: Painel Inspector de Propriedades (360px) -->
@@ -99,52 +99,44 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
-                <!-- Barra Superior da Bancada: Teste de Produto ERP & Grade -->
-                <Border Grid.Row="0" Background="{StaticResource CorPainel}" BorderBrush="{StaticResource CorBorda}" BorderThickness="0,0,0,1" Padding="12,6">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-
-                        <!-- Controles de Produto do Catálogo -->
-                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="TESTAR COM PRODUTO:" Foreground="{StaticResource CorTextoSuave}" FontWeight="Bold" FontSize="10.5" VerticalAlignment="Center" Margin="0,0,8,0" />
-
-                            <Button Command="{Binding ProdutoAnteriorCommand}" Style="{StaticResource BotaoSecundario}" Width="28" Height="28" Padding="0" ToolTip="Produto anterior no catálogo" Margin="0,0,4,0" AutomationProperties.Name="Produto anterior">
+                <!-- Produto em teste e os tamanhos dele -->
+                <Border Grid.Row="0" Background="{StaticResource CorPainel}" BorderBrush="{StaticResource CorBorda}" BorderThickness="0,0,0,1" Padding="12,8">
+                    <StackPanel>
+                        <DockPanel>
+                            <Button DockPanel.Dock="Left" Command="{Binding ProdutoAnteriorCommand}" Style="{StaticResource BotaoSecundario}" Width="28" Height="28" Padding="0" ToolTip="Produto anterior" Margin="0,0,4,0" AutomationProperties.Name="Produto anterior">
                                 <ui:SymbolIcon Symbol="ChevronLeft24" FontSize="14" />
                             </Button>
-
-                            <Button Command="{Binding ProximoProdutoCommand}" Style="{StaticResource BotaoSecundario}" Width="28" Height="28" Padding="0" ToolTip="Próximo produto no catálogo" Margin="0,0,10,0" AutomationProperties.Name="Próximo produto">
+                            <Button DockPanel.Dock="Left" Command="{Binding ProximoProdutoCommand}" Style="{StaticResource BotaoSecundario}" Width="28" Height="28" Padding="0" ToolTip="Próximo produto" Margin="0,0,10,0" AutomationProperties.Name="Próximo produto">
                                 <ui:SymbolIcon Symbol="ChevronRight24" FontSize="14" />
                             </Button>
+                            <Button DockPanel.Dock="Right" Command="{Binding DataContext.IrParaCatalogoCommand, RelativeSource={RelativeSource AncestorType=ui:FluentWindow}}" Style="{StaticResource BotaoSecundario}" Padding="10,4" Content="Escolher produto" FontSize="11.5" />
+                            <TextBlock DockPanel.Dock="Right" Text="Etiqueta própria" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource CorSucessoTexto}" VerticalAlignment="Center" Margin="8,0,12,0"
+                                       Visibility="{Binding ProdutoTemEtiquetaExclusiva, Converter={StaticResource BoolParaVisibilidadeConverter}}" />
+                            <TextBlock VerticalAlignment="Center" TextTrimming="CharacterEllipsis" FontSize="14">
+                                <Run Text="{Binding ProdutoAtual.Nome, Mode=OneWay, TargetNullValue='Nenhum produto (dados de exemplo)'}" FontWeight="Bold" Foreground="{StaticResource CorTexto}" />
+                                <Run Text="  " />
+                                <Run Text="{Binding ProdutoAtual.PrecoVendaCentavos, Mode=OneWay, Converter={StaticResource CentavosParaMoedaConverter}}" Foreground="{StaticResource CorPrimaria}" />
+                            </TextBlock>
+                        </DockPanel>
 
-                            <!-- Badge com detalhes do produto ativo -->
-                            <Border Background="{StaticResource CorSelecaoSuave}" BorderBrush="{StaticResource CorSelecao}" BorderThickness="1" CornerRadius="{StaticResource RaioPequeno}" Padding="10,4" VerticalAlignment="Center">
-                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <ui:SymbolIcon Symbol="Box24" FontSize="14" Foreground="{StaticResource CorPrimaria}" Margin="0,0,6,0" VerticalAlignment="Center" />
-                                    <TextBlock Text="{Binding ProdutoAtual.Nome, TargetNullValue='Nenhum produto selecionado (usando dados de modelo)'}" FontWeight="SemiBold" FontSize="11.5" Foreground="{StaticResource CorTexto}" MaxWidth="280" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
-                                    <TextBlock Text=" · " FontSize="11" Foreground="{StaticResource CorTextoSuave}" VerticalAlignment="Center" />
-                                    <TextBlock Text="{Binding ProdutoAtual.PrecoVendaCentavos, Converter={StaticResource CentavosParaMoedaConverter}}" FontWeight="Bold" FontSize="11.5" Foreground="{StaticResource CorPrimaria}" VerticalAlignment="Center" />
-                                </StackPanel>
-                            </Border>
-
-                            <!-- Tamanhos do produto: clicar mostra a etiqueta já com aquele tamanho e o código de barras dele -->
-                            <Border Background="{StaticResource CorSuperficieSubtil}" BorderBrush="{StaticResource CorBorda}" BorderThickness="1" CornerRadius="{StaticResource RaioPequeno}" Padding="8,3" Margin="8,0,0,0" VerticalAlignment="Center" ToolTip="Clique em um tamanho para ver a etiqueta com ele. Ao salvar, o modelo vale para todos os tamanhos; só o tamanho e o código de barras mudam.">
-                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock Text="TAMANHO:" FontWeight="Bold" FontSize="10" Foreground="{StaticResource CorTextoSuave}" Margin="0,0,6,0" VerticalAlignment="Center" />
-                                    <ListBox ItemsSource="{Binding TamanhosParaTesteDisponiveis}"
+                        <!-- Tamanhos: clicar mostra a etiqueta já com aquele tamanho -->
+                        <DockPanel Margin="0,8,0,0">
+                            <TextBlock DockPanel.Dock="Left" Text="Tamanhos" Style="{StaticResource Rotulo}" VerticalAlignment="Top" Margin="0,7,8,0" />
+                            <ComboBox DockPanel.Dock="Left" ItemsSource="{Binding GradesDisponiveis}" SelectedItem="{Binding GradeSelecionada}" Width="200" Height="30" FontSize="11.5" VerticalAlignment="Top" Margin="0,0,10,0"
+                                      ToolTip="Qual grade de tamanhos usar neste produto" AutomationProperties.Name="Grade de tamanhos" />
+                            <ListBox ItemsSource="{Binding TamanhosParaTesteDisponiveis}"
                                              SelectedItem="{Binding TamanhoParaTeste, Mode=TwoWay}"
                                              Background="Transparent" BorderThickness="0" Padding="0"
                                              ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                              ScrollViewer.VerticalScrollBarVisibility="Disabled"
                                              AutomationProperties.Name="Tamanho do produto">
                                         <ListBox.ItemsPanel>
-                                            <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                                            <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
                                         </ListBox.ItemsPanel>
                                         <ListBox.ItemContainerStyle>
                                             <Style TargetType="ListBoxItem">
-                                                <Setter Property="Margin" Value="2,0" />
+                                                <Setter Property="Margin" Value="0,2,4,2" />
+                                                <Setter Property="MinWidth" Value="34" />
                                                 <Setter Property="Padding" Value="9,3" />
                                                 <Setter Property="FontSize" Value="11.5" />
                                                 <Setter Property="FontWeight" Value="SemiBold" />
@@ -171,34 +163,16 @@
                                             </Style>
                                         </ListBox.ItemContainerStyle>
                                     </ListBox>
-                                </StackPanel>
-                            </Border>
-                        </StackPanel>
+                        </DockPanel>
 
-                        <!-- Modos de Exibição e Grade -->
-                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                            <Button Command="{Binding AlternarMostrarDadosReaisCommand}" Style="{StaticResource BotaoSecundario}" Padding="10,5" Margin="0,0,6,0" ToolTip="Alternar entre ver nomes/preços reais ou códigos de variáveis {Nome}">
-                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <ui:SymbolIcon Symbol="Eye24" FontSize="14" Margin="0,0,5,0" VerticalAlignment="Center" />
-                                    <TextBlock Text="{Binding MostrarDadosReais, Converter={StaticResource BoolTexto}, ConverterParameter='Dados Reais|Variáveis'}" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" />
-                                </StackPanel>
-                            </Button>
-
-                            <Button Command="{Binding AlternarGradeCommand}" Style="{StaticResource BotaoSecundario}" Padding="10,5" Margin="0,0,6,0" ToolTip="Mostrar/ocultar grade milimétrica de fundo">
-                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <ui:SymbolIcon Symbol="Grid24" FontSize="14" Margin="0,0,5,0" VerticalAlignment="Center" />
-                                    <TextBlock Text="Grade" FontSize="11" VerticalAlignment="Center" />
-                                </StackPanel>
-                            </Button>
-
-                            <Button Command="{Binding AlternarSnapCommand}" Style="{StaticResource BotaoSecundario}" Padding="10,5" ToolTip="Alinhamento magnético inteligente aos passos de 0.5 mm">
-                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <ui:SymbolIcon Symbol="Flash24" FontSize="14" Margin="0,0,5,0" VerticalAlignment="Center" />
-                                    <TextBlock Text="Imã (0.5mm)" FontSize="11" VerticalAlignment="Center" />
-                                </StackPanel>
-                            </Button>
-                        </StackPanel>
-                    </Grid>
+                        <WrapPanel Margin="0,6,0,0" Visibility="{Binding FaltaTamanhoNaEtiqueta, Converter={StaticResource BoolParaVisibilidadeConverter}}">
+                            <TextBlock Text="Esta etiqueta ainda não mostra o tamanho." FontSize="11.5" Foreground="{StaticResource CorAvisoTexto}" VerticalAlignment="Center" Margin="0,0,10,0" />
+                            <Button Command="{Binding AdicionarTamanhoCommand}" Style="{StaticResource BotaoSecundario}" Padding="10,3" FontSize="11.5" Content="Colocar tamanho na etiqueta" />
+                        </WrapPanel>
+                        <TextBlock Margin="0,6,0,0" FontSize="11" Foreground="{StaticResource CorTextoSuave}" TextWrapping="Wrap"
+                                   Visibility="{Binding TamanhoForaDoCadastro, Converter={StaticResource BoolParaVisibilidadeConverter}}"
+                                   Text="Tamanho fora do cadastro: sai escrito na etiqueta, mas o código de barras é o do produto. Para controlar estoque por tamanho, cadastre os tamanhos no Nexus LS." />
+                    </StackPanel>
                 </Border>
 
                 <!-- Bancada com Réguas e Canvas -->
@@ -282,47 +256,16 @@
 
         <!-- ==================== 2: BARRA DE STATUS INFERIOR ==================== -->
         <Border Grid.Row="2" Background="{StaticResource CorCabecalho}" BorderBrush="{StaticResource CorBorda}" BorderThickness="0,1,0,0" Padding="14,0">
-            <Grid VerticalAlignment="Center">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-
-                <!-- Coordenadas do Cursor -->
-                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,0">
-                    <TextBlock Text="Cursor: " Foreground="{StaticResource CorTextoSuave}" FontSize="11" />
-                    <TextBlock Text="X: " Foreground="{StaticResource CorTextoSuave}" FontSize="11" />
-                    <TextBlock Text="{Binding MouseXMm, StringFormat='{}{0:0.0} mm'}" FontWeight="Bold" FontSize="11" Foreground="{StaticResource CorTexto}" />
-                    <TextBlock Text=" | Y: " Foreground="{StaticResource CorTextoSuave}" FontSize="11" Margin="6,0,0,0" />
-                    <TextBlock Text="{Binding MouseYMm, StringFormat='{}{0:0.0} mm'}" FontWeight="Bold" FontSize="11" Foreground="{StaticResource CorTexto}" />
+            <DockPanel VerticalAlignment="Center">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <Button Command="{Binding ZoomMenosCommand}" Style="{StaticResource BotaoSecundario}" Content="−" Width="26" Height="22" MinHeight="0" Padding="0" ToolTip="Reduzir zoom" AutomationProperties.Name="Reduzir zoom" />
+                    <TextBlock Text="{Binding ZoomNivel, StringFormat='{}{0:P0}'}" Width="46" TextAlignment="Center" FontSize="11" FontWeight="Bold" Foreground="{StaticResource CorTexto}" VerticalAlignment="Center" />
+                    <Button Command="{Binding ZoomMaisCommand}" Style="{StaticResource BotaoSecundario}" Content="+" Width="26" Height="22" MinHeight="0" Padding="0" Margin="0,0,6,0" ToolTip="Aumentar zoom" AutomationProperties.Name="Aumentar zoom" />
+                    <Button Command="{Binding ZoomAjustarCommand}" Style="{StaticResource BotaoSecundario}" Content="Ajustar" Height="22" MinHeight="0" Padding="8,0" FontSize="10.5" ToolTip="Ajustar à tela (F4)" />
                 </StackPanel>
-
-                <!-- Dimensões do Papel -->
-                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,0">
-                    <TextBlock Text="Papel: " Foreground="{StaticResource CorTextoSuave}" FontSize="11" />
-                    <TextBlock Text="{Binding Modelo.LarguraMm, StringFormat='{}{0:0.#}'}" FontWeight="Bold" FontSize="11" Foreground="{StaticResource CorTexto}" />
-                    <TextBlock Text=" × " FontSize="11" Foreground="{StaticResource CorTextoSuave}" />
-                    <TextBlock Text="{Binding Modelo.AlturaMm, StringFormat='{}{0:0.#} mm'}" FontWeight="Bold" FontSize="11" Foreground="{StaticResource CorTexto}" />
-                </StackPanel>
-
-                <!-- Objeto Selecionado & Dicas -->
-                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="Elemento Ativo: " Foreground="{StaticResource CorTextoSuave}" FontSize="11" />
-                    <TextBlock Text="{Binding ElementoSelecionado.Nome, TargetNullValue='Nenhum'}" FontWeight="Bold" FontSize="11" Foreground="{StaticResource CorPrimaria}" Margin="0,0,16,0" />
-                    <TextBlock Text="Ctrl+Roda: Zoom  ·  Espaço+Arrastar: Mover Área  ·  Ctrl+P: Fila de Impressão" Foreground="{StaticResource CorTextoSuave}" FontSize="10.5" />
-                </StackPanel>
-
-                <!-- Zoom Level & Atalhos Rápidos -->
-                <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Command="{Binding Zoom100Command}" Style="{StaticResource BotaoSecundario}" Content="100%" Height="20" Padding="5,0" Margin="0,0,3,0" FontSize="9.5" ToolTip="Zoom 100%" />
-                    <Button Command="{Binding Zoom200Command}" Style="{StaticResource BotaoSecundario}" Content="200%" Height="20" Padding="5,0" Margin="0,0,3,0" FontSize="9.5" ToolTip="Zoom 200%" />
-                    <Button Command="{Binding ZoomAjustarCommand}" Style="{StaticResource BotaoSecundario}" Content="Ajustar" Height="20" Padding="5,0" Margin="0,0,8,0" FontSize="9.5" ToolTip="Ajustar à tela (F4)" />
-                    <TextBlock Text="Escala: " Foreground="{StaticResource CorTextoSuave}" FontSize="11" VerticalAlignment="Center" />
-                    <TextBlock Text="{Binding ZoomNivel, StringFormat='{}{0:P0}'}" FontWeight="Bold" FontSize="11" Foreground="{StaticResource CorTexto}" VerticalAlignment="Center" />
-                </StackPanel>
-            </Grid>
+                <TextBlock VerticalAlignment="Center" FontSize="11" Foreground="{StaticResource CorTextoSuave}" TextTrimming="CharacterEllipsis"
+                           Text="Clique em um item para editar  ·  Ctrl + roda: zoom  ·  Espaço + arrastar: mover a tela" />
+            </DockPanel>
         </Border>
 
         <!-- ==================== MODAL OVERLAY: NOVO DOCUMENTO (ESTILO ILLUSTRATOR / CORELDRAW) ==================== -->

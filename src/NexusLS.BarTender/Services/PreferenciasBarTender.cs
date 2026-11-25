@@ -14,6 +14,9 @@ public sealed class PreferenciasBarTender
     /// <summary>O operador já viu (e fechou) o passo a passo de impressão da Fila.</summary>
     public bool GuiaImpressaoVisto { get; set; }
 
+    /// <summary>Grade de tamanhos escolhida no Estúdio para cada produto (id do produto → nome da grade).</summary>
+    public Dictionary<int, string> GradePorProduto { get; set; } = new();
+
     public static string CaminhoPadrao() => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "NexusLS",

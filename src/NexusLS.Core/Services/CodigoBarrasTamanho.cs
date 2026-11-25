@@ -43,6 +43,10 @@ public static class CodigoBarrasTamanho
         // Se a linha existe na grade, a Ordem dela manda (inclusive 0, que é o mesmo código do produto no PDV).
         if (cadastrado is not null) return Math.Max(0, cadastrado.Ordem);
 
+        // O produto tem grade carregada e este tamanho não está nela: o PDV não conheceria um código com número,
+        // então a etiqueta sai com o código do próprio produto.
+        if (produto?.Tamanhos is { Count: > 0 }) return 0;
+
         return ObterOrdemGenerica(nome);
     }
 
