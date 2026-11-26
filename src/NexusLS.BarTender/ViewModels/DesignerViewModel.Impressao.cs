@@ -24,6 +24,9 @@ public record ItemPreviaEtiqueta(
 
 public partial class DesignerViewModel
 {
+    /// <summary>A impressora escolhida na tela principal; sem ela, o teste sai na padrão do Windows.</summary>
+    public Func<string?>? ImpressoraDoTeste { get; set; }
+
     [ObservableProperty]
     private bool _previaImpressaoAberta = false;
 
@@ -104,7 +107,7 @@ public partial class DesignerViewModel
                 : "";
             var itemTeste = new ItemFila(prod, 1, tamanhoTeste);
 
-            var sucesso = ImpressaoService.ImprimirDesign(new[] { itemTeste }, Modelo, NomeLoja);
+            var sucesso = ImpressaoService.ImprimirDesign(new[] { itemTeste }, Modelo, NomeLoja, nomeImpressora: ImpressoraDoTeste?.Invoke());
             if (sucesso)
             {
                 _dialogo.Sucesso("Impressão enviada com sucesso!");

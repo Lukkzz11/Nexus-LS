@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
@@ -11,35 +11,34 @@ namespace NexusLS.BarTender.Services;
 
 public class ImpressaoService
 {
-    private static PrintDialog? PrepararDialogoImpressao(
-        string? nomeImpressora,
-        double larguraMm,
-        double alturaMm,
-        out string? impressoraEfetiva)
+    /// <summary>
+    /// Acha a fila escolhida na tela. Sem escolha, usa a impressora padrão do Windows. Uma impressora que sumiu
+    /// vira erro: sem a janela de impressão, trocar calado mandaria as etiquetas para o lugar errado.
+    /// </summary>
+    public static System.Printing.PrintQueue LocalizarFila(string? nomeImpressora)
     {
-        impressoraEfetiva = null;
-        var dialogo = new PrintDialog();
+        if (string.IsNullOrWhiteSpace(nomeImpressora) || nomeImpressora == ImpressoraPadraoDoWindows)
+            return System.Printing.LocalPrintServer.GetDefaultPrintQueue();
 
-        if (!string.IsNullOrWhiteSpace(nomeImpressora))
-        {
-            try
+        var servidor = new System.Printing.LocalPrintServer();
+        var fila = servidor.GetPrintQueues(new[]
             {
-                using var server = new System.Printing.LocalPrintServer();
-                dialogo.PrintQueue = server.GetPrintQueue(nomeImpressora);
-                impressoraEfetiva = dialogo.PrintQueue.FullName;
-            }
-            catch (Exception ex)
-            {
-                App.Log(ex, $"Impressora '{nomeImpressora}' nao encontrada. Fallback para '{dialogo.PrintQueue?.FullName}'");
-                impressoraEfetiva = dialogo.PrintQueue?.FullName;
-            }
-        }
-        else
-        {
-            impressoraEfetiva = dialogo.PrintQueue?.FullName;
-        }
+                System.Printing.EnumeratedPrintQueueTypes.Local,
+                System.Printing.EnumeratedPrintQueueTypes.Connections
+            })
+            .FirstOrDefault(f => string.Equals(f.FullName, nomeImpressora, StringComparison.OrdinalIgnoreCase)
+                              || string.Equals(f.Name, nomeImpressora, StringComparison.OrdinalIgnoreCase));
 
-        if (dialogo.ShowDialog() != true) return null;
+        return fila ?? throw new InvalidOperationException(
+            $"A impressora \"{nomeImpressora}\" não foi encontrada. Ligue-a ou escolha outra na lista de impressoras.");
+    }
+
+    public const string ImpressoraPadraoDoWindows = "Impressora Padrão do Windows";
+
+    /// <summary>Prepara o envio direto para a fila, sem abrir a janela de impressão do Windows.</summary>
+    private static PrintDialog PrepararImpressao(string? nomeImpressora, double larguraMm, double alturaMm)
+    {
+        var dialogo = new PrintDialog { PrintQueue = LocalizarFila(nomeImpressora) };
 
         try
         {
@@ -74,13 +73,7 @@ public class ImpressaoService
         if (listaItens.Count == 0) return false;
 
         var formatoCore = config.Formato.FormatoCore;
-        var dialogo = PrepararDialogoImpressao(
-            nomeImpressora,
-            formatoCore.PaginaLarguraMm,
-            formatoCore.PaginaAlturaMm,
-            out _);
-
-        if (dialogo == null) return false;
+        var dialogo = PrepararImpressao(nomeImpressora, formatoCore.PaginaLarguraMm, formatoCore.PaginaAlturaMm);
 
         var paginator = new BarTenderPaginator(listaItens, config, primeiraPosicao);
         dialogo.PrintDocument(paginator, "Nexus BarTender - Impressão de Etiquetas");
@@ -97,13 +90,7 @@ public class ImpressaoService
         var listaItens = itens.ToList();
         if (listaItens.Count == 0) return false;
 
-        var dialogo = PrepararDialogoImpressao(
-            nomeImpressora,
-            modelo.LarguraMm,
-            modelo.AlturaMm,
-            out _);
-
-        if (dialogo == null) return false;
+        var dialogo = PrepararImpressao(nomeImpressora, modelo.LarguraMm, modelo.AlturaMm);
 
         var paginator = new BarTenderDesignPaginator(listaItens, modelo, nomeLoja, primeiraPosicao);
         dialogo.PrintDocument(paginator, $"Nexus BarTender - {modelo.Nome}");
@@ -113,7 +100,7 @@ public class ImpressaoService
     /// <summary>
     /// Impressão a partir da página de preparação: usa a mídia configurada (rolo com gap,
     /// marca preta, contínuo ou folha) e o modelo já ajustado às medidas dela.
-    /// Reaproveita o mesmo diálogo e a mesma fila de impressão do Windows.
+    /// Vai direto para a fila da impressora escolhida.
     /// </summary>
     public static bool ImprimirComMidia(
         IEnumerable<ItemFila> itens,
@@ -127,13 +114,7 @@ public class ImpressaoService
         if (listaItens.Count == 0) return false;
         if (midia is null) throw new ArgumentNullException(nameof(midia));
 
-        var dialogo = PrepararDialogoImpressao(
-            nomeImpressora,
-            midia.PaginaLarguraMm,
-            midia.PaginaAlturaMm,
-            out _);
-
-        if (dialogo == null) return false;
+        var dialogo = PrepararImpressao(nomeImpressora, midia.PaginaLarguraMm, midia.PaginaAlturaMm);
 
         try
         {

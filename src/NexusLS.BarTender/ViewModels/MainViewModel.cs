@@ -132,7 +132,8 @@ public partial class MainViewModel : ObservableObject
         _designerVM = new DesignerViewModel(_dialogo)
         {
             SolicitarIrParaImpressao = ImprimirDoEstudio,
-            SolicitarPadronizarEtiquetas = AbrirPadronizarEtiqueta
+            SolicitarPadronizarEtiquetas = AbrirPadronizarEtiqueta,
+            ImpressoraDoTeste = () => ImpressoraSelecionada
         };
 
         var http = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(10) };

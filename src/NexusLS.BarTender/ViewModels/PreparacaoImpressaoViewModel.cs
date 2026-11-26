@@ -856,7 +856,7 @@ public partial class PreparacaoImpressaoViewModel : ObservableObject
             if (!enviou)
             {
                 EnvioConcluido = false;
-                MensagemStatus = "Envio cancelado no diálogo de impressão do Windows.";
+                MensagemStatus = "Envio cancelado: nada foi enviado para a impressora.";
                 _dialogo.Informar(MensagemStatus, "Impressão não enviada");
                 return false;
             }

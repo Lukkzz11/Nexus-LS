@@ -5,8 +5,8 @@ using NexusLS.Core.Etiquetas;
 namespace NexusLS.BarTender.Services;
 
 /// <summary>
-/// Envio da preparação para a impressora. A implementação real usa o diálogo do Windows
-/// (o mesmo do resto do BarTender); os testes usam uma implementação de mentira.
+/// Envio da preparação para a impressora. A implementação real vai direto para a fila do Windows
+/// (sem abrir a janela de impressão); os testes usam uma implementação de mentira.
 /// </summary>
 public interface IImpressoraEtiquetas
 {
