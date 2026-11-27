@@ -21,6 +21,7 @@ public partial class MainWindow : FluentWindow
         }
 
         Loaded += (s, e) => App.Log("MainWindow LOADED event fired!");
+        Activated += (s, e) => (DataContext as ViewModels.MainViewModel)?.AtualizarImpressoras();
         Closing += (s, e) => App.Log($"MainWindow CLOSING event fired! Cancel={e.Cancel}");
         Closed += (s, e) => App.Log("MainWindow CLOSED event fired!");
     }

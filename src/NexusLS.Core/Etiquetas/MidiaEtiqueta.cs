@@ -41,7 +41,7 @@ public sealed record PerfilImpressora(
             marcas.Any(m => nomeImpressora.Contains(m, StringComparison.OrdinalIgnoreCase));
 
         // Térmicas primeiro: "HPRT" e "ZDesigner" não podem cair nas marcas de impressora de folha.
-        if (Tem("Zebra", "ZDesigner", "Argox", "TSC ", "Elgin L42", "HPRT", "Térmica", "Thermal"))
+        if (Tem("Zebra", "ZDesigner", "Argox", "TSC ", "TECLABEL", "Bar Code Printer", "Elgin L42","HPRT", "Térmica", "Thermal"))
             return Perfis[0];
         if (Tem("Canon", "HP ", "Epson L", "Brother", "LaserJet", "DeskJet", "Ink Tank", "Pantum", "Samsung", "Print to PDF"))
             return Perfis[2];

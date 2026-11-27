@@ -245,6 +245,33 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
+    /// <summary>
+    /// Relê as impressoras quando a janela volta a ficar ativa: uma impressora instalada com o programa
+    /// aberto aparece sem precisar reiniciar. Se nada mudou, não mexe nas escolhas da tela.
+    /// </summary>
+    public void AtualizarImpressoras()
+    {
+        List<string> atuais;
+        try
+        {
+            atuais = System.Drawing.Printing.PrinterSettings.InstalledPrinters.Cast<string>().ToList();
+        }
+        catch (Exception ex)
+        {
+            NexusLS.BarTender.App.Log($"AtualizarImpressoras: {ex.Message}");
+            return;
+        }
+
+        if (atuais.SequenceEqual(ImpressorasInstaladas)) return;
+
+        var escolhida = ImpressoraSelecionada;
+        var escolhidaNaPreparacao = _preparacaoVM?.ImpressoraSelecionada;
+
+        CarregarImpressoras();
+        if (escolhida is not null && ImpressorasInstaladas.Contains(escolhida)) ImpressoraSelecionada = escolhida;
+        _preparacaoVM?.DefinirImpressoras(ImpressorasInstaladas, escolhidaNaPreparacao ?? ImpressoraSelecionada);
+    }
+
     private async Task InicializarAsync()
     {
         await RecarregarDadosAsync();
