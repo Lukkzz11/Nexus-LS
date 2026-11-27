@@ -3,6 +3,9 @@ using System.Text.Json;
 
 namespace NexusLS.BarTender.Services;
 
+/// <summary>O que a preparação de impressão lembra de uma vez para a outra.</summary>
+public sealed record PredefinicaoImpressao(string? Impressora, NexusLS.Core.Etiquetas.PerfilMidia? Midia, int DescerMm);
+
 /// <summary>
 /// Preferências do BarTender que sobrevivem ao fechar o programa. Hoje guarda o banco
 /// escolhido, para o operador não ter que procurar o arquivo toda vez que abrir.
@@ -16,6 +19,9 @@ public sealed class PreferenciasBarTender
 
     /// <summary>Grade de tamanhos escolhida no Estúdio para cada produto (id do produto → nome da grade).</summary>
     public Dictionary<int, string> GradePorProduto { get; set; } = new();
+
+    /// <summary>Impressora, papel e ajuste de posição usados na preparação de impressão.</summary>
+    public PredefinicaoImpressao? Impressao { get; set; }
 
     public static string CaminhoPadrao() => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),

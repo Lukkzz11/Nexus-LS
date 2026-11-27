@@ -176,19 +176,6 @@ public class MidiaEtiquetaTests
         Assert.Empty(tag.Validar(104));
     }
 
-    [Fact]
-    public void Tag_50x80_deixa_margem_no_topo_para_o_picote_e_o_furo()
-    {
-        var tag = PerfisMidia.RoloTagRoupas2Colunas50x80;
-
-        Assert.Contains(PerfisMidia.ListaPadrao, m => ReferenceEquals(m, tag));
-        Assert.Equal(100, tag.PaginaLarguraMm);
-        Assert.Equal(80, tag.PaginaAlturaMm);
-        Assert.Equal(9, tag.MargemSuperiorMm);
-        Assert.True(tag.MargemSuperiorMm + tag.AlturaEtiquetaMm < tag.PaginaAlturaMm);
-        Assert.Empty(tag.Validar(104));
-    }
-
     [Theory]
     [InlineData(TipoMidiaEtiqueta.RoloComGap)]
     [InlineData(TipoMidiaEtiqueta.RoloMarcaPreta)]

@@ -331,6 +331,37 @@ public class FluxoPreparacaoImpressaoTests : IDisposable
     }
 
     [Fact]
+    public void Preparacao_lembra_papel_impressora_e_ajuste_na_proxima_vez()
+    {
+        var prefs = Path.Combine(Path.GetTempPath(), $"nexus_pref_{Guid.NewGuid():N}.json");
+        try
+        {
+            var primeira = new PreparacaoImpressaoViewModel(_dialogos, _impressora);
+            primeira.UsarPreferencias(prefs);
+            primeira.DefinirImpressoras(new[] { "Canon", "TECLABEL T-3000 Plus" }, "TECLABEL T-3000 Plus");
+            primeira.Carregar(SelecaoBermuda(), Modelo50x30(), "NEXUS LS");
+            primeira.MidiaSelecionada = PerfisMidia.RoloTagRoupas2Colunas50x75;
+            primeira.DescerMaisCommand.Execute(null);
+            primeira.SalvarPredefinicaoCommand.Execute(null);
+
+            var segunda = new PreparacaoImpressaoViewModel(_dialogos, _impressora);
+            segunda.UsarPreferencias(prefs);
+            segunda.DefinirImpressoras(new[] { "Canon", "TECLABEL T-3000 Plus" }, "Canon");
+            segunda.Carregar(SelecaoBermuda(), Modelo50x30(), "NEXUS LS");
+
+            Assert.Equal("TECLABEL T-3000 Plus", segunda.ImpressoraSelecionada);
+            Assert.Same(PerfisMidia.RoloTagRoupas2Colunas50x75, segunda.MidiaSelecionada);
+            Assert.Equal(75, segunda.AlturaEtiquetaMm);
+            Assert.Equal(2, segunda.Colunas);
+            Assert.Equal(1, segunda.DescerMm);
+        }
+        finally
+        {
+            File.Delete(prefs);
+        }
+    }
+
+    [Fact]
     public void Escolher_3_etiquetas_por_fileira_alarga_a_pagina_do_rolo()
     {
         var vm = new PreparacaoImpressaoViewModel(_dialogos, _impressora);

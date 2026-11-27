@@ -266,7 +266,7 @@ public partial class PreparacaoImpressaoViewModel : ObservableObject
 
         // Primeira abertura deste produto: parte de uma mídia parecida com o modelo vinculado.
         // Ao reabrir o mesmo produto, preserva a mídia que o operador já escolheu.
-        if (primeiraCarga)
+        if (primeiraCarga && !AplicarPredefinicao())
             SugerirMidiaParaModelo(modelo);
 
         AtualizarMidia();
@@ -876,11 +876,12 @@ public partial class PreparacaoImpressaoViewModel : ObservableObject
                 .Select(l => new ItemFila(Produto, l.Quantidade, l.EhSemTamanho ? "" : l.Tamanho))
                 .ToList();
 
+            var (midiaEnvio, modeloEnvio) = ParaEnvio();
             var enviou = _impressora.ImprimirPreparacao(
                 itens,
-                ModeloParaMidia,
+                modeloEnvio,
                 NomeLoja,
-                MidiaAtual,
+                midiaEnvio,
                 ImpressoraSelecionada,
                 primeiraPosicao: 1);
 
@@ -892,6 +893,7 @@ public partial class PreparacaoImpressaoViewModel : ObservableObject
                 return false;
             }
 
+            GuardarPredefinicao();
             EnvioConcluido = true;
             MensagemStatus = $"Envio concluído: {Selecao.Total} etiqueta(s) para {ImpressoraSelecionada ?? "a impressora padrão"} · {MidiaAtual.Nome}.";
             _dialogo.Sucesso(MensagemStatus);

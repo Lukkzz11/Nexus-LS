@@ -321,6 +321,18 @@
                                       SelectedItem="{Binding ImpressoraSelecionada, Mode=TwoWay}"
                                       Margin="0,3,0,10" ToolTip="Impressora que receberá o trabalho" />
 
+                            <!-- Ajuste de posição (rolo) e memória da tela -->
+                            <TextBlock Text="Descer a impressão (se estiver cortando em cima)" Style="{StaticResource Rotulo}" TextWrapping="Wrap" />
+                            <StackPanel Orientation="Horizontal" Margin="0,3,0,8">
+                                <Button Content="−" Command="{Binding DescerMenosCommand}" Width="36" Height="32" />
+                                <TextBlock Text="{Binding DescerMm, StringFormat='{}{0} mm'}" Width="64" TextAlignment="Center"
+                                           VerticalAlignment="Center" FontWeight="SemiBold" Foreground="{StaticResource CorTexto}" />
+                                <Button Content="+" Command="{Binding DescerMaisCommand}" Width="36" Height="32" />
+                            </StackPanel>
+                            <Button Content="Salvar como padrão" Command="{Binding SalvarPredefinicaoCommand}"
+                                    HorizontalAlignment="Stretch" Margin="0,0,0,10"
+                                    ToolTip="Guarda impressora, papel e ajuste. Imprimir também salva." />
+
                             <Border Background="{StaticResource CorSelecaoSuave}" BorderBrush="{StaticResource CorSelecao}"
                                     BorderThickness="1" CornerRadius="{StaticResource RaioMedio}" Padding="12,10" Margin="0,0,0,10">
                                 <Grid>
