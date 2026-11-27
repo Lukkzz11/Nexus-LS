@@ -110,7 +110,9 @@ public partial class MainWindow : FluentWindow
         vm.AbrirConexaoBanco = () => new Views.ConexaoBancoWindow(App.Servicos.Firebase, App.Servicos.Operacional) { Owner = this }.ShowDialog() == true;
         vm.AtualizarBanco();
 
-        Loaded += async (_, _) => await AvisarAoAbrirAsync(vm);
+        // Só depois da janela desenhada: no Loaded ela ainda está invisível, e a caixa de avisos (que pertence a ela)
+        // ficava escondida, sem ícone na barra, travando o Nexus como se não tivesse aberto.
+        ContentRendered += async (_, _) => await AvisarAoAbrirAsync(vm);
 
         // Atualização: as perguntas ficam aqui (janela); a consulta ao abrir é silenciosa e nunca atrapalha o uso.
         vm.Atualizacao.Confirmar = texto =>
