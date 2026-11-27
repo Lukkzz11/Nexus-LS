@@ -138,6 +138,9 @@
                 <StackPanel>
                     <TextBlock Text="3. Imprimir" FontSize="18" FontWeight="SemiBold" />
 
+                    <TextBlock Text="Impressora" Style="{StaticResource Rotulo}" />
+                    <ComboBox x:Name="ComboImpressora" Padding="8,7" />
+
                     <TextBlock Text="Papel" Style="{StaticResource Rotulo}" />
                     <ComboBox ItemsSource="{Binding Formatos}" DisplayMemberPath="Nome"
                               SelectedItem="{Binding FormatoSelecionado}" Padding="8,7" />

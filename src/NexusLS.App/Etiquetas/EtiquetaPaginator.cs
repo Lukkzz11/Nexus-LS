@@ -76,14 +76,12 @@ internal sealed class EtiquetaPaginator : DocumentPaginator
     }
 }
 
-/// <summary>Imprime as etiquetas numa impressora do Windows (a pessoa escolhe a impressora na caixa de impressão).</summary>
+/// <summary>Imprime as etiquetas direto na fila da impressora escolhida, sem a caixa de impressão do Windows.</summary>
 internal static class ImpressoraEtiquetas
 {
-    /// <summary>Devolve true se imprimiu e false se a pessoa cancelou a caixa de impressão.</summary>
-    public static bool Imprimir(IEnumerable<ItemEtiqueta> itens, FormatoEtiqueta formato, int primeiraPosicao)
+    public static bool Imprimir(IEnumerable<ItemEtiqueta> itens, FormatoEtiqueta formato, int primeiraPosicao, string? impressora)
     {
-        var dialogo = new PrintDialog();
-        if (dialogo.ShowDialog() != true) return false;
+        var dialogo = new PrintDialog { PrintQueue = Impressao.ImpressoraWindows.LocalizarFila(impressora) };
 
         // Informa o tamanho do papel ao driver (bobinas costumam vir configuradas para outro tamanho).
         try

@@ -47,22 +47,26 @@ public class ImpressoraWindows : IImpressoraCupom
         return dispatcher.InvokeAsync(() => Imprimir(texto, loja, qrCode), DispatcherPriority.Background).Task;
     }
 
-    private static void Imprimir(string texto, ConfiguracaoLoja loja, string? qrCode)
+    /// <summary>A fila com este nome; vazio ou "padrão" = a impressora padrão do Windows. Nunca troca de impressora sozinho.</summary>
+    public static PrintQueue LocalizarFila(string? nome)
     {
-        PrintQueue fila;
         try
         {
+            if (string.IsNullOrWhiteSpace(nome) || nome == ImpressoraPadrao) return LocalPrintServer.GetDefaultPrintQueue();
             using var servidor = new LocalPrintServer();
-            fila = string.IsNullOrWhiteSpace(loja.ImpressoraCupom)
-                ? LocalPrintServer.GetDefaultPrintQueue()
-                : servidor.GetPrintQueues().FirstOrDefault(f => f.Name == loja.ImpressoraCupom)
-                  ?? throw new InvalidOperationException(
-                      $"A impressora \"{loja.ImpressoraCupom}\" não foi encontrada. Confira em Configurações.");
+            return servidor.GetPrintQueues(new[] { EnumeratedPrintQueueTypes.Local, EnumeratedPrintQueueTypes.Connections })
+                       .FirstOrDefault(f => f.Name == nome || f.FullName == nome)
+                   ?? throw new InvalidOperationException($"A impressora \"{nome}\" não foi encontrada. Escolha outra.");
         }
         catch (PrintSystemException)
         {
-            throw new InvalidOperationException("Nenhuma impressora disponível. Instale uma ou escolha outra em Configurações.");
+            throw new InvalidOperationException("Nenhuma impressora disponível. Instale uma ou escolha outra.");
         }
+    }
+
+    private static void Imprimir(string texto, ConfiguracaoLoja loja, string? qrCode)
+    {
+        var fila = LocalizarFila(loja.ImpressoraCupom);
 
         var dialogo = new PrintDialog { PrintQueue = fila };
         var largura = dialogo.PrintableAreaWidth > 0 ? dialogo.PrintableAreaWidth : 300;

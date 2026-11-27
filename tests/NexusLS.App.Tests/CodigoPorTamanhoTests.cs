@@ -24,8 +24,8 @@ public sealed class CodigoPorTamanhoTests : IDisposable
         Assert.Equal("14352", CodigoBarrasTamanho.Resolver(Short("2000000000015", "1435"), "M"));
         Assert.Equal("16021", CodigoBarrasTamanho.Resolver(Short("1000000016024", "1602"), "P"));
         Assert.Equal("7891000315507", CodigoBarrasTamanho.Resolver(Short("7891000315507", "1435"), "M"));
-        Assert.Equal("2000000000015", CodigoBarrasTamanho.Resolver(Short("2000000000015", "1435S"), "M"));
-        Assert.Equal("2000000000015", CodigoBarrasTamanho.Resolver(Short("2000000000015", "101"), "M"));
+        Assert.Equal("20000000000152", CodigoBarrasTamanho.Resolver(Short("2000000000015", "1435S"), "M"));
+        Assert.Equal("20000000000152", CodigoBarrasTamanho.Resolver(Short("2000000000015", "101"), "M"));
         Assert.Equal("2000000000015", CodigoBarrasTamanho.Resolver(Short("2000000000015", "1435"), ""));
     }
 
@@ -47,6 +47,45 @@ public sealed class CodigoPorTamanhoTests : IDisposable
 
         Assert.Equal("1435" + m.Ordem, m.CodigoBarras);
         Assert.Equal("M", lido!.Value.Tamanho.Tamanho);
+    }
+
+    [Theory]
+    [InlineData("101")]
+    [InlineData("1435S")]
+    [InlineData(null)]
+    public async Task Sem_referencia_que_sirva_o_PDV_le_o_codigo_da_casa_mais_o_tamanho(string? referencia)
+    {
+        var produtos = new ProdutoService(_banco.Fabrica);
+        var id = (await produtos.CadastrarAsync(new DadosProduto("Bermuda", "2000000000015", 5000, 2000, 0), 0)).Id;
+        await using (var db = _banco.Fabrica.CreateDbContext())
+        {
+            db.Produtos.Single(x => x.Id == id).Referencia = referencia;
+            await db.SaveChangesAsync();
+        }
+        await produtos.AdicionarGradeAsync(id, new[] { "P", "M" });
+        var m = (await produtos.ListarTamanhosAsync(id)).Single(t => t.Tamanho == "M");
+
+        var lido = await produtos.ObterPorCodigoDeTamanhoAsync(m.CodigoBarras!);
+
+        Assert.Equal("2000000000015" + m.Ordem, m.CodigoBarras);
+        Assert.Equal("M", lido!.Value.Tamanho.Tamanho);
+        Assert.Null(await produtos.ObterPorCodigoDeTamanhoAsync("2000000000015"));
+    }
+
+    [Fact]
+    public void Codigo_de_14_digitos_num_modelo_EAN13_sai_inteiro_em_Code128()
+    {
+        string? lido = null;
+        Capturador.Rodar(() =>
+        {
+            var imagem = BarcodeGeneratorService.Gerar("20000000000152", NexusLS.BarTender.Models.Designer.TipoSimboloCodigo.Ean13, 400, 80, margem: 10)!;
+            var pontos = new byte[imagem.PixelWidth * imagem.PixelHeight * 4];
+            imagem.CopyPixels(pontos, imagem.PixelWidth * 4, 0);
+            var fonte = new ZXing.RGBLuminanceSource(pontos, imagem.PixelWidth, imagem.PixelHeight, ZXing.RGBLuminanceSource.BitmapFormat.BGR32);
+            lido = new ZXing.OneD.Code128Reader().decode(new ZXing.BinaryBitmap(new ZXing.Common.HybridBinarizer(fonte)))?.Text;
+        });
+
+        Assert.Equal("20000000000152", lido);
     }
 
     [Fact]

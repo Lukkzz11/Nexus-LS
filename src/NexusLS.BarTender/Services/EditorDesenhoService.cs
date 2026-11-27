@@ -427,7 +427,7 @@ public class EditorDesenhoService
         // Quando o produto tem Referência e há um tamanho selecionado (e o símbolo não é EAN-13 fixo),
         // o código de barras é ligado diretamente à Referência + Número Interno do Tamanho (ex: 1402 + 1 -> 14021).
         if (el.TipoCodigo != TipoSimboloCodigo.Ean13 &&
-            !string.IsNullOrWhiteSpace(produto.Referencia) &&
+            CodigoBarrasTamanho.ReferenciaServe(produto.Referencia) &&
             !string.IsNullOrWhiteSpace(tamanho) &&
             !string.Equals(tamanho, Tamanhos.SemTamanho, StringComparison.OrdinalIgnoreCase))
         {

@@ -103,13 +103,14 @@ public static class CodigoBarrasTamanho
 
     /// <summary>
     /// O código do tamanho de número <paramref name="ordem"/>. Quando o produto só tem um código "da casa" de 13 dígitos,
-    /// cada tamanho usa referência + número (14352), que o PDV lê já escolhendo o tamanho. Referência com menos de 4 dígitos fica de fora: 101 + 3 viraria a ref. 1013 de outro produto. Código de fabricante não muda.
+    /// cada tamanho usa referência + número (14352), que o PDV lê já escolhendo o tamanho. Se a referência não serve (ver <see cref="ReferenciaServe"/>), usa o próprio código + número (20000000000153). Código de fabricante não muda.
     /// </summary>
     public static string? DoTamanho(Produto? produto, int ordem)
     {
-        if (ordem > 0 && EhCodigoDaCasa(produto?.CodigoBarras)
-            && produto!.Referencia?.Trim() is { Length: >= 4 and < 13 } referencia && referencia.All(char.IsAsciiDigit))
-            return Montar(referencia, ordem);
+        if (ordem > 0 && EhCodigoDaCasa(produto?.CodigoBarras))
+            return ReferenciaServe(produto!.Referencia)
+                ? Montar(produto.Referencia, ordem)
+                : produto.CodigoBarras!.Trim() + ordem.ToString(CultureInfo.InvariantCulture);
 
         var baseCodigo = BaseDoCodigo(produto);
         if (string.IsNullOrWhiteSpace(baseCodigo)) return null;
@@ -117,6 +118,10 @@ public static class CodigoBarrasTamanho
         var montado = Montar(baseCodigo, ordem);
         return string.IsNullOrWhiteSpace(montado) ? baseCodigo : montado;
     }
+
+    /// <summary>Só números e de 4 a 12 dígitos: o PDV só lê números, e 101 + 3 viraria a ref. 1013 de outro produto.</summary>
+    public static bool ReferenciaServe(string? referencia) =>
+        referencia?.Trim() is { Length: >= 4 and < 13 } r && r.All(char.IsAsciiDigit);
 
     /// <summary>13 dígitos gerados pela própria loja: faixa interna "2", os prefixos 1000000/0000000 ou dígito que não confere.</summary>
     public static bool EhCodigoDaCasa(string? codigo)

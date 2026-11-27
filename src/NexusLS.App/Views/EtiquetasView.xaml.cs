@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using NexusLS.App.Etiquetas;
+using NexusLS.App.Impressao;
 using NexusLS.App.ViewModels;
 
 namespace NexusLS.App.Views;
@@ -17,14 +18,24 @@ public partial class EtiquetasView : UserControl
         };
     }
 
+    /// <summary>A última impressora usada, enquanto o programa está aberto.</summary>
+    private static string? _impressoraEscolhida;
+
     private EtiquetasViewModel? Vm => DataContext as EtiquetasViewModel;
 
     private void AoCarregar(object sender, RoutedEventArgs e)
     {
         if (Vm is not { } vm) return;
 
-        // Cuidados de "janela" ficam aqui na View: a caixa de impressão do Windows e a prévia desenhada.
-        vm.ImprimirEtiquetas = ImpressoraEtiquetas.Imprimir;
+        // Cuidados de "janela" ficam aqui na View: a impressora escolhida e a prévia desenhada.
+        ComboImpressora.ItemsSource = new[] { ImpressoraWindows.ImpressoraPadrao }.Concat(ImpressoraWindows.ListarImpressoras()).ToList();
+        ComboImpressora.SelectedItem = _impressoraEscolhida;
+        if (ComboImpressora.SelectedItem is null) ComboImpressora.SelectedIndex = 0;
+        vm.ImprimirEtiquetas = (itens, formato, posicao) =>
+        {
+            _impressoraEscolhida = ComboImpressora.SelectedItem as string;
+            return ImpressoraEtiquetas.Imprimir(itens, formato, posicao, _impressoraEscolhida);
+        };
         vm.PreviaMudou -= Redesenhar;
         vm.PreviaMudou += Redesenhar;
         Redesenhar();

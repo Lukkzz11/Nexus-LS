@@ -157,7 +157,8 @@ public class ProdutoService
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .Select(b => (Produto: p, Base: b!)))
             .Where(x => x.Base.Length < codigo.Length &&
-                        CodigoBarrasTamanho.UsaNumeroDoTamanho(x.Base) &&
+                        (CodigoBarrasTamanho.UsaNumeroDoTamanho(x.Base) ||
+                         x.Base == x.Produto.CodigoBarras && CodigoBarrasTamanho.EhCodigoDaCasa(x.Base)) &&
                         codigo.StartsWith(x.Base, StringComparison.Ordinal))
             .OrderByDescending(x => x.Base.Length);
 

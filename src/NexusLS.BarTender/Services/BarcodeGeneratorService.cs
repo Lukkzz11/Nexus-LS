@@ -29,6 +29,12 @@ public static class BarcodeGeneratorService
 
         var textoAjustado = conteudo.Trim();
 
+        // Código por tamanho com 14 dígitos não cabe num EAN-13: cortar mudaria o código, então sai em Code 128.
+        if (formato == BarcodeFormat.EAN_13 && textoAjustado.Count(char.IsDigit) > 13)
+        {
+            formato = BarcodeFormat.CODE_128;
+        }
+
         // Tratamento especial para EAN-13 (requer 12 ou 13 dígitos numéricos)
         if (formato == BarcodeFormat.EAN_13)
         {
