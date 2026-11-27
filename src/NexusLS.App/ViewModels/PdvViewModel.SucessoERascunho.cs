@@ -37,6 +37,14 @@ public partial class PdvViewModel
         MostrarSucesso("Cupom enviado para a impressora.");
     }
 
+    /// <summary>Comprovante sem preços, com QR Code para troca, da venda que acabou de ser finalizada.</summary>
+    [RelayCommand]
+    private Task ImprimirPresenteAsync() => ExecutarOcupadoAsync(async () =>
+    {
+        await _cupons.ImprimirPresenteAsync(_ultimaVendaId);
+        MostrarSucesso("Comprovante para presente enviado para a impressora.");
+    });
+
     // ================= Rascunho =================
 
     /// <summary>

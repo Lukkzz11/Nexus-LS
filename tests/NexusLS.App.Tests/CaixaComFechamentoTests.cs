@@ -92,6 +92,31 @@ public sealed class CaixaComFechamentoTests : IDisposable
         Assert.Equal("Sem diferença", historico.Diferenca);
     }
 
+    [Theory]
+    [InlineData(false, "Nuvem não configurada")]
+    [InlineData(true, "Não foi possível enviar para a nuvem")]
+    public async Task Fechar_envia_para_a_nuvem_e_uma_falha_nao_desfaz_o_fechamento(bool falha, string esperado)
+    {
+        var vm = await NovoCaixaAsync(_ => true);
+        var envios = 0;
+        vm.Fechamento!.EnviarParaNuvem = () =>
+        {
+            envios++;
+            if (falha) throw new InvalidOperationException("Sem internet.");
+            return Task.FromResult<NexusLS.Core.Sincronizacao.Nuvem.ResultadoEnvioNuvem?>(null);
+        };
+        await _caixa.AbrirAsync(5000);
+        await vm.Fechamento.AtualizarCommand.ExecuteAsync(null);
+
+        await vm.Fechamento.FecharRapidoCommand.ExecuteAsync(null);
+        await vm.Fechamento.EnvioEmAndamento;
+
+        Assert.Equal(1, envios);
+        Assert.False(vm.Fechamento.TurnoAberto);
+        Assert.Contains(esperado, vm.Fechamento.Mensagem);
+        Assert.Equal(falha, vm.Fechamento.MensagemEhErro);
+    }
+
     [Fact]
     public async Task Fechar_e_recusar_na_confirmacao_mantem_o_caixa_aberto()
     {

@@ -192,6 +192,7 @@ public partial class PdvViewModel
                 if (_sucessoSel.Opcao == OpcaoSucesso.NovaVenda) NovaVenda();
                 else _ = ExecutarOcupadoAsync(ReimprimirCupomAsync);
                 return true;
+            case ComandoTecla.F6: ImprimirPresenteCommand.Execute(null); return true;
             case ComandoTecla.Esc: NovaVenda(); return true;
             default: return false;
         }

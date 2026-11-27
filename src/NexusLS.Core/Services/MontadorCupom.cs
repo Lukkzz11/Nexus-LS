@@ -173,6 +173,46 @@ public static class MontadorCupom
         return string.Join("\n", linhas);
     }
 
+    /// <summary>
+    /// Comprovante para presente: o que foi comprado, SEM preços nem dados do pagamento. O QR Code impresso embaixo
+    /// leva o número da venda (<see cref="CodigoDeTroca"/>), que é o que a tela Trocas pede.
+    /// </summary>
+    public static string MontarPresente(Venda venda, ConfiguracaoLoja loja)
+    {
+        var largura = Math.Clamp(loja.LarguraCupom, ConfiguracaoService.LarguraMinima, ConfiguracaoService.LarguraMaxima);
+        var linhas = new List<string>();
+        var traco = new string('-', largura);
+
+        linhas.AddRange(Centralizar(loja.NomeLoja.ToUpper(new CultureInfo("pt-BR")), largura));
+        var endereco = EnderecoCompleto(loja);
+        if (endereco.Length > 0) linhas.AddRange(Centralizar(endereco, largura));
+        if (!string.IsNullOrWhiteSpace(loja.Telefone)) linhas.AddRange(Centralizar($"WhatsApp / Tel: {loja.Telefone}", largura));
+        linhas.AddRange(Centralizar("*** PARA PRESENTE ***", largura));
+        linhas.Add(traco);
+        linhas.Add($"Venda / Pedido: #{venda.Id}");
+        linhas.Add($"Data/Hora: {venda.DataHora.ToString("dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture)}");
+        linhas.Add(traco);
+        foreach (var item in venda.Itens.Where(i => i.Quantidade > 0))
+        {
+            var nome = item.Tamanho == Tamanhos.SemTamanho ? item.NomeProduto : $"{item.NomeProduto} ({item.Tamanho})";
+            linhas.AddRange(Quebrar($"{item.Quantidade} x {nome}", largura));
+        }
+        linhas.Add(traco);
+        if (!string.IsNullOrWhiteSpace(loja.CupomTextoGarantia))
+        {
+            foreach (var parte in Paragrafos(loja.CupomTextoGarantia))
+                linhas.AddRange(Quebrar(parte, largura));
+            linhas.Add(traco);
+        }
+        linhas.AddRange(Centralizar("PARA TROCAR, APRESENTE ESTE", largura));
+        linhas.AddRange(Centralizar("COMPROVANTE NA LOJA", largura));
+        linhas.AddRange(Centralizar($"Troca nº {CodigoDeTroca(venda)}", largura));
+        return string.Join("\n", linhas);
+    }
+
+    /// <summary>O conteúdo do QR Code de troca: só o número da venda, que o leitor digita na busca da tela Trocas.</summary>
+    public static string CodigoDeTroca(Venda venda) => venda.Id.ToString(CultureInfo.InvariantCulture);
+
     private static readonly string[] RotulosEmNegrito =
     {
         "Venda / Pedido:", "Data/Hora:", "Operador:", "Cliente:", "Tabela:", "Forma de Pagamento:", "FORMA DE PGTO.:", "Pgto:",

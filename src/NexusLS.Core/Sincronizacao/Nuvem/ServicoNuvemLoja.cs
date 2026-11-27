@@ -36,7 +36,7 @@ public sealed record LeituraLojas(IReadOnlyList<ResumoLoja> Lojas, bool DoCache,
 public sealed record ResultadoRecebimentoPrecos(int Aplicados, int Removidos, int Ignorados, int Consultados);
 
 /// <summary>
-/// "Compartilhar com a nuvem" e "Receber da nuvem" (PROPOSTA_GESTAO.md, seção 7). Só age quando a tela chama (envio manual).
+/// "Compartilhar com a nuvem" e "Receber da nuvem" (PROPOSTA_GESTAO.md, seção 7). Só age quando a tela chama (clique ou fechamento do caixa).
 /// Uma falha de rede nunca deixa nada pela metade no computador: o estado local só muda depois que a nuvem aceitou tudo, e
 /// reenviar é seguro (cada documento é substituído). Permissões do programa decidem quem vê todas as lojas; a proteção real
 /// entre lojas são as regras do Firestore (docs/REGRAS_FIRESTORE_POR_LOJA.md).
@@ -100,11 +100,24 @@ public sealed class ServicoNuvemLoja
 
     // ===================================================================== compartilhar
     public Task<ResultadoEnvioNuvem> CompartilharAsync(bool ignorarConflito = false, Action<string>? progresso = null, CancellationToken ct = default) =>
-        Protegido(() => CompartilharInternoAsync(ignorarConflito, progresso ?? (_ => { }), ct));
+        Protegido(() =>
+        {
+            if (!_podeCompartilhar()) throw new RegraDeNegocioException("Você não tem permissão para compartilhar os dados da loja com a nuvem.");
+            return CompartilharInternoAsync(ignorarConflito, progresso ?? (_ => { }), ct);
+        });
+
+    /// <summary>
+    /// Envio automático do fechamento do caixa: manda o que mudou (vendas, quantidades, produtos). É uma regra da loja, por
+    /// isso não depende da permissão de quem está no caixa. Nulo = a nuvem não está configurada (sem código da empresa).
+    /// Nunca passa por cima do aviso de loja duplicada.
+    /// </summary>
+    public async Task<ResultadoEnvioNuvem?> EnviarNoFechamentoAsync(CancellationToken ct = default) =>
+        string.IsNullOrWhiteSpace(_cache.Carregar().EmpresaId)
+            ? null
+            : await Protegido(() => CompartilharInternoAsync(false, _ => { }, ct));
 
     private async Task<ResultadoEnvioNuvem> CompartilharInternoAsync(bool ignorarConflito, Action<string> progresso, CancellationToken ct)
     {
-        if (!_podeCompartilhar()) throw new RegraDeNegocioException("Você não tem permissão para compartilhar os dados da loja com a nuvem.");
         var cliente = Cliente();
         var (lojaIdBruto, nomeBruto) = _loja();
         var lojaId = CaminhosNuvem.ValidarId(lojaIdBruto, "lojaId");

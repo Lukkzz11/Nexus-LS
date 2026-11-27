@@ -542,9 +542,12 @@
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                     </ItemsControl>
+                    <Button Content="🎁 Imprimir para presente, com QR Code de troca (F6)" Command="{Binding ImprimirPresenteCommand}"
+                            Style="{StaticResource BotaoSecundario}" HorizontalAlignment="Center" Focusable="False"
+                            Padding="14,8" Margin="0,12,0,0" />
                     <TextBlock Text="{Binding Mensagem}" Style="{StaticResource TextoMensagem}" HorizontalAlignment="Center" />
                     <TextBlock Style="{StaticResource DicaModal}" TextAlignment="Center"
-                               Text="← → ↑ ↓ alternam · Enter confirma · Esc = nova venda" />
+                               Text="← → ↑ ↓ alternam · Enter confirma · F6 = presente · Esc = nova venda" />
                 </StackPanel>
             </Border>
         </Grid>

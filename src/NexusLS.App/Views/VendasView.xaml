@@ -312,6 +312,8 @@
                             <WrapPanel Margin="0,16,0,0">
                                 <Button Content="Reimprimir cupom" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,8"
                                         Command="{Binding ReimprimirCupomCommand}" />
+                                <Button Content="Para presente (QR troca)" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,8"
+                                        Command="{Binding ImprimirPresenteCommand}" />
                                 <Button Content="Enviar por WhatsApp" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,8"
                                         ToolTip="Guarda o comprovante em PDF na gaveta e prepara o envio no WhatsApp"
                                         Command="{Binding EnviarWhatsAppCommand}" />

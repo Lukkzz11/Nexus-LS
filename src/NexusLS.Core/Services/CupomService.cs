@@ -11,6 +11,9 @@ namespace NexusLS.Core.Services;
 public interface IImpressoraCupom
 {
     Task ImprimirAsync(string texto, ConfiguracaoLoja loja);
+
+    /// <summary>O texto com um QR Code embaixo. Quem não sabe desenhar QR imprime só o texto.</summary>
+    Task ImprimirComQrAsync(string texto, ConfiguracaoLoja loja, string qrCode) => ImprimirAsync(texto, loja);
 }
 
 /// <summary>Gera e imprime o cupom de uma venda com os dados da loja salvos em Configurações.</summary>
@@ -41,6 +44,14 @@ public class CupomService
         var (texto, loja) = await GerarAsync(vendaId);
         await _impressora.ImprimirAsync(texto, loja);
     }
+    /// <summary>Imprime o comprovante para presente: sem preços e com o QR Code de troca.</summary>
+    public async Task ImprimirPresenteAsync(int vendaId)
+    {
+        var (venda, loja) = await CarregarVendaAsync(vendaId);
+        if (venda.Cancelada) throw new RegraDeNegocioException("Venda cancelada não tem comprovante para presente.");
+        await _impressora.ImprimirComQrAsync(MontadorCupom.MontarPresente(venda, loja), loja, MontadorCupom.CodigoDeTroca(venda));
+    }
+
     /// <summary>O comprovante da venda em PDF (padrão visual do Nexus, com campo de assinatura do cliente).</summary>
     public async Task<byte[]> GerarPdfAsync(int vendaId, bool pedirAssinatura = true)
     {

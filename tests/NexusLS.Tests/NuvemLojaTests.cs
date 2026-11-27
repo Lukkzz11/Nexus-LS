@@ -53,6 +53,23 @@ public sealed class NuvemLojaTests : IDisposable
 
     // ===================================================================== enviar
     [Fact]
+    public async Task Envio_do_fechamento_nao_depende_da_permissao_e_sem_empresa_nao_envia()
+    {
+        await VenderAsync();
+        _pode = false;
+        var servico = Servico();
+
+        Assert.Null(await servico.EnviarNoFechamentoAsync());
+        Assert.Empty(_nuvem.CaminhosGravados);
+
+        servico.SalvarEmpresa("empresa1");
+        var r = await servico.EnviarNoFechamentoAsync();
+
+        Assert.Equal(1, r!.Dias);
+        Assert.Equal(2, r.Produtos);
+    }
+
+    [Fact]
     public async Task Compartilhar_envia_dia_estoque_e_loja_e_so_em_caminhos_de_loja()
     {
         await VenderAsync();

@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using NexusLS.Core.Models;
 using NexusLS.Core.Services;
@@ -32,17 +33,21 @@ public class ImpressoraWindows : IImpressoraCupom
         }
     }
 
-    public Task ImprimirAsync(string texto, ConfiguracaoLoja loja)
+    public Task ImprimirAsync(string texto, ConfiguracaoLoja loja) => Enviar(texto, loja, null);
+
+    public Task ImprimirComQrAsync(string texto, ConfiguracaoLoja loja, string qrCode) => Enviar(texto, loja, qrCode);
+
+    private static Task Enviar(string texto, ConfiguracaoLoja loja, string? qrCode)
     {
         var dispatcher = Application.Current?.Dispatcher
             ?? throw new InvalidOperationException("A impressão só funciona com o programa aberto.");
 
         // A impressão do WPF precisa rodar na thread da interface. Prioridade baixa: deixa a tela
         // de sucesso aparecer antes de começar a imprimir.
-        return dispatcher.InvokeAsync(() => Imprimir(texto, loja), DispatcherPriority.Background).Task;
+        return dispatcher.InvokeAsync(() => Imprimir(texto, loja, qrCode), DispatcherPriority.Background).Task;
     }
 
-    private static void Imprimir(string texto, ConfiguracaoLoja loja)
+    private static void Imprimir(string texto, ConfiguracaoLoja loja, string? qrCode)
     {
         PrintQueue fila;
         try
@@ -130,6 +135,37 @@ public class ImpressoraWindows : IImpressoraCupom
         }
         foreach (var bloco in blocos) documento.Blocks.Add(bloco);
 
+        if (qrCode is not null)
+        {
+            var qr = new System.Windows.Controls.Image
+            {
+                Source = QrCode(qrCode),
+                Width = Math.Min(130, disponivel * 0.6),
+                Stretch = Stretch.Uniform,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(0, 6, 0, 30) // folga para o corte do papel
+            };
+            RenderOptions.SetBitmapScalingMode(qr, BitmapScalingMode.NearestNeighbor);
+            documento.Blocks.Add(new BlockUIContainer(qr));
+        }
+
         dialogo.PrintDocument(((IDocumentPaginatorSource)documento).DocumentPaginator, "Cupom Nexus");
+    }
+
+    /// <summary>QR Code em preto e branco, com 8 pontos por quadradinho.</summary>
+    public static BitmapSource QrCode(string conteudo)
+    {
+        var matriz = new ZXing.QrCode.QRCodeWriter().encode(conteudo, ZXing.BarcodeFormat.QR_CODE, 0, 0,
+            new Dictionary<ZXing.EncodeHintType, object> { [ZXing.EncodeHintType.MARGIN] = 2 });
+        const int escala = 8;
+        var lado = matriz.Width * escala;
+        var pontos = new byte[lado * lado];
+        for (var y = 0; y < lado; y++)
+            for (var x = 0; x < lado; x++)
+                pontos[y * lado + x] = matriz[x / escala, y / escala] ? (byte)0 : (byte)255;
+
+        var imagem = BitmapSource.Create(lado, lado, 96, 96, PixelFormats.Gray8, null, pontos, lado);
+        imagem.Freeze();
+        return imagem;
     }
 }

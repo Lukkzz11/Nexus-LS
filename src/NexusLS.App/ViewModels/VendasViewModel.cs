@@ -272,6 +272,15 @@ public partial class VendasViewModel : ViewModelBase
         MostrarSucesso($"Cupom da venda #{venda.Id} enviado para a impressora.");
     });
 
+    /// <summary>Comprovante sem preços, com QR Code para troca, da venda selecionada.</summary>
+    [RelayCommand]
+    private Task ImprimirPresenteAsync() => ExecutarAsync(async () =>
+    {
+        if (Selecionada is not { } venda) return;
+        await _cupons.ImprimirPresenteAsync(venda.Id);
+        MostrarSucesso($"Comprovante para presente da venda #{venda.Id} enviado para a impressora.");
+    });
+
     /// <summary>Guarda o comprovante em PDF na gaveta e abre o WhatsApp já com o telefone do cliente, a mensagem e o PDF para anexar.</summary>
     [RelayCommand]
     private Task EnviarWhatsAppAsync() => ExecutarAsync(async () =>

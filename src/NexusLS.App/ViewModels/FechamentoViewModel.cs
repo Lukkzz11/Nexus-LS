@@ -103,6 +103,30 @@ public partial class FechamentoViewModel : ViewModelBase
 
     private ResumoTurno? _resumo;
 
+    /// <summary>Envia à nuvem o que mudou, depois de fechar o caixa. Nulo no resultado = nuvem não configurada.</summary>
+    public Func<Task<NexusLS.Core.Sincronizacao.Nuvem.ResultadoEnvioNuvem?>>? EnviarParaNuvem { get; set; }
+
+    /// <summary>O envio em andamento (os testes esperam por ele).</summary>
+    public Task EnvioEmAndamento { get; private set; } = Task.CompletedTask;
+
+    /// <summary>Não segura o caixa: com internet ruim o fechamento já está gravado e a mensagem é completada depois.</summary>
+    private async Task EnviarNuvemAsync(string fechado)
+    {
+        if (EnviarParaNuvem is null) return;
+        MostrarSucesso($"{fechado} Enviando para a nuvem...");
+        try
+        {
+            var r = await EnviarParaNuvem();
+            MostrarSucesso(r is null
+                ? $"{fechado} Nuvem não configurada: nada foi enviado."
+                : $"{fechado} Nuvem atualizada.{(r.ProdutosPendentes > 0 ? $" Faltam {r.ProdutosPendentes} produtos, que vão no próximo envio." : "")}");
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            MostrarErro($"{fechado} Não foi possível enviar para a nuvem: {ex.Message} Os dados continuam salvos e vão no próximo envio.");
+        }
+    }
+
     /// <summary>A tela define como perguntar "confirma?" (assim o ViewModel não depende de MessageBox). Nos testes, responde sim.</summary>
     public Func<string, bool> Confirmar { get; set; } = _ => true;
 
@@ -251,9 +275,11 @@ public partial class FechamentoViewModel : ViewModelBase
         ConferidoDinheiroTexto = ConferidoCartaoTexto = ConferidoPixTexto = Observacao = "";
         TurnoEmConferencia = null;
         await AtualizarAsync();
-        MostrarSucesso(f.DiferencaTotalCentavos == 0
+        var fechado = f.DiferencaTotalCentavos == 0
             ? $"Caixa nº {id} conferido, sem diferença (versão {f.Versao})."
-            : $"Caixa nº {id} conferido com diferença de {Dinheiro.Formatar(f.DiferencaTotalCentavos)} (versão {f.Versao}).");
+            : $"Caixa nº {id} conferido com diferença de {Dinheiro.Formatar(f.DiferencaTotalCentavos)} (versão {f.Versao}).";
+        MostrarSucesso(fechado);
+        EnvioEmAndamento = EnviarNuvemAsync(fechado);
     });
 
     /// <summary>
@@ -300,9 +326,11 @@ public partial class FechamentoViewModel : ViewModelBase
         ConferidoDinheiroTexto = ConferidoCartaoTexto = ConferidoPixTexto = Observacao = "";
         TurnoEmConferencia = null;
         await AtualizarAsync();
-        MostrarSucesso(f.DiferencaTotalCentavos == 0
+        var fechado = f.DiferencaTotalCentavos == 0
             ? $"Caixa nº {id} fechado, sem diferença."
-            : $"Caixa nº {id} fechado com diferença de {Dinheiro.Formatar(f.DiferencaTotalCentavos)}.");
+            : $"Caixa nº {id} fechado com diferença de {Dinheiro.Formatar(f.DiferencaTotalCentavos)}.";
+        MostrarSucesso(fechado);
+        EnvioEmAndamento = EnviarNuvemAsync(fechado);
     });
 
     private static bool Diferente(ResumoTurno r, long dinheiro, long cartao, long pix) =>
