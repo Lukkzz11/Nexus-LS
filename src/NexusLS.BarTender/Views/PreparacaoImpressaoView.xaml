@@ -77,7 +77,7 @@
                                        Foreground="{StaticResource CorTextoSuave}" />
                         </Border>
                     </StackPanel>
-                    <TextBlock Text="Confira a prévia, o papel e a impressora antes de confirmar. As quantidades e o modelo vinculado ao produto são preservados."
+                    <TextBlock Text="1. Confira as etiquetas e as quantidades.   2. Escolha a impressora.   3. Clique em Imprimir."
                                Style="{StaticResource TextoApoio}" Margin="0,3,0,0" />
                 </StackPanel>
 
@@ -309,194 +309,17 @@
                     </Border>
                 </StackPanel>
 
-                <!-- ===================== CONFIGURAÇÃO ===================== -->
+                <!-- ===================== IMPRIMIR E AJUSTES ===================== -->
                 <StackPanel Grid.Column="2">
+                    <!-- Imprimir: o que a pessoa precisa fica no alto -->
                     <Border Style="{StaticResource Painel}" Padding="18" Margin="0,0,0,14">
                         <StackPanel>
-                            <TextBlock Text="Impressora e papel" Style="{StaticResource TituloSecao}" Margin="0,0,0,10" />
+                            <TextBlock Text="Imprimir" Style="{StaticResource TituloSecao}" Margin="0,0,0,10" />
 
                             <TextBlock Text="Impressora instalada" Style="{StaticResource Rotulo}" />
                             <ComboBox ItemsSource="{Binding ImpressorasInstaladas}"
                                       SelectedItem="{Binding ImpressoraSelecionada, Mode=TwoWay}"
                                       Margin="0,3,0,10" ToolTip="Impressora que receberá o trabalho" />
-
-                            <TextBlock Text="Perfil da impressora" Style="{StaticResource Rotulo}" />
-                            <ComboBox ItemsSource="{Binding PerfisImpressora}"
-                                      SelectedItem="{Binding PerfilImpressoraSelecionado, Mode=TwoWay}"
-                                      DisplayMemberPath="Nome" Margin="0,3,0,4"
-                                      ToolTip="Referência de largura e sensores; confira no manual do seu modelo" />
-                            <TextBlock Text="{Binding PerfilImpressoraSelecionado.Observacao}" FontSize="10.5"
-                                       Foreground="{StaticResource CorTextoSuave}" TextWrapping="Wrap" Margin="0,0,0,10" />
-
-                            <TextBlock Text="Formato de mídia (escolha o modelo do papel)" Style="{StaticResource Rotulo}" />
-                            <ListBox ItemsSource="{Binding MidiasDisponiveis}"
-                                     SelectedItem="{Binding MidiaSelecionada, Mode=TwoWay}"
-                                     ItemContainerStyle="{StaticResource CartaoSeletorMidiaItem}"
-                                     Background="Transparent" BorderThickness="0" Padding="0"
-                                     MaxHeight="260" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                     Margin="0,4,0,10">
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="58" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-                                            <views:IlustracaoMidia Grid.Column="0" Midia="{Binding}" Width="52" Height="42"
-                                                                   HorizontalAlignment="Left" VerticalAlignment="Center" />
-                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding Nome}" FontSize="11.5" FontWeight="Bold"
-                                                           Foreground="{StaticResource CorTexto}" TextTrimming="CharacterEllipsis" />
-                                                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
-                                                    <TextBlock Text="{Binding Dimensoes}" FontSize="10.5" FontWeight="SemiBold"
-                                                               Foreground="{StaticResource CorPrimaria}" />
-                                                    <TextBlock Text=" · " FontSize="10.5" Foreground="{StaticResource CorTextoSuave}" />
-                                                    <TextBlock Text="{Binding Distribuicao}" FontSize="10.5"
-                                                               Foreground="{StaticResource CorTextoSuave}" />
-                                                </StackPanel>
-                                            </StackPanel>
-                                        </Grid>
-                                    </DataTemplate>
-                                </ListBox.ItemTemplate>
-                            </ListBox>
-
-                            <TextBlock Text="Etiquetas por fileira (depende do papel)" Style="{StaticResource Rotulo}" />
-                            <ListBox ItemsSource="{Binding OpcoesFileira}"
-                                     SelectedItem="{Binding FileiraSelecionada, Mode=TwoWay}"
-                                     ItemContainerStyle="{StaticResource CartaoSeletorMidiaItem}"
-                                     Background="Transparent" BorderThickness="0" Padding="0"
-                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                     Margin="0,4,0,10"
-                                     ToolTip="Escolha quantas etiquetas o papel imprime lado a lado">
-                                <ListBox.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <UniformGrid Columns="3" />
-                                    </ItemsPanelTemplate>
-                                </ListBox.ItemsPanel>
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <StackPanel>
-                                            <TextBlock Text="{Binding Nome}" FontSize="11" FontWeight="Bold"
-                                                       Foreground="{StaticResource CorTexto}" />
-                                            <TextBlock Text="{Binding Descricao}" FontSize="9.5"
-                                                       Foreground="{StaticResource CorTextoSuave}"
-                                                       TextWrapping="Wrap" LineHeight="12" Margin="0,1,0,0" />
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </ListBox.ItemTemplate>
-                            </ListBox>
-
-                            <TextBlock Text="Sensor / tipo de mídia" Style="{StaticResource Rotulo}" />
-                            <ListBox ItemsSource="{Binding TiposMidia}"
-                                     SelectedItem="{Binding TipoMidiaSelecionado, Mode=TwoWay}"
-                                     ItemContainerStyle="{StaticResource CartaoSeletorMidiaItem}"
-                                     Background="Transparent" BorderThickness="0" Padding="0"
-                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                     Margin="0,4,0,10">
-                                <ListBox.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <UniformGrid Columns="2" />
-                                    </ItemsPanelTemplate>
-                                </ListBox.ItemsPanel>
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="46" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-                                            <views:IlustracaoMidia Grid.Column="0" Tipo="{Binding Tipo}" Width="40" Height="38"
-                                                                   HorizontalAlignment="Left" VerticalAlignment="Center" />
-                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding NomeCurto}" FontSize="11" FontWeight="Bold"
-                                                           Foreground="{StaticResource CorTexto}" TextTrimming="CharacterEllipsis" />
-                                                <TextBlock Text="{Binding Descricao}" FontSize="9.5"
-                                                           Foreground="{StaticResource CorTextoSuave}" TextWrapping="Wrap" LineHeight="12" Margin="0,1,0,0" />
-                                            </StackPanel>
-                                        </Grid>
-                                    </DataTemplate>
-                                </ListBox.ItemTemplate>
-                            </ListBox>
-
-                            <WrapPanel Margin="0,4,0,0">
-                                <StackPanel Style="{StaticResource CampoMedida}">
-                                    <TextBlock Text="Largura etiqueta (mm)" Style="{StaticResource RotuloMedida}" />
-                                    <TextBox Text="{Binding LarguraEtiquetaMm, StringFormat=0.##}" />
-                                </StackPanel>
-                                <StackPanel Style="{StaticResource CampoMedida}">
-                                    <TextBlock Text="Altura etiqueta (mm)" Style="{StaticResource RotuloMedida}" />
-                                    <TextBox Text="{Binding AlturaEtiquetaMm, StringFormat=0.##}" />
-                                </StackPanel>
-                                <StackPanel Style="{StaticResource CampoMedida}">
-                                    <TextBlock Text="Gap horizontal (mm)" Style="{StaticResource RotuloMedida}" />
-                                    <TextBox Text="{Binding EspacoHorizontalMm, StringFormat=0.##}" />
-                                </StackPanel>
-                                <StackPanel Style="{StaticResource CampoMedida}">
-                                    <TextBlock Text="Gap vertical (mm)" Style="{StaticResource RotuloMedida}" />
-                                    <TextBox Text="{Binding EspacoVerticalMm, StringFormat=0.##}" />
-                                </StackPanel>
-                                <StackPanel Style="{StaticResource CampoMedida}">
-                                    <TextBlock Text="Papel largura (mm)" Style="{StaticResource RotuloMedida}" />
-                                    <TextBox Text="{Binding PaginaLarguraMm, StringFormat=0.##}" />
-                                </StackPanel>
-                                <StackPanel Style="{StaticResource CampoMedida}">
-                                    <TextBlock Text="Papel altura (mm)" Style="{StaticResource RotuloMedida}" />
-                                    <TextBox Text="{Binding PaginaAlturaMm, StringFormat=0.##}" />
-                                </StackPanel>
-                                <StackPanel Style="{StaticResource CampoMedida}">
-                                    <TextBlock Text="Margem esq. (mm)" Style="{StaticResource RotuloMedida}" />
-                                    <TextBox Text="{Binding MargemEsquerdaMm, StringFormat=0.##}" />
-                                </StackPanel>
-                                <StackPanel Style="{StaticResource CampoMedida}">
-                                    <TextBlock Text="Margem sup. (mm)" Style="{StaticResource RotuloMedida}" />
-                                    <TextBox Text="{Binding MargemSuperiorMm, StringFormat=0.##}" />
-                                </StackPanel>
-                                <StackPanel Style="{StaticResource CampoMedida}">
-                                    <TextBlock Text="Colunas" Style="{StaticResource RotuloMedida}" />
-                                    <TextBox Text="{Binding Colunas}" />
-                                </StackPanel>
-                                <StackPanel Style="{StaticResource CampoMedida}">
-                                    <TextBlock Text="Linhas" Style="{StaticResource RotuloMedida}" />
-                                    <TextBox Text="{Binding Linhas}" />
-                                </StackPanel>
-                                <StackPanel Style="{StaticResource CampoMedida}" Width="128">
-                                    <TextBlock Text="Máx. impressora (mm)" Style="{StaticResource RotuloMedida}" />
-                                    <TextBox Text="{Binding LarguraMaximaImpressoraMm, StringFormat=0.##}"
-                                             ToolTip="Área imprimível em largura, conforme o manual da impressora" />
-                                </StackPanel>
-                            </WrapPanel>
-
-                            <Button Command="{Binding RestaurarMidiaDoPerfilCommand}" Style="{StaticResource BotaoSecundario}"
-                                    Padding="10,6" HorizontalAlignment="Left" Margin="0,2,0,0"
-                                    ToolTip="Voltar às medidas do perfil de mídia escolhido">
-                                <StackPanel Orientation="Horizontal">
-                                    <ui:SymbolIcon Symbol="ArrowReset24" FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center" />
-                                    <TextBlock Text="Restaurar medidas do perfil" FontSize="12" VerticalAlignment="Center" />
-                                </StackPanel>
-                            </Button>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- Aviso de incompatibilidade / medida inválida -->
-                    <Border Background="{StaticResource CorAvisoFundo}" BorderBrush="{StaticResource CorAvisoBorda}"
-                            BorderThickness="1" CornerRadius="{StaticResource RaioMedio}" Padding="12,10" Margin="0,0,0,14"
-                            Visibility="{Binding TemAvisoMidia, Converter={StaticResource BoolParaVisibilidadeConverter}}">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <ui:SymbolIcon Grid.Column="0" Symbol="Warning24" FontSize="15" Foreground="{StaticResource CorAvisoTexto}"
-                                           Margin="0,0,8,0" VerticalAlignment="Top" />
-                            <TextBlock Grid.Column="1" Text="{Binding AvisoMidia}" FontSize="11" TextWrapping="Wrap" LineHeight="16"
-                                       Foreground="{StaticResource CorAvisoTexto}" />
-                        </Grid>
-                    </Border>
-
-                    <!-- Conferência final -->
-                    <Border Style="{StaticResource Painel}" Padding="18">
-                        <StackPanel>
-                            <TextBlock Text="Conferência" Style="{StaticResource TituloSecao}" Margin="0,0,0,8" />
 
                             <Border Background="{StaticResource CorSelecaoSuave}" BorderBrush="{StaticResource CorSelecao}"
                                     BorderThickness="1" CornerRadius="{StaticResource RaioMedio}" Padding="12,10" Margin="0,0,0,10">
@@ -547,12 +370,28 @@
                                 <Run Text="{Binding PaginasTexto, Mode=OneWay, StringFormat=' · {0}'}" />
                             </TextBlock>
 
+                            <!-- Aviso de incompatibilidade / medida inválida -->
+                            <Border Background="{StaticResource CorAvisoFundo}" BorderBrush="{StaticResource CorAvisoBorda}"
+                                    BorderThickness="1" CornerRadius="{StaticResource RaioMedio}" Padding="12,10" Margin="0,0,0,10"
+                                    Visibility="{Binding TemAvisoMidia, Converter={StaticResource BoolParaVisibilidadeConverter}}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <ui:SymbolIcon Grid.Column="0" Symbol="Warning24" FontSize="15" Foreground="{StaticResource CorAvisoTexto}"
+                                                   Margin="0,0,8,0" VerticalAlignment="Top" />
+                                    <TextBlock Grid.Column="1" Text="{Binding AvisoMidia}" FontSize="11" TextWrapping="Wrap" LineHeight="16"
+                                               Foreground="{StaticResource CorAvisoTexto}" />
+                                </Grid>
+                            </Border>
+
                             <Button Command="{Binding ImprimirCommand}" Style="{StaticResource BotaoPrimario}"
                                     Padding="16,12" IsEnabled="{Binding PodeImprimir}"
                                     ToolTip="Enviar o trabalho para a impressora escolhida">
                                 <StackPanel Orientation="Horizontal">
                                     <ui:SymbolIcon Symbol="Print24" FontSize="18" Margin="0,0,8,0" VerticalAlignment="Center" />
-                                    <TextBlock Text="CONFIRMAR E IMPRIMIR" FontWeight="Bold" VerticalAlignment="Center" />
+                                    <TextBlock Text="IMPRIMIR" FontWeight="Bold" VerticalAlignment="Center" />
                                 </StackPanel>
                             </Button>
 
@@ -569,6 +408,167 @@
                                 </TextBlock.Style>
                             </TextBlock>
                         </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Painel}" Padding="18,12">
+                        <Expander Header="Ajustes do papel (só se sair errado)">
+                            <StackPanel Margin="0,12,0,0">
+                                <TextBlock Text="Perfil da impressora" Style="{StaticResource Rotulo}" />
+                                <ComboBox ItemsSource="{Binding PerfisImpressora}"
+                                          SelectedItem="{Binding PerfilImpressoraSelecionado, Mode=TwoWay}"
+                                          DisplayMemberPath="Nome" Margin="0,3,0,4"
+                                          ToolTip="Referência de largura e sensores; confira no manual do seu modelo" />
+                                <TextBlock Text="{Binding PerfilImpressoraSelecionado.Observacao}" FontSize="10.5"
+                                           Foreground="{StaticResource CorTextoSuave}" TextWrapping="Wrap" Margin="0,0,0,10" />
+
+                                <TextBlock Text="Formato de mídia (escolha o modelo do papel)" Style="{StaticResource Rotulo}" />
+                                <ListBox ItemsSource="{Binding MidiasDisponiveis}"
+                                         SelectedItem="{Binding MidiaSelecionada, Mode=TwoWay}"
+                                         ItemContainerStyle="{StaticResource CartaoSeletorMidiaItem}"
+                                         Background="Transparent" BorderThickness="0" Padding="0"
+                                         MaxHeight="260" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                         Margin="0,4,0,10">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="58" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <views:IlustracaoMidia Grid.Column="0" Midia="{Binding}" Width="52" Height="42"
+                                                                       HorizontalAlignment="Left" VerticalAlignment="Center" />
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Nome}" FontSize="11.5" FontWeight="Bold"
+                                                               Foreground="{StaticResource CorTexto}" TextTrimming="CharacterEllipsis" />
+                                                    <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                                        <TextBlock Text="{Binding Dimensoes}" FontSize="10.5" FontWeight="SemiBold"
+                                                                   Foreground="{StaticResource CorPrimaria}" />
+                                                        <TextBlock Text=" · " FontSize="10.5" Foreground="{StaticResource CorTextoSuave}" />
+                                                        <TextBlock Text="{Binding Distribuicao}" FontSize="10.5"
+                                                                   Foreground="{StaticResource CorTextoSuave}" />
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+
+                                <TextBlock Text="Etiquetas por fileira (depende do papel)" Style="{StaticResource Rotulo}" />
+                                <ListBox ItemsSource="{Binding OpcoesFileira}"
+                                         SelectedItem="{Binding FileiraSelecionada, Mode=TwoWay}"
+                                         ItemContainerStyle="{StaticResource CartaoSeletorMidiaItem}"
+                                         Background="Transparent" BorderThickness="0" Padding="0"
+                                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                         Margin="0,4,0,10"
+                                         ToolTip="Escolha quantas etiquetas o papel imprime lado a lado">
+                                    <ListBox.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <UniformGrid Columns="3" />
+                                        </ItemsPanelTemplate>
+                                    </ListBox.ItemsPanel>
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Nome}" FontSize="11" FontWeight="Bold"
+                                                           Foreground="{StaticResource CorTexto}" />
+                                                <TextBlock Text="{Binding Descricao}" FontSize="9.5"
+                                                           Foreground="{StaticResource CorTextoSuave}"
+                                                           TextWrapping="Wrap" LineHeight="12" Margin="0,1,0,0" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+
+                                <TextBlock Text="Sensor / tipo de mídia" Style="{StaticResource Rotulo}" />
+                                <ListBox ItemsSource="{Binding TiposMidia}"
+                                         SelectedItem="{Binding TipoMidiaSelecionado, Mode=TwoWay}"
+                                         ItemContainerStyle="{StaticResource CartaoSeletorMidiaItem}"
+                                         Background="Transparent" BorderThickness="0" Padding="0"
+                                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                         Margin="0,4,0,10">
+                                    <ListBox.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <UniformGrid Columns="2" />
+                                        </ItemsPanelTemplate>
+                                    </ListBox.ItemsPanel>
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="46" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <views:IlustracaoMidia Grid.Column="0" Tipo="{Binding Tipo}" Width="40" Height="38"
+                                                                       HorizontalAlignment="Left" VerticalAlignment="Center" />
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding NomeCurto}" FontSize="11" FontWeight="Bold"
+                                                               Foreground="{StaticResource CorTexto}" TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock Text="{Binding Descricao}" FontSize="9.5"
+                                                               Foreground="{StaticResource CorTextoSuave}" TextWrapping="Wrap" LineHeight="12" Margin="0,1,0,0" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+
+                                <WrapPanel Margin="0,4,0,0">
+                                    <StackPanel Style="{StaticResource CampoMedida}">
+                                        <TextBlock Text="Largura etiqueta (mm)" Style="{StaticResource RotuloMedida}" />
+                                        <TextBox Text="{Binding LarguraEtiquetaMm, StringFormat=0.##}" />
+                                    </StackPanel>
+                                    <StackPanel Style="{StaticResource CampoMedida}">
+                                        <TextBlock Text="Altura etiqueta (mm)" Style="{StaticResource RotuloMedida}" />
+                                        <TextBox Text="{Binding AlturaEtiquetaMm, StringFormat=0.##}" />
+                                    </StackPanel>
+                                    <StackPanel Style="{StaticResource CampoMedida}">
+                                        <TextBlock Text="Gap horizontal (mm)" Style="{StaticResource RotuloMedida}" />
+                                        <TextBox Text="{Binding EspacoHorizontalMm, StringFormat=0.##}" />
+                                    </StackPanel>
+                                    <StackPanel Style="{StaticResource CampoMedida}">
+                                        <TextBlock Text="Gap vertical (mm)" Style="{StaticResource RotuloMedida}" />
+                                        <TextBox Text="{Binding EspacoVerticalMm, StringFormat=0.##}" />
+                                    </StackPanel>
+                                    <StackPanel Style="{StaticResource CampoMedida}">
+                                        <TextBlock Text="Papel largura (mm)" Style="{StaticResource RotuloMedida}" />
+                                        <TextBox Text="{Binding PaginaLarguraMm, StringFormat=0.##}" />
+                                    </StackPanel>
+                                    <StackPanel Style="{StaticResource CampoMedida}">
+                                        <TextBlock Text="Papel altura (mm)" Style="{StaticResource RotuloMedida}" />
+                                        <TextBox Text="{Binding PaginaAlturaMm, StringFormat=0.##}" />
+                                    </StackPanel>
+                                    <StackPanel Style="{StaticResource CampoMedida}">
+                                        <TextBlock Text="Margem esq. (mm)" Style="{StaticResource RotuloMedida}" />
+                                        <TextBox Text="{Binding MargemEsquerdaMm, StringFormat=0.##}" />
+                                    </StackPanel>
+                                    <StackPanel Style="{StaticResource CampoMedida}">
+                                        <TextBlock Text="Margem sup. (mm)" Style="{StaticResource RotuloMedida}" />
+                                        <TextBox Text="{Binding MargemSuperiorMm, StringFormat=0.##}" />
+                                    </StackPanel>
+                                    <StackPanel Style="{StaticResource CampoMedida}">
+                                        <TextBlock Text="Colunas" Style="{StaticResource RotuloMedida}" />
+                                        <TextBox Text="{Binding Colunas}" />
+                                    </StackPanel>
+                                    <StackPanel Style="{StaticResource CampoMedida}">
+                                        <TextBlock Text="Linhas" Style="{StaticResource RotuloMedida}" />
+                                        <TextBox Text="{Binding Linhas}" />
+                                    </StackPanel>
+                                    <StackPanel Style="{StaticResource CampoMedida}" Width="128">
+                                        <TextBlock Text="Máx. impressora (mm)" Style="{StaticResource RotuloMedida}" />
+                                        <TextBox Text="{Binding LarguraMaximaImpressoraMm, StringFormat=0.##}"
+                                                 ToolTip="Área imprimível em largura, conforme o manual da impressora" />
+                                    </StackPanel>
+                                </WrapPanel>
+
+                                <Button Command="{Binding RestaurarMidiaDoPerfilCommand}" Style="{StaticResource BotaoSecundario}"
+                                        Padding="10,6" HorizontalAlignment="Left" Margin="0,2,0,0"
+                                        ToolTip="Voltar às medidas do perfil de mídia escolhido">
+                                    <StackPanel Orientation="Horizontal">
+                                        <ui:SymbolIcon Symbol="ArrowReset24" FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                        <TextBlock Text="Restaurar medidas do perfil" FontSize="12" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Expander>
                     </Border>
                 </StackPanel>
             </Grid>

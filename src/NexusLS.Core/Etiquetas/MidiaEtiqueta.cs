@@ -32,6 +32,23 @@ public sealed record PerfilImpressora(
 {
     public bool Aceita(TipoMidiaEtiqueta tipo) => MidiasSuportadas.Contains(tipo);
 
+    /// <summary>Palpite do perfil pelo nome da impressora no Windows. Nulo quando não dá para saber.</summary>
+    public static PerfilImpressora? DoNome(string? nomeImpressora)
+    {
+        if (string.IsNullOrWhiteSpace(nomeImpressora)) return null;
+
+        bool Tem(params string[] marcas) =>
+            marcas.Any(m => nomeImpressora.Contains(m, StringComparison.OrdinalIgnoreCase));
+
+        // Térmicas primeiro: "HPRT" e "ZDesigner" não podem cair nas marcas de impressora de folha.
+        if (Tem("Zebra", "ZDesigner", "Argox", "TSC ", "Elgin L42", "HPRT", "Térmica", "Thermal"))
+            return Perfis[0];
+        if (Tem("Canon", "HP ", "Epson L", "Brother", "LaserJet", "DeskJet", "Ink Tank", "Pantum", "Samsung", "Print to PDF"))
+            return Perfis[2];
+
+        return null;
+    }
+
     /// <summary>Perfis usados como ponto de partida. O operador sempre pode informar outra largura.</summary>
     public static IReadOnlyList<PerfilImpressora> Perfis { get; } = new[]
     {
@@ -196,6 +213,21 @@ public static class PerfisMidia
         "Folha A4 · 3 × 7 (63,5 × 38,1 mm)", TipoMidiaEtiqueta.Folha,
         63.5, 38.1, 2.5, 0, 3, 7, 210, 297, 7.2, 15.15,
         "21 etiquetas por folha. Use o gabarito do fabricante (Pimaco A4260/A4360 ou equivalente).");
+
+    /// <summary>Folha A4 com a etiqueta no tamanho do modelo, quantas couberem, para impressora comum.</summary>
+    public static PerfilMidia FolhaA4NoTamanho(double larguraMm, double alturaMm)
+    {
+        const double margem = 5, espaco = 2;
+        var colunas = Math.Max(1, (int)((210 - 2 * margem + espaco) / (larguraMm + espaco)));
+        var linhas = Math.Max(1, (int)((297 - 2 * margem + espaco) / (alturaMm + espaco)));
+        var esquerda = Math.Max(0, (210 - colunas * larguraMm - (colunas - 1) * espaco) / 2);
+
+        return new PerfilMidia(
+            $"Folha A4 · {colunas * linhas} etiquetas de {larguraMm:0.#} × {alturaMm:0.#} mm",
+            TipoMidiaEtiqueta.Folha, larguraMm, alturaMm, espaco, espaco, colunas, linhas,
+            210, 297, Math.Round(esquerda, 2), margem,
+            "Etiqueta no tamanho do modelo em folha A4.");
+    }
 
     public static readonly PerfilMidia Personalizado = new(
         "Personalizado (informar medidas)", TipoMidiaEtiqueta.RoloComGap,

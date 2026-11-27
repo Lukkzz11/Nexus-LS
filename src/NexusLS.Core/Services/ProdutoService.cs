@@ -380,8 +380,7 @@ public class ProdutoService
             .OrderBy(t => t.Id)
             .ToListAsync();
         var produto = await db.Produtos.AsNoTracking().FirstOrDefaultAsync(p => p.Id == produtoId);
-        var codigo = CodigoBarrasTamanho.BaseDoCodigo(produto);
-        foreach (var t in lista) t.CodigoBarras = t.EhSemTamanho ? null : CodigoBarrasTamanho.Montar(codigo, t.Ordem);
+        foreach (var t in lista) t.CodigoBarras = t.EhSemTamanho ? null : CodigoBarrasTamanho.DoTamanho(produto, t.Ordem);
         return lista;
     }
 

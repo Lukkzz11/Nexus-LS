@@ -281,6 +281,8 @@ public partial class SelecaoImpressaoViewModel : ObservableObject
 
         OnPropertyChanged(nameof(ResumoSelecao));
         OnPropertyChanged(nameof(ProdutoTemGrade));
+        OnPropertyChanged(nameof(TemTamanhoSemCadastro));
+        OnPropertyChanged(nameof(AvisoCadastro));
         QuantidadesAlteradas?.Invoke(this, EventArgs.Empty);
     }
 

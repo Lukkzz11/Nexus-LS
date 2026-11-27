@@ -114,6 +114,23 @@ public class BancoDadosService
             .ToListAsync();
     }
 
+    /// <summary>Cadastra no produto os tamanhos que faltam (estoque zero) e devolve a grade completa.</summary>
+    public async Task<List<ProdutoTamanho>> CadastrarTamanhosAsync(int produtoId, IEnumerable<string> tamanhos)
+    {
+        await using var db = CriarContexto();
+        var existentes = await db.TamanhosProduto.AsNoTracking().Where(t => t.ProdutoId == produtoId).ToListAsync();
+        var nomes = existentes.Select(t => t.Tamanho).ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var nome in tamanhos.Select(t => t.Trim().ToUpperInvariant()).Where(t => t.Length > 0).Distinct())
+        {
+            if (!nomes.Contains(nome))
+                db.TamanhosProduto.Add(new ProdutoTamanho { ProdutoId = produtoId, Tamanho = nome, Estoque = 0 });
+        }
+
+        await db.SaveChangesAsync();
+        return await db.TamanhosProduto.AsNoTracking().Where(t => t.ProdutoId == produtoId).OrderBy(t => t.Id).ToListAsync();
+    }
+
     public async Task<ConfiguracaoLoja?> ObterConfiguracaoLojaAsync()
     {
         if (!BancoExiste())

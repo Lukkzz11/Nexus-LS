@@ -1,4 +1,5 @@
 using NexusLS.BarTender.Services;
+using NexusLS.Core.Etiquetas;
 
 namespace NexusLS.App.Tests;
 
@@ -21,5 +22,17 @@ public sealed class ImpressaoDiretaTests
             using var fila = ImpressaoService.LocalizarFila(nome);
             Assert.Equal(nome, fila.FullName, ignoreCase: true);
         }
+    }
+
+    [Fact]
+    public void Folha_A4_no_tamanho_do_modelo_cabe_na_folha_e_a_Canon_a_aceita()
+    {
+        var folha = PerfisMidia.FolhaA4NoTamanho(35, 60);
+        var canon = PerfilImpressora.DoNome("Canon G3010 series")!;
+
+        Assert.Equal(20, folha.EtiquetasPorPagina);
+        Assert.True(canon.Aceita(folha.Tipo));
+        Assert.Empty(folha.Validar(canon.LarguraMaximaMm));
+        Assert.Null(PerfilImpressora.DoNome("ELGIN i8"));
     }
 }

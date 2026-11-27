@@ -310,7 +310,23 @@
                             </Grid>
                         </Border>
 
-                        <Border Grid.Row="2" Background="{StaticResource CorSelecaoSuave}" BorderBrush="{StaticResource CorSelecao}"
+                        <StackPanel Grid.Row="2">
+                            <Border Background="{StaticResource CorAvisoFundo}" BorderBrush="{StaticResource CorAvisoBorda}"
+                                    BorderThickness="1" CornerRadius="{StaticResource RaioMedio}" Padding="12,8" Margin="0,10,0,0"
+                                    Visibility="{Binding TemTamanhoSemCadastro, Converter={StaticResource BoolParaVisibilidadeConverter}}">
+                                <DockPanel>
+                                    <Button DockPanel.Dock="Right" Content="Cadastrar no Nexus" Command="{Binding CadastrarTamanhosCommand}"
+                                            Style="{StaticResource BotaoSecundario}" Padding="10,5" Margin="10,0,0,0" VerticalAlignment="Center" />
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding AvisoCadastro}" FontSize="11" TextWrapping="Wrap"
+                                                   Foreground="{StaticResource CorAvisoTexto}" />
+                                        <TextBlock Text="{Binding MensagemCadastro}" FontSize="11" TextWrapping="Wrap"
+                                                   Foreground="{StaticResource CorAvisoTexto}" />
+                                    </StackPanel>
+                                </DockPanel>
+                            </Border>
+
+                            <Border Background="{StaticResource CorSelecaoSuave}" BorderBrush="{StaticResource CorSelecao}"
                                 BorderThickness="1" CornerRadius="{StaticResource RaioMedio}" Padding="14,10" Margin="0,12,0,0">
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -333,6 +349,7 @@
                                 </StackPanel>
                             </Grid>
                         </Border>
+                        </StackPanel>
                     </Grid>
                 </Border>
             </Grid>

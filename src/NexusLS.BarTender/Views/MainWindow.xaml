@@ -536,6 +536,15 @@
                                     </StackPanel>
                                 </Button>
 
+                                <Button Command="{Binding BaixarCodigosDeBarrasCommand}" Style="{StaticResource BotaoSecundario}" Margin="0,0,8,0"
+                                        ToolTip="Salva uma imagem do código de barras de cada produto e tamanho"
+                                        AutomationProperties.Name="Baixar todos os códigos de barras">
+                                    <StackPanel Orientation="Horizontal">
+                                        <ui:SymbolIcon Symbol="ArrowDownload24" FontSize="15" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                        <TextBlock Text="Baixar códigos de barras" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+
                                 <Button Command="{Binding GerarCodigosEmLoteCommand}" Style="{StaticResource BotaoPrimario}"
                                         ToolTip="Gera códigos EAN-13 para todos os produtos da base que ainda não têm código" AutomationProperties.Name="Gera códigos EAN-13 para todos os produtos da base que ainda não têm código">
                                     <StackPanel Orientation="Horizontal">

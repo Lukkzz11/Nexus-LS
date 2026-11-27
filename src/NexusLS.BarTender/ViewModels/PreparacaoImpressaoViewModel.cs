@@ -271,6 +271,37 @@ public partial class PreparacaoImpressaoViewModel : ObservableObject
 
         AtualizarMidia();
         AtualizarTudo();
+        AjustarPapelAImpressora();
+    }
+
+    partial void OnImpressoraSelecionadaChanged(string? value) => AjustarPapelAImpressora();
+
+    /// <summary>
+    /// Escolhe o perfil pela impressora e, se o papel marcado não serve nela, troca por um que serve.
+    /// Sem isso o botão de imprimir ficava apagado (ex.: Canon com papel em rolo).
+    /// </summary>
+    private void AjustarPapelAImpressora()
+    {
+        var perfil = PerfilImpressora.DoNome(ImpressoraSelecionada);
+        if (perfil is null) return;
+
+        PerfilImpressoraSelecionado = perfil;
+        if (ModeloOriginal is not { } modelo || perfil.Aceita(TipoMidia)) return;
+
+        if (!perfil.Aceita(TipoMidiaEtiqueta.Folha))
+        {
+            SugerirMidiaParaModelo(modelo);
+            if (!perfil.Aceita(TipoMidia)) MidiaSelecionada = PerfisMidia.Rolo50x30Gap;
+        }
+        else
+        {
+            var folha = PerfisMidia.FolhaA4NoTamanho(modelo.LarguraMm, modelo.AlturaMm);
+            var existente = MidiasDisponiveis.FirstOrDefault(m => m == folha);
+            if (existente is null) MidiasDisponiveis.Insert(0, folha);
+            MidiaSelecionada = existente ?? folha;
+        }
+
+        AtualizarMidia();
     }
 
     /// <summary>

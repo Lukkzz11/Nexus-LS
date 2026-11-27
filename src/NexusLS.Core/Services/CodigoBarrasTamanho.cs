@@ -98,12 +98,34 @@ public static class CodigoBarrasTamanho
     /// </summary>
     public static string? Resolver(Produto? produto, string? tamanho)
     {
+        return DoTamanho(produto, ObterOrdem(produto, tamanho));
+    }
+
+    /// <summary>
+    /// O código do tamanho de número <paramref name="ordem"/>. Quando o produto só tem um código "da casa" de 13 dígitos,
+    /// cada tamanho usa referência + número (14352), que o PDV lê já escolhendo o tamanho. Referência com menos de 4 dígitos fica de fora: 101 + 3 viraria a ref. 1013 de outro produto. Código de fabricante não muda.
+    /// </summary>
+    public static string? DoTamanho(Produto? produto, int ordem)
+    {
+        if (ordem > 0 && EhCodigoDaCasa(produto?.CodigoBarras)
+            && produto!.Referencia?.Trim() is { Length: >= 4 and < 13 } referencia && referencia.All(char.IsAsciiDigit))
+            return Montar(referencia, ordem);
+
         var baseCodigo = BaseDoCodigo(produto);
         if (string.IsNullOrWhiteSpace(baseCodigo)) return null;
 
-        var ordem = ObterOrdem(produto, tamanho);
         var montado = Montar(baseCodigo, ordem);
         return string.IsNullOrWhiteSpace(montado) ? baseCodigo : montado;
+    }
+
+    /// <summary>13 dígitos gerados pela própria loja: faixa interna "2", os prefixos 1000000/0000000 ou dígito que não confere.</summary>
+    public static bool EhCodigoDaCasa(string? codigo)
+    {
+        var c = Ean13(codigo);
+        return c is not null && (c[0] == CodigoBarrasInterno.Prefixo
+            || c.StartsWith("1000000", StringComparison.Ordinal)
+            || c.StartsWith("0000000", StringComparison.Ordinal)
+            || !CodigoBarrasInterno.EhEan13Valido(c));
     }
 
     /// <summary>Referência da etiqueta quando o modelo usa a variável "Referência" no código de barras.</summary>
