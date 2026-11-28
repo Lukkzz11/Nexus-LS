@@ -20,7 +20,7 @@ internal static class EtiquetaDesenho
     private static readonly Typeface Negrito =
         new(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.Bold, FontStretches.Normal);
 
-    public static void Desenhar(DrawingContext dc, ItemEtiqueta item, double largura, double altura)
+    public static void Desenhar(DrawingContext dc, ItemEtiqueta item, double largura, double altura, double xNaPagina = 0)
     {
         var margem = largura * 0.05;
         var util = largura - 2 * margem;
@@ -60,15 +60,16 @@ internal static class EtiquetaDesenho
         // Código de barras (só se o código tiver caracteres que o Code 128 aceita).
         // Código ilegível (comprido demais para a largura) não é desenhado: um código que o leitor não lê é pior que nenhum.
         if (Code128.PodeCodificar(item.CodigoBarras) && LegibilidadeCodigo.Legivel(item.CodigoBarras, largura / DipPorMm))
-            DesenharCodigo(dc, item.CodigoBarras!, margem, largura, altura);
+            DesenharCodigo(dc, item.CodigoBarras!, margem, largura, altura, xNaPagina);
     }
 
-    private static void DesenharCodigo(DrawingContext dc, string codigo, double margem, double largura, double altura)
+    private static void DesenharCodigo(DrawingContext dc, string codigo, double margem, double largura, double altura, double xNaPagina)
     {
         var modulos = Code128.Modulos(codigo);
-        var silencio = LegibilidadeCodigo.ModulosDeSilencio; // módulos brancos de cada lado, exigidos para o leitor achar o começo e o fim
-        var larguraModulo = (largura - 2 * margem) / (modulos.Count + 2 * silencio);
-        var x0 = (largura - modulos.Count * larguraModulo) / 2;
+        // Cada barra com um número inteiro de pontos da impressora (203 dpi); senão o leitor falha.
+        var posicao = BarrasNaImpressora.Calcular(modulos.Count, xNaPagina + margem, largura - 2 * margem, margem, margem);
+        var larguraModulo = posicao.ModuloDip;
+        var x0 = posicao.InicioDip - xNaPagina;
         var y0 = altura * 0.62;
         var alturaBarras = altura * 0.22;
 

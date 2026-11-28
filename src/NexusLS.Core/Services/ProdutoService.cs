@@ -136,7 +136,8 @@ public class ProdutoService
     public async Task<(Produto Produto, ProdutoTamanho Tamanho)?> ObterPorCodigoDeTamanhoAsync(string codigoLido)
     {
         var codigo = (codigoLido ?? "").Trim();
-        if (codigo.Length < 2 || !codigo.All(char.IsAsciiDigit)) return null;
+        // A referência pode ter letras (BRM101, 0001M); o número do tamanho, no fim, é sempre dígito.
+        if (codigo.Length < 2 || !char.IsAsciiDigit(codigo[^1])) return null;
 
         await using var db = await _fabrica.CreateDbContextAsync();
         if (await db.Produtos.AnyAsync(p => p.Ativo && (p.CodigoBarras == codigo || p.CodigoInterno == codigo || p.Referencia == codigo)))

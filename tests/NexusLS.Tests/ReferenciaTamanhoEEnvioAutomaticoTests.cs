@@ -88,6 +88,23 @@ public class ReferenciaTamanhoEEnvioAutomaticoTests
         Assert.Null(await s.ObterPorCodigoDeTamanhoAsync("abc"));
     }
 
+    [Theory]
+    [InlineData("BRM101", "BRM1012")]
+    [InlineData("0001M", "0001M2")]
+    public async Task Referencia_com_letras_tambem_e_lida_com_o_numero_do_tamanho(string referencia, string lido)
+    {
+        using var banco = new BancoDeTeste();
+        var s = new ProdutoService(banco.Fabrica);
+        var p = await s.CadastrarAsync(new DadosProduto("Camisa", referencia, 5000, 2000, 0));
+        await s.AdicionarGradeAsync(p.Id, new[] { "P", "M" });
+
+        var achou = await s.ObterPorCodigoDeTamanhoAsync(lido);
+
+        Assert.Equal(p.Id, achou!.Value.Produto.Id);
+        Assert.Equal("M", achou.Value.Tamanho.Tamanho);
+        Assert.Null(await s.ObterPorCodigoDeTamanhoAsync(referencia));
+    }
+
     [Fact]
     public void Proxima_referencia_segue_o_modelo_pelas_duas_primeiras_casas()
     {

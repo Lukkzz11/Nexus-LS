@@ -55,7 +55,8 @@ internal sealed class EtiquetaPaginator : DocumentPaginator
                 {
                     dc.PushTransform(new TranslateTransform(EtiquetaDesenho.Dip(posicao.XMm), EtiquetaDesenho.Dip(posicao.YMm)));
                     EtiquetaDesenho.Desenhar(dc, posicao.Item,
-                        EtiquetaDesenho.Dip(_formato.EtiquetaLarguraMm), EtiquetaDesenho.Dip(_formato.EtiquetaAlturaMm));
+                        EtiquetaDesenho.Dip(_formato.EtiquetaLarguraMm), EtiquetaDesenho.Dip(_formato.EtiquetaAlturaMm),
+                        EtiquetaDesenho.Dip(posicao.XMm));
                     dc.Pop();
                 }
             }
