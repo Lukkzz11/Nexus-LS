@@ -63,6 +63,23 @@ public class ImpressaoService
         return dialogo;
     }
 
+    /// <summary>Resolução que o driver usa. As barras são desenhadas em pontos inteiros dela.</summary>
+    private static int Resolucao(PrintDialog dialogo)
+    {
+        try
+        {
+            var dpi = dialogo.PrintTicket.PageResolution?.X
+                      ?? dialogo.PrintQueue.DefaultPrintTicket?.PageResolution?.X;
+            if (dpi is >= 150 and <= 2400) return dpi.Value;
+        }
+        catch (Exception ex)
+        {
+            App.Log(ex, "Não foi possível ler a resolução da impressora; usando 203 dpi");
+        }
+
+        return BarrasNaImpressora.DpiPadrao;
+    }
+
     public static bool Imprimir(
         IEnumerable<ItemFila> itens,
         ConfiguracaoEtiqueta config,
@@ -75,7 +92,7 @@ public class ImpressaoService
         var formatoCore = config.Formato.FormatoCore;
         var dialogo = PrepararImpressao(nomeImpressora, formatoCore.PaginaLarguraMm, formatoCore.PaginaAlturaMm);
 
-        var paginator = new BarTenderPaginator(listaItens, config, primeiraPosicao);
+        var paginator = new BarTenderPaginator(listaItens, config, primeiraPosicao) { DpiImpressora = Resolucao(dialogo) };
         dialogo.PrintDocument(paginator, "Nexus BarTender - Impressão de Etiquetas");
         return true;
     }
@@ -92,7 +109,7 @@ public class ImpressaoService
 
         var dialogo = PrepararImpressao(nomeImpressora, modelo.LarguraMm, modelo.AlturaMm);
 
-        var paginator = new BarTenderDesignPaginator(listaItens, modelo, nomeLoja, primeiraPosicao);
+        var paginator = new BarTenderDesignPaginator(listaItens, modelo, nomeLoja, primeiraPosicao) { DpiImpressora = Resolucao(dialogo) };
         dialogo.PrintDocument(paginator, $"Nexus BarTender - {modelo.Nome}");
         return true;
     }
@@ -130,7 +147,7 @@ public class ImpressaoService
             App.Log(ex, "Não foi possível configurar a mídia no PrintTicket; usando a configuração do driver.");
         }
 
-        var paginator = new BarTenderMidiaPaginator(listaItens, modelo, nomeLoja, midia, primeiraPosicao);
+        var paginator = new BarTenderMidiaPaginator(listaItens, modelo, nomeLoja, midia, primeiraPosicao) { DpiImpressora = Resolucao(dialogo) };
         dialogo.PrintDocument(paginator, $"Nexus BarTender - {midia.Nome}");
         return true;
     }
@@ -138,6 +155,7 @@ public class ImpressaoService
 
 public class BarTenderPaginator : DocumentPaginator
 {
+    public int DpiImpressora { get; init; } = BarrasNaImpressora.DpiPadrao;
     private readonly List<List<PosicaoItemBarTender>> _paginas = new();
     private readonly FormatoEtiqueta _formato;
     private readonly ConfiguracaoEtiqueta _config;
@@ -208,7 +226,8 @@ public class BarTenderPaginator : DocumentPaginator
                         DesenhoEtiquetaService.Dip(pos.XMm),
                         DesenhoEtiquetaService.Dip(pos.YMm)));
 
-                    DesenhoEtiquetaService.Desenhar(dc, pos.Produto, pos.Tamanho, _config, largDip, altDip);
+                    DesenhoEtiquetaService.Desenhar(dc, pos.Produto, pos.Tamanho, _config, largDip, altDip,
+                        new Point(DesenhoEtiquetaService.Dip(pos.XMm), DesenhoEtiquetaService.Dip(pos.YMm)), DpiImpressora);
 
                     dc.Pop();
                 }
@@ -221,6 +240,7 @@ public class BarTenderPaginator : DocumentPaginator
 
 public class BarTenderDesignPaginator : DocumentPaginator
 {
+    public int DpiImpressora { get; init; } = BarrasNaImpressora.DpiPadrao;
     private readonly List<List<PosicaoItemBarTender>> _paginas = new();
     private readonly ModeloEtiquetaDesign _modelo;
     private readonly string _nomeLoja;
@@ -282,7 +302,8 @@ public class BarTenderDesignPaginator : DocumentPaginator
                             modeloEfetivo = modeloCustom;
                         }
                     }
-                    EditorDesenhoService.Desenhar(dc, modeloEfetivo, pos.Produto, pos.Tamanho, _nomeLoja, desenharBordaExterna: false);
+                    EditorDesenhoService.Desenhar(dc, modeloEfetivo, pos.Produto, pos.Tamanho, _nomeLoja, desenharBordaExterna: false,
+                        dpiImpressora: DpiImpressora);
                 }
             }
         }
@@ -299,6 +320,7 @@ public record PosicaoItemBarTender(double XMm, double YMm, Produto Produto, stri
 /// </summary>
 public class BarTenderMidiaPaginator : DocumentPaginator
 {
+    public int DpiImpressora { get; init; } = BarrasNaImpressora.DpiPadrao;
     private readonly List<List<PosicaoItemBarTender>> _paginas = new();
     private readonly ModeloEtiquetaDesign _modelo;
     private readonly string _nomeLoja;
@@ -368,7 +390,8 @@ public class BarTenderMidiaPaginator : DocumentPaginator
                         EditorDesenhoService.Dip(pos.XMm),
                         EditorDesenhoService.Dip(pos.YMm)));
 
-                    EditorDesenhoService.Desenhar(dc, _modelo, pos.Produto, pos.Tamanho, _nomeLoja, desenharBordaExterna: false);
+                    EditorDesenhoService.Desenhar(dc, _modelo, pos.Produto, pos.Tamanho, _nomeLoja, desenharBordaExterna: false,
+                        new Point(EditorDesenhoService.Dip(pos.XMm), EditorDesenhoService.Dip(pos.YMm)), DpiImpressora);
 
                     dc.Pop();
                 }

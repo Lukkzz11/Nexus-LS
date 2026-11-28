@@ -29,28 +29,11 @@ public static class BarcodeGeneratorService
 
         var textoAjustado = conteudo.Trim();
 
-        // Código por tamanho com 14 dígitos não cabe num EAN-13: cortar mudaria o código, então sai em Code 128.
-        if (formato == BarcodeFormat.EAN_13 && textoAjustado.Count(char.IsDigit) > 13)
+        // O que não serve como EAN-13 (14 dígitos, 5 dígitos, dígito que não confere) sai em Code 128:
+        // cortar, completar com zeros ou recalcular o dígito mudaria o código que o PDV conhece.
+        if (formato == BarcodeFormat.EAN_13 && !BarrasVetoriais.ServeComoEan13(textoAjustado))
         {
             formato = BarcodeFormat.CODE_128;
-        }
-
-        // Tratamento especial para EAN-13 (requer 12 ou 13 dígitos numéricos)
-        if (formato == BarcodeFormat.EAN_13)
-        {
-            var apenasDigitos = new string(textoAjustado.Where(char.IsDigit).ToArray());
-            if (apenasDigitos.Length >= 12)
-            {
-                textoAjustado = apenasDigitos.Substring(0, 12);
-                var digitoVerificador = CalcularDigitoEan13(textoAjustado);
-                textoAjustado += digitoVerificador;
-            }
-            else
-            {
-                // Completa com zeros à esquerda até 12 dígitos
-                textoAjustado = apenasDigitos.PadLeft(12, '0');
-                textoAjustado += CalcularDigitoEan13(textoAjustado);
-            }
         }
 
         try
@@ -115,15 +98,4 @@ public static class BarcodeGeneratorService
         }
     }
 
-    private static int CalcularDigitoEan13(string dozeDigitos)
-    {
-        var soma = 0;
-        for (var i = 0; i < 12; i++)
-        {
-            var d = dozeDigitos[i] - '0';
-            soma += (i % 2 == 0) ? d : d * 3;
-        }
-        var resto = soma % 10;
-        return (resto == 0) ? 0 : 10 - resto;
-    }
 }

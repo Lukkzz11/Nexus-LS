@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using NexusLS.BarTender.Models;
+using NexusLS.BarTender.Models.Designer;
 using NexusLS.Core.Etiquetas;
 using NexusLS.Core.Models;
 using NexusLS.Core.Services;
@@ -28,7 +29,9 @@ public class DesenhoEtiquetaService
         string? tamanho,
         ConfiguracaoEtiqueta config,
         double larguraDip,
-        double alturaDip)
+        double alturaDip,
+        Point origemNaPagina = default,
+        int dpiImpressora = BarrasNaImpressora.DpiPadrao)
     {
         // Fundo branco da etiqueta
         dc.DrawRectangle(Brushes.White, null, new Rect(0, 0, larguraDip, alturaDip));
@@ -143,7 +146,8 @@ public class DesenhoEtiquetaService
             {
                 var alturaBarras = Math.Clamp(espacoRestante - 12, 10, alturaDip * 0.28);
                 var yBarras = alturaDip - margemY - alturaBarras - 11;
-                DesenharBarrasCode128(dc, codigo!, margemX, areaUtilLargura, yBarras, alturaBarras);
+                DesenharBarrasCode128(dc, codigo!, margemX, areaUtilLargura, yBarras, alturaBarras,
+                    new Size(larguraDip, alturaDip), origemNaPagina, dpiImpressora);
             }
         }
     }
@@ -154,37 +158,15 @@ public class DesenhoEtiquetaService
         double xBase,
         double larguraDisponivel,
         double yBase,
-        double alturaBarras)
+        double alturaBarras,
+        Size etiqueta,
+        Point origem,
+        int dpi)
     {
         try
         {
-            var modulos = Code128.Modulos(codigo);
-            const int margemSilencioModulos = 6;
-            var totalModulos = modulos.Count + (2 * margemSilencioModulos);
-            var larguraModulo = larguraDisponivel / totalModulos;
-
-            // Centraliza o código
-            var xInicio = xBase + (margemSilencioModulos * larguraModulo);
-
-            for (var i = 0; i < modulos.Count;)
-            {
-                if (!modulos[i])
-                {
-                    i++;
-                    continue;
-                }
-
-                var fim = i;
-                while (fim < modulos.Count && modulos[fim]) fim++;
-
-                var larguraBarra = (fim - i) * larguraModulo;
-                dc.DrawRectangle(
-                    Brushes.Black,
-                    null,
-                    new Rect(xInicio + (i * larguraModulo), yBase, larguraBarra, alturaBarras));
-
-                i = fim;
-            }
+            BarrasVetoriais.Desenhar(dc, codigo, TipoSimboloCodigo.Code128,
+                new Rect(xBase, yBase, larguraDisponivel, alturaBarras), etiqueta, origem, dpi);
 
             // Dígitos do código centralizados abaixo das barras
             var tamFonteTexto = Math.Clamp(alturaBarras * 0.35, 6.5, 9.5);

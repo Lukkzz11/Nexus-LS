@@ -62,8 +62,21 @@ public static class Code128
         }
         else
         {
+            // Letras no conjunto B e, quando o código termina em 4 ou mais números (BRM10110), os pares finais no C:
+            // o código fica mais curto e as barras podem sair mais grossas.
+            var finais = 0;
+            while (finais < texto.Length && char.IsAsciiDigit(texto[texto.Length - 1 - finais])) finais++;
+            finais -= finais % 2;
+            if (finais < 4 || finais == texto.Length) finais = 0;
+
             simbolos.Add(InicioB);
-            foreach (var c in texto) simbolos.Add(c - ' ');       // conjunto B: valor = código ASCII - 32
+            foreach (var c in texto.AsSpan(0, texto.Length - finais)) simbolos.Add(c - ' ');  // B: ASCII - 32
+            if (finais > 0)
+            {
+                simbolos.Add(TrocaParaC);
+                for (var i = texto.Length - finais; i < texto.Length; i += 2)
+                    simbolos.Add(int.Parse(texto.AsSpan(i, 2)));
+            }
         }
 
         // Dígito verificador: soma de (valor × posição), a posição do início vale 1, e resto da divisão por 103.

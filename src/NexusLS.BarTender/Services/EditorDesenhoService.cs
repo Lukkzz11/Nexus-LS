@@ -36,7 +36,9 @@ public class EditorDesenhoService
         Produto? produto,
         string? tamanho,
         string nomeLoja,
-        bool desenharBordaExterna = false)
+        bool desenharBordaExterna = false,
+        Point origemNaPagina = default,
+        int dpiImpressora = BarrasNaImpressora.DpiPadrao)
     {
         var larguraDip = Dip(modelo.LarguraMm);
         var alturaDip = Dip(modelo.AlturaMm);
@@ -58,6 +60,14 @@ public class EditorDesenhoService
             // (é a mesma regra do desktop do Corel/Illustrator).
             if (!Bancada.IntersectaEtiqueta(el.X, el.Y, el.Largura, el.Altura, modelo.LarguraMm, modelo.AlturaMm))
             {
+                continue;
+            }
+
+            // O código de barras cuida da própria rotação para as barras caírem em cima dos pontos da impressora.
+            if (el.Tipo == TipoElemento.CodigoBarras)
+            {
+                if (el.Visivel)
+                    DesenharCodigoBarras(dc, el, produto, tamanho, new Size(larguraDip, alturaDip), origemNaPagina, dpiImpressora);
                 continue;
             }
 
@@ -107,10 +117,6 @@ public class EditorDesenhoService
 
             case TipoElemento.Imagem:
                 DesenharImagem(dc, el, xDip, yDip, largDip, altDip);
-                break;
-
-            case TipoElemento.CodigoBarras:
-                DesenharCodigoBarras(dc, el, produto, tamanho, xDip, yDip, largDip, altDip);
                 break;
 
             case TipoElemento.Retangulo:
@@ -273,25 +279,27 @@ public class EditorDesenhoService
         ElementoDesign el,
         Produto? produto,
         string? tamanho,
-        double x, double y, double larg, double alt)
+        Size etiqueta,
+        Point origem,
+        int dpi)
     {
         var codigo = ResolverCodigo(el, produto, tamanho);
         if (string.IsNullOrWhiteSpace(codigo))
             return;
 
+        var x = Dip(el.X);
+        var y = Dip(el.Y);
+        var larg = Dip(el.Largura);
+        var alt = Dip(el.Altura);
+        var centro = new Point(x + larg / 2, y + alt / 2);
+
         var alturaTexto = el.MostrarTextoLegivel && el.TipoCodigo != TipoSimboloCodigo.QrCode ? 10.0 : 0.0;
         var alturaBarras = Math.Max(6.0, alt - alturaTexto);
 
-        var largPx = (int)Math.Ceiling(larg * 2.0);
-        var altPx = (int)Math.Ceiling(alturaBarras * 2.0);
+        BarrasVetoriais.Desenhar(dc, codigo, el.TipoCodigo, new Rect(x, y, larg, alturaBarras),
+            etiqueta, origem, dpi, el.Rotacao, centro);
 
-        var barcodeBmp = BarcodeGeneratorService.Gerar(codigo, el.TipoCodigo, largPx, altPx, margem: 0);
-        if (barcodeBmp != null)
-        {
-            dc.DrawImage(barcodeBmp, new Rect(x, y, larg, alturaBarras));
-        }
-
-        if (el.MostrarTextoLegivel && el.TipoCodigo != TipoSimboloCodigo.QrCode)
+        if (alturaTexto > 0)
         {
             var txtLegivel = new FormattedText(
                 codigo,
@@ -302,10 +310,13 @@ public class EditorDesenhoService
                 Brushes.Black,
                 1.0)
             {
-                MaxTextWidth = larg,
+                MaxTextWidth = Math.Max(1, larg),
                 TextAlignment = TextAlignment.Center
             };
+
+            if (el.Rotacao != 0) dc.PushTransform(new RotateTransform(el.Rotacao, centro.X, centro.Y));
             dc.DrawText(txtLegivel, new Point(x, y + alturaBarras + 0.5));
+            if (el.Rotacao != 0) dc.Pop();
         }
     }
 

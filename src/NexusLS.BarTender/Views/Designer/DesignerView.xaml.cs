@@ -471,16 +471,33 @@ public partial class DesignerView : UserControl
 
             case TipoElemento.CodigoBarras:
                 var cod = EditorDesenhoService.ResolverCodigo(el, VM?.ProdutoAtual, VM?.TamanhoParaTeste);
-                var altPx = Math.Max(20, (int)altDip * 2);
-                var largPx = Math.Max(40, (int)largDip * 2);
-                var bmpBarcode = BarcodeGeneratorService.Gerar(cod, el.TipoCodigo, largPx, altPx, margem: 0);
+                // Mesmo desenho vetorial da impressão: a tela mostra as barras na largura em que vão sair.
+                var barras = new DrawingGroup();
+                using (var dcBarras = barras.Open())
+                {
+                    var comTexto = el.MostrarTextoLegivel && el.TipoCodigo != TipoSimboloCodigo.QrCode;
+                    var area = new Rect(EditorDesenhoService.Dip(el.X), EditorDesenhoService.Dip(el.Y),
+                        largDip, Math.Max(6.0, altDip - (comTexto ? 10.0 : 0.0)));
+                    var etiqueta = new Size(
+                        EditorDesenhoService.Dip(VM?.Modelo.LarguraMm ?? el.X * 2 + el.Largura),
+                        EditorDesenhoService.Dip(VM?.Modelo.AlturaMm ?? el.Y * 2 + el.Altura));
+
+                    dcBarras.PushTransform(new TranslateTransform(-area.X, -area.Y));
+                    dcBarras.DrawRectangle(Brushes.Transparent, null, area);
+                    BarrasVetoriais.Desenhar(dcBarras, cod, el.TipoCodigo, area, etiqueta, default);
+                    dcBarras.Pop();
+                }
 
                 var gridBarcode = new Grid { IsHitTestVisible = false };
                 gridBarcode.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
 
                 var imgBarcode = new Image
                 {
-                    Source = bmpBarcode,
+                    Source = new DrawingImage(barras),
+                    // Código comprido pode usar a margem da etiqueta: a prévia passa da caixa como na impressão.
+                    Margin = barras.Bounds.IsEmpty
+                        ? default
+                        : new Thickness(barras.Bounds.Left, 0, largDip - barras.Bounds.Right, 0),
                     Stretch = Stretch.Fill
                 };
                 Grid.SetRow(imgBarcode, 0);
