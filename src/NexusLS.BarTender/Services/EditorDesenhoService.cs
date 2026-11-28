@@ -332,7 +332,7 @@ public class EditorDesenhoService
                     VariavelEtiqueta.NomeProduto => "CAMISETA OVERSIZED LIFE SURF ALGODÃO",
                     VariavelEtiqueta.PrecoVarejo => "R$ 119,90",
                     VariavelEtiqueta.PrecoAtacado => "Atacado: R$ 79,90",
-                    VariavelEtiqueta.Referencia => "LS-2026-M",
+                    VariavelEtiqueta.Referencia => el.Texto.Contains("{Ref}") ? el.Texto.Replace("{Ref}", "LS-2026-M") : "LS-2026-M",
                     VariavelEtiqueta.Tamanho => !string.IsNullOrEmpty(tamanho) ? tamanho : "G",
                     VariavelEtiqueta.CodigoBarras => "7891234567890",
                     VariavelEtiqueta.CodigoInterno => "00452",
@@ -368,7 +368,10 @@ public class EditorDesenhoService
                 VariavelEtiqueta.NomeProduto => produto.Nome,
                 VariavelEtiqueta.PrecoVarejo => Dinheiro.Formatar(produto.PrecoVendaCentavos),
                 VariavelEtiqueta.PrecoAtacado => produto.PrecoAtacadoCentavos > 0 ? Dinheiro.Formatar(produto.PrecoAtacadoCentavos) : "",
-                VariavelEtiqueta.Referencia => produto.Referencia ?? "",
+                // Aceita rótulo junto ("REF. {Ref}"); produto sem referência não deixa o rótulo solto.
+                VariavelEtiqueta.Referencia => string.IsNullOrWhiteSpace(produto.Referencia)
+                    ? ""
+                    : (baseTexto.Contains("{Ref}") ? baseTexto.Replace("{Ref}", produto.Referencia) : produto.Referencia),
                 VariavelEtiqueta.Tamanho => !string.IsNullOrEmpty(tamLimpo)
                     ? (baseTexto.Contains("{Tamanho}") ? baseTexto.Replace("{Tamanho}", tamLimpo) : tamLimpo)
                     : "",

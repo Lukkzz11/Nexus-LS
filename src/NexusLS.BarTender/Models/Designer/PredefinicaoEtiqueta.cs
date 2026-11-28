@@ -119,6 +119,42 @@ public class PredefinicaoEtiqueta
             },
             new()
             {
+                Nome = "Tag Vestuário 50 × 75 mm · A (sem preço)",
+                Categoria = "Vestuário & Moda",
+                Dimensoes = "50 × 75 mm",
+                LarguraMm = 50.0,
+                AlturaMm = 75.0,
+                TipoSugerido = "Normal",
+                Descricao = "Tag de roupa com furo: logotipo, nome em até duas linhas, tamanho bem grande, referência e código de barras alto. Sem preço.",
+                Simbolo = SymbolRegular.Tag24,
+                Fabrica = ModeloEtiquetaDesign.CriarTagRoupaSemPreco50x75
+            },
+            new()
+            {
+                Nome = "Tag Vestuário 50 × 75 mm · B (com preço)",
+                Categoria = "Vestuário & Moda",
+                Dimensoes = "50 × 75 mm",
+                LarguraMm = 50.0,
+                AlturaMm = 75.0,
+                TipoSugerido = "Normal",
+                Descricao = "Igual à A, com o preço de venda em destaque no pé da tag.",
+                Simbolo = SymbolRegular.Tag24,
+                Fabrica = ModeloEtiquetaDesign.CriarTagRoupaComPreco50x75
+            },
+            new()
+            {
+                Nome = "Tag Vestuário 50 × 75 mm · C (compacta, mais folga)",
+                Categoria = "Vestuário & Moda",
+                Dimensoes = "50 × 75 mm",
+                LarguraMm = 50.0,
+                AlturaMm = 75.0,
+                TipoSugerido = "Normal",
+                Descricao = "Desenho mais enxuto, com tamanho em faixa preta e mais folga em cima e embaixo para impressora que varia a posição.",
+                Simbolo = SymbolRegular.Tag24,
+                Fabrica = ModeloEtiquetaDesign.CriarTagRoupaCompacta50x75
+            },
+            new()
+            {
                 Nome = "Tag Vestuário / Roupas (Tamanho Gigante + Ref + Código) - 35 × 60 mm",
                 Categoria = "Vestuário & Moda",
                 Dimensoes = "35 × 60 mm",

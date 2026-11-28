@@ -125,9 +125,12 @@ public partial class PadronizarEtiquetaViewModel : ObservableObject
             .OrderByDescending(p => p.Nome.Contains("Tag Vestuário", StringComparison.OrdinalIgnoreCase))
             .ToList();
 
+        // Os modelos prontos de tag usam o logotipo que a loja já colocou nas etiquetas dela.
+        var logo = LogoDaLoja(salvos.Select(s => s.Modelo).Append(modeloEstudioAtual));
+
         foreach (var preset in presets)
         {
-            var m = preset.Fabrica();
+            var m = preset.Fabrica().AplicarLogo(logo);
             if (m.Elementos.Count == 0) continue;
 
             OpcoesModelos.Add(new OpcaoModeloPadronizacao(
@@ -163,6 +166,14 @@ public partial class PadronizarEtiquetaViewModel : ObservableObject
         OpcaoSelecionada = OpcoesModelos.FirstOrDefault();
         AtualizarPrevia();
     }
+
+    /// <summary>A primeira imagem guardada dentro de um dos modelos (o logotipo da etiqueta da loja).</summary>
+    public static string? LogoDaLoja(IEnumerable<ModeloEtiquetaDesign?> modelos) =>
+        modelos
+            .Where(m => m is not null)
+            .SelectMany(m => m!.Elementos)
+            .FirstOrDefault(e => e.Tipo == TipoElemento.Imagem && e.Visivel && !string.IsNullOrWhiteSpace(e.ImagemBase64))
+            ?.ImagemBase64;
 
     private void CarregarTamanhosAmostra(Produto produto)
     {
