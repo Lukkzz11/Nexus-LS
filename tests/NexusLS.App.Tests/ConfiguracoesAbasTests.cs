@@ -73,6 +73,7 @@ public sealed class ConfiguracoesAbasTests : IDisposable
     public void Comandos_de_atualizador_e_portal_web_executam_sem_excecao()
     {
         var vm = Criar();
+        vm.IniciarPrograma = _ => { };
         vm.AbrirAtualizadorCommand.Execute(null);
         vm.AbrirPortalWebCommand.Execute(null);
     }

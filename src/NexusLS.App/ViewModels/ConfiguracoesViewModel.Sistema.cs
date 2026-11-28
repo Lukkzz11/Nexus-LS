@@ -151,6 +151,10 @@ public partial class ConfiguracoesViewModel
         if (!string.IsNullOrEmpty(PastaDeDados)) AbrirPasta(PastaDeDados);
     }
 
+    /// <summary>Abre um programa do Windows; os testes trocam para não abrir o Hub de verdade.</summary>
+    public Action<string> IniciarPrograma { get; set; } = exe => System.Diagnostics.Process.Start(
+        new System.Diagnostics.ProcessStartInfo(exe) { UseShellExecute = true, WorkingDirectory = Path.GetDirectoryName(exe)! });
+
     [RelayCommand]
     public void AbrirAtualizador()
     {
@@ -165,11 +169,7 @@ public partial class ConfiguracoesViewModel
             var exe = caminhos.FirstOrDefault(File.Exists);
             if (exe != null)
             {
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(exe)
-                {
-                    UseShellExecute = true,
-                    WorkingDirectory = Path.GetDirectoryName(exe)!
-                });
+                IniciarPrograma(exe);
                 return;
             }
             MensagemPreferencias = "O executável atualizador.exe não foi encontrado na pasta do sistema.";
